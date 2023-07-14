@@ -48,7 +48,7 @@ class TextureUnits:
     @property
     def available_unit(self):
         context = GLConfig.buffered_current_context
-        for i in range(1, GLConfig.max_texture_units):
+        for i in range(GLConfig.max_texture_units):
             key = (context, i)
             if key not in self._unit_texture_map:
                 return i
