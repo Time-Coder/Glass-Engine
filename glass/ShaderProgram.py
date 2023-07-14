@@ -349,36 +349,33 @@ class ShaderProgram(GPUProgram):
 
 		# 绑定所有纹理
 		self.use()
-		self_used_units = {0}
+		self_used_units = set()
 		not_set_samplers = []
 		for sampler_info in self._sampler_map.values():
 			location = sampler_info["location"]
 			if location < 0:
 				continue
 
-			texture_unit = 0
 			target_type = sampler_info["target_type"]
-			if sampler_info["sampler"] is None:
-				if TextureUnits[0] != (target_type, 0):
-					GLConfig.active_texture_unit = 0
-					GL.glBindTexture(target_type, 0)
-					TextureUnits[0] = (target_type, 0)
-			else:
+			texture_id = 0
+			if sampler_info["sampler"] is not None:
 				texture_id = sampler_info["sampler"].id
-				texture_unit = TextureUnits.unit_of_texture((target_type, texture_id))
+
+			texture_unit = TextureUnits.unit_of_texture((target_type, texture_id))
+			if texture_unit is None:
+				texture_unit = TextureUnits.available_unit
 				if texture_unit is None:
-					texture_unit = TextureUnits.available_unit
-					if texture_unit is None:
-						not_set_samplers.append(sampler_info)
-						continue
-					GLConfig.active_texture_unit = texture_unit
-					GL.glBindTexture(target_type, texture_id)
-					TextureUnits[texture_unit] = (target_type, texture_id)
-					if "access" in sampler_info:
-						access = sampler_info["access"]
-						internal_format = sampler_info["sampler"].internal_format
-						GL.glBindImageTexture(texture_unit, texture_id, 0, False, 0, access, internal_format)
-				self_used_units.add(texture_id)
+					not_set_samplers.append(sampler_info)
+					continue
+				GLConfig.active_texture_unit = texture_unit
+				GL.glBindTexture(target_type, texture_id)
+				TextureUnits[texture_unit] = (target_type, texture_id)
+				if "access" in sampler_info:
+					access = sampler_info["access"]
+					internal_format = sampler_info["sampler"].internal_format
+					GL.glBindImageTexture(texture_unit, texture_id, 0, False, 0, access, internal_format)
+			self_used_units.add(texture_id)
+
 			if location not in self.uniform._texture_value_map or \
 			   self.uniform._texture_value_map[location] != texture_unit:
 				GL.glUniform1i(location, texture_unit)
@@ -388,7 +385,9 @@ class ShaderProgram(GPUProgram):
 			available_units = GLConfig.available_texture_units - self_used_units
 			it_available_units = iter(available_units)
 			for sampler_info in not_set_samplers:
-				texture_id = sampler_info["sampler"].id
+				texture_id = 0
+				if sampler_info["sampler"] is not None:
+					texture_id = sampler_info["sampler"].id
 				texture_unit = next(it_available_units)
 				target_type = sampler_info["target_type"]
 				GLConfig.active_texture_unit = texture_unit
