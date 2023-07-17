@@ -8,7 +8,7 @@ class FlatCamera:
 		self.far = 100
 		self.clip = self.far - self.near
 		self.focus = self.near
-		self.len_diameter = 0.1
+		self.len_diameter = 0.01
 		self.projection_mode = 0
 
 		cos45 = 0.5*math.sqrt(2)

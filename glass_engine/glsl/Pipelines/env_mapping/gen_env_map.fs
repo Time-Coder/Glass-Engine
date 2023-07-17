@@ -12,6 +12,7 @@ in GeometryOut
     flat bool visible;
 } fs_in;
 
+in vec4 NDC;
 in flat int camera_index;
 in flat int env_map_index;
 

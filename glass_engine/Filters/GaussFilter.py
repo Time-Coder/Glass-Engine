@@ -58,6 +58,26 @@ class GaussFilter(Filter):
                 self.program.draw_triangles(Frame.vertices, Frame.indices)
 
         return self.vertical_fbo.color_attachment(0)
+    
+    def draw_to_active(self, screen_image: sampler2D) -> None:
+        self.horizontal_fbo.resize(screen_image.width, screen_image.height)
+        self.vertical_fbo.resize(screen_image.width, screen_image.height)
+
+        if self.__sigma.x == 0:
+            self.__sigma.x = 0.3 * ((self.__kernel_shape.x-1)*0.5 - 1) + 0.8
+        if self.__sigma.y == 0:
+            self.__sigma.y = 0.3 * ((self.__kernel_shape.y-1)*0.5 - 1) + 0.8
+
+        with GLConfig.LocalConfig(cull_face=None, polygon_mode=GL.GL_FILL):
+            with self.horizontal_fbo:
+                self.program["screen_image"] = screen_image
+                self.program["horizontal"] = True
+                self.program.draw_triangles(Frame.vertices, Frame.indices)
+
+            GLConfig.clear_buffers()
+            self.program["screen_image"] = self.horizontal_fbo.color_attachment(0)
+            self.program["horizontal"] = False
+            self.program.draw_triangles(Frame.vertices, Frame.indices)
 
     @property
     def kernel_shape(self)->tuple:

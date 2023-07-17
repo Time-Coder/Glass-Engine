@@ -5,7 +5,6 @@ import math
 import glm
 import os
 import types
-import threading
 import cProfile
 import hashlib
 import pickle
@@ -125,9 +124,6 @@ def checktype(func):
         return return_value
 
     return wrapper
-
-def in_main_thread():
-    return (threading.current_thread() == threading.main_thread())
 
 def is_overridden(method):
     cls = method.__self__.__class__

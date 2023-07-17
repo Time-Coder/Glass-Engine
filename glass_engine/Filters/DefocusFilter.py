@@ -41,6 +41,23 @@ class DefocusFilter(Filter):
 
         return self.vertical_fbo.color_attachment(0)
     
+    def draw_to_active(self, screen_image:sampler2D)->None:
+        self.horizontal_fbo.resize(screen_image.width, screen_image.height)
+        self.vertical_fbo.resize(screen_image.width, screen_image.height)
+
+        with GLConfig.LocalConfig(cull_face=None, polygon_mode=GL.GL_FILL):
+            self.program["camera"] = self.__camera
+            self.program["view_pos_map"] = self.__view_pos_map
+            with self.horizontal_fbo:
+                self.program["screen_image"] = screen_image
+                self.program["horizontal"] = True
+                self.program.draw_triangles(Frame.vertices, Frame.indices)
+
+            GLConfig.clear_buffers()
+            self.program["screen_image"] = self.horizontal_fbo.color_attachment(0)
+            self.program["horizontal"] = False
+            self.program.draw_triangles(Frame.vertices, Frame.indices)
+
     @property
     def camera(self):
         return self.__camera

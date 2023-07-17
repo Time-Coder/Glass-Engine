@@ -13,6 +13,7 @@ in GeometryOut
 } fs_in;
 
 in flat int env_map_index;
+in vec4 NDC;
 
 in PreShadingColors
 {

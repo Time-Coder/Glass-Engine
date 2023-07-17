@@ -35,6 +35,7 @@ out PreShadingColors
 } pre_shading_colors;
 
 out flat int env_map_index;
+out vec4 NDC;
 
 #include "../../include/Camera.glsl"
 #include "../../include/Material.glsl"
@@ -116,7 +117,8 @@ void main()
             }
         }
 
-        gl_Position = view_to_NDC(camera, gs_out.view_pos);
+        NDC = view_to_NDC(camera, gs_out.view_pos);
+        gl_Position = NDC;
         EmitVertex();
     }
 

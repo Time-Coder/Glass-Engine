@@ -5,21 +5,18 @@ from .Camera import Camera
 
 from glass import ShaderProgram, Instances, Vertices, Indices, GLInfo, RenderHint
 from glass.utils import checktype, vec4_to_quat
+from glass.AttrList import AttrList
 
 import glm
-import time
 from functools import wraps
-from concurrent.futures import ThreadPoolExecutor, Future
 from OpenGL import GL
 import inspect
 import types
 from enum import Enum
 import copy
-import numpy as np
 
 class Mesh(Entity):
 
-    __building_thread_pool = None
     __geometry_map = {}
     __builder_map = {}
     __mesh_vars = None
@@ -119,10 +116,6 @@ class Mesh(Entity):
 
     def build(self):
         pass
-    
-    def draw_now(self, wait=0.02):
-        if not self.__block:
-            time.sleep(wait)
 
     @checktype
     def explode(self, distance:float):
@@ -318,18 +311,13 @@ class Mesh(Entity):
             self._test_transparent()
             return
 
-        if not self.vertices.hasattr("color") and not self.vertices.hasattr("back_color"):
-            for vertex in self.vertices:
-                vertex.color = self.color
-                vertex.back_color = self.back_color
+        if self.vertices.hasattr("color"):
+            for i in range(len(self.vertices)):
+                self.vertices._attr_list_map["color"][i] = self.color
 
-        elif not self.vertices.hasattr("color"):
-            for vertex in self.vertices:
-                vertex.color = self.color
-
-        elif not self.vertices.hasattr("back_color"):
-            for vertex in self.vertices:
-                vertex.back_color = self.back_color
+        if self.vertices.hasattr("back_color"):
+            for i in range(len(self.vertices)):
+                self.vertices._attr_list_map["back_color"][i] = self.back_color
 
         self._test_transparent()
 
@@ -344,10 +332,18 @@ class Mesh(Entity):
             color = glm.vec4(color, 1)
 
         self._color = color
-        for vertex in self.vertices:
-            vertex.color = color
-            if not self._back_color_user_set:
-                vertex.back_color = color
+        if "color" not in self.vertices._attr_list_map:
+            self.vertices._attr_list_map["color"] = AttrList()
+
+        if "back_color" not in self.vertices._attr_list_map:
+            self.vertices._attr_list_map["back_color"] = AttrList()
+
+        for i in range(len(self.vertices)):
+            self.vertices._attr_list_map["color"][i] = self._color
+
+        if not self._back_color_user_set:
+            for i in range(len(self.vertices)):
+                self.vertices._attr_list_map["back_color"][i] = self._color
 
         self._test_transparent()
 
@@ -362,102 +358,18 @@ class Mesh(Entity):
             color = glm.vec4(color, 1)
 
         self._back_color_user_set = True
-
         self._back_color = color
-        for vertex in self.vertices:
-            vertex.back_color = color
+
+        if "color" not in self.vertices._attr_list_map:
+            self.vertices._attr_list_map["color"] = AttrList()
+
+        if "back_color" not in self.vertices._attr_list_map:
+            self.vertices._attr_list_map["back_color"] = AttrList()
+
+        for i in range(len(self.vertices)):
+            self.vertices._attr_list_map["back_color"][i] = self._back_color
 
         self._test_transparent()
-
-    def scale_up(self, instances:Instances, camera:Camera):
-        class ScaleUp:
-            def __init__(sub_self, mesh, instances, camera):
-                sub_self.__mesh = mesh
-                sub_self.__old_info = {}
-                sub_self.__instances = instances
-                sub_self.__camera_pos = camera.abs_position
-                sub_self.__screen_scale = 2*camera.tan_half_fov/camera.screen.height()
-
-                sub_self.__mesh_inv_quat = glm.quat(1, 0, 0, 0)
-                sub_self.__mesh_inv_quat.w = mesh.orientation.w
-                sub_self.__mesh_inv_quat.x = -mesh.orientation.x
-                sub_self.__mesh_inv_quat.y = -mesh.orientation.y
-                sub_self.__mesh_inv_quat.y = -mesh.orientation.z
-
-                x_center = (mesh.x_max + mesh.x_min)/2
-                y_center = (mesh.y_max + mesh.y_min)/2
-                z_center = (mesh.z_max + mesh.z_min)/2
-                sub_self.__center = glm.vec3(x_center, y_center, z_center)
-
-                sub_self.__x_len = mesh.x_max - mesh.x_min
-                sub_self.__y_len = mesh.y_max - mesh.y_min
-                sub_self.__z_len = mesh.z_max - mesh.z_min
-
-                if sub_self.__x_len == 0:
-                    sub_self.__x_len = 1
-                if sub_self.__y_len == 0:
-                    sub_self.__y_len = 1
-                if sub_self.__z_len == 0:
-                    sub_self.__z_len = 1
-
-                sub_self.__x_len *= mesh.scale.x
-                sub_self.__y_len *= mesh.scale.y
-                sub_self.__z_len *= mesh.scale.z
-
-            def __enter__(sub_self):
-                mesh = sub_self.__mesh
-                sub_self.__old_info.clear()
-
-                if mesh._draw_all_outlines:
-                    for i, instance in enumerate(sub_self.__instances):
-                        
-                        sub_self.__old_info[i] = \
-                        {
-                            "old_position": instance.abs_position,
-                            "old_scale": instance.abs_scale
-                        }
-
-                        sub_self.__update_transform(instance, mesh.outline_width)
-                else:
-                    for path, width in mesh._draw_outline_map.items():
-                        if path not in sub_self.__instances:
-                            continue
-
-                        instance = sub_self.__instances[path]
-                        sub_self.__old_info[path] = \
-                        {
-                            "old_position": instance.abs_position,
-                            "old_scale": instance.abs_scale
-                        }
-
-                        sub_self.__update_transform(instance, width)
-                    
-            def __exit__(sub_self, *exc_details):
-                for key, info in sub_self.__old_info.items():
-                    instance = sub_self.__instances[key]
-                    instance.abs_position = info["old_position"]
-                    instance.abs_scale = info["old_scale"]
-                    
-            def __update_transform(sub_self, instance, outline_width):
-                mesh = sub_self.__mesh
-                d = glm.length(instance.abs_position + sub_self.__center - sub_self.__camera_pos)
-                width = sub_self.__screen_scale * outline_width * d
-
-                parent_orientation = vec4_to_quat(instance.abs_orientation) * sub_self.__mesh_inv_quat
-                parent_position = instance.abs_position - parent_orientation * mesh.position
-
-                scale_up_x = 1 + 2*width/sub_self.__x_len
-                scale_up_y = 1 + 2*width/sub_self.__y_len
-                scale_up_z = 1 + 2*width/sub_self.__z_len
-                scale_up = glm.vec3(scale_up_x, scale_up_y, scale_up_z)
-
-                new_scale = instance.abs_scale * scale_up
-                new_position = parent_position + parent_orientation * (mesh.position + mesh.orientation * instance.abs_scale * (1 - scale_up) * sub_self.__center)
-
-                instance.abs_scale = new_scale
-                instance.abs_position = new_position
-
-        return ScaleUp(self, instances, camera)
 
     @property
     def back_material(self):
@@ -652,6 +564,14 @@ class Mesh(Entity):
         
         self.__geometry_info["z_max"] = z_max
 
+    def __copy_vertices(self, shared_vertices):
+        if self._vertices is shared_vertices:
+            return
+        
+        for key, value in shared_vertices._attr_list_map.items():
+            if key not in ["color", "back_color"]:
+                self._vertices._attr_list_map[key] = value
+
     def start_building(self):
         if self.__class__.__name__ == "Mesh":
             return
@@ -659,49 +579,45 @@ class Mesh(Entity):
         if self.__shared:
             instance_key = self.__instance_key
             if instance_key in Mesh.__geometry_map:
-                self._vertices = Mesh.__geometry_map[instance_key]["vertices"]
-                self._indices = Mesh.__geometry_map[instance_key]["indices"]
-                self.__geometry_info = Mesh.__geometry_map[instance_key]
-                if self.__block:
-                    builder = self.__geometry_info["builder"]
-                    if builder is not None:
-                        if isinstance(builder, types.GeneratorType):
-                            if self.__geometry_info["build_state"] == "build":
-                                try:
-                                    while True:
-                                        next(builder)
-                                except StopIteration:
-                                    if builder in Mesh.__builder_map:
-                                        del Mesh.__builder_map[builder]
+                geometry_info = Mesh.__geometry_map[instance_key]
+                self.__copy_vertices(geometry_info["vertices"])
+                self._indices = geometry_info["indices"]
+                self.__geometry_info = geometry_info
+                if not self.__block:
+                    return
 
-                                    builder = self.__post_build(self.__geometry_info)
-                                    self.__geometry_info["builder"] = builder
-                                    self.__geometry_info["build_state"] = "post_build"
-                                    Mesh.__builder_map[builder] = self.__geometry_info
+                builder = self.__geometry_info["builder"]
+                if builder is None:
+                    return
+                
+                if self.__geometry_info["build_state"] == "build":
+                    try:
+                        while True:
+                            next(builder)
+                    except StopIteration:
+                        if builder in Mesh.__builder_map:
+                            del Mesh.__builder_map[builder]
 
-                            if self.__geometry_info["build_state"] == "post_build":
-                                try:
-                                    while True:
-                                        next(builder)
-                                except StopIteration:
-                                    if builder in Mesh.__builder_map:
-                                        del Mesh.__builder_map[builder]
+                        builder = self.__post_build(self.__geometry_info)
+                        self.__geometry_info["builder"] = builder
+                        self.__geometry_info["build_state"] = "post_build"
+                        Mesh.__builder_map[builder] = self.__geometry_info
 
-                                    self.__geometry_info["builder"] = None
-                                    self.__geometry_info["build_state"] = "done"
+                if self.__geometry_info["build_state"] == "post_build":
+                    try:
+                        while True:
+                            next(builder)
+                    except StopIteration:
+                        if builder in Mesh.__builder_map:
+                            del Mesh.__builder_map[builder]
 
-                        elif isinstance(builder, Future):
-                            builder.result()
-                            builder = self.__post_build(self.__geometry_info)
-                            try:
-                                while True:
-                                    next(builder)
-                            except StopIteration:
-                                pass
+                        self.__geometry_info["builder"] = None
+                        self.__geometry_info["build_state"] = "done"
+
                 return
             else:
                 draw_type = GL.GL_DYNAMIC_DRAW if not self.__block else GL.GL_STATIC_DRAW
-                Mesh.__geometry_map[instance_key] = \
+                geometry_info = \
                 {
                     "vertices": Vertices(draw_type=draw_type),
                     "indices": Indices(draw_type=draw_type),
@@ -711,9 +627,10 @@ class Mesh(Entity):
                     "y_min": 0, "y_max": 0,
                     "z_min": 0, "z_max": 0,
                 }
-                self._vertices = Mesh.__geometry_map[instance_key]["vertices"]
-                self._indices = Mesh.__geometry_map[instance_key]["indices"]
-                self.__geometry_info = Mesh.__geometry_map[instance_key]
+                Mesh.__geometry_map[instance_key] = geometry_info
+                self._vertices = geometry_info["vertices"]
+                self._indices = geometry_info["indices"]
+                self.__geometry_info = geometry_info
         elif self.__geometry_info is None:
             draw_type = GL.GL_DYNAMIC_DRAW if not self.__block else GL.GL_STATIC_DRAW
             self.__geometry_info = \
@@ -728,15 +645,6 @@ class Mesh(Entity):
             }
             self._vertices = self.__geometry_info["vertices"]
             self._indices = self.__geometry_info["indices"]
-
-        def done_callback(future):
-            future.result()
-
-            if future in self.__builder_map:
-                builder = self.__post_build(self.__builder_map[future])
-                self.__builder_map[builder] = self.__builder_map.pop(future)
-                self.__builder_map[builder]["builder"] = builder
-                self.__builder_map[builder]["build_state"] = "post_build"
 
         if self.__block:
             if inspect.isgeneratorfunction(self.build):
@@ -786,13 +694,17 @@ class Mesh(Entity):
                         self.__geometry_info["build_state"] = "done"
                         self.__geometry_info["builder"] = None
             else:
-                if Mesh.__building_thread_pool is None:
-                    Mesh.__building_thread_pool = ThreadPoolExecutor(max_workers=10)
-
-                builder = Mesh.__building_thread_pool.submit(self.build)
-                builder.add_done_callback(done_callback)
+                self.build()
+                builder = self.__post_build(self.__geometry_info)
                 self.__geometry_info["builder"] = builder
+                self.__geometry_info["build_state"] = "post_build"
                 Mesh.__builder_map[builder] = self.__geometry_info
+                try:
+                    next(builder)
+                except StopIteration:
+                    del Mesh.__builder_map[builder]
+                    self.__geometry_info["build_state"] = "done"
+                    self.__geometry_info["builder"] = None
 
     @property
     def __instance_key(self):

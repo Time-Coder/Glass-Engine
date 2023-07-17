@@ -100,11 +100,11 @@ class GPUProgram(GLObject):
 			self._link()
 
 		if name in self._uniform_map:
-			return self.uniform[name]
-		elif name in self.buffer._blocks_info:
-			return self.buffer[name]
-		elif name in self.uniform_block._blocks_info:
-			return self.uniform_block[name]
+			return self._uniform[name]
+		elif name in self._shader_storage_block_map:
+			return self._shader_storage_block[name]
+		elif name in self._uniform_block_map:
+			return self._uniform_block[name]
 		else:
 			error_message = "'" + name + "' is not defined in following files:\n  "
 			all_files = self._get_compiled_files()
@@ -116,11 +116,11 @@ class GPUProgram(GLObject):
 			self._link()
 
 		if name in self._uniform_map:
-			self.uniform[name] = value
-		elif name in self.buffer._blocks_info:
-			self.buffer[name] = value
-		elif name in self.uniform_block._blocks_info:
-			self.uniform_block[name] = value
+			self._uniform[name] = value
+		elif name in self._shader_storage_block_map:
+			self._shader_storage_block[name] = value
+		elif name in self._uniform_block_map:
+			self._uniform_block[name] = value
 		else:
 			error_message = "'" + name + "' is not defined in following files:\n  "
 			all_files = self._get_compiled_files()

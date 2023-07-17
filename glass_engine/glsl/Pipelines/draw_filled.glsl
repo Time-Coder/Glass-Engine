@@ -81,7 +81,7 @@ vec4 draw_filled(Camera camera)
     if (shading_model != 9)
     {
         // SSAO
-        vec2 screen_tex_coord = gl_FragCoord.xy / textureSize(SSAO_map, 0);
+        vec2 screen_tex_coord = (NDC.xy / NDC.w + 1)/2;
         float ssao_factor = texture(SSAO_map, screen_tex_coord).r;
         out_color3 *= (1-ssao_factor);
 

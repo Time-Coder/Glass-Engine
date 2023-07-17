@@ -6,6 +6,7 @@ from enum import Enum
 from .utils import checktype, get_subscript_chain
 from .sampler2D import sampler2D
 from .image2D import image2D
+from .FBOAttachment import FBOAttachment
 from .usampler2D import usampler2D, uimage2D
 from .isampler2D import isampler2D, iimage2D
 from .sampler2DMS import sampler2DMS
@@ -220,6 +221,8 @@ class Uniform:
 
     def _set_atom(self, name:str, value):
         if name in self._atom_value_map and self._atom_value_map[name] == value:
+            if isinstance(value, FBOAttachment):
+                value.bind()
             return
         
         if GL.glGetUniformLocation:

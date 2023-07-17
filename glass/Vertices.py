@@ -294,7 +294,7 @@ class Vertices:
             if index in self._index_vertex_map:
                 result = self._index_vertex_map[index]
             else:
-                result = self.__cass__._element()
+                result = self.__class__.element_type()
                 result._add_array_index(self, index)
                 for key, attr_list in self._attr_list_map.items():
                     result[key] = attr_list[index]

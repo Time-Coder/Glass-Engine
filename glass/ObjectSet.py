@@ -19,6 +19,12 @@ class ObjectSet:
     def __iter__(self):
         result = ObjectSet.iterator(self._set.__iter__())
         return result
+    
+    def __len__(self):
+        return self._set.__len__()
+    
+    def __bool__(self):
+        return bool(self._set)
 
     def add(self, var):
         self._set.add(id(var))

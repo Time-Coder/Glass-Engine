@@ -36,14 +36,23 @@ class SceneRoamManipulator(Manipulator):
             self._right_press_global_posF = global_pos
             self._right_press_yaw = self.camera.yaw
             self._right_press_pitch = self.camera.pitch
+            return False
         elif button == Manipulator.MouseButton.LeftButton:
             self._is_left_pressed = True
             self._left_press_global_posF = global_pos
             self._left_press_yaw = self.camera.yaw
             self._left_press_pitch = self.camera.pitch
             self._left_press_camera_pos = copy.deepcopy(self.camera.position)
-
-        return False
+            return False
+        elif button == Manipulator.MouseButton.MiddleButton:
+            x = screen_pos.x
+            y = screen_pos.y
+            width = self.camera.screen.width()
+            height = self.camera.screen.height()
+            s = x/(width-1)
+            t = 1 - y/(height-1)
+            self.camera.auto_focus_tex_coord = glm.vec2(s, t)
+            return True
 
     def on_mouse_released(self, button:Manipulator.MouseButton, screen_pos:glm.vec2, global_pos:glm.vec2):
         if button == Manipulator.MouseButton.RightButton:

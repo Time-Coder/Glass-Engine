@@ -1,6 +1,6 @@
 from .Renderer import Renderer
 from .FlatCamera import FlatCamera
-from ..Filters import GaussFilter, DefocusFilter, FXAAFilter, BloomHDRFilter
+from ..Filters import GaussFilter, DefocusFilter, FXAAFilter, BloomFilter, HDRFilter
 from ..Frame import Frame
 
 from glass import \
@@ -39,43 +39,33 @@ class CommonRenderer(Renderer):
         self._flat_cameras["front"] = FlatCamera("front")
         self._flat_cameras["back"] = FlatCamera("back")
 
-        self.filters["bloom"] = BloomHDRFilter()
-        self.filters["FXAA"] = FXAAFilter(internal_format=GL.GL_RGB8)
+        self.filters["bloom"] = BloomFilter()
+        self.filters["HDR"] = HDRFilter()
         self.filters["defocus"] = DefocusFilter()
+        self.filters["FXAA"] = FXAAFilter(internal_format=GL.GL_RGB8)
 
         self.filters["bloom"].enabled = False
-        self.filters["FXAA"].enabled = True
+        self.filters["HDR"].enabled = False
         self.filters["defocus"].enabled = False
+        self.filters["FXAA"].enabled = True
 
     @property
     def bloom(self):
-        return self.filters["bloom"].enabled and self.filters["bloom"].enable_bloom
+        return self.filters["bloom"].enabled
     
     @bloom.setter
     @checktype
     def bloom(self, flag:bool):
-        if flag:
-            self.filters["bloom"].enabled = True
-            self.filters["bloom"].enable_bloom = True
-        else:
-            self.filters["bloom"].enable_bloom = False
-            if not self.filters["bloom"].enable_HDR:
-                self.filters["bloom"].enabled = False
+        self.filters["bloom"].enabled = flag
 
     @property
     def HDR(self):
-        return self.filters["bloom"].enabled and self.filters["bloom"].enable_HDR
+        return self.filters["HDR"].enabled
     
     @HDR.setter
     @checktype
     def HDR(self, flag:bool):
-        if flag:
-            self.filters["bloom"].enabled = True
-            self.filters["bloom"].enable_HDR = True
-        else:
-            self.filters["bloom"].enable_HDR = False
-            if not self.filters["bloom"].enable_bloom:
-                self.filters["bloom"].enabled = False
+        self.filters["HDR"].enabled = flag
 
     @property
     def defocus(self):
@@ -303,24 +293,23 @@ class CommonRenderer(Renderer):
 
     @property
     def ssao_generate_program(self):
-        program = None
-        if "ssao_generate" not in self.programs:
-            program = ShaderProgram()
-            program.compile("../glsl/Pipelines/draw_frame.vs")
-            program.compile("../glsl/Pipelines/SSAO/ssao_generate.fs")
-            self.programs["ssao_generate"] = program
-        else:
-            program = self.programs["ssao_generate"]
-
+        if "ssao_generate" in self.programs:
+            return self.programs["ssao_generate"]
+        
+        program = ShaderProgram()
+        program.compile("../glsl/Pipelines/draw_frame.vs")
+        program.compile("../glsl/Pipelines/SSAO/ssao_generate.fs")
+        self.programs["ssao_generate"] = program
+        
         return program
     
     @property
     def ssao_fbo(self):
-        screen_size = GLConfig.screen_size
+        half_screen_size = GLConfig.screen_size/2
         if "ssao" in self.fbos:
-            self.fbos["ssao"].resize(screen_size.x, screen_size.y)
+            self.fbos["ssao"].resize(half_screen_size.x, half_screen_size.y)
         else:
-            fbo = FBO(screen_size.x, screen_size.y)
+            fbo = FBO(half_screen_size.x, half_screen_size.y)
             fbo.attach(0, sampler2D)
             self.fbos["ssao"] = fbo
 

@@ -58,12 +58,12 @@ class ForwardRenderer(CommonRenderer):
         return program
     
     @property
-    def ssao_gbuffer_fbo(self):
-        screen_size = GLConfig.screen_size
+    def ssao_gbuffer(self):
+        half_screen_size = GLConfig.screen_size/2
         if "ssao_gbuffer" in self.fbos:
-            self.fbos["ssao_gbuffer"].resize(screen_size.x, screen_size.y)
+            self.fbos["ssao_gbuffer"].resize(half_screen_size.x, half_screen_size.y)
         else:
-            fbo = FBO(screen_size.x, screen_size.y)
+            fbo = FBO(half_screen_size.x, half_screen_size.y)
             fbo.attach(0, sampler2D)
             fbo.attach(1, sampler2D)
             fbo.attach(GL.GL_DEPTH_ATTACHMENT, RBO)
@@ -78,7 +78,7 @@ class ForwardRenderer(CommonRenderer):
         with GLConfig.LocalConfig(clear_color=glm.vec4(0,0,0,0), polygon_mode=GL.GL_FILL):
             GLConfig.clear_buffers()
             if self._enable_SSAO or self.defocus:
-                with self.ssao_gbuffer_fbo:
+                with self.ssao_gbuffer:
                     self.ssao_gbuffer_program["camera"] = self.camera
                     for mesh, instances in self.scene.all_meshes.items():
                         if not mesh.is_filled:
@@ -89,8 +89,8 @@ class ForwardRenderer(CommonRenderer):
                         self.ssao_gbuffer_program["explode_distance"] = mesh.explode_distance
                         mesh.draw(self.ssao_gbuffer_program, instances)
 
-                view_pos_alpha_map = self.ssao_gbuffer_fbo.color_attachment(0)
-                view_normal_map = self.ssao_gbuffer_fbo.color_attachment(1)
+                view_pos_alpha_map = self.ssao_gbuffer.color_attachment(0)
+                view_normal_map = self.ssao_gbuffer.color_attachment(1)
                 if self.defocus:
                     self.filters["defocus"].view_pos_map = view_pos_alpha_map
             
@@ -106,7 +106,7 @@ class ForwardRenderer(CommonRenderer):
                         self.ssao_generate_program.draw_triangles(Frame.vertices, Frame.indices)
 
                 self._SSAO_map = self._SSAO_blur_filter(self.ssao_fbo.color_attachment(0))
-
+                
     def render(self, camera, scene):
         # profiler.enable()
         self._should_update = False
