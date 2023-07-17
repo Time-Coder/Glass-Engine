@@ -8,9 +8,8 @@ from .KernelFilter import KernelFilter
 from .SlitStretchFilter import SlitStretchFilter
 from .StarFieldFilter import StarFieldFilter
 from .WaterWaveFilter import WaterWaveFilter
-from .ResizeFilter import ResizeFilter
-from .PyramidSamplingFilter import PyramidSamplingFilter
-from .BloomHDRFilter import BloomHDRFilter
+from .BloomFilter import BloomFilter
+from .HDRFilter import HDRFilter
 from .LightExtractFilter import LightExtractFilter
 from .DefocusFilter import DefocusFilter
 from .FXAAFilter import FXAAFilter

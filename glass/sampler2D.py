@@ -151,9 +151,9 @@ class sampler2D(FBOAttachment):
 		FBOAttachment.__del__(self)
 
 	@staticmethod
-	def should_update():
-		return (sampler2D._unknown_shadertoy_samplers or \
-			    sampler2D._dynamic_shadertoy_samplers)
+	def should_update()->bool:
+		return (bool(sampler2D._unknown_shadertoy_samplers) or \
+			    bool(sampler2D._dynamic_shadertoy_samplers))
 
 	@property
 	def is_shadertoy(self):

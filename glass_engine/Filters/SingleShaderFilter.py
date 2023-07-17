@@ -76,52 +76,56 @@ class SingleShaderFilter(Filter):
 
         self._shader_path = shader_path
 
-    def _call(self, fbo:FBO, screen_image:sampler2D)->sampler2D:
+    def draw(self, screen_image):
+        self.program["screen_image"] = screen_image
+        if self in SingleShaderFilter._unknown_filters:
+            is_dynamic = (self.program["iTime"].location != -1 or \
+                            self.program["iTimeDelta"].location != -1 or \
+                            self.program["iFrameRate"].location != -1 or \
+                            self.program["iFrame"].location != -1 or \
+                            self.program["iDate"].location != -1)
+            
+            SingleShaderFilter._unknown_filters.remove(self)
+            if is_dynamic:
+                SingleShaderFilter._dynamic_filters.add(self)
+
+        if self in SingleShaderFilter._dynamic_filters:
+            current_time = time.time()
+            now = datetime.now()
+
+            if self._start_time == 0:
+                self._start_time = current_time
+            if self._last_frame_time == 0:
+                self._last_frame_time = current_time
+            
+            time_delta = current_time - self._last_frame_time
+            fps = 60
+            if time_delta > 0:
+                fps = 1/time_delta
+            t = current_time - self._start_time
+            
+            self.program["iTime"] = t
+            self.program["iTimeDelta"] = time_delta
+            self.program["iFrameRate"] = fps
+            self.program["iFrame"] = self._frame_index
+            self.program["iDate"] = glm.vec4(now.year, now.month, now.day, now.second + now.microsecond/1000)
+            
+            self._last_frame_time = current_time
+            self._frame_index += 1
+            
+        self.program.draw_triangles(Frame.vertices, Frame.indices)
+
+    def draw_to_active(self, screen_image:sampler2D)->None:
         with GLConfig.LocalConfig(cull_face=None, polygon_mode=GL.GL_FILL):
-            with fbo:
-                self.program["screen_image"] = screen_image
-                if self in SingleShaderFilter._unknown_filters:
-                    is_dynamic = (self.program["iTime"].location != -1 or \
-                                    self.program["iTimeDelta"].location != -1 or \
-                                    self.program["iFrameRate"].location != -1 or \
-                                    self.program["iFrame"].location != -1 or \
-                                    self.program["iDate"].location != -1)
-                    
-                    SingleShaderFilter._unknown_filters.remove(self)
-                    if is_dynamic:
-                        SingleShaderFilter._dynamic_filters.add(self)
-
-                if self in SingleShaderFilter._dynamic_filters:
-                    current_time = time.time()
-                    now = datetime.now()
-
-                    if self._start_time == 0:
-                        self._start_time = current_time
-                    if self._last_frame_time == 0:
-                        self._last_frame_time = current_time
-                    
-                    time_delta = current_time - self._last_frame_time
-                    fps = 60
-                    if time_delta > 0:
-                        fps = 1/time_delta
-                    t = current_time - self._start_time
-                    
-                    self.program["iTime"] = t
-                    self.program["iTimeDelta"] = time_delta
-                    self.program["iFrameRate"] = fps
-                    self.program["iFrame"] = self._frame_index
-                    self.program["iDate"] = glm.vec4(now.year, now.month, now.day, now.second + now.microsecond/1000)
-                    
-                    self._last_frame_time = current_time
-                    self._frame_index += 1
-                    
-                self.program.draw_triangles(Frame.vertices, Frame.indices)
-
-        return fbo.color_attachment(0)
+            self.draw(screen_image)
 
     def __call__(self, screen_image:sampler2D)->sampler2D:
         self.fbo.resize(screen_image.width, screen_image.height)
-        return self._call(self.fbo, screen_image)
+        with GLConfig.LocalConfig(cull_face=None, polygon_mode=GL.GL_FILL):
+            with self.fbo:
+                self.draw(screen_image)
+
+        return self.fbo.color_attachment(0)
     
     def __getitem__(self, name:str):
         return self.program[name]
@@ -131,8 +135,8 @@ class SingleShaderFilter(Filter):
 
     @staticmethod
     def should_update():
-        return (SingleShaderFilter._unknown_filters or \
-                SingleShaderFilter._dynamic_filters)
+        return (bool(SingleShaderFilter._unknown_filters) or \
+                bool(SingleShaderFilter._dynamic_filters))
 
     @staticmethod
     def __template(file_name):

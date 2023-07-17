@@ -19,3 +19,8 @@ class FXAAFilter(Filter):
             FXAAFilter.program.draw_triangles(Frame.vertices, Frame.indices)
             
         return self.fbo.color_attachment(0)
+    
+    def draw_to_active(self, screen_image: sampler2D) -> None:
+        FXAAFilter.program["screen_image"] = screen_image
+        FXAAFilter.program.draw_triangles(Frame.vertices, Frame.indices)
+        

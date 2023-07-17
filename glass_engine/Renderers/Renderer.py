@@ -37,4 +37,3 @@ class Renderer(ABC):
     @abstractmethod
     def render(self, camera, scene)->bool:
         pass
-   

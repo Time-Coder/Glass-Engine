@@ -4,7 +4,6 @@ in vec2 tex_coord;
 out vec4 frag_color;
 
 uniform float filter_radius;
-uniform sampler2D original_image;
 uniform sampler2D screen_image;
 
 void main()
@@ -39,8 +38,5 @@ void main()
     frag_color += (b+d+f+h)*2.0;
     frag_color += (a+c+g+i);
     frag_color *= 1.0 / 16.0;
-
-    vec4 original_color = texture(original_image, tex_coord);
-    frag_color += original_color;
-    frag_color.a = 1;
+    frag_color.a = 0.1;
 }

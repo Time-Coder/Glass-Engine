@@ -4,10 +4,9 @@ from OpenGL import GL
 import pathlib
 import inspect
 import warnings
-import numpy as np
-from ctypes import pointer
 import struct
 import sys
+import copy
 
 from .Uniform import Uniform
 from .GPUProgram import GPUProgram, LinkError, LinkWarning
@@ -34,6 +33,11 @@ class ShaderProgram(GPUProgram):
 		self._patch_vertices = 0
 		self._context = 0
 
+	@staticmethod
+	def __update_dict(dest_dict, src_dict):
+		for key, value in src_dict.items():
+			dest_dict[key] = copy.copy(value)
+
 	@checktype
 	def compile(self, file_name:str, shader_type:GLInfo.shader_types=None):
 		if self._is_linked:
@@ -59,33 +63,23 @@ class ShaderProgram(GPUProgram):
 		if shader_type == GL.GL_VERTEX_SHADER:
 			shader = VertexShader.load(file_name)
 			self.vertex_shader = shader
-			# self.vertex_shader.compile(file_name)
-			# shader = self.vertex_shader
 		elif shader_type == GL.GL_FRAGMENT_SHADER:
 			shader = FragmentShader.load(file_name)
 			self.fragment_shader = shader
-			# self.fragment_shader.compile(file_name)
-			# shader = self.fragment_shader
 		elif shader_type == GL.GL_GEOMETRY_SHADER:
 			shader = GeometryShader.load(file_name)
 			self.geometry_shader = shader
-			# self.geometry_shader.compile(file_name)
-			# shader = self.geometry_shader
 		elif shader_type == GL.GL_TESS_CONTROL_SHADER:
 			shader = TessControlShader.load(file_name)
 			self.tess_ctrl_shader = shader
-			# self.tess_ctrl_shader.compile(file_name)
-			# shader = self.tess_ctrl_shader
 		elif shader_type == GL.GL_TESS_EVALUATION_SHADER:
 			shader = TessEvaluationShader.load(file_name)
 			self.tess_eval_shader = shader
-			# self.tess_eval_shader.compile(file_name)
-			# shader = self.tess_eval_shader
 
 		self._attributes_info.update(shader.attributes_info)
-		self._uniforms_info.update(shader.uniforms_info)
-		self._uniform_blocks_info.update(shader.uniform_blocks_info)
-		self._shader_storage_blocks_info.update(shader.shader_storage_blocks_info)
+		self.__update_dict(self._uniforms_info, shader.uniforms_info)
+		self.__update_dict(self._uniform_blocks_info, shader.uniform_blocks_info)
+		self.__update_dict(self._shader_storage_blocks_info, shader.shader_storage_blocks_info)
 		self._structs_info.update(shader.structs_info)
 		self._outs_info.update(shader.outs_info)
 		self._is_linked = False

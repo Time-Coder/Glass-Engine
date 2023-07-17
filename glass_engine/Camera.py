@@ -29,6 +29,8 @@ class Camera(SinglePathNode):
 		self.__height = 40*2*self.__near*self.__tan_half_fov
 		self.__focus = 0.9*self.__near
 		self.__len_diameter = 0.01
+		self.__auto_focus = True
+		self.__auto_focus_tex_coord = glm.vec2(0.5, 0.5)
 		self.__screen = Screen(self)
 
 	@property
@@ -164,6 +166,33 @@ class Camera(SinglePathNode):
 	@checktype
 	def len_diameter(self, diameter:float):
 		self.__len_diameter = diameter
+
+	@property
+	def clear_distance(self):
+		return 1/(1/self.focus - 1/self.near)
+	
+	@clear_distance.setter
+	@checktype
+	def clear_distance(self, distance:float):
+		self.focus = 1/(1/self.near + 1/distance)
+
+	@property
+	def auto_focus(self):
+		return self.__auto_focus
+	
+	@auto_focus.setter
+	@checktype
+	def auto_focus(self, flag:bool):
+		self.__auto_focus = flag
+
+	@property
+	def auto_focus_tex_coord(self):
+		return self.__auto_focus_tex_coord
+	
+	@auto_focus_tex_coord.setter
+	@checktype
+	def auto_focus_tex_coord(self, tex_coord:glm.vec2):
+		self.__auto_focus_tex_coord = tex_coord
 
 	def project(self, world_coord:glm.vec3):
 		# 相机坐标系下的坐标

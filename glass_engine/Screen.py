@@ -10,11 +10,12 @@ from glass.utils import checktype
 
 from PyQt6.QtOpenGLWidgets import QOpenGLWidget
 from PyQt6.QtGui import QMouseEvent, QKeyEvent, QCursor, QWheelEvent, QSurfaceFormat, QFont, QColor, QPen
-from PyQt6.QtCore import Qt, QPointF, QPoint, QTimerEvent, QEvent, pyqtSignal
+from PyQt6.QtCore import Qt, QPointF, QPoint, QTimerEvent, pyqtSignal, QSize
 from PyQt6.QtWidgets import QApplication
 
 import time
 import glm
+import sys
 from OpenGL import GL
 
 class Screen(QOpenGLWidget):
@@ -29,6 +30,16 @@ class Screen(QOpenGLWidget):
     key_repeated = pyqtSignal(set)
     frame_started = pyqtSignal()
     frame_ended = pyqtSignal()
+
+    __app = None
+    __has_exec = False
+
+    def __new__(cls, *args, **kwargs):
+        if QApplication.instance() is None:
+            Screen.__app = QApplication(sys.argv)
+
+        instance = QOpenGLWidget.__new__(cls, *args, **kwargs)
+        return instance
 
     def __init__(self, camera, parent=None):
         QOpenGLWidget.__init__(self, parent)
@@ -53,6 +64,9 @@ class Screen(QOpenGLWidget):
         
         self.__render_hint = RenderHint()
         self._listen_cursor_timer = self.startTimer(10)
+
+    def sizeHint(self):
+        return QSize(800, 600)
 
     @property
     def samples(self):
@@ -119,15 +133,10 @@ class Screen(QOpenGLWidget):
 
         self.frame_started.emit()
         should_update = self.camera.scene.generate_meshes()
-        has_active_filter = False
-        for f in self.renderer.filters:
-            if f.enabled:
-                has_active_filter = True
-                break
 
         with self.render_hint:
             GLConfig.clear_buffers()
-            if not has_active_filter:
+            if not self.renderer.filters.has_valid:
                 with self.renderer.render_hint:
                     should_update = self.renderer.render(self.camera, self.camera.scene) or should_update
             else:
@@ -136,9 +145,7 @@ class Screen(QOpenGLWidget):
                         should_update = self.renderer.render(self.camera, self.camera.scene) or should_update
 
                 screen_image = self._before_filter_fbo.resolved.color_attachment(0)
-                screen_image = self.renderer.filters(screen_image)
-                GLConfig.clear_buffers()
-                Frame.draw(screen_image)
+                self.renderer.filters.draw(screen_image)
         
         self.__calc_fps()
 
@@ -150,13 +157,11 @@ class Screen(QOpenGLWidget):
     @property
     def _before_filter_fbo(self):
         screen_size = GLConfig.screen_size
-
-        samples = self.samples
-        if samples > 1:
+        if self.samples > 1:
             if self.__before_filter_fbo_ms is not None:
-                self.__before_filter_fbo_ms.resize(screen_size.x, screen_size.y, samples)
+                self.__before_filter_fbo_ms.resize(screen_size.x, screen_size.y, self.samples)
             else:
-                self.__before_filter_fbo_ms = FBO(screen_size.x, screen_size.y, samples)
+                self.__before_filter_fbo_ms = FBO(screen_size.x, screen_size.y, self.samples)
                 self.__before_filter_fbo_ms.attach(0, sampler2DMS, GL.GL_RGBA32F)
                 self.__before_filter_fbo_ms.attach(GL.GL_DEPTH_STENCIL_ATTACHMENT, RBO, GL.GL_DEPTH_STENCIL)
             return self.__before_filter_fbo_ms
@@ -321,6 +326,13 @@ class Screen(QOpenGLWidget):
         
         self._is_cursor_hiden = False
         self.unsetCursor()
+
+    def show(self):
+        QOpenGLWidget.show(self)
+        if Screen.__app is not None and \
+           not Screen.__has_exec:
+            Screen.__app.exec()
+            Screen.__has_exec = True
 
     @property
     def is_cursor_hiden(self):

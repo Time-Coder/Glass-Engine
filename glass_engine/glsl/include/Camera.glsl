@@ -12,6 +12,8 @@ struct Camera
 	float clip;
 	float focus;
 	float len_diameter;
+	bool auto_focus;
+	vec2 auto_focus_tex_coord;
 	int projection_mode; // 0: 透视投影, 1: 正射投影
 
 	// 透视投影专有

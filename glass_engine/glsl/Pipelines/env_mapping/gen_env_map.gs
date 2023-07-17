@@ -26,6 +26,7 @@ out GeometryOut
     flat bool visible;
 } gs_out;
 
+out vec4 NDC;
 out flat int camera_index;
 
 out PreShadingColors
@@ -122,7 +123,9 @@ void main()
                 }
             }
 
-            gl_Position = view_to_NDC(cameras[face], gs_out.view_pos);
+            NDC = view_to_NDC(cameras[face], gs_out.view_pos);
+            gl_Position = NDC;
+            
             EmitVertex();
         }
         EndPrimitive();

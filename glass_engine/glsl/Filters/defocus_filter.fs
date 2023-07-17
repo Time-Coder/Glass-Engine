@@ -13,10 +13,25 @@ uniform bool horizontal;
 void main()
 {
     vec3 view_pos = texture(view_pos_map, tex_coord).xyz;
-    if (length(view_pos) < 1E-6)
+    float focus = camera.focus;
+    if (camera.auto_focus)
     {
-        frag_color = texture(screen_image, tex_coord);
-        return;
+        vec3 clear_view_pos = texture(view_pos_map, camera.auto_focus_tex_coord).xyz;
+        float clear_distance = clear_view_pos.y;
+        if (length(clear_view_pos) > 1E-6)
+        {
+            focus = 1/(1/camera.near + 1/clear_distance);
+        }
+        else
+        {
+            focus = camera.near;
+        }
+    }
+
+    float factor = 1 / focus;
+    if (length(view_pos) > 1E-6)
+    {
+        factor -= 1 / view_pos.y;
     }
 
     vec2 tex_size = textureSize(screen_image, 0);
@@ -24,8 +39,14 @@ void main()
     frag_color = vec4(0, 0, 0, 0);
     
     float dpi = 0.5 * tex_size.y / (camera.near*camera.tan_half_fov);
-    float blur_width = abs(camera.len_diameter*(1-camera.near*(1/camera.focus - 1/view_pos.y)));
+    float blur_width = abs(camera.len_diameter*(1-camera.near*factor));
     float blur_pixel_width = dpi * blur_width;
+    if (blur_pixel_width <= 1)
+    {
+        frag_color = texture(screen_image, tex_coord);
+        return;
+    }
+
     float sigma = 0.3 * ((blur_pixel_width-1)*0.5 - 1) + 0.8;
     float double_sigma2 = 2*sigma*sigma;  
     if(horizontal)

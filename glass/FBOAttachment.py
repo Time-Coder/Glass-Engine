@@ -48,7 +48,7 @@ class FBOAttachment(GLObject):
             else:
                 texture_unit = TextureUnits.available_unit
                 if texture_unit is None:
-                    texture_unit = random.randint(1, GLConfig.max_texture_units-1)
+                    texture_unit = random.randint(0, GLConfig.max_texture_units-1)
                 GLConfig.active_texture_unit = texture_unit
 
         GLObject.bind(self)
