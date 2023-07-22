@@ -28,10 +28,7 @@ class SceneNode:
 			return glm.vec3(self.x, self.y, self.z)
 
 		def __setattr__(self, name:str, value):
-			if name in "xyzrgbstp":
-				if getattr(self, name) == value:
-					return
-				
+			if name in "xyzrgbstp":				
 				if self._callback is not None:
 					self._callback()
 
@@ -57,10 +54,7 @@ class SceneNode:
 			return self.flat
 
 		def __setattr__(self, name:str, value):
-			if name in "wxyz":
-				if getattr(self, name) == value:
-					return
-				
+			if name in "wxyz":				
 				if self._callback is not None:
 					self._callback()
 				
