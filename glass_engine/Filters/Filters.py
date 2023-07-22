@@ -8,6 +8,10 @@ from ..Frame import Frame
 
 class Filter(ABC):
 
+    def __init__(self):
+        self._should_update = False
+        self._enabled = True
+
     @abstractmethod
     def __call__(self, screen_image:sampler2D)->sampler2D:
         pass
@@ -18,15 +22,21 @@ class Filter(ABC):
 
     @property
     def enabled(self)->bool:
-        if not hasattr(self, "_enabled"):
-            return True
-        else:
-            return self._enabled
+        return self._enabled
     
     @enabled.setter
     @checktype
     def enabled(self, flag:bool):
         self._enabled = flag
+
+    @property
+    def should_update(self)->bool:
+        return (self._should_update and self._enabled)
+    
+    @should_update.setter
+    @checktype
+    def should_update(self, flag:bool):
+        self._should_update = flag
 
 class Filters(DictList):
 
@@ -38,7 +48,8 @@ class Filters(DictList):
             
         return False
 
-    def draw(self, screen_image:sampler2D):
+    def draw(self, screen_image:sampler2D)->bool:
+        should_update = False
         last_filter = None
         last_filter_index = -1
         for i in range(len(self)-1, -1, -1):
@@ -58,6 +69,11 @@ class Filters(DictList):
                 continue
             
             screen_image = f(screen_image)
+            should_update = f.should_update or should_update
+            f.should_update = False
 
         last_filter.draw_to_active(screen_image)
+        should_update = last_filter.should_update or should_update
+        last_filter.should_update = False
+        return should_update
     

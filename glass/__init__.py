@@ -23,6 +23,10 @@ from .Instances import Instance, Instances
 from .ShaderProgram import ShaderProgram
 from .ComputeProgram import ComputeProgram
 
+from .ShaderStorageBlock import ShaderStorageBlock
+from .UniformBlock import UniformBlock
+from .Uniform import Uniform
+
 from .GLConfig import GLConfig
 from .GLInfo import GLInfo
 from .RenderHint import RenderHint

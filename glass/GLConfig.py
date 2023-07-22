@@ -144,6 +144,7 @@ class _MetaGLConfig(type):
     __debug = True
 
     __max_texture_units = None
+    __max_image_units = None
     __max_compute_work_group_count = None
     __max_compute_work_group_size = None
     __max_compute_work_group_invocations = None
@@ -154,6 +155,8 @@ class _MetaGLConfig(type):
     __buffered_current_context = None
     __gl_version = None
     __available_texture_units = None
+    __available_image_units = None
+    __available_extensions = None
 
     @property
     def debug(cls):
@@ -482,6 +485,12 @@ class _MetaGLConfig(type):
         return _MetaGLConfig.__max_texture_units
     
     @property
+    def max_image_units(cls):
+        if _MetaGLConfig.__max_image_units is None:
+            _MetaGLConfig.__max_image_units = GL.glGetIntegerv(GL.GL_MAX_IMAGE_UNITS)
+        return _MetaGLConfig.__max_image_units
+
+    @property
     def max_compute_work_group_count(cls):
         if _MetaGLConfig.__max_compute_work_group_count is None:
             max_x = GL.glGetIntegeri_v(GL.GL_MAX_COMPUTE_WORK_GROUP_COUNT, 0)[0]
@@ -548,6 +557,21 @@ class _MetaGLConfig(type):
             _MetaGLConfig.__available_texture_units = set(range(cls.max_texture_units))
 
         return _MetaGLConfig.__available_texture_units
+    
+    @property
+    def available_image_units(cls):
+        if _MetaGLConfig.__available_image_units is None:
+            _MetaGLConfig.__available_image_units = set(range(cls.max_image_units))
+
+        return _MetaGLConfig.__available_image_units
+    
+    @property
+    def available_extensions(cls):
+        if _MetaGLConfig.__available_extensions is None:
+            extensions_bytes = GL.glGetString(GL.GL_EXTENSIONS)
+            _MetaGLConfig.__available_extensions = extensions_bytes.decode().split()
+
+        return _MetaGLConfig.__available_extensions
     
 def setter_methods(cls):
     setters = set()

@@ -251,6 +251,9 @@ class SSUBO(BO):
 		if nbytes is None:
 			nbytes = self.nbytes
 
+		if nbytes <= 0:
+			return -1
+
 		self.bind()
 		if (start, nbytes) not in self._binding_points:
 			self._binding_points[start, nbytes] = self.__class__._get_binding_point()

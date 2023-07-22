@@ -47,7 +47,10 @@ class PointLight(Light):
         if self._color == color:
             return
         
-        self._color = color
+        self._color.r = color.r
+        self._color.g = color.g
+        self._color.b = color.b
+
         for flat in self._flats:
             flat.color = self._color
 

@@ -134,7 +134,7 @@ class sampler2DMS(FBOAttachment):
 
 	@property
 	def dtype(self):
-		return get_dtype_from_internal_format(self._internal_format)
+		return get_dtype(self._internal_format)
 
 	@property
 	def internal_format(self):

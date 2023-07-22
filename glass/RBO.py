@@ -2,7 +2,7 @@ from .FBOAttachment import FBOAttachment
 from .GLInfo import GLInfo
 from .BO import BO
 from .utils import checktype
-from .helper import get_dtype_from_internal_format
+from .helper import get_dtype
 
 from OpenGL import GL
 
@@ -50,7 +50,7 @@ class RBO(FBOAttachment):
 
 	@property
 	def dtype(self):
-		return get_dtype_from_internal_format(self._internal_format)
+		return get_dtype(self._internal_format)
 
 	@checktype
 	def malloc(self, width:int, height:int, internal_format:GLInfo.internal_formats=None, samples:int=None):

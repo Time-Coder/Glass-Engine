@@ -25,6 +25,9 @@ class ObjectSet:
     
     def __bool__(self):
         return bool(self._set)
+    
+    def __contains__(self, var):
+        return (id(var) in self._set)
 
     def add(self, var):
         self._set.add(id(var))

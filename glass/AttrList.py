@@ -68,7 +68,7 @@ class AttrList(SameTypeList):
             for move in patch["move"]:
                 self._vbo.copy_to(move["old_start"]*self.stride, move["size"]*self.stride, temp_vbo, move["new_start"]*self.stride)
 
-            self._vbo.clear()
+            self._vbo.delete()
             self._vbo = temp_vbo
             self.is_new_vbo = True
 

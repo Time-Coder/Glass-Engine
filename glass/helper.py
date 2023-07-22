@@ -126,7 +126,7 @@ def get_channels(internal_format):
 	elif external_format == GL.GL_DEPTH_STENCIL: return 2
 	else: return 3
 
-def get_dtype_from_internal_format(internal_format):
+def get_dtype(internal_format):
 	if internal_format not in GLInfo.format_info_map:
 		return GL.GL_UNSIGNED_BYTE
 	else:

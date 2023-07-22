@@ -11,6 +11,7 @@ class DeferredRenderer(CommonRenderer):
 
     def __init__(self):
         CommonRenderer.__init__(self)
+        self.filters["FXAA"].enabled = True
 
     @property
     def deferred_render_program(self):
@@ -144,8 +145,8 @@ class DeferredRenderer(CommonRenderer):
         refraction_map = resolved.color_attachment(6)
         mix_int_map = resolved.color_attachment(7)
 
-        if self.defocus:
-            self.filters["defocus"].view_pos_map = view_pos_and_alpha_map
+        if self.DOF:
+            self.filters["DOF"].view_pos_map = view_pos_and_alpha_map
 
         self.generate_SSAO(view_pos_and_alpha_map, view_normal_and_emission_r_map)
 

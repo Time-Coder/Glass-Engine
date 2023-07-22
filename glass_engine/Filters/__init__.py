@@ -11,5 +11,5 @@ from .WaterWaveFilter import WaterWaveFilter
 from .BloomFilter import BloomFilter
 from .HDRFilter import HDRFilter
 from .LightExtractFilter import LightExtractFilter
-from .DefocusFilter import DefocusFilter
+from .DOFFilter import DOFFilter
 from .FXAAFilter import FXAAFilter

@@ -34,7 +34,7 @@ class ModelMesh(Mesh):
         self.x_min, self.x_max = float(xx.min()), float(xx.max())
         self.y_min, self.y_max = float(yy.min()), float(yy.max())
         self.z_min, self.z_max = float(zz.min()), float(zz.max())
-
+        self.should_add_color = False
         self.vertices = Vertices(
             position=AttrList.fromarray(np_array, glm.vec3),
             tangent=AttrList.frombuffer(assimp_mesh.tangent_buffer, glm.vec3),

@@ -11,7 +11,8 @@ class GaussFilter(Filter):
 
     @checktype
     def __init__(self, kernel_shape:(int,tuple)=32, sigma:(float,tuple)=0):
-
+        Filter.__init__(self)
+        
         self.__kernel_shape = glm.uvec2()
         self.__sigma = glm.vec2()
 

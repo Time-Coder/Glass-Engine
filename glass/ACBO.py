@@ -36,7 +36,7 @@ class ACBO(BO):
                 temp_bo = ACBO()
                 temp_bo.malloc(4 * capacity_of(offset/4), GL.GL_DYNAMIC_COPY)
                 acbo.copy_to(0, acbo.nbytes, temp_bo, 0)
-                acbo.clear()
+                acbo.delete()
                 acbo = temp_bo
                 ACBO._ACBO_map[binding] = acbo
 

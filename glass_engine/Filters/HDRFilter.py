@@ -1,17 +1,64 @@
-from .SingleShaderFilter import SingleShaderFilter
-from glass import sampler2D
+from .Filters import Filter
+from ..Frame import Frame
+from glass import sampler2D, ShaderProgram, FBO, ShaderStorageBlock, GLConfig
 
 from OpenGL import GL
 
-class HDRFilter(SingleShaderFilter):
+class HDRFilter(Filter):
+
+    class CurrentLuma(ShaderStorageBlock.HostClass):
+        def __init__(self):
+            ShaderStorageBlock.HostClass.__init__(self)
+            self._current_luma = 0
+
+        @property
+        def current_luma(self):
+            return self._current_luma
+        
+        @current_luma.setter
+        @ShaderStorageBlock.HostClass.not_const
+        def current_luma(self, luma:float):
+            self._current_luma = luma
 
     def __init__(self):
-        SingleShaderFilter.__init__(self, "../glsl/Filters/hdr_filter.glsl")
+        Filter.__init__(self)
+
+        self.current_luma = HDRFilter.CurrentLuma()
+
+        self.camera = None
+
+        self.program = ShaderProgram()
+        self.program.compile("../glsl/Pipelines/draw_frame.vs")
+        self.program.compile("../glsl/Filters/hdr_filter.fs")
+        self.program["CurrentLuma"].bind(self.current_luma)
+
+        self.fbo = FBO()
+        self.fbo.attach(0, sampler2D)
 
     def __call__(self, screen_image:sampler2D)->sampler2D:
         screen_image.filter_mipmap = GL.GL_LINEAR
-        return SingleShaderFilter.__call__(self, screen_image)
+        self.fbo.resize(screen_image.width, screen_image.height)
+        with GLConfig.LocalConfig(cull_face=None, polygon_mode=GL.GL_FILL):
+            with self.fbo:
+                self.program["camera"] = self.camera
+                self.program["screen_image"] = screen_image
+                self.program["fps"] = self.camera.screen.smooth_fps
+                self.program.draw_triangles(Frame.vertices, Frame.indices)
+
+        return self.fbo.color_attachment(0)
     
     def draw_to_active(self, screen_image: sampler2D) -> None:
         screen_image.filter_mipmap = GL.GL_LINEAR
-        SingleShaderFilter.draw_to_active(self, screen_image)
+        with GLConfig.LocalConfig(cull_face=None, polygon_mode=GL.GL_FILL):
+            self.program["camera"] = self.camera
+            self.program["screen_image"] = screen_image
+            self.program["fps"] = self.camera.screen.smooth_fps
+            self.program.draw_triangles(Frame.vertices, Frame.indices)
+
+    @property
+    def should_update(self) -> bool:
+        return True
+    
+    @should_update.setter
+    def should_update(self, flag:bool):
+        pass

@@ -9,6 +9,8 @@ class FXAAFilter(Filter):
     program.compile("../glsl/Filters/FXAA_filter.fs")
 
     def __init__(self, internal_format:GLInfo.internal_formats=None):
+        Filter.__init__(self)
+        
         self.fbo = FBO()
         self.fbo.attach(0, sampler2D, internal_format)
 

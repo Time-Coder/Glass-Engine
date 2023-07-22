@@ -89,7 +89,7 @@ class Material():
         self.__refraction_user_set = False
         self.__refractive_index_user_set = False
         self.__env_max_bake_times = 2
-        self.__dynamic_env_mapping = True
+        self.__dynamic_env_mapping = False
         self.__auto_update_env_map = False
         self.__has_transparent = True
         self.__has_opaque = False
