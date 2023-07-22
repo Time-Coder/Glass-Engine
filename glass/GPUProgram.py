@@ -346,12 +346,14 @@ class GPUProgram(GLObject):
 
 		for uniform in self._uniform_map.values():
 			for atom in uniform["atoms"]:
-				if "sampler" in atom["type"] or "image" in atom["type"]:
-					self._sampler_map[atom["name"]] = \
+				atom_type = atom["type"]
+				atom_name = atom["name"]
+				if "sampler" in atom_type or "image" in atom_type:
+					self._sampler_map[atom_name] = \
 					{
 						"location": -1,
-						"sampler": 0,
-						"target_type": _target_type_map[atom["type"]]
+						"sampler": None,
+						"target_type": _target_type_map[atom_type]
 					}
 
 	def _resolve_one_uniform_block(self, block_info):

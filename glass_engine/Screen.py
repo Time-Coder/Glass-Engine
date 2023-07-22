@@ -18,6 +18,33 @@ import glm
 import sys
 from OpenGL import GL
 
+class SlideAverageFilter:
+
+    @checktype
+    def __init__(self, window_width:int=10):
+        self._current_sum = 0
+        self._window_width = window_width
+        self._data_list = []
+
+    def __call__(self, new_value):
+        if len(self._data_list) >= self._window_width:
+            old_value = self._data_list.pop(0)
+            self._current_sum -= old_value
+
+        self._data_list.append(new_value)
+        self._current_sum += new_value
+
+        return self._current_sum / len(self._data_list)
+    
+    @property
+    def window_width(self):
+        return self._window_width
+    
+    @window_width.setter
+    @checktype
+    def window_width(self, window_width:int):
+        self._window_width = window_width
+
 class Screen(QOpenGLWidget):
 
     mouse_pressed = pyqtSignal(Manipulator.MouseButton, glm.vec2, glm.vec2)
@@ -53,6 +80,8 @@ class Screen(QOpenGLWidget):
         self._hide_cursor_global_posF = QPointF(0, 0)
         self._last_cursor_global_pos = QPoint(0, 0)
         self._fps = 0
+        self._smooth_fps = 0
+        self._fps_filter = SlideAverageFilter()
         self.__before_filter_fbo = None
         self.__before_filter_fbo_ms = None
         self._is_gl_init = False
@@ -145,7 +174,7 @@ class Screen(QOpenGLWidget):
                         should_update = self.renderer.render(self.camera, self.camera.scene) or should_update
 
                 screen_image = self._before_filter_fbo.resolved.color_attachment(0)
-                self.renderer.filters.draw(screen_image)
+                should_update = self.renderer.filters.draw(screen_image) or should_update
         
         self.__calc_fps()
 
@@ -310,6 +339,7 @@ class Screen(QOpenGLWidget):
         self._last_frame_time = current_time
         if dt < 1:
             self._fps = 1 / dt
+            self._smooth_fps = self._fps_filter(self._fps)
 
     def hide_cursor(self):
         if self._is_cursor_hiden:
@@ -341,6 +371,10 @@ class Screen(QOpenGLWidget):
     @property
     def fps(self):
         return self._fps
+    
+    @property
+    def smooth_fps(self):
+        return self._smooth_fps
 
     @property
     def manipulator(self):
@@ -373,7 +407,7 @@ class Screen(QOpenGLWidget):
 
             cursor_global_posF = QPointF(cursor_global_pos)
 
-            should_update = sampler2D.should_update() or SingleShaderFilter.should_update()
+            should_update = sampler2D.should_update()
             if self._pressed_keys:
                 should_update = self.__keyRepeateEvent(self._pressed_keys) or should_update
 

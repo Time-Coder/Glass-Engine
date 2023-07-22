@@ -3,7 +3,7 @@ from .CommonRenderer import CommonRenderer
 from ..Frame import Frame
 
 from glass import \
-    ShaderProgram, GLConfig, sampler2D, FBO, RBO
+    ShaderProgram, GLConfig, sampler2D, FBO, RBO, sampler2DMS
 from glass.utils import profiler
 
 from OpenGL import GL
@@ -59,17 +59,31 @@ class ForwardRenderer(CommonRenderer):
     
     @property
     def ssao_gbuffer(self):
-        half_screen_size = GLConfig.screen_size/2
-        if "ssao_gbuffer" in self.fbos:
-            self.fbos["ssao_gbuffer"].resize(half_screen_size.x, half_screen_size.y)
-        else:
-            fbo = FBO(half_screen_size.x, half_screen_size.y)
-            fbo.attach(0, sampler2D)
-            fbo.attach(1, sampler2D)
-            fbo.attach(GL.GL_DEPTH_ATTACHMENT, RBO)
-            self.fbos["ssao_gbuffer"] = fbo
+        samples = self.camera.screen.samples
+        if samples > 1:
+            screen_size = GLConfig.screen_size
+            if "ssao_gbuffer_ms" in self.fbos:
+                self.fbos["ssao_gbuffer_ms"].resize(screen_size.x, screen_size.y, samples)
+            else:
+                fbo = FBO(screen_size.x, screen_size.y, samples)
+                fbo.attach(0, sampler2DMS)
+                fbo.attach(1, sampler2DMS)
+                fbo.attach(GL.GL_DEPTH_ATTACHMENT, RBO)
+                self.fbos["ssao_gbuffer_ms"] = fbo
 
-        return self.fbos["ssao_gbuffer"]
+            return self.fbos["ssao_gbuffer_ms"]
+        else:
+            screen_size = GLConfig.screen_size
+            if "ssao_gbuffer" in self.fbos:
+                self.fbos["ssao_gbuffer"].resize(screen_size.x, screen_size.y)
+            else:
+                fbo = FBO(screen_size.x, screen_size.y)
+                fbo.attach(0, sampler2D)
+                fbo.attach(1, sampler2D)
+                fbo.attach(GL.GL_DEPTH_ATTACHMENT, RBO)
+                self.fbos["ssao_gbuffer"] = fbo
+
+            return self.fbos["ssao_gbuffer"]
 
     def generate_SSAO(self):
         self._SSAO_map = None
@@ -77,7 +91,7 @@ class ForwardRenderer(CommonRenderer):
         view_normal_map = None
         with GLConfig.LocalConfig(clear_color=glm.vec4(0,0,0,0), polygon_mode=GL.GL_FILL):
             GLConfig.clear_buffers()
-            if self._enable_SSAO or self.defocus:
+            if self._enable_SSAO or self.DOF:
                 with self.ssao_gbuffer:
                     self.ssao_gbuffer_program["camera"] = self.camera
                     for mesh, instances in self.scene.all_meshes.items():
@@ -89,10 +103,10 @@ class ForwardRenderer(CommonRenderer):
                         self.ssao_gbuffer_program["explode_distance"] = mesh.explode_distance
                         mesh.draw(self.ssao_gbuffer_program, instances)
 
-                view_pos_alpha_map = self.ssao_gbuffer.color_attachment(0)
-                view_normal_map = self.ssao_gbuffer.color_attachment(1)
-                if self.defocus:
-                    self.filters["defocus"].view_pos_map = view_pos_alpha_map
+                view_pos_alpha_map = self.ssao_gbuffer.resolved.color_attachment(0)
+                view_normal_map = self.ssao_gbuffer.resolved.color_attachment(1)
+                if self.DOF:
+                    self.filters["DOF"].view_pos_map = view_pos_alpha_map
             
             if self._enable_SSAO:
                 with GLConfig.LocalConfig(cull_face=None, polygon_mode=GL.GL_FILL):

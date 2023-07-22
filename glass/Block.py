@@ -85,6 +85,9 @@ class Block:
 			return (id(self) == id(other))
 
 		def bind_to_point(self, binding_point:int)->None:
+			if binding_point < 0:
+				return
+
 			if self._binding_point == binding_point:
 				return
 

@@ -8,7 +8,10 @@ class FlatCamera:
 		self.far = 100
 		self.clip = self.far - self.near
 		self.focus = self.near
-		self.len_diameter = 0.01
+		self.aperture = 0.01
+		self.auto_focus = False
+		self.focus_tex_coord = glm.vec2(0.5, 0.5)
+		self.focus_change_speed = 0.1
 		self.projection_mode = 0
 
 		cos45 = 0.5*math.sqrt(2)

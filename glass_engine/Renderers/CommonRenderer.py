@@ -1,6 +1,6 @@
 from .Renderer import Renderer
 from .FlatCamera import FlatCamera
-from ..Filters import GaussFilter, DefocusFilter, FXAAFilter, BloomFilter, HDRFilter
+from ..Filters import GaussFilter, DOFFilter, FXAAFilter, BloomFilter, HDRFilter
 from ..Frame import Frame
 
 from glass import \
@@ -28,7 +28,7 @@ class CommonRenderer(Renderer):
         self._envFXAA = True
         self._should_update = False
 
-        self._defocus = False
+        self._DOF = False
         self._transparent_meshes = {}
 
         self._flat_cameras = DictList()
@@ -40,14 +40,14 @@ class CommonRenderer(Renderer):
         self._flat_cameras["back"] = FlatCamera("back")
 
         self.filters["bloom"] = BloomFilter()
+        self.filters["DOF"] = DOFFilter()
         self.filters["HDR"] = HDRFilter()
-        self.filters["defocus"] = DefocusFilter()
         self.filters["FXAA"] = FXAAFilter(internal_format=GL.GL_RGB8)
 
         self.filters["bloom"].enabled = False
+        self.filters["DOF"].enabled = False
         self.filters["HDR"].enabled = False
-        self.filters["defocus"].enabled = False
-        self.filters["FXAA"].enabled = True
+        self.filters["FXAA"].enabled = False
 
     @property
     def bloom(self):
@@ -68,13 +68,13 @@ class CommonRenderer(Renderer):
         self.filters["HDR"].enabled = flag
 
     @property
-    def defocus(self):
-        return self.filters["defocus"].enabled
+    def DOF(self):
+        return self.filters["DOF"].enabled
     
-    @defocus.setter
+    @DOF.setter
     @checktype
-    def defocus(self, flag:bool):
-        self.filters["defocus"].enabled = flag
+    def DOF(self, flag:bool):
+        self.filters["DOF"].enabled = flag
 
     @property
     def FXAA(self):
@@ -183,7 +183,8 @@ class CommonRenderer(Renderer):
     def startup(self, camera, scene):
         self.camera = camera
         self.scene = scene
-        self.filters["defocus"].camera = camera
+        self.filters["DOF"].camera = camera
+        self.filters["HDR"].camera = camera
 
         return False
     

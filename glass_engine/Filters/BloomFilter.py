@@ -11,6 +11,8 @@ class BloomFilter(Filter):
 
     @checktype
     def __init__(self):
+        Filter.__init__(self)
+        
         self.last_src_width = 0
         self.last_src_height = 0
 

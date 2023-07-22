@@ -47,12 +47,7 @@ vec3 Phong_lighting(
 
     // 角度限制
     float theta = acos(dot(normalize(light.direction), -to_light));
-    if(theta - light.half_span_angle_rad > 2*light.half_softness_rad)
-    {
-        return vec3(0,0,0);
-    }
     float cutoff = soft_step(light.half_span_angle_rad+light.half_softness_rad-theta, light.half_softness_rad);
-    
     vec3 to_camera = normalize(camera_pos - frag_pos);
 
     // 光照参数
@@ -88,10 +83,6 @@ vec3 PhongBlinn_lighting(
 
     // 角度限制
     float theta = acos(dot(normalize(light.direction), -to_light));
-    if(theta - light.half_span_angle_rad > 2*light.half_softness_rad)
-    {
-        return vec3(0,0,0);
-    }
     float cutoff = soft_step(light.half_span_angle_rad+light.half_softness_rad-theta, light.half_softness_rad);
     
     vec3 to_camera = normalize(camera_pos - frag_pos);
@@ -117,10 +108,6 @@ vec3 Flat_lighting(SpotLight light, InternalMaterial material, vec3 to_light, ve
 {
     // 角度限制
     float theta = acos(dot(normalize(light.direction), -to_light));
-    if(theta - light.half_span_angle_rad > 2*light.half_softness_rad)
-    {
-        return vec3(0,0,0);
-    }
     float cutoff = soft_step(light.half_span_angle_rad+light.half_softness_rad-theta, light.half_softness_rad);
 
     // 光照参数
@@ -158,10 +145,6 @@ vec3 CookTorrance_lighting(
 
     // 角度限制
     float theta = acos(dot(light.direction, -to_light));
-    if(theta - light.half_span_angle_rad > 2*light.half_softness_rad)
-    {
-        return vec3(0,0,0);
-    }
     float cutoff = soft_step(light.half_span_angle_rad+light.half_softness_rad-theta, light.half_softness_rad);
 
     float d = sqrt(d2);

@@ -84,7 +84,7 @@ class Indices(SameTypeList):
 			for move in patch["move"]:
 				self._ebo.copy_to(move["old_start"]*self.stride, move["size"]*self.stride, temp_ebo, move["new_start"]*self.stride)
 
-			self._ebo.clear()
+			self._ebo.delete()
 			self._ebo = temp_ebo
 
 		new_data = patch["new_data"]
@@ -115,7 +115,7 @@ class Indices(SameTypeList):
 			return
 		else:
 			if self._temp_buffer_changed:
-				self._temp_ebo.clear()
+				self._temp_ebo.delete()
 		
 		self._check_in_items()
 		

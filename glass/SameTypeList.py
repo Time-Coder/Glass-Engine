@@ -68,7 +68,7 @@ class SameTypeList:
             if isinstance(self._list, np.ndarray):
                 self._list_ndarray = self._list
             else:
-                if self._list and "sampler" in type(self._list[0]).__name__:
+                if self and "sampler" in type(self._list[0]).__name__:
                     len_list = len(self._list)
                     self._data_list.extend([0]*(len_list - len(self._data_list)))
                     del self._data_list[len_list:]
@@ -96,7 +96,7 @@ class SameTypeList:
         return result
 
     def _check_type(self, value):
-        if not self._list:
+        if not self:
             return
 
         if type(value) != self._dtype and type(value) != type(self._list[0]):

@@ -124,7 +124,7 @@ class samplerCube(FBOAttachment):
 
 		@property
 		def dtype(self):
-			return get_dtype_from_internal_format(self._internal_format)
+			return get_dtype(self._internal_format)
 
 		@property
 		def internal_format(self):
@@ -148,7 +148,7 @@ class samplerCube(FBOAttachment):
 					self._image = None
 			if self._image is not None:
 				old_np_dtype = self._image.dtype
-				new_np_dtype = GLInfo.dtype_map[get_dtype_from_internal_format(self._internal_format)]
+				new_np_dtype = GLInfo.dtype_map[get_dtype(self._internal_format)]
 				if old_np_dtype != new_np_dtype:
 					self._image = self._image.astype(new_np_dtype)
 			self._image_changed = True

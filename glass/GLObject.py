@@ -41,7 +41,7 @@ class GLObject(metaclass=_MetaGLObject):
     def id(self):
         return self._id
     
-    def clear(self):
+    def delete(self):
         if self._id == 0:
             return
 

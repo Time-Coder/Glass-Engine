@@ -389,10 +389,12 @@ class ShaderParser:
 			}
 			return ""
 
-		uniform_regx = r"uniform[\s\n]+(?P<type>[a-zA-Z_]\w*(\s*\[\S+\]\s*)*)[\s\n]+(?P<name>[a-zA-Z_]\w*(\s*\[\S+\]\s*)*)[\s\n]*(=.*?)?;";
+		uniform_prefix = r"uniform[\s\n]+"
+		uniform_regx = r"(?P<type>[a-zA-Z_]\w*(\s*\[\S+\]\s*)*)[\s\n]+(?P<name>[a-zA-Z_]\w*(\s*\[\S+\]\s*)*)[\s\n]*(=.*?)?;";
 		layout_qualifiers_regx = r"(layout\s*\((?P<layout_qualifiers>.*?)\)[\s\n]*)?"
 		memory_qualifiers_regx = r"(?P<memory_qualifiers>((coherent|volatile|restrict|readonly|writeonly|readwrite)[\s\n]+)+)?"
-		re.sub(r"^\s*" + layout_qualifiers_regx + memory_qualifiers_regx + uniform_regx, append_uniform, content, flags=re.M|re.S)
+		re.sub(r"^\s*" + layout_qualifiers_regx + memory_qualifiers_regx + uniform_prefix + uniform_regx, append_uniform, content, flags=re.M|re.S)
+		re.sub(r"^\s*" + uniform_prefix + layout_qualifiers_regx + memory_qualifiers_regx + uniform_regx, append_uniform, content, flags=re.M|re.S)
 		return uniforms_info
 
 	@staticmethod
@@ -451,10 +453,12 @@ class ShaderParser:
 				"binding_point": binding_point
 			}
 		
-		uniform_block_regx = r"uniform[\s\n]+(?P<name>[a-zA-Z_]\w*)[\s\n]*\{(?P<body>.*?)\}\s*((?P<var_name>[a-zA-Z_]\w*)\s*)?;"
+		uniform_prefix = r"uniform[\s\n]+"
+		uniform_block_regx = r"(?P<name>[a-zA-Z_]\w*)[\s\n]*\{(?P<body>.*?)\}\s*((?P<var_name>[a-zA-Z_]\w*)\s*)?;"
 		layout_qualifiers_regx = r"(layout\s*\((?P<layout_qualifiers>.*?)\)[\s\n]*)?"
 		memory_qualifiers_regx = r"(?P<memory_qualifiers>((coherent|volatile|restrict|readonly|writeonly|readwrite)[\s\n]+)+)?"
-		re.sub(r"^\s*" + layout_qualifiers_regx + memory_qualifiers_regx + uniform_block_regx, append_uniform_block, content, flags=re.M)
+		re.sub(r"^\s*" + layout_qualifiers_regx + memory_qualifiers_regx + uniform_prefix + uniform_block_regx, append_uniform_block, content, flags=re.M)
+		re.sub(r"^\s*" + uniform_prefix + layout_qualifiers_regx + memory_qualifiers_regx + uniform_block_regx, append_uniform_block, content, flags=re.M)
 		return uniform_blocks_info
 
 	@staticmethod
@@ -512,11 +516,13 @@ class ShaderParser:
 				"internal_format": internal_format,
 				"binding_point": binding_point
 			}
-			
-		buffer_regx = r"buffer[\s\n]+(?P<name>[a-zA-Z_]\w*)[\s\n]*\{(?P<body>.*?)\}\s*((?P<var_name>[a-zA-Z_]\w*)\s*)?;"
+		
+		buffer_prefix = r"buffer[\s\n]+"
+		buffer_regx = r"(?P<name>[a-zA-Z_]\w*)[\s\n]*\{(?P<body>.*?)\}\s*((?P<var_name>[a-zA-Z_]\w*)\s*)?;"
 		layout_qualifiers_regx = r"(layout\s*\((?P<layout_qualifiers>.*?)\)[\s\n]*)?"
 		memory_qualifiers_regx = r"(?P<memory_qualifiers>((coherent|volatile|restrict|readonly|writeonly|readwrite)[\s\n]+)+)?"
-		re.sub(r"^\s*" + layout_qualifiers_regx + memory_qualifiers_regx + buffer_regx, append_shader_storage_block, content, flags=re.M|re.S)
+		re.sub(r"^\s*" + layout_qualifiers_regx + memory_qualifiers_regx + buffer_prefix + buffer_regx, append_shader_storage_block, content, flags=re.M|re.S)
+		re.sub(r"^\s*" + buffer_prefix + layout_qualifiers_regx + memory_qualifiers_regx + buffer_regx, append_shader_storage_block, content, flags=re.M|re.S)
 		return shader_storage_blocks_info
 
 	@staticmethod

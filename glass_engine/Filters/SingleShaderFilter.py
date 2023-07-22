@@ -3,6 +3,7 @@ from ..Frame import Frame
 
 from glass.utils import checktype, cat
 from glass import FBO, ShaderProgram, sampler2D, GLConfig
+from glass.ObjectSet import ObjectSet
 
 from OpenGL import GL
 import os
@@ -14,11 +15,13 @@ class SingleShaderFilter(Filter):
 
     __template_content = ""
 
-    _unknown_filters = set()
-    _dynamic_filters = set()
+    _unknown_filters = ObjectSet()
+    _dynamic_filters = ObjectSet()
 
     @checktype
     def __init__(self, shader_path:str=None):
+        Filter.__init__(self)
+        
         SingleShaderFilter._unknown_filters.add(self)
 
         self.fbo = FBO()
@@ -133,10 +136,17 @@ class SingleShaderFilter(Filter):
     def __setitem__(self, name:str, value):
         self.program[name] = value
 
-    @staticmethod
-    def should_update():
-        return (bool(SingleShaderFilter._unknown_filters) or \
-                bool(SingleShaderFilter._dynamic_filters))
+    @property
+    def should_update(self):
+        if not self.enabled:
+            return False
+        
+        return (self._should_update or self in SingleShaderFilter._dynamic_filters)
+    
+    @should_update.setter
+    @checktype
+    def should_update(self, flag:bool):
+        self._should_update = flag
 
     @staticmethod
     def __template(file_name):

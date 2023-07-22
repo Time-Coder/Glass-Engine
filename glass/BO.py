@@ -12,8 +12,8 @@ class BO(GLObject):
 		self._nbytes = 0
 		self._draw_type = GL.GL_STATIC_DRAW
 
-	def clear(self):
-		GLObject.clear(self)
+	def delete(self):
+		GLObject.delete(self)
 		self._nbytes = 0
 
 	def bufferData(self, value_array, draw_type:GLInfo.draw_types=GL.GL_STATIC_DRAW):

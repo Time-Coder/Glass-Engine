@@ -40,31 +40,35 @@ class FBOAttachment(GLObject):
 
     def bind(self, update_fbo:bool=False, force_update_image:bool=False):
         cls_name = self.__class__.__name__
-        is_texture = ("sampler" in cls_name or "image" in cls_name)
-        if is_texture:
-            texture_unit = TextureUnits.unit_of_texture(self._id)
-            if texture_unit is not None:
-                GLConfig.active_texture_unit = texture_unit
-            else:
+        target_type = self.__class__._basic_info["target_type"]
+        if "sampler" in cls_name:
+            texture_unit = None
+            if self._id == 0:
                 texture_unit = TextureUnits.available_unit
+            else:
+                texture_unit = TextureUnits.unit_of_texture((target_type, self._id))
                 if texture_unit is None:
-                    texture_unit = random.randint(0, GLConfig.max_texture_units-1)
-                GLConfig.active_texture_unit = texture_unit
+                    texture_unit = TextureUnits.available_unit
 
+            if texture_unit is None:
+                texture_unit = random.randint(0, GLConfig.max_texture_units-1)
+
+            GLConfig.active_texture_unit = texture_unit
+            
         GLObject.bind(self)
         if update_fbo:
             self._fbo_image_changed = True
             self._fbo_image_generated_mipmap = False
         
-        if is_texture:
-            target_type = self.__class__._basic_info["target_type"]
-            TextureUnits.current_texture = (target_type, self._id)
+        if "sampler" in cls_name:
+            TextureUnits[texture_unit] = (target_type, self._id)
 
     def unbind(self):
         success = GLObject.unbind(self)
         cls_name = self.__class__.__name__
-        if success and ("sampler" in cls_name or "image" in cls_name):
+        if success and "sampler" in cls_name:
             target_type = self.__class__._basic_info["target_type"]
+            assert TextureUnits.current_texture == (target_type, self._id)
             TextureUnits.current_texture = (target_type, 0)
 
         return success

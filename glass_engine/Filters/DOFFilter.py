@@ -3,14 +3,36 @@ from ..Frame import Frame
 
 from glass import FBO, ShaderProgram, sampler2D, GLConfig
 from glass.utils import checktype
+from glass.ShaderStorageBlock import ShaderStorageBlock
 
 from OpenGL import GL
+import time
 
-class DefocusFilter(Filter):
+class DOFFilter(Filter):
+
+    class CurrentFocus(ShaderStorageBlock.HostClass):
+        def __init__(self):
+            ShaderStorageBlock.HostClass.__init__(self)
+
+            self._current_focus = 0
+
+        @property
+        def current_focus(self):
+            return self._current_focus
+        
+        @current_focus.setter
+        @ShaderStorageBlock.HostClass.not_const
+        def current_focus(self, focus:float):
+            self._current_focus = focus
 
     def __init__(self, camera:'Camera'=None, view_pos_map:sampler2D=None):
+        Filter.__init__(self)
+
         self.__camera = camera
         self.__view_pos_map = view_pos_map
+        self._last_not_should_update_time = 0
+
+        self.current_focus = DOFFilter.CurrentFocus()
 
         self.horizontal_fbo = FBO()
         self.horizontal_fbo.attach(0, sampler2D, GL.GL_RGBA32F)
@@ -20,7 +42,8 @@ class DefocusFilter(Filter):
 
         self.program = ShaderProgram()
         self.program.compile("../glsl/Pipelines/draw_frame.vs")
-        self.program.compile("../glsl/Filters/defocus_filter.fs")
+        self.program.compile("../glsl/Filters/dof_filter.fs")
+        self.program["CurrentFocus"].bind(self.current_focus)
 
     def __call__(self, screen_image:sampler2D)->sampler2D:
         self.horizontal_fbo.resize(screen_image.width, screen_image.height)
@@ -29,6 +52,7 @@ class DefocusFilter(Filter):
         with GLConfig.LocalConfig(cull_face=None, polygon_mode=GL.GL_FILL):
             self.program["camera"] = self.__camera
             self.program["view_pos_map"] = self.__view_pos_map
+            self.program["fps"] = self.__camera.screen.smooth_fps
             with self.horizontal_fbo:
                 self.program["screen_image"] = screen_image
                 self.program["horizontal"] = True
@@ -40,7 +64,7 @@ class DefocusFilter(Filter):
                 self.program.draw_triangles(Frame.vertices, Frame.indices)
 
         return self.vertical_fbo.color_attachment(0)
-    
+
     def draw_to_active(self, screen_image:sampler2D)->None:
         self.horizontal_fbo.resize(screen_image.width, screen_image.height)
         self.vertical_fbo.resize(screen_image.width, screen_image.height)
@@ -48,6 +72,7 @@ class DefocusFilter(Filter):
         with GLConfig.LocalConfig(cull_face=None, polygon_mode=GL.GL_FILL):
             self.program["camera"] = self.__camera
             self.program["view_pos_map"] = self.__view_pos_map
+            self.program["fps"] = self.__camera.screen.smooth_fps
             with self.horizontal_fbo:
                 self.program["screen_image"] = screen_image
                 self.program["horizontal"] = True
@@ -80,4 +105,12 @@ class DefocusFilter(Filter):
             return
         
         self.__view_pos_map = view_pos_map
-        
+    
+    @property
+    def should_update(self) -> bool:
+        return self._enabled
+    
+    @should_update.setter
+    @checktype
+    def should_update(self, flag:bool):
+        pass

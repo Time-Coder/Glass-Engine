@@ -28,9 +28,10 @@ class Camera(SinglePathNode):
 		self.__clip = self.__far - self.__near
 		self.__height = 40*2*self.__near*self.__tan_half_fov
 		self.__focus = 0.9*self.__near
-		self.__len_diameter = 0.01
+		self.__aperture = 0.01
 		self.__auto_focus = True
-		self.__auto_focus_tex_coord = glm.vec2(0.5, 0.5)
+		self.__focus_tex_coord = glm.vec2(0.5, 0.5)
+		self.__focus_change_speed = 0.005 # m/s
 		self.__screen = Screen(self)
 
 	@property
@@ -159,13 +160,13 @@ class Camera(SinglePathNode):
 		self.__focus = focus
 
 	@property
-	def len_diameter(self):
-		return self.__len_diameter
+	def aperture(self):
+		return self.__aperture
 	
-	@len_diameter.setter
+	@aperture.setter
 	@checktype
-	def len_diameter(self, diameter:float):
-		self.__len_diameter = diameter
+	def aperture(self, diameter:float):
+		self.__aperture = diameter
 
 	@property
 	def clear_distance(self):
@@ -186,13 +187,22 @@ class Camera(SinglePathNode):
 		self.__auto_focus = flag
 
 	@property
-	def auto_focus_tex_coord(self):
-		return self.__auto_focus_tex_coord
+	def focus_tex_coord(self):
+		return self.__focus_tex_coord
 	
-	@auto_focus_tex_coord.setter
+	@focus_tex_coord.setter
 	@checktype
-	def auto_focus_tex_coord(self, tex_coord:glm.vec2):
-		self.__auto_focus_tex_coord = tex_coord
+	def focus_tex_coord(self, tex_coord:glm.vec2):
+		self.__focus_tex_coord = tex_coord
+
+	@property
+	def focus_change_speed(self):
+		return self.__focus_change_speed
+	
+	@focus_change_speed.setter
+	@checktype
+	def focus_change_speed(self, speed:float):
+		self.__focus_change_speed = speed
 
 	def project(self, world_coord:glm.vec3):
 		# 相机坐标系下的坐标

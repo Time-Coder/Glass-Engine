@@ -18,6 +18,7 @@ from .utils import checktype, id_to_var, subscript, md5s, modify_time, save_var,
 from .GLInfo import GLInfo
 from .GLConfig import GLConfig
 from .TextureUnits import TextureUnits
+from .ImageUnits import ImageUnits
 
 class ShaderProgram(GPUProgram):
 
@@ -343,8 +344,10 @@ class ShaderProgram(GPUProgram):
 
 		# 绑定所有纹理
 		self.use()
-		self_used_units = set()
+		self_used_texture_units = set()
+		self_used_image_units = set()
 		not_set_samplers = []
+		not_set_images = []
 		for sampler_info in self._sampler_map.values():
 			location = sampler_info["location"]
 			if location < 0:
@@ -355,20 +358,31 @@ class ShaderProgram(GPUProgram):
 			if sampler_info["sampler"] is not None:
 				texture_id = sampler_info["sampler"].id
 
-			texture_unit = TextureUnits.unit_of_texture((target_type, texture_id))
-			if texture_unit is None:
-				texture_unit = TextureUnits.available_unit
+			texture_unit = None
+			if "access" not in sampler_info:
+				texture_unit = TextureUnits.unit_of_texture((target_type, texture_id))
 				if texture_unit is None:
-					not_set_samplers.append(sampler_info)
-					continue
-				GLConfig.active_texture_unit = texture_unit
-				GL.glBindTexture(target_type, texture_id)
-				TextureUnits[texture_unit] = (target_type, texture_id)
-				if "access" in sampler_info:
-					access = sampler_info["access"]
-					internal_format = sampler_info["sampler"].internal_format
-					GL.glBindImageTexture(texture_unit, texture_id, 0, False, 0, access, internal_format)
-			self_used_units.add(texture_id)
+					texture_unit = TextureUnits.available_unit
+					if texture_unit is None:
+						not_set_samplers.append(sampler_info)
+						continue
+					GLConfig.active_texture_unit = texture_unit
+					GL.glBindTexture(target_type, texture_id)
+					TextureUnits[texture_unit] = (target_type, texture_id)
+				self_used_texture_units.add(texture_unit)
+			else:
+				texture_unit = ImageUnits.unit_of_image((target_type, texture_id))
+				if texture_unit is None:
+					texture_unit = ImageUnits.available_unit
+					if texture_unit is None:
+						not_set_images.append(sampler_info)
+						continue
+				
+				access = sampler_info["access"]
+				internal_format = sampler_info["sampler"].internal_format
+				GL.glBindImageTexture(texture_unit, texture_id, 0, GL.GL_FALSE, 0, access, internal_format)
+				ImageUnits[texture_unit] = (target_type, texture_id)
+				self_used_image_units.add(texture_unit)
 
 			if location not in self.uniform._texture_value_map or \
 			   self.uniform._texture_value_map[location] != texture_unit:
@@ -376,7 +390,7 @@ class ShaderProgram(GPUProgram):
 				self.uniform._texture_value_map[location] = texture_unit
 
 		if not_set_samplers:
-			available_units = GLConfig.available_texture_units - self_used_units
+			available_units = GLConfig.available_texture_units - self_used_texture_units
 			it_available_units = iter(available_units)
 			for sampler_info in not_set_samplers:
 				texture_id = 0
@@ -387,11 +401,22 @@ class ShaderProgram(GPUProgram):
 				GLConfig.active_texture_unit = texture_unit
 				GL.glBindTexture(target_type, texture_id)
 				TextureUnits[texture_unit] = (target_type, texture_id)
-				if "access" in sampler_info:
-					access = sampler_info["access"]
-					internal_format = sampler_info["sampler"].internal_format
-					GL.glBindImageTexture(texture_unit, texture_id, 0, False, 0, access, internal_format)
-				
+
+		if not_set_images:
+			available_units = GLConfig.available_image_units - self_used_image_units
+			it_available_units = iter(available_units)
+			for sampler_info in not_set_images:
+				texture_id = 0
+				if sampler_info["sampler"] is not None:
+					texture_id = sampler_info["sampler"].id
+
+				texture_unit = next(it_available_units)
+				target_type = sampler_info["target_type"]
+				access = sampler_info["access"]
+				internal_format = sampler_info["sampler"].internal_format
+				GL.glBindImageTexture(texture_unit, texture_id, 0, False, 0, access, internal_format)
+				ImageUnits[texture_unit] = (target_type, texture_id)
+
 	def __preprocess_before_draw(self, vertices, indices, instances, start_index, total, times, is_patch):
 		if GLConfig.debug:
 			if is_patch:
