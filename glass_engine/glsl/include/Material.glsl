@@ -3,7 +3,7 @@
 
 struct Material
 {
-	int shading_model;
+	uint shading_model;
 	// Flat = 0x1
     // Gouraud = 0x2
     // Phong = 0x3
@@ -17,6 +17,8 @@ struct Material
     // Fresnel = 0xa
     // PBR = 0xb
 
+    bool recv_shadows;
+    bool cast_shadows;
 	vec3 ambient;
 	vec3 diffuse;
 	vec3 specular;
@@ -67,7 +69,9 @@ struct Material
 
 struct InternalMaterial
 {
-	int shading_model;
+	uint shading_model;
+    bool recv_shadows;
+    bool cast_shadows;
 	vec3 ambient;
 	vec3 diffuse;
 	vec3 specular;
@@ -87,6 +91,8 @@ InternalMaterial fetch_internal_material(vec4 frag_color, Material material, vec
 {
     InternalMaterial internal_material; // 实际使用的材质
     internal_material.shading_model = material.shading_model;
+    internal_material.recv_shadows = material.recv_shadows;
+    internal_material.cast_shadows = material.cast_shadows;
 
     // 材质不透明度
     float material_opacity = material.opacity;

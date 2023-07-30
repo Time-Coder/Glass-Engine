@@ -13,3 +13,4 @@ from .HDRFilter import HDRFilter
 from .LightExtractFilter import LightExtractFilter
 from .DOFFilter import DOFFilter
 from .FXAAFilter import FXAAFilter
+from .ShadowFilter import ShadowFilter

@@ -19,6 +19,9 @@ from .GLInfo import GLInfo
 from .GLConfig import GLConfig
 from .TextureUnits import TextureUnits
 from .ImageUnits import ImageUnits
+from .VAO import VAO
+from .VBO import VBO
+from .EBO import EBO
 
 class ShaderProgram(GPUProgram):
 
@@ -33,11 +36,16 @@ class ShaderProgram(GPUProgram):
 		self._meta_file_name = ""
 		self._patch_vertices = 0
 		self._context = 0
+		self._include_paths = []
 
 	@staticmethod
 	def __update_dict(dest_dict, src_dict):
 		for key, value in src_dict.items():
 			dest_dict[key] = copy.copy(value)
+
+	@checktype
+	def add_include_path(self, include_path:str):
+		self._include_paths.insert(0, include_path)
 
 	@checktype
 	def compile(self, file_name:str, shader_type:GLInfo.shader_types=None):
@@ -62,19 +70,19 @@ class ShaderProgram(GPUProgram):
 
 		shader = None
 		if shader_type == GL.GL_VERTEX_SHADER:
-			shader = VertexShader.load(file_name)
+			shader = VertexShader.load(file_name, include_paths=self._include_paths)
 			self.vertex_shader = shader
 		elif shader_type == GL.GL_FRAGMENT_SHADER:
-			shader = FragmentShader.load(file_name)
+			shader = FragmentShader.load(file_name, include_paths=self._include_paths)
 			self.fragment_shader = shader
 		elif shader_type == GL.GL_GEOMETRY_SHADER:
-			shader = GeometryShader.load(file_name)
+			shader = GeometryShader.load(file_name, include_paths=self._include_paths)
 			self.geometry_shader = shader
 		elif shader_type == GL.GL_TESS_CONTROL_SHADER:
-			shader = TessControlShader.load(file_name)
+			shader = TessControlShader.load(file_name, include_paths=self._include_paths)
 			self.tess_ctrl_shader = shader
 		elif shader_type == GL.GL_TESS_EVALUATION_SHADER:
-			shader = TessEvaluationShader.load(file_name)
+			shader = TessEvaluationShader.load(file_name, include_paths=self._include_paths)
 			self.tess_eval_shader = shader
 
 		self._attributes_info.update(shader.attributes_info)
@@ -150,6 +158,7 @@ class ShaderProgram(GPUProgram):
 		meta_info["uniform_map"] = self._uniform_map
 		meta_info["uniform_block_map"] = self._uniform_block_map
 		meta_info["shader_storage_block_map"] = self._shader_storage_block_map
+		meta_info["include_paths"] = self._include_paths
 		save_var(meta_info, self._meta_file_name)
 
 	def _apply(self):
@@ -240,6 +249,7 @@ class ShaderProgram(GPUProgram):
 			self._uniform_map = meta_info["uniform_map"]
 			self._uniform_block_map = meta_info["uniform_block_map"]
 			self._shader_storage_block_map = meta_info["shader_storage_block_map"]
+			self._include_paths = meta_info["include_paths"]
 			self._should_relink = False
 		else:
 			self._should_relink = True

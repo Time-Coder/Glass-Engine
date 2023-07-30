@@ -25,6 +25,7 @@ struct SpotLight
     float K1; // 一次衰减系数
     float K2; // 二次衰减系数
     float coverage; // 覆盖范围
+    bool generate_shadows; // 是否产生阴影
 
     // 外参数
     vec3 abs_position;
@@ -33,7 +34,7 @@ struct SpotLight
 
 vec3 Phong_lighting(
     SpotLight light, InternalMaterial material,
-    vec3 camera_pos, vec3 frag_pos, vec3 normal)
+    Camera camera, vec3 frag_pos, vec3 normal)
 {
     // 基础向量
     vec3 to_light = light.abs_position - frag_pos;
@@ -48,7 +49,7 @@ vec3 Phong_lighting(
     // 角度限制
     float theta = acos(dot(normalize(light.direction), -to_light));
     float cutoff = soft_step(light.half_span_angle_rad+light.half_softness_rad-theta, light.half_softness_rad);
-    vec3 to_camera = normalize(camera_pos - frag_pos);
+    vec3 to_camera = normalize(camera.abs_position - frag_pos);
 
     // 光照参数
     material.ambient = light.ambient * material.ambient;
@@ -69,7 +70,7 @@ vec3 Phong_lighting(
 
 vec3 PhongBlinn_lighting(
     SpotLight light, InternalMaterial material,
-    vec3 camera_pos, vec3 frag_pos, vec3 normal)
+    Camera camera, vec3 frag_pos, vec3 normal)
 {
     // 基础向量
     vec3 to_light = light.abs_position - frag_pos;
@@ -85,7 +86,7 @@ vec3 PhongBlinn_lighting(
     float theta = acos(dot(normalize(light.direction), -to_light));
     float cutoff = soft_step(light.half_span_angle_rad+light.half_softness_rad-theta, light.half_softness_rad);
     
-    vec3 to_camera = normalize(camera_pos - frag_pos);
+    vec3 to_camera = normalize(camera.abs_position - frag_pos);
 
     // 光照参数
     material.ambient = light.ambient * material.ambient;
@@ -104,8 +105,13 @@ vec3 PhongBlinn_lighting(
     return final_color;
 }
 
-vec3 Flat_lighting(SpotLight light, InternalMaterial material, vec3 to_light, vec3 face_normal)
+vec3 Flat_lighting(
+    SpotLight light, InternalMaterial material,
+    Camera camera, vec3 face_pos, vec3 face_normal)
 {
+    // 基础向量
+    vec3 to_light = normalize(light.abs_position - face_pos);
+
     // 角度限制
     float theta = acos(dot(normalize(light.direction), -to_light));
     float cutoff = soft_step(light.half_span_angle_rad+light.half_softness_rad-theta, light.half_softness_rad);
@@ -126,14 +132,14 @@ vec3 Flat_lighting(SpotLight light, InternalMaterial material, vec3 to_light, ve
 
 vec3 Gouraud_lighting(
     SpotLight light, InternalMaterial material,
-    vec3 camera_pos, vec3 frag_pos, vec3 normal)
+    Camera camera, vec3 frag_pos, vec3 normal)
 {
-    return Phong_lighting(light, material, camera_pos, frag_pos, normal);
+    return Phong_lighting(light, material, camera, frag_pos, normal);
 }
 
 vec3 CookTorrance_lighting(
     SpotLight light, InternalMaterial material,
-    vec3 camera_pos, vec3 frag_pos, vec3 normal)
+    Camera camera, vec3 frag_pos, vec3 normal)
 {
     // 基础向量
     vec3 to_light = light.abs_position - frag_pos;
@@ -149,7 +155,7 @@ vec3 CookTorrance_lighting(
 
     float d = sqrt(d2);
     to_light = to_light / d;
-    vec3 to_camera = normalize(camera_pos - frag_pos);
+    vec3 to_camera = normalize(camera.abs_position - frag_pos);
 
     // 光照颜色
     vec3 lighting_color = CookTorrance_lighting(to_light, to_camera, normal, material);

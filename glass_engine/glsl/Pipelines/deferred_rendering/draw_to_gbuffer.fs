@@ -1,5 +1,7 @@
 #version 460 core
 
+#extension GL_ARB_gpu_shader_int64 : require
+
 in GeometryOut
 {
     vec3 view_pos;
@@ -18,7 +20,7 @@ in PreShadingColors
     flat vec3 Flat_back_color;
 } pre_shading_colors;
 
-in flat int env_map_index;
+in flat uint64_t env_map_handle;
 
 // 几何信息
 layout(location=0) out vec4 view_pos_and_alpha;
@@ -30,7 +32,7 @@ layout(location=3) out vec4 diffuse_or_albedo_and_emission_b;
 layout(location=4) out vec4 specular_or_prelight_and_shininess;
 layout(location=5) out vec4 reflection;
 layout(location=6) out vec4 refraction;
-layout(location=7) out ivec4 mix_int;
+layout(location=7) out uvec4 mix_uint;
 
 #include "../../include/Material.glsl"
 #include "../../include/fragment_utils.glsl"

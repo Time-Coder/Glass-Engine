@@ -1,6 +1,7 @@
 #version 460 core
 
 #extension GL_ARB_bindless_texture : require
+#extension GL_ARB_gpu_shader_int64 : require
 
 in GeometryOut
 {
@@ -14,7 +15,7 @@ in GeometryOut
 
 in vec4 NDC;
 in flat int camera_index;
-in flat int env_map_index;
+in flat uint64_t env_map_handle;
 
 in PreShadingColors
 {
@@ -35,12 +36,6 @@ layout(location=2) out float reveal;
 #include "../../include/math.glsl"
 #include "../../include/OIT.glsl"
 #include "../../include/env_mapping.glsl"
-
-buffer BindlessSampler2Ds
-{
-    int n_bindless_sampler2Ds;
-    sampler2D bindless_sampler2Ds[];
-};
 
 uniform Material material;
 uniform Material back_material;

@@ -150,9 +150,12 @@ class Vertices:
             for key, attr_list in instances._attr_list_map.items():
                 if key in program._attributes_info:
                     feed_type = attr_list.dtype
-                    if GLConfig.debug:
-                        need_type = program._attributes_info[key]["python_type"]
-                        if feed_type != need_type:
+                    need_type = program._attributes_info[key]["python_type"]
+                    if feed_type != need_type:
+                        if feed_type in GLInfo.primary_types and need_type in GLInfo.primary_types:
+                            attr_list.dtype = need_type
+                            feed_type = need_type
+                        else:
                             error_message = f"vertex attribute '{key}' need type {need_type}, {feed_type} value were given"
                             raise TypeError(error_message)
                     

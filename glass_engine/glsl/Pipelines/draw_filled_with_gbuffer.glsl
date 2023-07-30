@@ -8,7 +8,7 @@ vec4 draw_filled_with_gbuffer(Camera camera,
     vec4 diffuse_or_albedo_and_emission_b,
     vec4 specular_or_prelight_and_shininess,
     vec4 reflection, vec4 refraction, float SSAO_factor,
-    ivec4 mix_int
+    uvec4 mix_uint
 )
 {
     vec3 view_pos = view_pos_and_alpha.xyz;
@@ -23,10 +23,10 @@ vec4 draw_filled_with_gbuffer(Camera camera,
         return vec4(0, 0, 0, 0);
     }
 
-    int shading_model = mix_int.x;
-    int env_map_index = mix_int.y;
-    bool is_sphere = bool(mix_int.z);
-    float refractive_index = mix_int.w/255.0;
+    uint shading_model = mix_uint.x;
+    uint64_t env_map_handle = uint64_t((uint64_t(mix_uint.z) << 32) | uint64_t(mix_uint.y));
+    bool is_sphere = bool(mix_uint.w & 0x1);
+    float refractive_index = (mix_uint.w >> 1) / 255.0;
 
     InternalMaterial internal_material;
     internal_material.shading_model = shading_model;
@@ -90,7 +90,7 @@ vec4 draw_filled_with_gbuffer(Camera camera,
     // 环境映射
     vec3 view_dir = normalize(frag_pos - camera.abs_position);
     vec4 env_color = vec4(0, 0, 0, 0);
-    bool use_env_map = (env_map_index > 0 && env_map_index < n_bindless_sampler2Ds);
+    bool use_env_map = (env_map_handle != 0);
     if (is_sphere)
     {
         env_color = sphere_reflect_refract_color(
@@ -100,7 +100,7 @@ vec4 draw_filled_with_gbuffer(Camera camera,
             view_dir, normal, 
             use_skybox_map, skybox_map,
             use_skydome_map, skydome_map,
-            use_env_map, bindless_sampler2Ds[env_map_index]
+            use_env_map, sampler2D(env_map_handle)
         );
     }
     else
@@ -112,7 +112,7 @@ vec4 draw_filled_with_gbuffer(Camera camera,
             view_dir, normal, 
             use_skybox_map, skybox_map,
             use_skydome_map, skydome_map,
-            use_env_map, bindless_sampler2Ds[env_map_index]
+            use_env_map, sampler2D(env_map_handle)
         );
     }
     out_color3 = mix(out_color3, env_color.rgb, env_color.a);

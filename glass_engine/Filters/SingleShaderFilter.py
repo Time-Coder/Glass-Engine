@@ -83,10 +83,10 @@ class SingleShaderFilter(Filter):
         self.program["screen_image"] = screen_image
         if self in SingleShaderFilter._unknown_filters:
             is_dynamic = (self.program["iTime"].location != -1 or \
-                            self.program["iTimeDelta"].location != -1 or \
-                            self.program["iFrameRate"].location != -1 or \
-                            self.program["iFrame"].location != -1 or \
-                            self.program["iDate"].location != -1)
+                          self.program["iTimeDelta"].location != -1 or \
+                          self.program["iFrameRate"].location != -1 or \
+                          self.program["iFrame"].location != -1 or \
+                          self.program["iDate"].location != -1)
             
             SingleShaderFilter._unknown_filters.remove(self)
             if is_dynamic:

@@ -4,27 +4,9 @@ import OpenGL.GL.ARB.bindless_texture as bt
 from .FBOAttachment import FBOAttachment
 from .GLInfo import GLInfo
 from .utils import checktype
-from .ShaderStorageBlock import ShaderStorageBlock
 from .helper import *
 
 class sampler2DMS(FBOAttachment):
-	
-	class BindlessSampler2DMSs(ShaderStorageBlock.HostClass):
-		def __init__(self):
-			ShaderStorageBlock.HostClass.__init__(self)
-			self.bindless_sampler2DMSs = [0]
-
-		@property
-		def n_bindless_sampler2DMSs(self):
-			return len(self.bindless_sampler2DMSs)
-
-		@ShaderStorageBlock.HostClass.not_const
-		def append(self, handle:int)->int:
-			index = len(self.bindless_sampler2DMSs)
-			self.bindless_sampler2DMSs.append(handle)
-			return index
-		
-	BindlessSampler2DMSs = BindlessSampler2DMSs()
 
 	_basic_info = \
 	{
@@ -39,7 +21,6 @@ class sampler2DMS(FBOAttachment):
 	def __init__(self, width:int=0, height:int=0, samples:int=4, internal_format:GLInfo.internal_formats=GL.GL_RGBA32F):
 		FBOAttachment.__init__(self)
 		
-		self._index = -1
 		self._handle = 0
 		self._samples = samples
 		self._width = width
@@ -49,10 +30,7 @@ class sampler2DMS(FBOAttachment):
 
 	def __del__(self):
 		if self._handle != 0:
-			# bt.glMakeTextureHandleNonResidentARB(self._handle)
 			self._handle = 0
-
-		self._index = -1
 
 		FBOAttachment.__del__(self)
 
@@ -80,57 +58,40 @@ class sampler2DMS(FBOAttachment):
 			self._handle = bt.glGetTextureHandleARB(self._id)
 			if self._handle == 0:
 				raise RuntimeError(f"failed to create sampler2D {self._id}'s handle")
+			self._dynamic = False
 			bt.glMakeTextureHandleResidentARB(self._handle)
-			self._index = sampler2DMS.BindlessSampler2DMSs.append(self._handle)
 			
 		return self._handle
-	
-	@property
-	def index(self):
-		if self._id == 0:
-			return -1
-		
-		if self._handle == 0:
-			self._handle = bt.glGetTextureHandleARB(self._id)
-			if self._handle == 0:
-				raise RuntimeError(f"failed to create sampler2D {self._id}'s handle")
-			bt.glMakeTextureHandleResidentARB(self._handle)
-			self._index = sampler2DMS.BindlessSampler2DMSs.append(self._handle)
-			
-		return self._index
 
 	@property
 	def samples(self):
 		return self._samples
 
 	@samples.setter
-	@checktype
+	@FBOAttachment.param_setter
 	def samples(self, samples:int):
-		if self._samples != samples:
-			self._samples = samples
-			self._param_changed = True
+		self._samples = samples
+		self._param_changed = True
 
 	@property
 	def width(self):
 		return self._width
 
 	@width.setter
-	@checktype
+	@FBOAttachment.param_setter
 	def width(self, width:int):
-		if self._width != width:
-			self._width = width
-			self._param_changed = True
+		self._width = width
+		self._param_changed = True
 
 	@property
 	def height(self):
 		return self._height
 
 	@height.setter
-	@checktype
+	@FBOAttachment.param_setter
 	def height(self, height:int):
-		if self._height != height:
-			self._height = height
-			self._param_changed = True
+		self._height = height
+		self._param_changed = True
 
 	@property
 	def dtype(self):
@@ -141,17 +102,16 @@ class sampler2DMS(FBOAttachment):
 		return self._internal_format
 
 	@internal_format.setter
-	@checktype
+	@FBOAttachment.param_setter
 	def internal_format(self, format:GLInfo.internal_formats):
-		if self._internal_format != format:
-			self._internal_format = format
-			self._param_changed = True
+		self._internal_format = format
+		self._param_changed = True
 
 	def update(self):
 		self._param_changed = True
 
 	@checktype
-	def malloc(self, width:int, height:int, internal_format:GLInfo.internal_formats=None, samples:int=4):
+	def malloc(self, width:int, height:int, samples:int=4, layers:int=None, internal_format:GLInfo.internal_formats=None):
 		self.width = width
 		self.height = height
 		self.samples = samples

@@ -1,6 +1,10 @@
 #version 460 core
 
-in vec2 tex_coord;
+in TexCoord
+{
+    vec2 tex_coord;
+} fs_in;
+
 out vec4 frag_color;
 
 #include "../include/Camera.glsl"
@@ -48,7 +52,7 @@ void main()
         memoryBarrier();
     }
         
-	frag_color = texture(screen_image, tex_coord);
+	frag_color = texture(screen_image, fs_in.tex_coord);
 	// frag_color.rgb = vec3(1.0) - exp(-frag_color.rgb / (0.5+pow(luma, 1.0/3.0)));
 
     luma = 0.5*(0.5+pow(luma, 1.0/3.0));

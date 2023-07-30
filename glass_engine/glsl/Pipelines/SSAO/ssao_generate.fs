@@ -3,7 +3,11 @@
 #include "../../include/Camera.glsl"
 #include "../../include/math.glsl"
 
-in vec2 tex_coord;
+in TexCoord
+{
+    vec2 tex_coord;
+} fs_in;
+
 out float SSAO_factor;
 
 uniform sampler2D view_pos_alpha_map;
@@ -18,18 +22,18 @@ void main()
 {
     int rand_seed = 0;
 
-    vec3 view_pos = texture(view_pos_alpha_map, tex_coord).xyz;
-    vec3 view_normal = texture(view_normal_map, tex_coord).xyz;
+    vec3 view_pos = texture(view_pos_alpha_map, fs_in.tex_coord).xyz;
+    vec3 view_normal = texture(view_normal_map, fs_in.tex_coord).xyz;
     if (length(view_pos) < 1E-6 || length(view_normal) < 1E-6)
     {
         SSAO_factor = 0;
         return;
     }
 
-    vec3 rand_vec = normalize(rand_vec3(tex_coord, rand_seed));
+    vec3 rand_vec = normalize(rand3(fs_in.tex_coord, rand_seed));
     do
     {
-        rand_vec = normalize(rand_vec3(tex_coord, rand_seed));
+        rand_vec = normalize(rand3(fs_in.tex_coord, rand_seed));
     } while(hasnan(rand_vec) || length(cross(rand_vec, view_normal)) < 1E-6);
     vec3 view_tangent = normalize(cross(rand_vec, view_normal));
     vec3 view_bitangent = normalize(cross(view_normal, view_tangent));
@@ -39,14 +43,14 @@ void main()
     float PI = acos(-1);
     for(int i = 0; i < SSAO_samples; i++)
     {
-        float radius = rand(tex_coord, rand_seed);
-        float phi = 0.5*PI*rand(tex_coord, rand_seed);
+        float radius = rand(fs_in.tex_coord, rand_seed);
+        float phi = 0.5*PI*rand(fs_in.tex_coord, rand_seed);
         while(radius * sin(phi) < 1E-3)
         {
-            radius = rand(tex_coord, rand_seed);
-            phi = 0.5*PI*rand(tex_coord, rand_seed);
+            radius = rand(fs_in.tex_coord, rand_seed);
+            phi = 0.5*PI*rand(fs_in.tex_coord, rand_seed);
         }
-        float theta = 2*PI*rand(tex_coord, rand_seed);
+        float theta = 2*PI*rand(fs_in.tex_coord, rand_seed);
 
         float x = radius*cos(phi)*cos(theta);
         float y = radius*cos(phi)*sin(theta);

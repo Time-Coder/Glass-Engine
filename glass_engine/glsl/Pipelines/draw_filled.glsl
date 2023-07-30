@@ -58,7 +58,7 @@ vec4 draw_filled(Camera camera)
 
     vec3 frag_pos = view_to_world(camera, view_pos);
     vec3 normal = view_dir_to_world(camera, view_normal);
-    int shading_model = internal_material.shading_model;
+    uint shading_model = internal_material.shading_model;
 
     vec3 out_color3 = vec3(0, 0, 0);
     if (shading_model == 9) // Unlit
@@ -75,7 +75,7 @@ vec4 draw_filled(Camera camera)
     }
     else // Phong, PhongBlinn, CookTorrance(PBR)
     {
-        out_color3 = FRAG_LIGHTING(internal_material, camera.abs_position, frag_pos, normal);
+        out_color3 = FRAG_LIGHTING(internal_material, camera, frag_pos, normal);
     }
 
     if (shading_model != 9)
@@ -95,7 +95,7 @@ vec4 draw_filled(Camera camera)
     // 环境映射
     vec3 view_dir = normalize(frag_pos - camera.abs_position);
     vec4 env_color = vec4(0, 0, 0, 0);
-    bool use_env_map = (env_map_index > 0 && env_map_index < n_bindless_sampler2Ds);
+    bool use_env_map = (env_map_handle > 0);
     if (is_sphere)
     {
         env_color = sphere_reflect_refract_color(
@@ -105,7 +105,7 @@ vec4 draw_filled(Camera camera)
             view_dir, normal, 
             use_skybox_map, skybox_map,
             use_skydome_map, skydome_map,
-            use_env_map, bindless_sampler2Ds[env_map_index]
+            use_env_map, sampler2D(env_map_handle)
         );
     }
     else
@@ -117,7 +117,7 @@ vec4 draw_filled(Camera camera)
             view_dir, normal, 
             use_skybox_map, skybox_map,
             use_skydome_map, skydome_map,
-            use_env_map, bindless_sampler2Ds[env_map_index]
+            use_env_map, sampler2D(env_map_handle)
         );
     }
     out_color3 = mix(out_color3, env_color.rgb, env_color.a);

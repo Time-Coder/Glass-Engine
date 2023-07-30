@@ -156,6 +156,7 @@ class SSUBO(BO):
 			"bool": (SSUBO._get_bool, SSUBO._set_bool),
 			"int": (SSUBO._get_int, SSUBO._set_int),
 			"uint": (SSUBO._get_uint, SSUBO._set_uint),
+			"uint64_t": (SSUBO._get_uint64_t, SSUBO._set_uint64_t),
 			"float": (SSUBO._get_float, SSUBO._set_float),
 			"double": (SSUBO._get_double, SSUBO._set_double),
 			"bvec2": (SSUBO._get_bvec2, SSUBO._set_bvec2),
@@ -210,8 +211,8 @@ class SSUBO(BO):
 		max_size = 0
 		self._len_array = None
 		for atom_name, atom_info in self._atom_info_map.items():
-			current_type = atom_info["type"]
-			current_size = atom_info["offset"] + sizeof(type_from_str(current_type))
+			current_type = type_from_str(atom_info["type"])
+			current_size = atom_info["offset"] + sizeof(current_type)
 			if "[{0}]" in atom_name:
 				if self._len_array is None:
 					# pos_array_end = atom_name.find("[{0}]")
@@ -233,7 +234,8 @@ class SSUBO(BO):
 	def _name_to_range(self, start_name:str, end_name:str):
 		start_offset = self._atom_info_map[start_name]["offset"]
 		end_info = self._atom_info_map[end_name]
-		nbytes = end_info["offset"] + sizeof(type_from_str(end_info["type"])) - start_offset
+		end_type = type_from_str(end_info["type"])
+		nbytes = end_info["offset"] + sizeof(end_type) - start_offset
 		if "[{0}]" in end_name:
 			# pos_array_end = end_name.find("[{0}]")
 			# len_array = len(eval("self._bound_var." + end_name[:pos_array_end]))
@@ -289,6 +291,9 @@ class SSUBO(BO):
 			value = int(value.value)
 
 		self.bufferSubData(offset, 4, np.array([int(value)], dtype=np.uint32))
+
+	def _set_uint64_t(self, offset:int, value):
+		self.bufferSubData(offset, 8, np.array([int(value)], dtype=np.uint64))
 
 	def _set_float(self, offset:int, value):
 		self.bufferSubData(offset, 4, np.array([float(value)], dtype=np.float32))
@@ -443,6 +448,9 @@ class SSUBO(BO):
 
 	def _get_uint(self, offset:int)->int:
 		return int.from_bytes(self._buffer[offset:offset+4], signed=False)
+	
+	def _get_uint64_t(self, offset:int)->int:
+		return int.from_bytes(self._buffer[offset:offset+8], signed=False)
 
 	def _get_float(self, offset:int)->float:
 		return struct.unpack('f', self._buffer[offset:offset+4])[0]

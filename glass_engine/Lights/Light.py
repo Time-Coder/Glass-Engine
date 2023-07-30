@@ -12,6 +12,7 @@ class Light(Entity):
         self._ambient = SceneNode.vec3(1, 1, 1, callback=self._update_ambient)
         self._diffuse = SceneNode.vec3(1, 1, 1, callback=self._update_diffuse)
         self._specular = SceneNode.vec3(1, 1, 1, callback=self._update_specular)
+        self._generate_shadows = True
         self._flats = set()
 
     @property
@@ -86,6 +87,16 @@ class Light(Entity):
 
         self._update_scene_lights()
 
+    @property
+    def generate_shadows(self):
+        return self._generate_shadows
+    
+    @generate_shadows.setter
+    @checktype
+    def generate_shadows(self, flag:bool):
+        self._generate_shadows = flag
+        self._update_generate_shadows()
+
     def _update_scene_lights(self):
         for scene in self.scenes:
             if self.__class__.__name__ == "PointLight":
@@ -116,5 +127,11 @@ class Light(Entity):
     def _update_ambient(self):
         for flat in self._flats:
             flat.ambient = self._ambient
+
+        self._update_scene_lights()
+
+    def _update_generate_shadows(self):
+        for flat in self._flats:
+            flat.generate_shadows = self._generate_shadows
 
         self._update_scene_lights()

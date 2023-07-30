@@ -32,7 +32,6 @@ class image2D(GLObject):
     def __init__(self, image:(str,np.ndarray)=None, width:int=None, height:int=None, internal_format:GLInfo.internal_formats=None):
         GLObject.__init__(self)
         
-        self._index = -1
         self._handle = 0
         self._image = None
         self._width = 0

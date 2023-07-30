@@ -67,7 +67,10 @@ class BaseShader(GLObject):
 		pass
 
 	@classmethod
-	def load(cls, file_name:str):
+	def load(cls, file_name:str, include_paths:list=None):
+		if include_paths is None:
+			include_paths = []
+
 		if not os.path.isfile(file_name):
 			current_frame = inspect.currentframe().f_back.f_back
 			calling_path = os.path.dirname(current_frame.f_code.co_filename)
@@ -82,6 +85,9 @@ class BaseShader(GLObject):
 			return cls._shader_map[file_name]
 		else:
 			shader = cls()
+			for include_path in include_paths:
+				shader.add_include_path(include_path)
+				
 			shader.compile(file_name)
 			cls._shader_map[file_name] = shader
 			return shader
@@ -156,6 +162,7 @@ class BaseShader(GLObject):
 		
 		self._code = meta_info["code"]
 		self._clean_code = meta_info["clean_code"]
+		self._line_message_map = meta_info["line_message_map"]
 		self.attributes_info = meta_info["attributes_info"]
 		self.uniforms_info = meta_info["uniforms_info"]
 		self.uniform_blocks_info = meta_info["uniform_blocks_info"]
@@ -190,11 +197,11 @@ class BaseShader(GLObject):
 		if self._test_should_recompile():
 			self._code = cat(file_name)
 			related_files = [abs_name]
-			self._add_include_path(".")
+			self.add_include_path(".")
 			include_path = os.path.dirname(abs_name)
 			if not os.path.isabs(file_name):
 				include_path = os.path.relpath(include_path)
-			self._add_include_path(include_path)
+			self.add_include_path(include_path)
 			related_files.extend(self._replace_includes())
 
 			self._clean_code = ShaderParser.delete_C_comments(self._code)
@@ -224,6 +231,7 @@ class BaseShader(GLObject):
 			meta_info["related_files"] = related_files
 			meta_info["code"] = self._code
 			meta_info["clean_code"] = self._clean_code
+			meta_info["line_message_map"] = self._line_message_map
 			meta_info["attributes_info"] = self.attributes_info
 			meta_info["uniforms_info"] = self.uniforms_info
 			meta_info["uniform_blocks_info"] = self.uniform_blocks_info
@@ -235,7 +243,7 @@ class BaseShader(GLObject):
 
 		self._compiled_but_not_applied = True
 
-	def _add_include_path(self, include_path):
+	def add_include_path(self, include_path):
 		self._include_paths.insert(0, include_path)
 
 	def _find_comments(self):
@@ -324,14 +332,14 @@ class BaseShader(GLObject):
 			pos_include_end = pos_filename_end + 1
 			pos_filename_end -= 1
 			pos_filename_end = ShaderParser.skip_space_reverse(self._code, pos_filename_end)
-			filename = self._code[pos_filename_start : pos_filename_end+1]
+			include_filename = self._code[pos_filename_start : pos_filename_end+1]
 			found = False
 
 			for include_path in self._include_paths:
 				if not os.path.isdir(include_path):
 					continue
 
-				full_name = include_path + "/" + filename
+				full_name = include_path + "/" + include_filename
 				if not os.path.isfile(full_name):
 					continue
 
@@ -368,7 +376,7 @@ class BaseShader(GLObject):
 				
 			if not found:
 				line_number = ShaderParser.line_number(self._code, pos_filename_start)
-				raise CompileError("\n  " + self._line_message_map[line_number].format(message_type="error") + f'File "{filename}" not exists.')
+				raise CompileError("\n  " + self._line_message_map[line_number].format(message_type="error") + f'File "{include_filename}" not exists.')
 
 		return list(included_files)
 

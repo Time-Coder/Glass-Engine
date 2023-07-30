@@ -5,7 +5,7 @@ import ctypes
 import struct
 
 from .GLInfo import GLInfo
-	
+
 def glGetEnum(gl_constant:constant.IntConstant):
 	value = GL.GLint()
 	GL.glGetIntegerv(gl_constant, value)
@@ -108,6 +108,8 @@ def type_from_str(type_str):
 	elif type_str == "usampler2DMS":
 		from .usampler2DMS import usampler2DMS
 		return usampler2DMS
+	else:
+		raise TypeError(f"not support type {type_str}")
 
 def get_external_format(internal_format):
 	if internal_format not in GLInfo.format_info_map:

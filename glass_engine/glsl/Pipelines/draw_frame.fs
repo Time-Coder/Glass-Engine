@@ -1,18 +1,35 @@
 #version 460 core
 
-in vec2 tex_coord;
+#extension GL_EXT_texture_array : require
+
+in TexCoord
+{
+    vec2 tex_coord;
+} fs_in;
+
 out vec4 frag_color;
 
 uniform sampler2D screen_image;
+uniform sampler2DArray screen_image_array;
+uniform int layer;
+
 uniform bool gray;
 uniform bool invert;
 
 void main()
 { 
-    frag_color = texture(screen_image, tex_coord);
+    if (layer < 0)
+    {
+        frag_color = texture(screen_image, fs_in.tex_coord);
+    }
+    else
+    {
+        frag_color = texture2DArray(screen_image_array, vec3(fs_in.tex_coord, layer));
+    }
+    
     if (gray)
     {
-        frag_color = vec4(frag_color.r, frag_color.r, frag_color.r, 1);
+        frag_color = vec4(vec3(frag_color.r), 1);
     }
     if (invert)
     {

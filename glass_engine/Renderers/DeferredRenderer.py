@@ -2,7 +2,7 @@ from .CommonRenderer import CommonRenderer
 from ..Frame import Frame
 
 from glass import \
-    ShaderProgram, GLConfig, FBO, RBO, sampler2DMS, sampler2D, isampler2D, isampler2DMS
+    ShaderProgram, GLConfig, FBO, RBO, sampler2DMS, sampler2D, usampler2D, usampler2DMS
 
 from OpenGL import GL
 import glm
@@ -24,7 +24,6 @@ class DeferredRenderer(CommonRenderer):
         program["PointLights"].bind(self.scene.point_lights)
         program["DirLights"].bind(self.scene.dir_lights)
         program["SpotLights"].bind(self.scene.spot_lights)
-        program["BindlessSampler2Ds"].bind(sampler2D.BindlessSampler2Ds)
         
         self.programs["deferred_render"] = program
 
@@ -42,7 +41,6 @@ class DeferredRenderer(CommonRenderer):
         program["PointLights"].bind(self.scene.point_lights)
         program["DirLights"].bind(self.scene.dir_lights)
         program["SpotLights"].bind(self.scene.spot_lights)
-        program["BindlessSampler2Ds"].bind(sampler2D.BindlessSampler2Ds)
         self.programs["draw_to_gbuffer"] = program
 
         return program
@@ -79,7 +77,7 @@ class DeferredRenderer(CommonRenderer):
                 fbo.attach(4, sampler2DMS, GL.GL_RGBA32F) # specular_or_prelight_and_shininess
                 fbo.attach(5, sampler2DMS, GL.GL_RGBA32F) # reflection
                 fbo.attach(6, sampler2DMS, GL.GL_RGBA32F) # refraction
-                fbo.attach(7, isampler2DMS, GL.GL_RGBA32I) # mix_int
+                fbo.attach(7, usampler2DMS, GL.GL_RGBA32UI) # mix_uint
                 fbo.attach(GL.GL_DEPTH_ATTACHMENT, RBO)
                 fbo.auto_clear = False
                 self.fbos["gbuffer_ms"] = fbo
@@ -97,7 +95,7 @@ class DeferredRenderer(CommonRenderer):
                 fbo.attach(4, sampler2D, GL.GL_RGBA32F) # specular_or_prelight_and_shininess
                 fbo.attach(5, sampler2D, GL.GL_RGBA32F) # reflection
                 fbo.attach(6, sampler2D, GL.GL_RGBA32F) # refraction
-                fbo.attach(7, isampler2D, GL.GL_RGBA32I) # mix_int
+                fbo.attach(7, usampler2D, GL.GL_RGBA32UI) # mix_uint
                 fbo.attach(GL.GL_DEPTH_ATTACHMENT, RBO)
                 fbo.auto_clear = False
                 self.fbos["gbuffer"] = fbo
@@ -143,7 +141,7 @@ class DeferredRenderer(CommonRenderer):
         specular_or_prelight_and_shininess_map = resolved.color_attachment(4)
         reflection_map = resolved.color_attachment(5)
         refraction_map = resolved.color_attachment(6)
-        mix_int_map = resolved.color_attachment(7)
+        mix_uint_map = resolved.color_attachment(7)
 
         if self.DOF:
             self.filters["DOF"].view_pos_map = view_pos_and_alpha_map
@@ -160,7 +158,7 @@ class DeferredRenderer(CommonRenderer):
             self.deferred_render_program["specular_or_prelight_and_shininess_map"] = specular_or_prelight_and_shininess_map
             self.deferred_render_program["reflection_map"] = reflection_map
             self.deferred_render_program["refraction_map"] = refraction_map
-            self.deferred_render_program["mix_int_map"] = mix_int_map
+            self.deferred_render_program["mix_uint_map"] = mix_uint_map
             self.deferred_render_program["SSAO_map"] = self._SSAO_map
             self.deferred_render_program["skydome_map"] = self.scene.skydome.skydome_map
             self.deferred_render_program["skybox_map"] = self.scene.skybox.skybox_map

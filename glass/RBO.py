@@ -19,7 +19,7 @@ class RBO(FBOAttachment):
 	}
 
 	@checktype
-	def __init__(self, width:int=0, height:int=0, internal_format:GLInfo.internal_formats=GL.GL_DEPTH24_STENCIL8, samples:int=None):
+	def __init__(self, width:int=0, height:int=0, samples:int=None, internal_format:GLInfo.internal_formats=GL.GL_DEPTH24_STENCIL8):
 		FBOAttachment.__init__(self)
 
 		self._samples = samples
@@ -53,7 +53,7 @@ class RBO(FBOAttachment):
 		return get_dtype(self._internal_format)
 
 	@checktype
-	def malloc(self, width:int, height:int, internal_format:GLInfo.internal_formats=None, samples:int=None):
+	def malloc(self, width:int, height:int, samples:int=None, layers:int=None, internal_format:GLInfo.internal_formats=None):
 		self.width = width
 		self.height = height
 

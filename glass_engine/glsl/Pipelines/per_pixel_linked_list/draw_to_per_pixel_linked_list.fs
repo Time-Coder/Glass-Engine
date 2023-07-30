@@ -1,6 +1,7 @@
 #version 460 core
 
 #extension GL_ARB_bindless_texture : require
+#extension GL_ARB_gpu_shader_int64 : require
 
 in VertexOut
 {
@@ -9,7 +10,7 @@ in VertexOut
     vec3 tex_coord;
     vec4 color;
     vec4 back_color;
-    flat int env_map_index;
+    flat uint64_t env_map_handle;
     flat bool visible;
 } fs_in;
 
@@ -45,12 +46,6 @@ buffer SpotLights
 {
     int n_spot_lights;
     SpotLight spot_lights[];
-};
-
-buffer BindlessSamplerCubes
-{
-    int n_bindless_samplerCubes;
-    samplerCube bindless_samplerCubes[];
 };
 
 uniform Material material;
@@ -165,7 +160,7 @@ void main()
         view_dir, normal, texture_lod,
         use_skybox_map, skybox_map,
         use_skydome_map, skydome_map,
-        (fs_in.env_map_index > 0), bindless_samplerCubes[fs_in.env_map_index]
+        (fs_in.env_map_handle > 0), samplerCube(fs_in.env_map_handle)
     );
     out_color3 = mix(out_color3, env_color.rgb, env_color.a);
 

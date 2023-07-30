@@ -1,6 +1,10 @@
 #version 460 core
 
-in vec2 tex_coord;
+in TexCoord
+{
+    vec2 tex_coord;
+} fs_in;
+
 out vec4 frag_color;
 
 uniform sampler2D screen_image;
@@ -33,22 +37,22 @@ void main()
     // - l - m -
     // g - h - i
     // === ('e' is the current texel) ===
-    vec4 a = texture(screen_image, vec2(tex_coord.x - 2*dx, tex_coord.y + 2*dy));
-    vec4 b = texture(screen_image, vec2(tex_coord.x,        tex_coord.y + 2*dy));
-    vec4 c = texture(screen_image, vec2(tex_coord.x + 2*dx, tex_coord.y + 2*dy));
+    vec4 a = texture(screen_image, vec2(fs_in.tex_coord.x - 2*dx, fs_in.tex_coord.y + 2*dy));
+    vec4 b = texture(screen_image, vec2(fs_in.tex_coord.x,        fs_in.tex_coord.y + 2*dy));
+    vec4 c = texture(screen_image, vec2(fs_in.tex_coord.x + 2*dx, fs_in.tex_coord.y + 2*dy));
 
-    vec4 d = texture(screen_image, vec2(tex_coord.x - 2*dx, tex_coord.y));
-    vec4 e = texture(screen_image, vec2(tex_coord.x,        tex_coord.y));
-    vec4 f = texture(screen_image, vec2(tex_coord.x + 2*dx, tex_coord.y));
+    vec4 d = texture(screen_image, vec2(fs_in.tex_coord.x - 2*dx, fs_in.tex_coord.y));
+    vec4 e = texture(screen_image, vec2(fs_in.tex_coord.x,        fs_in.tex_coord.y));
+    vec4 f = texture(screen_image, vec2(fs_in.tex_coord.x + 2*dx, fs_in.tex_coord.y));
 
-    vec4 g = texture(screen_image, vec2(tex_coord.x - 2*dx, tex_coord.y - 2*dy));
-    vec4 h = texture(screen_image, vec2(tex_coord.x,        tex_coord.y - 2*dy));
-    vec4 i = texture(screen_image, vec2(tex_coord.x + 2*dx, tex_coord.y - 2*dy));
+    vec4 g = texture(screen_image, vec2(fs_in.tex_coord.x - 2*dx, fs_in.tex_coord.y - 2*dy));
+    vec4 h = texture(screen_image, vec2(fs_in.tex_coord.x,        fs_in.tex_coord.y - 2*dy));
+    vec4 i = texture(screen_image, vec2(fs_in.tex_coord.x + 2*dx, fs_in.tex_coord.y - 2*dy));
 
-    vec4 j = texture(screen_image, vec2(tex_coord.x - dx, tex_coord.y + dy));
-    vec4 k = texture(screen_image, vec2(tex_coord.x + dx, tex_coord.y + dy));
-    vec4 l = texture(screen_image, vec2(tex_coord.x - dx, tex_coord.y - dy));
-    vec4 m = texture(screen_image, vec2(tex_coord.x + dx, tex_coord.y - dy));
+    vec4 j = texture(screen_image, vec2(fs_in.tex_coord.x - dx, fs_in.tex_coord.y + dy));
+    vec4 k = texture(screen_image, vec2(fs_in.tex_coord.x + dx, fs_in.tex_coord.y + dy));
+    vec4 l = texture(screen_image, vec2(fs_in.tex_coord.x - dx, fs_in.tex_coord.y - dy));
+    vec4 m = texture(screen_image, vec2(fs_in.tex_coord.x + dx, fs_in.tex_coord.y - dy));
 
     if (mip_level == 0)
     {

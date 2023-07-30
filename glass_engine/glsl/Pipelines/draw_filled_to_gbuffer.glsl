@@ -76,10 +76,10 @@ void draw_filled_to_gbuffer()
     reflection = internal_material.reflection;    
     refraction = internal_material.refraction;
 
-    mix_int.x = internal_material.shading_model;
-    mix_int.y = env_map_index;
-    mix_int.z = int(is_sphere);
-    mix_int.w = int(255*internal_material.refractive_index);
+    mix_uint.x = internal_material.shading_model;
+    mix_uint.y = uint(env_map_handle & 0xFFFFFFFF); // low 32 bits 
+    mix_uint.z = uint(env_map_handle >> 32); // high 32 bits
+    mix_uint.w = uint((uint(255*internal_material.refractive_index) << 1) | uint(is_sphere));
 }
 
 #endif

@@ -43,7 +43,7 @@ buffer SpotLights
     ))\
 )
 
-vec3 FRAG_LIGHTING(InternalMaterial internal_material, vec3 camera_pos, vec3 frag_pos, vec3 normal)
+vec3 FRAG_LIGHTING(InternalMaterial internal_material, Camera camera, vec3 frag_pos, vec3 normal)
 {
     vec3 out_color3 = internal_material.ambient;
 
@@ -52,7 +52,7 @@ vec3 FRAG_LIGHTING(InternalMaterial internal_material, vec3 camera_pos, vec3 fra
     {
         out_color3 += FRAG_LIGHTING_ONE(
             point_lights[i], internal_material,
-            camera_pos, frag_pos, normal
+            camera, frag_pos, normal
         );
     }
 
@@ -61,7 +61,7 @@ vec3 FRAG_LIGHTING(InternalMaterial internal_material, vec3 camera_pos, vec3 fra
     {
         out_color3 += FRAG_LIGHTING_ONE(
             dir_lights[i], internal_material,
-            camera_pos, frag_pos, normal
+            camera, frag_pos, normal
         );
     }
 
@@ -70,7 +70,7 @@ vec3 FRAG_LIGHTING(InternalMaterial internal_material, vec3 camera_pos, vec3 fra
     {
         out_color3 += FRAG_LIGHTING_ONE(
             spot_lights[i], internal_material,
-            camera_pos, frag_pos, normal
+            camera, frag_pos, normal
         );
     }
 
@@ -79,37 +79,34 @@ vec3 FRAG_LIGHTING(InternalMaterial internal_material, vec3 camera_pos, vec3 fra
 
 #undef FRAG_LIGHTING_ONE
 
-#define FLAT_LIGHTING(out_color3, internal_material, face_pos, face_normal) \
+#define FLAT_LIGHTING(out_color3, internal_material, camera, face_pos, face_normal) \
 out_color3 = internal_material.ambient;\
 for(int j = 0; j < n_point_lights; j++)\
 {\
-    vec3 to_light = normalize(point_lights[j].abs_position - face_pos);\
-    out_color3 += Flat_lighting(point_lights[j], internal_material, to_light, face_normal);\
+    out_color3 += Flat_lighting(point_lights[j], internal_material, camera, face_pos, face_normal);\
 }\
 for(int j = 0; j < n_dir_lights; j++)\
 {\
-    vec3 to_light = -normalize(dir_lights[j].direction);\
-    out_color3 += Flat_lighting(dir_lights[j], internal_material, to_light, face_normal);\
+    out_color3 += Flat_lighting(dir_lights[j], internal_material, camera, face_pos, face_normal);\
 }\
 for(int j = 0; j < n_spot_lights; j++)\
 {\
-    vec3 to_light = normalize(spot_lights[j].abs_position - face_pos);\
-    out_color3 += Flat_lighting(spot_lights[j], internal_material, to_light, face_normal);\
+    out_color3 += Flat_lighting(spot_lights[j], internal_material, camera, face_pos, face_normal);\
 }
 
-#define GOURAUD_LIGHTING(out_color3, internal_material, camera_pos, vertex_pos, vertex_normal) \
+#define GOURAUD_LIGHTING(out_color3, internal_material, camera, vertex_pos, vertex_normal) \
 out_color3 = internal_material.ambient;\
 for(int j = 0; j < n_point_lights; j++)\
 {\
-    out_color3 += Gouraud_lighting(point_lights[j], internal_material, camera_pos, vertex_pos, vertex_normal);\
+    out_color3 += Gouraud_lighting(point_lights[j], internal_material, camera, vertex_pos, vertex_normal);\
 }\
 for(int j = 0; j < n_dir_lights; j++)\
 {\
-    out_color3 += Gouraud_lighting(dir_lights[j], internal_material, camera_pos, vertex_pos, vertex_normal);\
+    out_color3 += Gouraud_lighting(dir_lights[j], internal_material, camera, vertex_pos, vertex_normal);\
 }\
 for(int j = 0; j < n_spot_lights; j++)\
 {\
-    out_color3 += Gouraud_lighting(spot_lights[j], internal_material, camera_pos, vertex_pos, vertex_normal);\
+    out_color3 += Gouraud_lighting(spot_lights[j], internal_material, camera, vertex_pos, vertex_normal);\
 }
 
 #endif

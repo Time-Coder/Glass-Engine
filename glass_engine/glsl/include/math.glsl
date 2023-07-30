@@ -30,9 +30,16 @@ bool is_equal(float a, float b)
     return abs(a - b) <= (abs(a) < abs(b) ? abs(b) : abs(a)) * 1E-6;
 }
 
-float rand(vec2 frag_coord, inout int seed)
+float rand(vec2 focus_point, inout int seed)
 {
-    float result = fract(sin((seed+1)*dot(frag_coord, vec2(12.9898, 78.233)))*43758.5453123);
+    float result = fract(sin((seed+1)*dot(focus_point, vec2(12.9898, 78.233)))*43758.5453123);
+    seed++;
+    return result;
+}
+
+float rand(vec3 focus_point, inout int seed)
+{
+    float result = fract(sin((seed+1)*dot(focus_point, vec3(12.9898, 78.233, 63.643)))*43758.5453123);
     seed++;
     return result;
 }
@@ -44,15 +51,23 @@ float rand(inout int seed)
     return result;
 }
 
-vec2 rand_vec2(vec2 frag_coord, inout int seed)
+vec2 rand2(vec2 focus_point, inout int seed)
 {
     vec2 result;
-    result.x = rand(frag_coord, seed);
-    result.y = rand(frag_coord, seed);
+    result.x = rand(focus_point, seed);
+    result.y = rand(focus_point, seed);
     return result;
 }
 
-vec2 rand_vec2(inout int seed)
+vec2 rand2(vec3 focus_point, inout int seed)
+{
+    vec2 result;
+    result.x = rand(focus_point, seed);
+    result.y = rand(focus_point, seed);
+    return result;
+}
+
+vec2 rand2(inout int seed)
 {
     vec2 result;
     result.x = rand(seed);
@@ -60,16 +75,25 @@ vec2 rand_vec2(inout int seed)
     return result;
 }
 
-vec3 rand_vec3(vec2 frag_coord, inout int seed)
+vec3 rand3(vec2 focus_point, inout int seed)
 {
     vec3 result;
-    result.x = rand(frag_coord, seed);
-    result.y = rand(frag_coord, seed);
-    result.z = rand(frag_coord, seed);
+    result.x = rand(focus_point, seed);
+    result.y = rand(focus_point, seed);
+    result.z = rand(focus_point, seed);
     return result;
 }
 
-vec3 rand_vec3(inout int seed)
+vec3 rand3(vec3 focus_point, inout int seed)
+{
+    vec3 result;
+    result.x = rand(focus_point, seed);
+    result.y = rand(focus_point, seed);
+    result.z = rand(focus_point, seed);
+    return result;
+}
+
+vec3 rand3(inout int seed)
 {
     vec3 result;
     result.x = rand(seed);
@@ -78,17 +102,27 @@ vec3 rand_vec3(inout int seed)
     return result;
 }
 
-vec4 rand_vec4(vec2 frag_coord, inout int seed)
+vec4 rand4(vec2 focus_point, inout int seed)
 {
     vec4 result;
-    result.x = rand(frag_coord, seed);
-    result.y = rand(frag_coord, seed);
-    result.z = rand(frag_coord, seed);
-    result.w = rand(frag_coord, seed);
+    result.x = rand(focus_point, seed);
+    result.y = rand(focus_point, seed);
+    result.z = rand(focus_point, seed);
+    result.w = rand(focus_point, seed);
     return result;
 }
 
-vec4 rand_vec4(inout int seed)
+vec4 rand4(vec3 focus_point, inout int seed)
+{
+    vec4 result;
+    result.x = rand(focus_point, seed);
+    result.y = rand(focus_point, seed);
+    result.z = rand(focus_point, seed);
+    result.w = rand(focus_point, seed);
+    return result;
+}
+
+vec4 rand4(inout int seed)
 {
     vec4 result;
     result.x = rand(seed);
@@ -165,6 +199,24 @@ float soft_min(float x, float y)
 {
     float t = 0.1;
     return 0.5 * (x + y - soft_abs(x - y, t));
+}
+
+float soft_floor(float x, float t)
+{
+    float floor_x = floor(x);
+    float fract_x = x - floor_x;
+    if (fract_x < 0.5)
+    {
+        return floor_x - 1 + soft_step(fract_x, t);
+    }
+    else if (fract_x > 0.5)
+    {
+        return floor_x + soft_step(fract_x - 1, t);
+    }
+    else
+    {
+        return floor_x;
+    }
 }
 
 float luminance(vec3 color)
@@ -346,5 +398,28 @@ DEFINE_MAT_HAS_NAN_INF(3, 4)
 DEFINE_MAT_HAS_NAN_INF(4, 2)
 DEFINE_MAT_HAS_NAN_INF(4, 3)
 DEFINE_MAT_HAS_NAN_INF(4, 4)
+
+float legendre_eval(float x, int n)
+{
+    switch (n)
+    {
+    case 0: return 1;
+    case 1: return x;
+    default: 
+    {
+        float Pi_2 = 1;
+        float Pi_1 = x;
+        for (int i = 2; i <= n; i++)
+        {
+            float Pi = (2*i - 1) * x * Pi_1 - (i - 1) * Pi_2;
+            Pi /= i;
+
+            Pi_2 = Pi_1;
+            Pi_1 = Pi;
+        }
+        return Pi_1;
+    }
+    }
+}
 
 #endif

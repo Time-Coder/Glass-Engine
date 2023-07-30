@@ -9,7 +9,7 @@ class Transform(Instance):
 		self["abs_position"] = glm.vec3(0, 0, 0)
 		self["abs_orientation"] = glm.vec4(1, 0, 0, 0)
 		self["abs_scale"] = glm.vec3(1, 1, 1)
-		self["env_map_index"] = 0
+		self["env_map_handle"] = 0
 		self["visible"] = 1
 
 	def update(self, other):

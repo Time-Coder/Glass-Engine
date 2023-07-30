@@ -2,8 +2,10 @@ from .GLInfo import GLInfo
 from .GLObject import GLObject
 from .TextureUnits import TextureUnits
 from .GLConfig import GLConfig
+from .utils import checktype
 
 import random
+from functools import wraps
 
 class FBOAttachment(GLObject):
 
@@ -11,13 +13,60 @@ class FBOAttachment(GLObject):
         GLObject.__init__(self)
 
         self._fbo = None
-        self._fbo_attachment_target = None
+        self._fbo_attach_point = None
         self._fbo_image_changed = False
         self._fbo_image_generated_mipmap = True
         self._can_resize = True
+        self._dynamic = True
 
-    def malloc(self, width:int, height:int, internal_format:GLInfo.internal_formats=None, samples:int=None):
+    @property
+    def dynamic(self):
+        return self._dynamic
+
+    @staticmethod
+    def param_setter(func):
+        @wraps(func)
+        def wrapper(*args, **kwargs):
+            self = args[0]
+            value = args[1]
+
+            equal = False
+            try:
+                lvalue = getattr(self, func.__name__)
+                if type(lvalue) != type(value):
+                    equal = False
+                else:
+                    equal = bool(getattr(self, func.__name__) == value)
+            except:
+                equal = False
+
+            if equal:
+                return
+
+            if not self.dynamic:
+                raise RuntimeError(f"none dynamic {self.__class__.__name__} cannot change any parameters")
+
+            safe_func = checktype(func)
+            return_value = safe_func(*args, **kwargs)
+
+            return return_value
+
+        return wrapper
+
+    def malloc(self, width:int, height:int, samples:int=None, layers:int=None, internal_format:GLInfo.internal_formats=None):
         pass
+
+    def resize(self, width:int, height:int, samples:int=None, layers:int=None):
+        if not self._can_resize:
+            return
+
+        self._can_resize = False
+
+        self.malloc(width, height, samples, layers, internal_format=None)
+        if self._fbo is not None:
+            self._fbo.resize(width, height, samples, layers)
+
+        self._can_resize = True
 
     def clear_buffer(self):
         self.bind(force_update_image=True)
@@ -25,18 +74,6 @@ class FBOAttachment(GLObject):
     @property
     def fbo(self):
         return self._fbo
-
-    def resize(self, width:int, height:int, samples:int=None):
-        if not self._can_resize:
-            return
-
-        self._can_resize = False
-
-        self.malloc(width, height, internal_format=None, samples=samples)
-        if self._fbo is not None:
-            self._fbo.resize(width, height, samples)
-
-        self._can_resize = True
 
     def bind(self, update_fbo:bool=False, force_update_image:bool=False):
         cls_name = self.__class__.__name__

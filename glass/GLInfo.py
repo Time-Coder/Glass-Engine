@@ -4,6 +4,7 @@ import sys
 sys.path.append(os.path.abspath(os.path.dirname(os.path.realpath(__file__)) + "/.."))
 
 from OpenGL import GL, constant
+import OpenGL.GL.ARB.gpu_shader_int64 as gsi64
 import numpy as np
 import glm
 import ctypes
@@ -13,12 +14,37 @@ dtype_int8 = np.array([], dtype=np.int8).dtype
 dtype_uint16 = np.array([], dtype=np.uint16).dtype
 dtype_int16 = np.array([], dtype=np.int16).dtype
 dtype_uint32 = np.array([], dtype=np.uint32).dtype
+dtype_uint64 = np.array([], dtype=np.uint64).dtype
 dtype_int32 = np.array([], dtype=np.int32).dtype
+dtype_int64 = np.array([], dtype=np.int64).dtype
 dtype_float16 = np.array([], dtype=np.float16).dtype
 dtype_float32 = np.array([], dtype=np.float32).dtype
 dtype_float64 = np.array([], dtype=np.float64).dtype
 
 class GLInfo:
+	primary_types = \
+	[
+		int, float, bool,
+
+		np.int8, np.uint8,
+		np.int16, np.uint16,
+		np.int32, np.uint32,
+		np.int64, np.uint64,
+		np.float16, np.float32, np.float64,
+
+		dtype_int8, dtype_uint8,
+		dtype_int16, dtype_uint16,
+		dtype_int32, dtype_uint32,
+		dtype_int64, dtype_uint64,
+		dtype_float16, dtype_float32, dtype_float64,
+
+		ctypes.c_int8, ctypes.c_uint8,
+		ctypes.c_int16, ctypes.c_uint16,
+		ctypes.c_int32, ctypes.c_uint32,
+		ctypes.c_int64, ctypes.c_uint64,
+		ctypes.c_float, ctypes.c_double
+	]
+
 	dtype_map = \
 	{
 		GL.GL_BYTE: np.int8,
@@ -27,6 +53,7 @@ class GLInfo:
 		GL.GL_UNSIGNED_SHORT: np.uint16,
 		GL.GL_INT: np.int32,
 		GL.GL_UNSIGNED_INT: np.uint32,
+		gsi64.GL_UNSIGNED_INT64_ARB: np.uint64,
 		GL.GL_HALF_FLOAT: np.float16,
 		GL.GL_FLOAT: np.float32,
 		GL.GL_DOUBLE: np.float64,
@@ -40,6 +67,7 @@ class GLInfo:
 		dtype_uint16:GL.GL_UNSIGNED_SHORT, np.uint16:GL.GL_UNSIGNED_SHORT, ctypes.c_uint16:GL.GL_UNSIGNED_SHORT,
 		dtype_int32:GL.GL_INT, np.int32:GL.GL_INT, ctypes.c_int32:GL.GL_INT, int:GL.GL_INT,
 		dtype_uint32:GL.GL_UNSIGNED_INT, np.uint32:GL.GL_UNSIGNED_INT, ctypes.c_uint32:GL.GL_UNSIGNED_INT,
+		dtype_uint64:gsi64.GL_UNSIGNED_INT64_ARB, np.uint64:gsi64.GL_UNSIGNED_INT64_ARB, ctypes.c_uint64:gsi64.GL_UNSIGNED_INT64_ARB,
 		dtype_float16:GL.GL_HALF_FLOAT, np.float16:GL.GL_HALF_FLOAT,
 		dtype_float32:GL.GL_FLOAT, np.float32:GL.GL_FLOAT, ctypes.c_float:GL.GL_FLOAT, float:GL.GL_FLOAT,
 		dtype_float64:GL.GL_DOUBLE, np.float64:GL.GL_DOUBLE, ctypes.c_double:GL.GL_DOUBLE,
@@ -409,7 +437,7 @@ class GLInfo:
 	int_types = [GL.GL_BYTE, GL.GL_UNSIGNED_BYTE, GL.GL_SHORT, GL.GL_UNSIGNED_SHORT, GL.GL_INT, GL.GL_UNSIGNED_INT]
 	atom_type_names = \
 	[
-		"bool", "int", "uint", "float", "double", "atomic_uint",
+		"bool", "int", "uint", "uint64_t", "float", "double", "atomic_uint",
 
 		"bvec2", "bvec3", "bvec4",
 		"ivec2", "ivec3", "ivec4",
@@ -427,13 +455,17 @@ class GLInfo:
 		"dmat2x4", "dmat3x4", "dmat4x4",
 		"dmat2", "dmat3", "dmat4",
 
-		"sampler2D", "sampler2DMS", "samplerCube", "image2D", "iimage2D", "uimage2D",
-		"isampler2D", "usampler2D", "isampler2DMS", "usampler2DMS"
+		"sampler2D", "isampler2D", "usampler2D",
+		"sampler2DMS", "isampler2DMS", "usampler2DMS",
+		"sampler2DArray", "isampler2DArray", "usampler2DArray",
+		"sampler2DMSArray", "isampler2DMSArray", "usampler2DMSArray",
+		"samplerCube", "samplerCubeArray",
+		"image2D", "iimage2D", "uimage2D"
 	]
 
 	atom_type_map = \
 	{
-		"bool":bool, "int":int, "uint":np.uint32,
+		"bool":bool, "int":int, "uint":np.uint32, "uint64_t":np.uint64,
 		"float":np.float32, "double":np.float64, "atomic_uint":np.uint32,
 
 		"bvec2":glm.bvec2, "bvec3":glm.bvec3, "bvec4":glm.bvec4,
@@ -452,6 +484,7 @@ class GLInfo:
 		"dmat2x4":glm.dmat2x4, "dmat3x4":glm.dmat3x4, "dmat4x4":glm.dmat4x4,
 		"dmat2":glm.dmat2, "dmat3":glm.dmat3, "dmat4":glm.dmat4
 	}
+
 	memory_modifiers_to_internal_types_map = \
 	{
 		"r11f_g11f_b10f": GL.GL_R11F_G11F_B10F,
@@ -500,4 +533,26 @@ class GLInfo:
 		(GL.GL_NEAREST, GL.GL_LINEAR): GL.GL_NEAREST_MIPMAP_LINEAR,
 		(GL.GL_LINEAR, GL.GL_NEAREST): GL.GL_LINEAR_MIPMAP_NEAREST,
 		(GL.GL_LINEAR, GL.GL_LINEAR): GL.GL_LINEAR_MIPMAP_LINEAR
+	}
+	fbo_status_errors = \
+	{
+		GL.GL_FRAMEBUFFER_UNDEFINED: "default FBO does not exist",
+		GL.GL_FRAMEBUFFER_INCOMPLETE_ATTACHMENT: "some attachments are incomplete",
+		GL.GL_FRAMEBUFFER_INCOMPLETE_MISSING_ATTACHMENT: "no attachments attached",
+		GL.GL_FRAMEBUFFER_INCOMPLETE_DRAW_BUFFER: "all color attachments' GL_FRAMEBUFFER_ATTACHMENT_OBJECT_TYPE is GL_NONE",
+		GL.GL_FRAMEBUFFER_INCOMPLETE_READ_BUFFER: "all read buffer color attachments' GL_FRAMEBUFFER_ATTACHMENT_OBJECT_TYPE is GL_NONE",
+		GL.GL_FRAMEBUFFER_UNSUPPORTED: "the combination of attachments' internal formats violates an implementation-dependent set of restrictions",
+		GL.GL_FRAMEBUFFER_INCOMPLETE_MULTISAMPLE: 
+		[
+			"GL_RENDERBUFFER_SAMPLES is not the same for all attached RBOs",
+			"GL_TEXTURE_SAMPLES is the not same for all attached textures",
+			"attachments are a mix of RBOs and textures, but GL_RENDERBUFFER_SAMPLES doesn't match GL_TEXTURE_SAMPLES",
+			"GL_TEXTURE_FIXED_SAMPLE_LOCATIONS is not the same for all attached textures",
+			"attachments are a mix of RBOs and textures, but GL_TEXTURE_FIXED_SAMPLE_LOCATIONS is not GL_TRUE for all attached textures",
+		],
+		GL.GL_FRAMEBUFFER_INCOMPLETE_LAYER_TARGETS:
+		[
+			"some attachments are layered, but some populated attachments are not layered",
+			"all populated color attachments are not from textures of the same target"
+		]
 	}

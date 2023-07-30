@@ -126,10 +126,10 @@ class SkyBox(Mesh):
             self.__program = ShaderProgram()
             self.__program.compile("glsl/Pipelines/skybox/skybox.vs")
             self.__program.compile("glsl/Pipelines/skybox/skybox.fs")
-            self.__program["skybox_map"].bind(self.skybox_map)
 
         return self.__program
     
     def draw(self, camera:Camera):
         self.program["camera"] = camera
+        self.program["skybox_map"] = self.skybox_map
         Mesh.draw(self, self.program)

@@ -79,6 +79,8 @@ class FlatSpotLight:
         self.direction = glm.vec3(0, 1, 0)
         self.aggregate_coeff = spot_light.aggregate_coeff
 
+        self.generate_shadows = spot_light.generate_shadows
+
         self._source = spot_light
         spot_light._flats.add(self)
 

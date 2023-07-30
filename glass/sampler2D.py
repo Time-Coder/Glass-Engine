@@ -11,33 +11,15 @@ from datetime import datetime
 
 from .FBOAttachment import FBOAttachment
 from .GLInfo import GLInfo
-from .utils import checktype, cat, bincat
+from .utils import checktype, cat
 from .ImageLoader import ImageLoader
 from .helper import *
 from .Indices import Indices
 from .Vertices import Vertices, Vertex
 from .GLConfig import GLConfig
-from .ShaderStorageBlock import ShaderStorageBlock
 from .ObjectSet import ObjectSet
 
 class sampler2D(FBOAttachment):
-
-    class BindlessSampler2Ds(ShaderStorageBlock.HostClass):
-        def __init__(self):
-            ShaderStorageBlock.HostClass.__init__(self)
-            self.bindless_sampler2Ds = [0]
-
-        @property
-        def n_bindless_sampler2Ds(self):
-            return len(self.bindless_sampler2Ds)
-
-        @ShaderStorageBlock.HostClass.not_const
-        def append(self, handle:int)->int:
-            index = len(self.bindless_sampler2Ds)
-            self.bindless_sampler2Ds.append(handle)
-            return index
-        
-    BindlessSampler2Ds = BindlessSampler2Ds()
 
     _default_internal_format = GL.GL_RGBA32F
     _default_filter_min = GL.GL_LINEAR
@@ -63,7 +45,6 @@ class sampler2D(FBOAttachment):
     def __init__(self, image:(str,np.ndarray)=None, width:int=None, height:int=None, internal_format:GLInfo.internal_formats=None):
         FBOAttachment.__init__(self)
         
-        self._index = -1
         self._handle = 0
         self._image = None
         self._width = 0
@@ -83,7 +64,6 @@ class sampler2D(FBOAttachment):
         self._filter_min_changed = True
         self._filter_mag_changed = True
         self._border_color_changed = False
-        self._dynamic = True
 
         # shadertoy
         self._shadertoy_program = None
@@ -146,8 +126,6 @@ class sampler2D(FBOAttachment):
             # bt.glMakeTextureHandleNonResidentARB(self._handle)
             self._handle = 0
 
-        self._index = -1
-
         FBOAttachment.__del__(self)
 
     @staticmethod
@@ -183,26 +161,10 @@ class sampler2D(FBOAttachment):
             self._handle = bt.glGetTextureHandleARB(self._id)
             if self._handle == 0:
                 raise RuntimeError(f"failed to create sampler2D {self._id}'s handle")
-            bt.glMakeTextureHandleResidentARB(self._handle)
-            self._index = sampler2D.BindlessSampler2Ds.append(self._handle)
-            
+            bt.glMakeTextureHandleResidentARB(self._handle)            
             self._dynamic = False
 
         return self._handle
-    
-    @property
-    def index(self):
-        self.bind()
-        if self._handle == 0:
-            self._handle = bt.glGetTextureHandleARB(self._id)
-            if self._handle == 0:
-                raise RuntimeError(f"failed to create sampler2D {self._id}'s handle")
-            bt.glMakeTextureHandleResidentARB(self._handle)
-            self._index = sampler2D.BindlessSampler2Ds.append(self._handle)
-            
-            self._dynamic = False
-
-        return self._index
 
     def bind(self, update_fbo:bool=False, force_update_image:bool=False):
         if self._should_update_shadertoy and self._shadertoy_program is not None:
@@ -259,46 +221,12 @@ class sampler2D(FBOAttachment):
         dtype = get_dtype(self._internal_format)
         GL.glClearTexImage(self._id, 0, external_format, dtype, None)
 
-    @staticmethod
-    def param_setter(func):
-        @wraps(func)
-        def wrapper(*args, **kwargs):
-            self = args[0]
-            value = args[1]
-
-            equal = False
-            try:
-                lvalue = getattr(self, func.__name__)
-                if type(lvalue) != type(value):
-                    equal = False
-                else:
-                    equal = bool(getattr(self, func.__name__) == value)
-            except:
-                equal = False
-
-            if equal:
-                return
-
-            if not self.dynamic:
-                raise RuntimeError("none dynamic sampler2D cannot change any parameters")
-
-            safe_func = checktype(func)
-            return_value = safe_func(*args, **kwargs)
-
-            return return_value
-
-        return wrapper
-
-    @property
-    def dynamic(self):
-        return self._dynamic
-
     @property
     def width(self):
         return self._width
 
     @width.setter
-    @param_setter
+    @FBOAttachment.param_setter
     def width(self, width:int):
         self._width = width
         if self._image is not None:
@@ -314,7 +242,7 @@ class sampler2D(FBOAttachment):
         return self._height
 
     @height.setter
-    @param_setter
+    @FBOAttachment.param_setter
     def height(self, height:int):
         self._height = height
         if self._image is not None:
@@ -374,7 +302,7 @@ class sampler2D(FBOAttachment):
         self._image_changed = True
 
     @internal_format.setter
-    @param_setter
+    @FBOAttachment.param_setter
     def internal_format(self, internal_format:GLInfo.internal_formats):
         self._set_internal_format(internal_format)
 
@@ -383,7 +311,7 @@ class sampler2D(FBOAttachment):
         return self._wrap_s
 
     @wrap_s.setter
-    @param_setter
+    @FBOAttachment.param_setter
     def wrap_s(self, wrap_type:GLInfo.wrap_types):
         self._wrap_s = wrap_type
         self._wrap_s_changed = True
@@ -393,7 +321,7 @@ class sampler2D(FBOAttachment):
         return self._wrap_t
 
     @wrap_t.setter
-    @param_setter
+    @FBOAttachment.param_setter
     def wrap_t(self, wrap_type:GLInfo.wrap_types):
         self._wrap_t = wrap_type
         self._wrap_t_changed = True
@@ -403,7 +331,7 @@ class sampler2D(FBOAttachment):
         return self._wrap_s, self._wrap_t
 
     @wrap.setter
-    @param_setter
+    @FBOAttachment.param_setter
     def wrap(self, wrap_type):
         if wrap_type in GLInfo.wrap_types:
             self.wrap_s = wrap_type
@@ -417,7 +345,7 @@ class sampler2D(FBOAttachment):
         return self._filter_min
 
     @filter_min.setter
-    @param_setter
+    @FBOAttachment.param_setter
     def filter_min(self, filter_type:GLInfo.filter_types):
         self._filter_min = filter_type
         self._filter_min_changed = True
@@ -427,7 +355,7 @@ class sampler2D(FBOAttachment):
         return self._filter_mag
 
     @filter_mag.setter
-    @param_setter
+    @FBOAttachment.param_setter
     def filter_mag(self, filter_type:GLInfo.filter_types):
         self._filter_mag = filter_type
         self._filter_mag_changed = True
@@ -437,7 +365,7 @@ class sampler2D(FBOAttachment):
         return self._filter_mipmap
 
     @filter_mipmap.setter
-    @param_setter
+    @FBOAttachment.param_setter
     def filter_mipmap(self, filter_type:GLInfo.filter_types):
         self._filter_mipmap = filter_type
         self._filter_min_changed = True
@@ -454,7 +382,7 @@ class sampler2D(FBOAttachment):
         return self._filter_min, self._filter_mag, self._filter_mipmap
 
     @filter.setter
-    @param_setter
+    @FBOAttachment.param_setter
     def filter(self, filter_type):
         if filter_type in GLInfo.filter_types:
             self.filter_min = filter_type
@@ -471,7 +399,7 @@ class sampler2D(FBOAttachment):
         return self._border_color
 
     @border_color.setter
-    @param_setter
+    @FBOAttachment.param_setter
     def border_color(self, color:(glm.vec3, glm.vec4)):
         if isinstance(color, glm.vec3):
             color = glm.vec4(color, 1)
@@ -482,14 +410,14 @@ class sampler2D(FBOAttachment):
     @property
     def image(self):
         if self._fbo_image_changed:
-            self._image = self._fbo.data(self._fbo_attachment_target)
+            self._image = self._fbo.data(self._fbo_attach_point)
             self._image_changed = False
             self._fbo_image_changed = False
 
         return self._image
 
     @image.setter
-    @param_setter
+    @FBOAttachment.param_setter
     def image(self, image:(np.ndarray,str)):
         is_shadertoy = False
         if isinstance(image, str):
@@ -521,7 +449,7 @@ class sampler2D(FBOAttachment):
             self.__init_shadertoy(image)
 
     @checktype
-    def malloc(self, width:int, height:int, internal_format:GLInfo.internal_formats=None, samples:int=None):        
+    def malloc(self, width:int, height:int, samples:int=None, layers:int=None, internal_format:GLInfo.internal_formats=None):        
         self.width = width
         self.height = height
 

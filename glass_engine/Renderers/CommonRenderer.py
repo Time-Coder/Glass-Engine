@@ -1,17 +1,23 @@
 from .Renderer import Renderer
 from .FlatCamera import FlatCamera
-from ..Filters import GaussFilter, DOFFilter, FXAAFilter, BloomFilter, HDRFilter
+from ..Filters import *
 from ..Frame import Frame
 
 from glass import \
-    ShaderProgram, GLConfig, FBO, RBO, sampler2D, sampler2DMS, ACBO, uimage2D, image2D, samplerCube, GLInfo
+    ShaderProgram, GLConfig, FBO, RBO, sampler2D, sampler2DMS, ACBO, uimage2D, image2D, samplerCube, sampler2DArray, GLInfo
 from glass.DictList import DictList
-from glass.utils import checktype
+from glass.utils import checktype, cat, modify_time
+from ..Lights.DirLight import FlatDirLight
 
 from OpenGL import GL
 import glm
+import os
+import sys
+import numpy as np
 
 class CommonRenderer(Renderer):
+
+    __dir_light_depth_geo_shader_template = None
 
     def __init__(self):
         Renderer.__init__(self)
@@ -38,6 +44,8 @@ class CommonRenderer(Renderer):
         self._flat_cameras["top"] = FlatCamera("top")
         self._flat_cameras["front"] = FlatCamera("front")
         self._flat_cameras["back"] = FlatCamera("back")
+
+        self._depth_filter_kernel = KernelFilter.Kernel(np.ones((5, 5))/25)
 
         self.filters["bloom"] = BloomFilter()
         self.filters["DOF"] = DOFFilter()
@@ -115,7 +123,7 @@ class CommonRenderer(Renderer):
                         FXAAFilter.program["screen_image"] = env_map
                         FXAAFilter.program.draw_triangles(Frame.vertices, Frame.indices)
                     env_map = env_FXAA_fbo.color_attachment(0)
-                    inst.env_map_index = env_map.index
+                    inst.env_map_handle = env_map.handle
                     inst.user_data["env_bake_state"] = "filtered"
         else:
             for mesh, instances in self.scene.all_meshes.items():
@@ -128,7 +136,7 @@ class CommonRenderer(Renderer):
                         continue
 
                     env_OIT_blend_fbo = self.env_OIT_blend_fbo(inst)
-                    inst.env_map_index = env_OIT_blend_fbo.color_attachment(0).index
+                    inst.env_map_handle = env_OIT_blend_fbo.color_attachment(0).handle
 
     @property
     def programs(self):
@@ -189,6 +197,123 @@ class CommonRenderer(Renderer):
         return False
     
     @property
+    def dir_light_depth_geo_shader_path(self):
+        cache_folder = os.path.dirname(os.path.abspath(sys.argv[0])) + "/__glcache__"
+        if not os.path.isdir(cache_folder):
+            os.makedirs(cache_folder)
+
+        self_folder = os.path.dirname(os.path.abspath(__file__))
+        target_filename = cache_folder + f"/DirLight_depth{self.camera.CSM_levels}.gs"
+        template_filename = self_folder + "/../glsl/Pipelines/DirLight_depth/DirLight_depth.gs"
+        if not os.path.isfile(target_filename) or modify_time(template_filename) > modify_time(target_filename):
+            if CommonRenderer.__dir_light_depth_geo_shader_template is None:
+                CommonRenderer.__dir_light_depth_geo_shader_template = cat(template_filename)
+
+            content = CommonRenderer.__dir_light_depth_geo_shader_template.replace("{CSM_levels}", str(self.camera.CSM_levels))
+            out_file = open(target_filename, "w")
+            out_file.write(content)
+            out_file.close()
+
+        return target_filename
+
+    @property
+    def dir_light_depth_program(self):
+        key = f"dir_light_depth{self.camera.CSM_levels}"
+        if key in self.programs:
+            return self.programs[key]
+        
+        program = ShaderProgram()
+        program.add_include_path(os.path.dirname(os.path.abspath(__file__)) + "/../glsl/Pipelines/DirLight_depth")
+        program.compile("../glsl/Pipelines/DirLight_depth/DirLight_depth.vs")
+        program.compile(self.dir_light_depth_geo_shader_path)
+        program.compile("../glsl/Pipelines/DirLight_depth/DirLight_depth.fs")
+
+        self.programs[key] = program
+
+        return program
+    
+    @property
+    def dir_light_depth_filter_program(self):
+        key = f"dir_light_depth_filter{self.camera.CSM_levels}"
+        if key in self.programs:
+            return self.programs[key]
+        
+        program = ShaderProgram()
+        program.compile(Frame.draw_frame_vs)
+        program.compile(Frame.draw_frame_array_gs(self.camera.CSM_levels))
+        program.compile("../glsl/Filters/array_kernel_filter.fs")
+        program["Kernel"].bind(self._depth_filter_kernel)
+
+        self.programs[key] = program
+
+        return program
+
+    def update_dir_lights_depth(self):
+        for dir_light in self.scene.dir_lights:
+            if not dir_light.generate_shadows:
+                continue
+
+            dir_light.max_back_offset = 0
+
+        for mesh, instances in self.scene.all_meshes.items():
+            if not mesh.material.cast_shadows:
+                continue
+
+            original_center = mesh.center
+            original_corner = glm.vec3()
+            original_corner.x = original_center.x + (mesh.x_max - mesh.x_min)/2
+            original_corner.y = original_center.y + (mesh.y_max - mesh.y_min)/2
+            original_corner.z = original_center.z + (mesh.z_max - mesh.z_min)/2
+            for instance in instances:
+                center = instance.apply(original_center)
+                corner = instance.apply(original_corner)
+                radius = glm.length(corner - center)
+
+                for dir_light in self.scene.dir_lights:
+                    if not dir_light.generate_shadows:
+                        continue
+
+                    current_offset = radius + glm.dot(center, -dir_light.direction)
+                    if current_offset > dir_light.max_back_offset:
+                        dir_light.max_back_offset = current_offset
+
+        for dir_light in self.scene.dir_lights:
+            if not dir_light.generate_shadows:
+                continue
+
+            if dir_light.depth_fbo is None:
+                dir_light.depth_fbo = FBO(1024, 1024, layers=self.camera.CSM_levels)
+                dir_light.depth_fbo.attach(GL.GL_DEPTH_ATTACHMENT, sampler2DArray)
+                dir_light.depth_fbo.depth_attachment.wrap_s = GL.GL_CLAMP_TO_BORDER
+                dir_light.depth_fbo.depth_attachment.wrap_t = GL.GL_CLAMP_TO_BORDER
+                dir_light.depth_fbo.depth_attachment.border_color = glm.vec4(1, 1, 1, 1)
+
+                dir_light.depth_filter_fbo = FBO(1024, 1024, layers=self.camera.CSM_levels)
+                dir_light.depth_filter_fbo.attach(0, sampler2DArray)
+
+                dir_light.depth_filter = GaussFilter(5)
+            
+            with GLConfig.LocalConfig(depth_test=True, blend=False, cull_face=None, polygon_mode=GL.GL_FILL):
+                with dir_light.depth_fbo:
+                    GLConfig.clear_buffer(2, glm.vec4(1,1,1,1))
+                    self.dir_light_depth_program["dir_light"] = dir_light
+                    self.dir_light_depth_program["camera"] = self.camera
+                    for mesh, instances in self.scene.all_meshes.items():
+                        if not mesh.material.cast_shadows:
+                            continue
+
+                        self.dir_light_depth_program["explode_distance"] = mesh.explode_distance
+                        mesh.draw(self.dir_light_depth_program, instances)
+
+            # with GLConfig.LocalConfig(depth_test=False, cull_face=None, polygon_mode=GL.GL_FILL):
+            #     with dir_light.depth_filter_fbo:
+            #         self.dir_light_depth_filter_program["screen_image"] = dir_light.depth_fbo.depth_attachment
+            #         self.dir_light_depth_filter_program.draw_triangles(Frame.vertices, Frame.indices)
+
+            dir_light.depth_map_handle = dir_light.depth_fbo.depth_attachment.handle
+            # dir_light.depth_map_handle = dir_light.depth_filter(dir_light.depth_fbo.depth_attachment).handle
+
+    @property
     def forward_program(self):
         if "forward" in self.programs:
             return self.programs["forward"]
@@ -201,7 +326,6 @@ class CommonRenderer(Renderer):
         program["PointLights"].bind(self.scene.point_lights)
         program["DirLights"].bind(self.scene.dir_lights)
         program["SpotLights"].bind(self.scene.spot_lights)
-        program["BindlessSampler2Ds"].bind(sampler2D.BindlessSampler2Ds)
 
         self.programs["forward"] = program
 
@@ -286,7 +410,6 @@ class CommonRenderer(Renderer):
             program["DirLights"].bind(self.scene.dir_lights)
             program["PointLights"].bind(self.scene.point_lights)
             program["SpotLights"].bind(self.scene.spot_lights)
-            program["BindlessSampler2Ds"].bind(sampler2D.BindlessSampler2Ds)
             
             self.programs["gen_env_map"] = program
 
@@ -441,7 +564,7 @@ class CommonRenderer(Renderer):
                     FXAAFilter.program.draw_triangles(Frame.vertices, Frame.indices)
                 env_map = env_FXAA_fbo.color_attachment(0)
                 instance.user_data["env_bake_state"] = "filtered"
-            instance.env_map_index = env_map.index
+            instance.env_map_handle = env_map.handle
             instance.visible = 1
             self.increase_bake_times(instance)
 

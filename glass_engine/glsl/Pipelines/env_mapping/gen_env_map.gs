@@ -1,6 +1,7 @@
 #version 460 core
 
 #extension GL_ARB_bindless_texture : require
+#extension GL_ARB_gpu_shader_int64 : require
 
 layout (triangles) in;
 layout (triangle_strip, max_vertices=18) out;
@@ -12,7 +13,7 @@ in VertexOut
     vec3 tex_coord;
     vec4 color;
     vec4 back_color;
-    flat int env_map_index;
+    flat uint64_t env_map_handle;
     flat bool visible;
 } gs_in[];
 
@@ -26,9 +27,6 @@ out GeometryOut
     flat bool visible;
 } gs_out;
 
-out vec4 NDC;
-out flat int camera_index;
-
 out PreShadingColors
 {
     vec3 Gouraud_color;
@@ -37,7 +35,9 @@ out PreShadingColors
     flat vec3 Flat_back_color;
 } pre_shading_colors;
 
-out flat int env_map_index;
+out vec4 NDC;
+out flat int camera_index;
+out flat uint64_t env_map_handle;
 
 #include "../../include/Camera.glsl"
 #include "../../include/Material.glsl"
@@ -51,12 +51,6 @@ uniform Material back_material;
 uniform bool is_filled;
 uniform bool use_skydome_map;
 uniform sampler2D skydome_map;
-
-buffer BindlessSampler2Ds
-{
-    int n_bindless_sampler2Ds;
-    sampler2D bindless_sampler2Ds[];
-};
 
 void main()
 {
@@ -86,43 +80,42 @@ void main()
             camera_index = face;
             gs_out.visible = gs_in[i].visible;
 
-            env_map_index = gs_in[i].env_map_index;
+            env_map_handle = gs_in[i].env_map_handle;
 
             pre_shading_colors.Gouraud_color = vec3(0, 0, 0);
             pre_shading_colors.Gouraud_back_color = vec3(0, 0, 0);
             pre_shading_colors.Flat_color = vec3(0, 0, 0);
             pre_shading_colors.Flat_back_color = vec3(0, 0, 0);
 
+            
+
             // pre lighting
             if (is_filled)
             {
                 if (material.shading_model == 1) // Flat
                 {
+                    // front
                     InternalMaterial internal_material = fetch_internal_material(face_color, material, face_tex_coord);
                     FLAT_LIGHTING(pre_shading_colors.Flat_color, internal_material, face_world_pos, face_world_normal);
+                
+                    // back
+                    internal_material = fetch_internal_material(face_back_color, back_material, face_tex_coord);
+                    FLAT_LIGHTING(pre_shading_colors.Flat_back_color, internal_material, face_world_pos, -face_world_normal);
                 }
 
                 if (material.shading_model == 2) // Gouraud
                 {
                     vec3 vertex_world_pos = view_to_world(cameras[face], gs_out.view_pos);
+                    vec3 vertex_world_normal = normalize(gs_in[i].world_TBN[2]);
+                    
                     InternalMaterial internal_material = fetch_internal_material(gs_out.color, material, gs_out.tex_coord.xy);
-                    GOURAUD_LIGHTING(pre_shading_colors.Gouraud_color, internal_material, cameras[face].abs_position, vertex_world_pos, normalize(gs_in[i].world_TBN[2]));
-                }
-
-                if (back_material.shading_model == 1) // Flat
-                {
-                    InternalMaterial internal_material = fetch_internal_material(face_back_color, back_material, face_tex_coord);
-                    FLAT_LIGHTING(pre_shading_colors.Flat_back_color, internal_material, face_world_pos, -face_world_normal);
-                }
-
-                if (back_material.shading_model == 2) // Gouraud
-                {
-                    vec3 vertex_world_pos = view_to_world(cameras[face], gs_out.view_pos);
-                    InternalMaterial internal_material = fetch_internal_material(gs_out.back_color, back_material, gs_out.tex_coord.xy);
-                    GOURAUD_LIGHTING(pre_shading_colors.Gouraud_back_color, internal_material, cameras[face].abs_position, vertex_world_pos, -normalize(gs_in[i].world_TBN[2]));
+                    GOURAUD_LIGHTING(pre_shading_colors.Gouraud_color, internal_material, cameras[face].abs_position, vertex_world_pos, vertex_world_normal);
+                
+                    internal_material = fetch_internal_material(gs_out.back_color, back_material, gs_out.tex_coord.xy);
+                    GOURAUD_LIGHTING(pre_shading_colors.Gouraud_back_color, internal_material, cameras[face].abs_position, vertex_world_pos, -vertex_world_normal);
                 }
             }
-
+            
             NDC = view_to_NDC(cameras[face], gs_out.view_pos);
             gl_Position = NDC;
             
