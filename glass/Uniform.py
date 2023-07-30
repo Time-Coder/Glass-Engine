@@ -1,4 +1,5 @@
 from OpenGL import GL
+import OpenGL.GL.ARB.gpu_shader_int64 as gsi64
 import glm
 import copy
 from enum import Enum
@@ -13,6 +14,7 @@ from .sampler2DMS import sampler2DMS
 from .isampler2DMS import isampler2DMS
 from .usampler2DMS import usampler2DMS
 from .samplerCube import samplerCube
+from .sampler2DArray import sampler2DArray
 from .ACBO import ACBO
 from .GLConfig import GLConfig
 from .utils import subscript
@@ -258,7 +260,7 @@ class Uniform:
             Uniform._set_atom_map = \
             {
                 "bool": Uniform._set_bool, "int": Uniform._set_int, "uint": Uniform._set_uint,
-                "float": Uniform._set_float, "double": Uniform._set_double,
+                "uint64_t": Uniform._set_uint64_t, "float": Uniform._set_float, "double": Uniform._set_double,
                 "bvec2": Uniform._set_bvec2, "bvec3": Uniform._set_bvec3, "bvec4": Uniform._set_bvec4,
                 "ivec2": Uniform._set_ivec2, "ivec3": Uniform._set_ivec3, "ivec4": Uniform._set_ivec4,
                 "uvec2": Uniform._set_uvec2, "uvec3": Uniform._set_uvec3, "uvec4": Uniform._set_uvec4,
@@ -276,7 +278,7 @@ class Uniform:
                 "sampler2D": Uniform._set_sampler2D, "isampler2D": Uniform._set_isampler2D, "usampler2D": Uniform._set_usampler2D,
                 "image2D": Uniform._set_image2D, "iimage2D": Uniform._set_iimage2D, "uimage2D": Uniform._set_uimage2D,
                 "sampler2DMS": Uniform._set_sampler2DMS, "isampler2DMS": Uniform._set_isampler2DMS, "usampler2DMS": Uniform._set_usampler2DMS,
-                "samplerCube": Uniform._set_samplerCube,
+                "samplerCube": Uniform._set_samplerCube, "sampler2DArray": Uniform._set_sampler2DArray
             }
         return Uniform._set_atom_map[atom_type]
 
@@ -294,6 +296,9 @@ class Uniform:
             value = int(value.value)
             
         GL.glUniform1ui(location, int(value))
+
+    def _set_uint64_t(self, location:int, value):    
+        gsi64.glUniform1ui64ARB(location, int(value))
 
     def _set_float(self, location:int, value):
         GL.glUniform1f(location, float(value))
@@ -446,6 +451,13 @@ class Uniform:
 
     def _set_usampler2DMS(self, location:int, value:usampler2DMS):
         self._set_sampler2DMS(location, value)
+
+    def _set_sampler2DArray(self, location:int, value:sampler2DArray):
+        if value is not None:
+            value.bind()
+
+        self._program._sampler_map[self._current_atom_name]["location"] = location
+        self._program._sampler_map[self._current_atom_name]["sampler"] = value
 
     def __set_general_image2D(self, location:int, value:(image2D,iimage2D,uimage2D,str), image_type:[image2D,iimage2D,uimage2D]=image2D):
         if isinstance(value, str):

@@ -32,6 +32,25 @@ class AttrList(SameTypeList):
     def draw_type(self, draw_type:GLInfo.draw_types):
         self._draw_type = draw_type
 
+    @property
+    def dtype(self):
+        if self._dtype is not None:
+            return self._dtype
+        
+        if self:
+            return type(self._list[0])
+
+        return None
+    
+    @dtype.setter
+    def dtype(self, dtype):
+        if self._dtype == dtype:
+            return
+        
+        self._dtype = dtype
+        self._list_dirty = True
+        self.stride = sizeof(dtype)
+
     def _apply(self):
         self._check_in_items()
         if self._increment is None:

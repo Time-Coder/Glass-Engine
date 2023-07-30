@@ -474,7 +474,7 @@ class _MetaGLConfig(type):
             try:
                 _MetaGLConfig.__max_color_attachments = GL.glGetIntegerv(GL.GL_MAX_COLOR_ATTACHMENTS)
             except:
-                return 32
+                return 8
             
         return _MetaGLConfig.__max_color_attachments
     

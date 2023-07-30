@@ -2,7 +2,7 @@ import copy
 import numpy as np
 
 from .utils import capacity_of
-from .helper import nitems
+from .helper import nitems, sizeof
 from .GLConfig import GLConfig
 from .GLInfo import GLInfo
 
@@ -77,7 +77,14 @@ class SameTypeList:
 
                     self._list_ndarray = np.array(self._data_list, dtype=np.uint64)
                 else:
-                    self._list_ndarray = np.array(self._list)
+                    if self._dtype is None:
+                        self._list_ndarray = np.array(self._list)
+                    else:
+                        np_dtype = self._dtype
+                        if np_dtype in GLInfo.np_dtype_map:
+                            np_dtype = GLInfo.np_dtype_map[np_dtype]
+                        self._list_ndarray = np.array(self._list, dtype=np_dtype)
+
             self._list_dirty = False
 
         return self._list_ndarray
@@ -330,3 +337,11 @@ class SameTypeList:
             return type(self._list[0])
         
         return None
+
+    @dtype.setter
+    def dtype(self, dtype):
+        if self._dtype == dtype:
+            return
+        
+        self._dtype = dtype
+        self._list_dirty = True

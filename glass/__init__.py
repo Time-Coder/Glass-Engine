@@ -15,6 +15,7 @@ from .sampler2DMS import sampler2DMS
 from .isampler2DMS import isampler2DMS
 from .usampler2DMS import usampler2DMS
 from .samplerCube import samplerCube
+from .sampler2DArray import sampler2DArray
 
 from .Vertices import Vertices, Vertex
 from .Indices import Indices

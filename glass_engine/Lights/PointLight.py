@@ -161,6 +161,7 @@ class FlatPointLight:
         self.K2 = point_light._K2
         self.coverage = point_light._coverage
         self.abs_position = glm.vec3(0, 0, 0)
+        self.generate_shadows = point_light.generate_shadows
 
         self._source = point_light
         point_light._flats.add(self)

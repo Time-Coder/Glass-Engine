@@ -65,6 +65,8 @@ class Material():
         self.__albedo = glm.vec3(0.5, 0.5, 0.5)
         self.__metallic = 0.5
         self.__roughness = 0.5
+        self.__recv_shadows = True
+        self.__cast_shadows = True
 
         self.__ambient_map = None
         self.__diffuse_map = None
@@ -95,6 +97,24 @@ class Material():
         self.__has_opaque = False
 
         self._parent_meshes = set()
+
+    @property
+    def recv_shadows(self):
+        return self.__recv_shadows
+    
+    @recv_shadows.setter
+    @checktype
+    def recv_shadows(self, flag:bool):
+        self.__recv_shadows = flag
+
+    @property
+    def cast_shadows(self):
+        return self.__cast_shadows
+    
+    @cast_shadows.setter
+    @checktype
+    def cast_shadows(self, flag:bool):
+        self.__cast_shadows = flag
 
     @property
     def has_transparent(self):
@@ -136,9 +156,7 @@ class Material():
         for mesh in self._parent_meshes:
             for scene in mesh.scenes:
                 for instance in scene._all_meshes[mesh].values():
-                    if "env_max_bake_times" in instance.user_data and \
-                       scene in instance.user_data["env_max_bake_times"]:
-                        instance.user_data["env_max_bake_times"][scene] = 0
+                    instance.user_data["env_bake_times", scene] = 0
 
     @property
     def dynamic_env_mapping(self):

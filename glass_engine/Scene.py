@@ -8,7 +8,7 @@ from .SkyBox import SkyBox
 from .SkyDome import SkyDome
 
 from glass.utils import checktype, vec4_to_quat, quat_to_vec4
-from glass import Instances, samplerCube, ShaderStorageBlock
+from glass import Instances, samplerCube
 
 import glm
 import numpy as np
@@ -56,10 +56,7 @@ class Scene:
     def skydome(self, image:(str,np.ndarray)):
         self._skydome.skydome_map = image
 
-    def __update_env_map(self, scene_node:SceneNode=None):
-        if not self.__anything_changed:
-            return
-
+    def __update_env_maps(self, scene_node:SceneNode=None):
         if scene_node is None:
             scene_node = self._root
 
@@ -67,7 +64,11 @@ class Scene:
             scene_node.material.update_env_map()
 
         for child in scene_node.children:
-            self.__update_env_map(child)
+            self.__update_env_maps(child)
+
+    def __update_depth_maps(self):
+        for dir_light in self._dir_lights:
+            dir_light.need_update_depth_map = True
 
     def __clear_dirty(self, scene_node:SceneNode=None):
         if scene_node is None:
@@ -128,7 +129,8 @@ class Scene:
                 self._point_lights_changed = True
             elif isinstance(scene_node, DirLight):
                 dir_light = FlatDirLight(scene_node)
-                dir_light.direction = quat * glm.vec3(0, 1, 0)
+                dir_light.direction = quat * dir_light.direction
+                dir_light.abs_orientation = quat
                 if new_path in self._dir_lights:
                     scene_node._flats.remove(self._dir_lights[new_path])
                 self._dir_lights[new_path] = dir_light
@@ -143,9 +145,12 @@ class Scene:
         if self not in self._root._transform_dirty and self not in self._root._children_transform_dirty:
             return
         
-        self.__anything_changed = False
         self.__trav(self._root, Transform(), "")
-        self.__update_env_map()
+        if self.__anything_changed:
+            self.__update_env_maps()
+            self.__update_depth_maps()
+            self.__anything_changed = False
+
         self.__clear_dirty()
         for mesh in self._all_meshes:
             if mesh not in self._backup_meshes:
@@ -204,7 +209,8 @@ class Scene:
                 break
             
             self._last_generated_meshes.clear()
-            
+        
+        self.__anything_changed = True
         return True
     
     @staticmethod

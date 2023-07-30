@@ -8,6 +8,7 @@ from glass.utils import checktype, vec4_to_quat
 from glass.AttrList import AttrList
 
 import glm
+import math
 from functools import wraps
 from OpenGL import GL
 import inspect
@@ -101,7 +102,7 @@ class Mesh(Entity):
                 self.span_lat >= 180 and self.span_lon >= 360) or \
                (self.__class__.__name__ == "Icosphere" and \
                 self.scale.x == self.scale.y == self.scale.z)
-    
+
     @property
     def has_transparent(self):
         return self.__has_transparent
@@ -311,13 +312,17 @@ class Mesh(Entity):
             self._test_transparent()
             return
 
-        if self.vertices.hasattr("color"):
-            for i in range(len(self.vertices)):
-                self.vertices._attr_list_map["color"][i] = self.color
+        if "color" not in self.vertices._attr_list_map:
+            self.vertices._attr_list_map["color"] = AttrList()
 
-        if self.vertices.hasattr("back_color"):
-            for i in range(len(self.vertices)):
-                self.vertices._attr_list_map["back_color"][i] = self.back_color
+        if "back_color" not in self.vertices._attr_list_map:
+            self.vertices._attr_list_map["back_color"] = AttrList()
+
+        for i in range(len(self.vertices)):
+            self.vertices._attr_list_map["color"][i] = self.color
+
+        for i in range(len(self.vertices)):
+            self.vertices._attr_list_map["back_color"][i] = self.back_color
 
         self._test_transparent()
 
@@ -466,7 +471,7 @@ class Mesh(Entity):
 
     @property
     def bounding_box(self):
-        return self.__bounding_box
+        return (self.x_min, self.x_max, self.y_min, self.y_max, self.z_min, self.z_max)
 
     @property
     def center(self):

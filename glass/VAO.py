@@ -1,4 +1,5 @@
 from OpenGL import GL
+import OpenGL.GL.ARB.gpu_shader_int64 as gsi64
 import ctypes
 
 from .utils import checktype
@@ -24,7 +25,7 @@ class VAP:
 			stride = sizeof(element_type)
 
 		gl_type = GLInfo.dtype_inverse_map[element_type]
-		if gl_type == GL.GL_DOUBLE:
+		if gl_type in [GL.GL_DOUBLE, gsi64.GL_UNSIGNED_INT64_ARB]:
 			GL.glVertexAttribLPointer(self._location, nitems(element_type), gl_type, stride, ctypes.c_void_p(offset))
 		elif gl_type in GLInfo.int_types:
 			GL.glVertexAttribIPointer(self._location, nitems(element_type), gl_type, stride, ctypes.c_void_p(offset))

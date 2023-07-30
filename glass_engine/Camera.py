@@ -33,6 +33,7 @@ class Camera(SinglePathNode):
 		self.__focus_tex_coord = glm.vec2(0.5, 0.5)
 		self.__focus_change_speed = 0.005 # m/s
 		self.__screen = Screen(self)
+		self.__CSM_levels = 5
 
 	@property
 	def projection_mode(self):
@@ -225,3 +226,11 @@ class Camera(SinglePathNode):
 		
 		return device_coord
 	
+	@property
+	def CSM_levels(self):
+		return self.__CSM_levels
+	
+	@CSM_levels.setter
+	@checktype
+	def CSM_levels(self, levels:int):
+		self.__CSM_levels = levels

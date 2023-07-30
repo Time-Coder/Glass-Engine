@@ -25,6 +25,7 @@ class Floor(Mesh):
             Floor.__default_image[50:, :50, :] = 127
 
         self.material.diffuse_map = Floor.__default_image
+        self.material.cast_shadows = False
         self.start_building()
 
     def build(self):

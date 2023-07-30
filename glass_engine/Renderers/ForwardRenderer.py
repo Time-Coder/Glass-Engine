@@ -124,6 +124,7 @@ class ForwardRenderer(CommonRenderer):
     def render(self, camera, scene):
         # profiler.enable()
         self._should_update = False
+        self.update_dir_lights_depth()
         self.generate_SSAO()
         self.draw_opaque()
         self.draw_transparent()

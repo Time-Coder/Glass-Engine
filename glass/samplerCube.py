@@ -13,54 +13,7 @@ from .ImageLoader import ImageLoader
 from .DictList import DictList
 from .ShaderStorageBlock import ShaderStorageBlock
 
-@staticmethod
-def _param_setter(func):
-	@wraps(func)
-	def wrapper(*args, **kwargs):
-		self = args[0]
-		value = args[1]
-
-		success = False
-		try:
-			lvalue = getattr(self, func.__name__)
-			if type(lvalue) != value:
-				success = False
-			else:
-				success = bool(getattr(self, func.__name__) == value)
-		except:
-			success = False
-
-		if success:
-			return
-
-		if not self.dynamic:
-			raise RuntimeError("none dynamic samplerCube cannot change any parameters")
-
-		safe_func = checktype(func)
-		return_value = safe_func(*args, **kwargs)
-
-		return return_value
-
-	return wrapper
-
 class samplerCube(FBOAttachment):
-
-	class BindlessSamplerCubes(ShaderStorageBlock.HostClass):
-		def __init__(self):
-			ShaderStorageBlock.HostClass.__init__(self)
-			self.bindless_samplerCubes = [0]
-
-		@property
-		def n_bindless_samplerCubes(self):
-			return len(self.bindless_samplerCubes)
-
-		@ShaderStorageBlock.HostClass.not_const
-		def append(self, handle:int)->int:
-			index = len(self.bindless_samplerCubes)
-			self.bindless_samplerCubes.append(handle)
-			return index
-		
-	BindlessSamplerCubes = BindlessSamplerCubes()
 
 	_basic_info = \
 	{
@@ -95,7 +48,7 @@ class samplerCube(FBOAttachment):
 			return self._width
 
 		@width.setter
-		@_param_setter
+		@FBOAttachment.param_setter
 		def width(self, width:int):
 			self._width = width
 			if self._image is not None:
@@ -111,7 +64,7 @@ class samplerCube(FBOAttachment):
 			return self._height
 
 		@height.setter
-		@_param_setter
+		@FBOAttachment.param_setter
 		def height(self, height:int):
 			self._height = height
 			if self._image is not None:
@@ -131,7 +84,7 @@ class samplerCube(FBOAttachment):
 			return self._internal_format
 
 		@internal_format.setter
-		@_param_setter
+		@FBOAttachment.param_setter
 		def internal_format(self, format:GLInfo.internal_formats):
 			if self._internal_format == format:
 				return
@@ -158,7 +111,7 @@ class samplerCube(FBOAttachment):
 			return self._image
 
 		@image.setter
-		@_param_setter
+		@FBOAttachment.param_setter
 		def image(self, image:(np.ndarray,str)):
 			if isinstance(image, str):
 				image = ImageLoader.load(image)
@@ -205,7 +158,6 @@ class samplerCube(FBOAttachment):
 	def __init__(self, width:int=0, height:int=0, internal_format:GLInfo.internal_formats=GL.GL_RGBA32F):
 		FBOAttachment.__init__(self)
 
-		self._index = -1
 		self._handle = 0
 		self._dynamic = True
 
@@ -234,10 +186,7 @@ class samplerCube(FBOAttachment):
 
 	def __del__(self):
 		if self._handle != 0:
-			# bt.glMakeTextureHandleNonResidentARB(self._handle)
 			self._handle = 0
-
-		self._index = -1
 
 		FBOAttachment.__del__(self)
 
@@ -280,31 +229,9 @@ class samplerCube(FBOAttachment):
 			if self._handle == 0:
 				raise RuntimeError("failed to create samplerCube {self._id}'s handle")
 			bt.glMakeTextureHandleResidentARB(self._handle)
-			self._index = samplerCube.BindlessSamplerCubes.append(self._handle)
-			
 			self._dynamic = False
 
 		return self._handle
-	
-	@property
-	def index(self):
-		if self._id == 0:
-			return -1
-		
-		if self._handle == 0:
-			self._handle = bt.glGetTextureHandleARB(self._id)
-			if self._handle == 0:
-				raise RuntimeError("failed to create samplerCube {self._id}'s handle")
-			bt.glMakeTextureHandleResidentARB(self._handle)
-			self._index = samplerCube.BindlessSamplerCubes.append(self._handle)
-			
-			self._dynamic = False
-
-		return self._index
-
-	@property
-	def dynamic(self):
-		return self._dynamic
 
 	@property
 	def is_completed(self):
@@ -361,7 +288,7 @@ class samplerCube(FBOAttachment):
 		return self._faces[0].internal_format
 	
 	@internal_format.setter
-	@checktype
+	@FBOAttachment.param_setter
 	def internal_format(self, internal_format:GLInfo.internal_formats):
 		for i in range(6):
 			self._faces[i].internal_format = internal_format
@@ -371,7 +298,7 @@ class samplerCube(FBOAttachment):
 		return self._wrap_s
 
 	@wrap_s.setter
-	@_param_setter
+	@FBOAttachment.param_setter
 	def wrap_s(self, wrap_type:GLInfo.wrap_types):
 		self._wrap_s = wrap_type
 		self._wrap_s_changed = True
@@ -381,7 +308,7 @@ class samplerCube(FBOAttachment):
 		return self._wrap_t
 
 	@wrap_t.setter
-	@_param_setter
+	@FBOAttachment.param_setter
 	def wrap_t(self, wrap_type:GLInfo.wrap_types):
 		self._wrap_t = wrap_type
 		self._wrap_t_changed = True
@@ -391,7 +318,7 @@ class samplerCube(FBOAttachment):
 		return self._wrap_r
 
 	@wrap_r.setter
-	@_param_setter
+	@FBOAttachment.param_setter
 	def wrap_r(self, wrap_type:GLInfo.wrap_types):
 		self._wrap_r = wrap_type
 		self._wrap_r_changed = True
@@ -401,7 +328,7 @@ class samplerCube(FBOAttachment):
 		return self._wrap_s, self._wrap_t, self._wrap_r
 
 	@wrap.setter
-	@_param_setter
+	@FBOAttachment.param_setter
 	def wrap(self, wrap_type):
 		if wrap_type in GLInfo.wrap_types:
 			self.wrap_s = wrap_type
@@ -417,7 +344,7 @@ class samplerCube(FBOAttachment):
 		return self._filter_min
 
 	@filter_min.setter
-	@_param_setter
+	@FBOAttachment.param_setter
 	def filter_min(self, filter_type:GLInfo.filter_types):
 		self._filter_min = filter_type
 		self._filter_min_changed = True
@@ -427,7 +354,7 @@ class samplerCube(FBOAttachment):
 		return self._filter_mag
 
 	@filter_mag.setter
-	@_param_setter
+	@FBOAttachment.param_setter
 	def filter_mag(self, filter_type:GLInfo.filter_types):
 		self._filter_mag = filter_type
 		self._filter_mag_changed = True
@@ -437,7 +364,7 @@ class samplerCube(FBOAttachment):
 		return self._filter_mipmap
 
 	@filter_mipmap.setter
-	@_param_setter
+	@FBOAttachment.param_setter
 	def filter_mipmap(self, filter_type:GLInfo.filter_types):
 		self._filter_mipmap = filter_type
 		self._filter_min_changed = True
@@ -454,7 +381,7 @@ class samplerCube(FBOAttachment):
 		return self._filter_min, self._filter_mag, self._filter_mipmap
 
 	@filter.setter
-	@_param_setter
+	@FBOAttachment.param_setter
 	def filter(self, filter_type):
 		if filter_type in GLInfo.filter_types:
 			self.filter_min = filter_type
@@ -468,7 +395,7 @@ class samplerCube(FBOAttachment):
 		return self._border_color
 
 	@border_color.setter
-	@_param_setter
+	@FBOAttachment.param_setter
 	def border_color(self, color:(glm.vec3, glm.vec4)):
 		if isinstance(color, glm.vec3):
 			color = glm.vec4(color, 1)
@@ -477,7 +404,7 @@ class samplerCube(FBOAttachment):
 		self._border_color_changed = True
 
 	@checktype
-	def malloc(self, width:int, height:int, internal_format:GLInfo.internal_formats=None, samples:int=None):
+	def malloc(self, width:int, height:int, samples:int=None, layers:int=None, internal_format:GLInfo.internal_formats=None):
 		for face in self._faces:
 			face.malloc(width, height, internal_format)
 
