@@ -1,7 +1,6 @@
 #version 460 core
 
 #extension GL_ARB_bindless_texture : require
-#extension GL_ARB_gpu_shader_int64 : require
 #extension GL_EXT_texture_array : require
 
 layout (triangles) in;
@@ -9,12 +8,11 @@ layout (triangle_strip, max_vertices = 3) out;
 
 in VertexOut
 {
-    vec3 view_pos;
     mat3 view_TBN;
     vec3 tex_coord;
     vec4 color;
     vec4 back_color;
-    flat uint64_t env_map_handle;
+    flat uvec2 env_map_handle;
     flat bool visible;
 } gs_in[];
 
@@ -36,7 +34,7 @@ out PreShadingColors
     flat vec3 Flat_back_color;
 } pre_shading_colors;
 
-out flat uint64_t env_map_handle;
+out flat uvec2 env_map_handle;
 out vec4 NDC;
 
 #include "../../include/Camera.glsl"
@@ -54,20 +52,20 @@ uniform sampler2D skydome_map;
 
 void main()
 {
-    vec3 v1 = gs_in[1].view_pos - gs_in[0].view_pos;
-    vec3 v2 = gs_in[2].view_pos - gs_in[0].view_pos;
+    vec3 v1 = gl_in[1].gl_Position.xyz - gl_in[0].gl_Position.xyz;
+    vec3 v2 = gl_in[2].gl_Position.xyz - gl_in[0].gl_Position.xyz;
     vec3 face_view_normal = normalize(cross(v1, v2));
     vec3 face_world_normal = view_dir_to_world(camera, face_view_normal);
 
     vec2 face_tex_coord = (gs_in[0].tex_coord.xy + gs_in[1].tex_coord.xy + gs_in[2].tex_coord.xy)/3;
-    vec3 face_view_pos = (gs_in[0].view_pos + gs_in[1].view_pos + gs_in[2].view_pos)/3 + explode_distance * face_view_normal;
+    vec3 face_view_pos = (gl_in[0].gl_Position + gl_in[1].gl_Position + gl_in[2].gl_Position).xyz/3 + explode_distance * face_view_normal;
     vec3 face_world_pos = view_to_world(camera, face_view_pos);
     vec4 face_color = (gs_in[0].color + gs_in[1].color + gs_in[2].color)/3;
     vec4 face_back_color = (gs_in[0].back_color + gs_in[1].back_color + gs_in[2].back_color)/3;
 
     for (int i = 0; i < 3; i++)
     {
-        gs_out.view_pos = gs_in[i].view_pos + explode_distance * face_view_normal;
+        gs_out.view_pos = gl_in[i].gl_Position.xyz + explode_distance * face_view_normal;
         gs_out.view_TBN = gs_in[i].view_TBN;
         gs_out.color = gs_in[i].color;
         gs_out.back_color = gs_in[i].back_color;

@@ -34,6 +34,13 @@ def bincat(file_name):
     in_file.close()
     return content
 
+def uint64_to_uvec2(uint64_value):
+    result = glm.uvec2()
+    bytes_data = uint64_value.to_bytes(8, byteorder='little', signed=False)
+    result.x = int.from_bytes(bytes_data[:4], byteorder='little', signed=False)
+    result.y = int.from_bytes(bytes_data[4:], byteorder='little', signed=False)
+    return result
+
 def same_type(var1, var2):
     return (isinstance(var1, type(var2)) and isinstance(var2, type(var1)))
 

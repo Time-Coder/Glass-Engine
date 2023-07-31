@@ -29,6 +29,12 @@ vec4 world_to_lightNDC(DirLight light, Camera camera, int level, vec3 world_coor
     return NDC_coord;
 }
 
+vec4 world_to_lightNDC(DirLight light, Camera camera, int level, vec3 world_coord)
+{
+    float depth_length = 0;
+    return world_to_lightNDC(light, camera, level, world_coord, depth_length);
+}
+
 float SSM(DirLight light, Camera camera, vec3 frag_pos, vec3 frag_normal)
 {
     int level = locate_CSM_leveli(camera, frag_pos);
@@ -69,12 +75,13 @@ float _get_PCF_value(DirLight light, Camera camera, int level, vec3 frag_pos, ve
     for (int i = 0; i < 16; i++)
     {
         vec2 rand_result = rand2(frag_pos, rand_seed);
-        float s = depth_map_tex_coord.s + 0.5*(PCF_width-1)*rand_result.s * ds;
-        float t = depth_map_tex_coord.t + 0.5*(PCF_width-1)*rand_result.t * ds;
+        float s = depth_map_tex_coord.s + rand_result.s*(PCF_width-1) * ds;
+        float t = depth_map_tex_coord.t + rand_result.t*(PCF_width-1) * dt;
+
         float sample_depth = texture2DArray(sampler2DArray(light.depth_map_handle), vec3(s, t, level)).r;
         not_occ_count += (sample_depth > self_depth ? 1 : 0);
         total_count += 1;
-    }    
+    }
     return 1.0*not_occ_count/total_count;
 }
 
@@ -85,10 +92,10 @@ float PCF(DirLight light, Camera camera, vec3 frag_pos, vec3 frag_normal)
     float level_rear = level - leveli;
 
     int rand_seed = 0;
-    float visibility = _get_PCF_value(light, camera, leveli, frag_pos, frag_normal, 9, rand_seed);
+    float visibility = _get_PCF_value(light, camera, leveli, frag_pos, frag_normal, 7, rand_seed);
     if (leveli < camera.CSM_levels)
     {
-        float visibility2 = _get_PCF_value(light, camera, leveli+1, frag_pos, frag_normal, 9, rand_seed);
+        float visibility2 = _get_PCF_value(light, camera, leveli+1, frag_pos, frag_normal, 7, rand_seed);
         visibility = mix(visibility, visibility2, level_rear);
     }
     
@@ -136,12 +143,13 @@ float _get_PCSS_value(DirLight light, Camera camera, int level, vec3 frag_pos, v
 
     BoundingSphere bounding_sphere = Frustum_bounding_sphere(camera, level);
     vec2 PCF_size = (self_depth/mean_blocker_depth - 1) * (1/depth_length) / (2*bounding_sphere.radius) * texture_size;
-    PCF_size.x = max(PCF_size.x, 1);
-    PCF_size.y = max(PCF_size.y, 1);
+    PCF_size.x = max(PCF_size.x, 7);
+    PCF_size.y = max(PCF_size.y, 7);
 
     int not_occ_count = 0;
     int total_count = 0;
-    int num_samples = int(4*log(1+PCF_size.x*PCF_size.y));
+    float a = 0.65;
+    int num_samples = int((pow(1+PCF_size.x*PCF_size.y, a)-1)/a);
     for (int i = 0; i < num_samples; i++)
     {
         vec2 rand_result = rand2(frag_pos, rand_seed);

@@ -1,0 +1,6 @@
+#ifndef _POINT_LIGHT_SHADOW_MAPPING_GLSL__
+#define _POINT_LIGHT_SHADOW_MAPPING_GLSL__
+
+
+
+#endif

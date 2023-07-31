@@ -1,6 +1,5 @@
 #version 460 core
 
-#extension GL_ARB_gpu_shader_int64 : require
 
 // vertex
 layout (location = 0) in vec3 position;
@@ -15,7 +14,7 @@ layout (location = 6) in vec4 back_color;
 layout (location = 7) in vec3 abs_position;
 layout (location = 8) in vec4 abs_orientation;
 layout (location = 9) in vec3 abs_scale;
-layout (location = 10) in uint64_t env_map_handle;
+layout (location = 10) in uvec2 env_map_handle;
 layout (location = 11) in int visible;
 
 out VertexOut

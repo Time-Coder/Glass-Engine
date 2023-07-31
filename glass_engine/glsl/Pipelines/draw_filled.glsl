@@ -95,7 +95,7 @@ vec4 draw_filled(Camera camera)
     // 环境映射
     vec3 view_dir = normalize(frag_pos - camera.abs_position);
     vec4 env_color = vec4(0, 0, 0, 0);
-    bool use_env_map = (env_map_handle > 0);
+    bool use_env_map = (env_map_handle.x > 0 || env_map_handle.y > 0);
     if (is_sphere)
     {
         env_color = sphere_reflect_refract_color(

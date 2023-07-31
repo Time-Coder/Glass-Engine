@@ -88,6 +88,7 @@ class Vertex(dict):
             
         return dict.__getitem__(self, name)
 
+dtype_uint64 = np.array([], dtype=np.uint64).dtype
 class Vertices:
 
     element_type = Vertex
@@ -155,6 +156,11 @@ class Vertices:
                         if feed_type in GLInfo.primary_types and need_type in GLInfo.primary_types:
                             attr_list.dtype = need_type
                             feed_type = need_type
+                        elif feed_type == int and need_type == glm.uvec2:
+                            attr_list.dtype = np.uint64
+                            feed_type = glm.uvec2
+                        elif feed_type in (np.uint64, dtype_uint64) and need_type == glm.uvec2:
+                            feed_type = glm.uvec2
                         else:
                             error_message = f"vertex attribute '{key}' need type {need_type}, {feed_type} value were given"
                             raise TypeError(error_message)

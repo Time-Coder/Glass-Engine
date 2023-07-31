@@ -14,12 +14,11 @@ class Block:
 			if not atom_info_list:
 				return
 
-			pos_point = atom_info_list[0]["name"].find(".")
 			self._atom_info_map = {}
 
 			structure_key_list = []
 			for atom_info in atom_info_list:
-				atom_name = atom_info["name"][pos_point+1:]
+				atom_name = atom_info["name"]
 				self._atom_info_map[atom_name] = atom_info
 				structure_key_list.append("(" + atom_info["type"] + ", " + atom_name + ")")
 			self._structure_key = ", ".join(structure_key_list)

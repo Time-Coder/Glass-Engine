@@ -1,7 +1,6 @@
 #version 460 core
 
 #extension GL_ARB_bindless_texture : require
-#extension GL_ARB_gpu_shader_int64 : require
 #extension GL_EXT_texture_array : require
 
 in GeometryOut

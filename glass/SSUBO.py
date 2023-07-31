@@ -112,10 +112,10 @@ class SSUBO(BO):
 			self._binding_points.clear()
 			self.malloc(max_size)
 
-		for atom_name in self._atom_info_map:
-			atom_type = self._atom_info_map[atom_name]["type"]
-			atom_offset = self._atom_info_map[atom_name]["offset"]
-			atom_subscript_chain = self._atom_info_map[atom_name]["subscript_chain"]
+		for atom_name, atom_info in self._atom_info_map.items():
+			atom_type = atom_info["type"]
+			atom_offset = atom_info["offset"]
+			atom_subscript_chain = atom_info["subscript_chain"]
 			set_func = SSUBO._set_atom_func(atom_type)
 			if "[{0}]" not in atom_name:
 				# value = eval("self._bound_var." + atom_name)
@@ -124,7 +124,7 @@ class SSUBO(BO):
 				value = subscript(self._bound_var, atom_subscript_chain)
 				set_func(self, atom_offset, value)
 			else:
-				stride = self._atom_info_map[atom_name]["stride"]
+				stride = atom_info["stride"]
 				for i in range(self._len_array):
 					# value = eval("self._bound_var." + atom_name.format(i))
 					# eval("self._set_" + atom_type)(atom_offset + i*stride, value)
@@ -319,8 +319,11 @@ class SSUBO(BO):
 	def _set_ivec4(self, offset:int, value:glm.ivec4):
 		self.bufferSubData(offset, sizeof(value), np.array(value, dtype=np.int32))
 	
-	def _set_uvec2(self, offset:int, value:glm.uvec2):
-		self.bufferSubData(offset, sizeof(value), np.array(value, dtype=np.uint32))
+	def _set_uvec2(self, offset:int, value:(glm.uvec2,int)):
+		if isinstance(value, glm.uvec2):
+			self.bufferSubData(offset, sizeof(value), np.array(value, dtype=np.uint32))
+		else:
+			self.bufferSubData(offset, 8, np.array([value], dtype=np.uint64))
 	
 	def _set_uvec3(self, offset:int, value:glm.uvec3):
 		self.bufferSubData(offset, sizeof(value), np.array(value, dtype=np.uint32))

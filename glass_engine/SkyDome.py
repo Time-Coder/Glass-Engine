@@ -1,5 +1,4 @@
 from .Mesh import Mesh, Camera
-from .SphericalToCube import spherical_to_cube, spherical_to_cube_ms
 
 from glass.utils import checktype
 from glass import Vertex, sampler2D, ShaderProgram

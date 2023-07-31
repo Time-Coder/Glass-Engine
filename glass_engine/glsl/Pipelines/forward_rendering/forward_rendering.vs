@@ -1,6 +1,5 @@
 #version 460 core
 
-#extension GL_ARB_gpu_shader_int64 : require
 
 // vertex
 layout (location = 0) in vec3 position;
@@ -15,17 +14,16 @@ layout (location = 6) in vec4 back_color;
 layout (location = 7) in vec3 abs_position;
 layout (location = 8) in vec4 abs_orientation;
 layout (location = 9) in vec3 abs_scale;
-layout (location = 10) in uint64_t env_map_handle;
+layout (location = 10) in uvec2 env_map_handle;
 layout (location = 11) in int visible;
 
 out VertexOut
 {
-    vec3 view_pos;
     mat3 view_TBN;
     vec3 tex_coord;
     vec4 color;
     vec4 back_color;
-    flat uint64_t env_map_handle;
+    flat uvec2 env_map_handle;
     flat bool visible;
 } vs_out;
 
@@ -41,8 +39,6 @@ void main()
     transform.abs_orientation = vec4_to_quat(abs_orientation);
     transform.abs_scale = abs_scale;
 
-    vec3 world_pos = transform_apply(transform, position);
-    vs_out.view_pos = world_to_view(camera, world_pos);
     vs_out.color = color;
     vs_out.back_color = back_color;
     vs_out.tex_coord = tex_coord;
@@ -52,5 +48,7 @@ void main()
     vs_out.env_map_handle = env_map_handle;
     vs_out.visible = (visible != 0);
 
-    gl_Position = view_to_NDC(camera, vs_out.view_pos);
+    vec3 world_pos = transform_apply(transform, position);
+    vec3 view_pos = world_to_view(camera, world_pos);
+    gl_Position = vec4(view_pos, 1);
 }

@@ -24,7 +24,7 @@ vec4 draw_filled_with_gbuffer(Camera camera,
     }
 
     uint shading_model = mix_uint.x;
-    uint64_t env_map_handle = uint64_t((uint64_t(mix_uint.z) << 32) | uint64_t(mix_uint.y));
+    uvec2 env_map_handle = mix_uint.yz;
     bool is_sphere = bool(mix_uint.w & 0x1);
     float refractive_index = (mix_uint.w >> 1) / 255.0;
 
@@ -72,7 +72,7 @@ vec4 draw_filled_with_gbuffer(Camera camera,
     }
     else // Phong, PhongBlinn, CookTorrance
     {
-        out_color3 = FRAG_LIGHTING(internal_material, camera.abs_position, frag_pos, normal);
+        out_color3 = FRAG_LIGHTING(internal_material, camera, frag_pos, normal);
     }
 
     if (shading_model != 9) // Unlit
