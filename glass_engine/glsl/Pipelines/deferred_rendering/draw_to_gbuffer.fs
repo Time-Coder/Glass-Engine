@@ -1,6 +1,5 @@
 #version 460 core
 
-#extension GL_ARB_gpu_shader_int64 : require
 
 in GeometryOut
 {
@@ -20,7 +19,7 @@ in PreShadingColors
     flat vec3 Flat_back_color;
 } pre_shading_colors;
 
-in flat uint64_t env_map_handle;
+in flat uvec2 env_map_handle;
 
 // 几何信息
 layout(location=0) out vec4 view_pos_and_alpha;

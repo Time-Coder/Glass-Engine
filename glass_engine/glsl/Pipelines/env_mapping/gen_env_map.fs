@@ -1,7 +1,7 @@
 #version 460 core
 
 #extension GL_ARB_bindless_texture : require
-#extension GL_ARB_gpu_shader_int64 : require
+#extension GL_EXT_texture_array : require
 
 in GeometryOut
 {
@@ -14,8 +14,7 @@ in GeometryOut
 } fs_in;
 
 in vec4 NDC;
-in flat int camera_index;
-in flat uint64_t env_map_handle;
+in flat uvec2 env_map_handle;
 
 in PreShadingColors
 {
@@ -39,11 +38,16 @@ layout(location=2) out float reveal;
 
 uniform Material material;
 uniform Material back_material;
-uniform Camera cameras[6];
+uniform vec3 camera_pos;
 uniform sampler2D SSAO_map;
 uniform bool is_opaque_pass;
 uniform bool is_filled;
 uniform bool is_sphere;
+
+uniform CubeCameras
+{
+    Camera cube_cameras[6];
+};
 
 // 环境映射
 uniform bool use_skybox_map;
@@ -61,7 +65,9 @@ void main()
         discard;
     }
 
-    Camera camera = cameras[camera_index];
+    Camera camera = cube_cameras[gl_Layer];
+    camera.abs_position = camera_pos;
+
     if (is_filled)
     {
         out_color = draw_filled(camera);

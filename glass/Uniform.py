@@ -4,7 +4,7 @@ import glm
 import copy
 from enum import Enum
 
-from .utils import checktype, get_subscript_chain
+from .utils import checktype, get_subscript_chain, uint64_to_uvec2
 from .sampler2D import sampler2D
 from .image2D import image2D
 from .FBOAttachment import FBOAttachment
@@ -324,8 +324,12 @@ class Uniform:
     def _set_ivec4(self, location:int, value:glm.ivec4):
         GL.glUniform4i(location, value.x, value.y, value.z, value.w)
     
-    def _set_uvec2(self, location:int, value:glm.uvec2):
-        GL.glUniform2ui(location, value.x, value.y)
+    def _set_uvec2(self, location:int, value:(glm.uvec2,int)):
+        if isinstance(value, glm.uvec2):
+            GL.glUniform2ui(location, value.x, value.y)
+        else:
+            used_value = uint64_to_uvec2(value)
+            GL.glUniform2ui(location, used_value.x, used_value.y)
     
     def _set_uvec3(self, location:int, value:glm.uvec3):
         GL.glUniform3ui(location, value.x, value.y, value.z)

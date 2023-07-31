@@ -125,6 +125,7 @@ class ForwardRenderer(CommonRenderer):
         # profiler.enable()
         self._should_update = False
         self.update_dir_lights_depth()
+        self.update_point_lights_depth()
         self.generate_SSAO()
         self.draw_opaque()
         self.draw_transparent()

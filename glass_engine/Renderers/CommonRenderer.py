@@ -1,5 +1,5 @@
 from .Renderer import Renderer
-from .FlatCamera import FlatCamera
+from .CubeCameras import CubeCameras
 from ..Filters import *
 from ..Frame import Frame
 
@@ -36,14 +36,6 @@ class CommonRenderer(Renderer):
 
         self._DOF = False
         self._transparent_meshes = {}
-
-        self._flat_cameras = DictList()
-        self._flat_cameras["right"] = FlatCamera("right")
-        self._flat_cameras["left"] = FlatCamera("left")
-        self._flat_cameras["bottom"] = FlatCamera("bottom")
-        self._flat_cameras["top"] = FlatCamera("top")
-        self._flat_cameras["front"] = FlatCamera("front")
-        self._flat_cameras["back"] = FlatCamera("back")
 
         self._depth_filter_kernel = KernelFilter.Kernel(np.ones((5, 5))/25)
 
@@ -108,7 +100,8 @@ class CommonRenderer(Renderer):
         if flag:
             self.camera.screen.makeCurrent()
             for mesh, instances in self.scene.all_meshes.items():
-                if not mesh.material.need_env_map:
+                if not mesh.material.need_env_map and \
+                   not mesh._back_material.need_env_map:
                     continue
 
                 for inst in instances:
@@ -127,7 +120,8 @@ class CommonRenderer(Renderer):
                     inst.user_data["env_bake_state"] = "filtered"
         else:
             for mesh, instances in self.scene.all_meshes.items():
-                if not mesh.material.need_env_map:
+                if not mesh.material.need_env_map and \
+                   not mesh._back_material.need_env_map:
                     continue
 
                 for inst in instances:
@@ -226,7 +220,7 @@ class CommonRenderer(Renderer):
         program.add_include_path(os.path.dirname(os.path.abspath(__file__)) + "/../glsl/Pipelines/DirLight_depth")
         program.compile("../glsl/Pipelines/DirLight_depth/DirLight_depth.vs")
         program.compile(self.dir_light_depth_geo_shader_path)
-        program.compile("../glsl/Pipelines/DirLight_depth/DirLight_depth.fs")
+        program.compile("../glsl/Pipelines/get_depth.fs")
 
         self.programs[key] = program
 
@@ -247,6 +241,45 @@ class CommonRenderer(Renderer):
         self.programs[key] = program
 
         return program
+    
+    @property
+    def point_light_depth_program(self):
+        if "point_light_depth" in self.programs:
+            return self.programs["point_light_depth"]
+        
+        program = ShaderProgram()
+        program.compile("../glsl/Pipelines/PointLight_depth/PointLight_depth.vs")
+        program.compile("../glsl/Pipelines/PointLight_depth/PointLight_depth.gs")
+        program.compile("../glsl/Pipelines/get_depth.fs")
+        program["CubeCameras"].bind(CubeCameras)
+
+        self.programs["point_light_depth"] = program
+
+        return program
+
+    def update_point_lights_depth(self):
+        for point_light in self.scene.point_lights:
+            if not point_light.generate_shadows:
+                continue
+
+            if point_light.depth_fbo is None:
+                point_light.depth_fbo = FBO(1024, 1024)
+                point_light.depth_fbo.attach(GL.GL_DEPTH_ATTACHMENT, samplerCube)
+                point_light.depth_fbo.depth_attachment.wrap_s = GL.GL_CLAMP_TO_BORDER
+                point_light.depth_fbo.depth_attachment.wrap_t = GL.GL_CLAMP_TO_BORDER
+                point_light.depth_fbo.depth_attachment.border_color = glm.vec4(1, 1, 1, 1)
+            
+            with GLConfig.LocalConfig(depth_test=True, blend=False, cull_face=None, polygon_mode=GL.GL_FILL):
+                with point_light.depth_fbo:
+                    self.point_light_depth_program["light_pos"] = point_light.abs_position
+                    for mesh, instances in self.scene.all_meshes.items():
+                        if not mesh.material.cast_shadows:
+                            continue
+
+                        self.point_light_depth_program["explode_distance"] = mesh.explode_distance
+                        mesh.draw(self.point_light_depth_program, instances)
+
+            point_light.depth_map_handle = point_light.depth_fbo.depth_attachment.handle
 
     def update_dir_lights_depth(self):
         for dir_light in self.scene.dir_lights:
@@ -410,6 +443,7 @@ class CommonRenderer(Renderer):
             program["DirLights"].bind(self.scene.dir_lights)
             program["PointLights"].bind(self.scene.point_lights)
             program["SpotLights"].bind(self.scene.spot_lights)
+            program["CubeCameras"].bind(CubeCameras)
             
             self.programs["gen_env_map"] = program
 
@@ -480,9 +514,6 @@ class CommonRenderer(Renderer):
                 continue
 
             camera_pos = mesh_center + instance.abs_position
-            for camera in self._flat_cameras:
-                camera.abs_position = camera_pos
-
             instance.visible = 0
             env_map_fbo = self.env_map_fbo(instance)
             env_transparent_meshes = {}
@@ -490,7 +521,7 @@ class CommonRenderer(Renderer):
                 with env_map_fbo:
                     GLConfig.clear_buffers()
 
-                    self.gen_env_map_program["cameras"] = self._flat_cameras
+                    self.gen_env_map_program["camera_pos"] = camera_pos
                     self.gen_env_map_program["is_opaque_pass"] = True
                     self.gen_env_map_program["use_skybox_map"] = self.scene.skybox.is_completed
                     self.gen_env_map_program["skybox_map"] = self.scene.skybox.skybox_map
@@ -505,6 +536,7 @@ class CommonRenderer(Renderer):
                             self.gen_env_map_program["is_filled"] = other_mesh.is_filled
                             self.gen_env_map_program["is_sphere"] = other_mesh.is_sphere
                             other_mesh.draw(self.gen_env_map_program, other_instances)
+                        
                         if other_mesh.has_transparent:
                             env_transparent_meshes[other_mesh] = other_instances
 
@@ -524,7 +556,7 @@ class CommonRenderer(Renderer):
                         GLConfig.clear_buffer(1, glm.vec4(0, 0, 0, 0))
                         GLConfig.clear_buffer(2, glm.vec4(0, 0, 0, 0))
 
-                        self.gen_env_map_program["cameras"] = self._flat_cameras
+                        self.gen_env_map_program["camera_pos"] = camera_pos
                         self.gen_env_map_program["is_opaque_pass"] = False
                         self.gen_env_map_program["use_skybox_map"] = self.scene.skybox.is_completed
                         self.gen_env_map_program["skybox_map"] = self.scene.skybox.skybox_map
@@ -617,7 +649,7 @@ class CommonRenderer(Renderer):
             return self.programs["env_OIT_blend"]
         
         program = ShaderProgram()
-        program.compile("../glsl/Pipelines/draw_frame.vs")
+        program.compile(Frame.draw_frame_vs)
         program.compile("../glsl/Pipelines/env_mapping/env_OIT_blend.fs")
         self.programs["env_OIT_blend"] = program
 

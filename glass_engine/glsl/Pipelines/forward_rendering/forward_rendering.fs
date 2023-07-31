@@ -1,7 +1,6 @@
 #version 460 core
 
 #extension GL_ARB_bindless_texture : require
-#extension GL_ARB_gpu_shader_int64 : require
 #extension GL_EXT_texture_array : require
 
 in GeometryOut
@@ -14,7 +13,7 @@ in GeometryOut
     flat bool visible;
 } fs_in;
 
-in flat uint64_t env_map_handle;
+in flat uvec2 env_map_handle;
 in vec4 NDC;
 
 in PreShadingColors

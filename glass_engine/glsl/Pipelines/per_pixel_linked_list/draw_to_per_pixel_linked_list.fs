@@ -1,7 +1,6 @@
 #version 460 core
 
 #extension GL_ARB_bindless_texture : require
-#extension GL_ARB_gpu_shader_int64 : require
 
 in VertexOut
 {
@@ -10,7 +9,7 @@ in VertexOut
     vec3 tex_coord;
     vec4 color;
     vec4 back_color;
-    flat uint64_t env_map_handle;
+    flat uvec2 env_map_handle;
     flat bool visible;
 } fs_in;
 

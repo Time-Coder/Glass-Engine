@@ -19,7 +19,7 @@ struct DirLight
     vec3 diffuse;
     vec3 specular;
     bool generate_shadows; // 是否产生阴影
-    uint64_t depth_map_handle;
+    uvec2 depth_map_handle;
     float max_back_offset;
 
     // 外参数
@@ -42,7 +42,7 @@ vec3 PhongBlinn_lighting(
     material.diffuse = light.diffuse * material.diffuse;
     material.specular = light.specular * material.specular;
 
-    if (light.generate_shadows && material.recv_shadows && light.depth_map_handle > 0)
+    if (light.generate_shadows && material.recv_shadows && (light.depth_map_handle.x > 0 || light.depth_map_handle.y > 0))
     {
         float shadow_visibility = PCF(light, camera, frag_pos, frag_normal);
         material.diffuse *= shadow_visibility;
@@ -71,7 +71,7 @@ vec3 Phong_lighting(
     material.diffuse = light.diffuse * material.diffuse;
     material.specular = light.specular * material.specular;
 
-    if (light.generate_shadows && material.recv_shadows && light.depth_map_handle > 0)
+    if (light.generate_shadows && material.recv_shadows && (light.depth_map_handle.x > 0 || light.depth_map_handle.y > 0))
     {
         float shadow_visibility = PCF(light, camera, frag_pos, frag_normal);
         material.diffuse *= shadow_visibility;
@@ -103,7 +103,7 @@ vec3 Flat_lighting(DirLight light, InternalMaterial material, Camera camera, vec
     material.diffuse = light.diffuse * material.diffuse;
     material.specular = light.specular * material.specular;
 
-    if (light.generate_shadows && material.recv_shadows && light.depth_map_handle > 0)
+    if (light.generate_shadows && material.recv_shadows && (light.depth_map_handle.x > 0 || light.depth_map_handle.y > 0))
     {
         float shadow_visibility = PCF(light, camera, face_pos, face_normal);
         material.diffuse *= shadow_visibility;
@@ -128,7 +128,7 @@ vec3 CookTorrance_lighting(
     vec3 to_camera = normalize(camera.abs_position - frag_pos);
 
     // 光照颜色
-    if (light.generate_shadows && material.recv_shadows && light.depth_map_handle > 0)
+    if (light.generate_shadows && material.recv_shadows && (light.depth_map_handle.x > 0 || light.depth_map_handle.y > 0))
     {
         float shadow_visibility = PCF(light, camera, frag_pos, frag_normal);
         material.albedo *= shadow_visibility;

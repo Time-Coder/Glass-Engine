@@ -413,7 +413,7 @@ class ShaderParser:
 				members[var_name] = member
 				return ""
 
-			re.sub(r"^\s*(?P<type>[a-zA-Z_]\w*(\s*\[\S+\]\s*)*)[\s\n]+(?P<name>[a-zA-Z_]\w*(\s*\[\S+\]\s*)*)[\s\n]*;", append_member, body, flags=re.M)
+			re.sub(r"^\s*(?P<type>[a-zA-Z_]\w*(\s*\[\S+\]\s*)*)[\s\n]+(?P<name>[a-zA-Z_]\w*(\s*\[\S+\]\s*)*)[\s\n]*;", append_member, body, flags=re.M|re.S)
 			var_name = ""
 			try:
 				var_name = match.group("var_name")
@@ -457,8 +457,8 @@ class ShaderParser:
 		uniform_block_regx = r"(?P<name>[a-zA-Z_]\w*)[\s\n]*\{(?P<body>.*?)\}\s*((?P<var_name>[a-zA-Z_]\w*)\s*)?;"
 		layout_qualifiers_regx = r"(layout\s*\((?P<layout_qualifiers>.*?)\)[\s\n]*)?"
 		memory_qualifiers_regx = r"(?P<memory_qualifiers>((coherent|volatile|restrict|readonly|writeonly|readwrite)[\s\n]+)+)?"
-		re.sub(r"^\s*" + layout_qualifiers_regx + memory_qualifiers_regx + uniform_prefix + uniform_block_regx, append_uniform_block, content, flags=re.M)
-		re.sub(r"^\s*" + uniform_prefix + layout_qualifiers_regx + memory_qualifiers_regx + uniform_block_regx, append_uniform_block, content, flags=re.M)
+		re.sub(r"^\s*" + layout_qualifiers_regx + memory_qualifiers_regx + uniform_prefix + uniform_block_regx, append_uniform_block, content, flags=re.M|re.S)
+		re.sub(r"^\s*" + uniform_prefix + layout_qualifiers_regx + memory_qualifiers_regx + uniform_block_regx, append_uniform_block, content, flags=re.M|re.S)
 		return uniform_blocks_info
 
 	@staticmethod
