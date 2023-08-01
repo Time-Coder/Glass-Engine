@@ -123,11 +123,16 @@ class ShaderProgram(GPUProgram):
 
 			error_messages, warning_messages = self._format_error_warning(message)
 			if warning_messages:
-				warnings.warn("\n  " + "\n  ".join(warning_messages), category=LinkWarning)
+				warning_message = "Warning when linking following files:\n  " + \
+					              "\n  ".join(self._get_compiled_files()) + "\n" + \
+						          "\n".join(warning_messages)
+				warnings.warn(warning_message, category=LinkWarning)
 
 			if error_messages:
-				self._is_linked = False
-				raise LinkError("\n  " + "\n  ".join(error_messages))
+				error_message = "Error when linking following files:\n  " + \
+					            "\n  ".join(self._get_compiled_files()) + "\n" + \
+						        "\n".join(error_messages)
+				raise LinkError(error_message)
 			
 			status = GL.glGetProgramiv(self._id, GL.GL_LINK_STATUS)
 			if status != GL.GL_TRUE:

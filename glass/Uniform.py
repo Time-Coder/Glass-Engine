@@ -139,9 +139,9 @@ class Uniform:
                 full_name += "[" + str(name) + "]"
 
             if full_name not in self._uniform._program._uniform_map:
-                error_message = "uniform variable '" + full_name + "' is not defined in following files:\n  "
+                error_message = "uniform variable '" + full_name + "' is not defined in following files:\n"
                 all_files = self._uniform._program._get_compiled_files()
-                error_message += "  \n".join(all_files)
+                error_message += "\n".join(all_files)
                 raise NameError(error_message)
             
             if full_name not in self._uniform._uniform_var_map:
@@ -158,9 +158,9 @@ class Uniform:
                 full_name += "[" + str(name) + "]"
 
             if full_name not in self._uniform._program._uniform_map:
-                error_message = "uniform variable '" + full_name + "' is not defined in following files:\n  "
+                error_message = "uniform variable '" + full_name + "' is not defined in following files:\n"
                 all_files = self._uniform._program._get_compiled_files()
-                error_message += "\n  ".join(all_files)
+                error_message += "\n".join(all_files)
                 raise NameError(error_message)
 
             self._uniform[full_name] = value
@@ -187,9 +187,9 @@ class Uniform:
 
     def __getitem__(self, name:str):
         if name not in self._program._uniform_map:
-            error_message = "uniform variable '" + name + "' is not defined in following files:\n  "
+            error_message = "uniform variable '" + name + "' is not defined in following files:\n"
             all_files = self._program._get_compiled_files()
-            error_message += "\n  ".join(all_files)
+            error_message += "\n".join(all_files)
             raise NameError(error_message)
 
         if name not in self._uniform_var_map:
@@ -199,9 +199,9 @@ class Uniform:
 
     def __setitem__(self, name:str, value):
         if GLConfig.debug and name not in self._program._uniform_map:
-            error_message = "uniform variable '" + name + "' is not defined in following files:\n  "
+            error_message = "uniform variable '" + name + "' is not defined in following files:\n"
             all_files = self._program._get_compiled_files()
-            error_message += "\n  ".join(all_files)
+            error_message += "\n".join(all_files)
             raise NameError(error_message)
 
         for atom in self._program._uniform_map[name]["atoms"]:

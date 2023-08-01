@@ -26,7 +26,6 @@ class FlatDirLight:
         self.depth_map_handle = 0
         self.depth_filter_fbo = None
         self.depth_filter = None
-        self.need_update_depth_map = True
         
         self._source = dir_light
         dir_light._flats.add(self)

@@ -1,14 +1,18 @@
 #version 460 core
 
-#extension GL_EXT_texture_array : require
+#extension GL_ARB_bindless_texture : enable
 
 layout (triangles, invocations=6) in;
 layout (triangle_strip, max_vertices=3) out;
 
 in flat int vertex_visible[];
 out flat int visible;
+out vec3 world_pos;
 
-uniform vec3 light_pos;
+#include "../../include/Camera.glsl"
+#include "../../Lights/PointLight.glsl"
+
+uniform PointLight point_light;
 uniform float explode_distance;
 
 uniform CubeCameras
@@ -25,13 +29,17 @@ void main()
     gl_Layer = gl_InvocationID;
     for (int i = 0; i < 3; i++)
     {
-        vec3 world_pos = gl_in[i].gl_Position.xyz + explode_distance * face_world_normal;
+        world_pos = gl_in[i].gl_Position.xyz + explode_distance * face_world_normal;
         visible = vertex_visible[i];
         
         Camera camera = cube_cameras[gl_InvocationID];
-        camera.abs_position = light_pos;
+        camera.abs_position = point_light.abs_position;
+        camera.near = 0.1;
+        camera.far = point_light.coverage;
+        camera.clip = camera.far - camera.near;
 
         gl_Position = Camera_project(camera, world_pos);
+        
         EmitVertex();
     }
     

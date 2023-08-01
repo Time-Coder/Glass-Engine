@@ -20,6 +20,12 @@ uniform float SSAO_power;
 
 void main()
 {
+    if (SSAO_radius <= 1E-4 || SSAO_samples <= 0 || SSAO_power <= 1E-6)
+    {
+        SSAO_factor = 0;
+        return;
+    }
+
     int rand_seed = 0;
 
     vec3 view_pos = texture(view_pos_alpha_map, fs_in.tex_coord).xyz;

@@ -67,8 +67,8 @@ class Scene:
             self.__update_env_maps(child)
 
     def __update_depth_maps(self):
-        for dir_light in self._dir_lights:
-            dir_light.need_update_depth_map = True
+        for point_light in self._point_lights:
+            point_light.need_update_depth_map = True
 
     def __clear_dirty(self, scene_node:SceneNode=None):
         if scene_node is None:

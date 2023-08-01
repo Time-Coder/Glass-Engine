@@ -163,6 +163,10 @@ class FlatPointLight:
         self.abs_position = glm.vec3(0, 0, 0)
         self.generate_shadows = point_light.generate_shadows
 
+        self.depth_fbo = None
+        self.depth_map_handle = 0
+        self.need_update_depth_map = True
+
         self._source = point_light
         point_light._flats.add(self)
 

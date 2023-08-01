@@ -250,7 +250,7 @@ class CommonRenderer(Renderer):
         program = ShaderProgram()
         program.compile("../glsl/Pipelines/PointLight_depth/PointLight_depth.vs")
         program.compile("../glsl/Pipelines/PointLight_depth/PointLight_depth.gs")
-        program.compile("../glsl/Pipelines/get_depth.fs")
+        program.compile("../glsl/Pipelines/PointLight_depth/PointLight_depth.fs")
         program["CubeCameras"].bind(CubeCameras)
 
         self.programs["point_light_depth"] = program
@@ -259,19 +259,18 @@ class CommonRenderer(Renderer):
 
     def update_point_lights_depth(self):
         for point_light in self.scene.point_lights:
-            if not point_light.generate_shadows:
+            if not point_light.generate_shadows or \
+               not point_light.need_update_depth_map:
                 continue
 
             if point_light.depth_fbo is None:
                 point_light.depth_fbo = FBO(1024, 1024)
                 point_light.depth_fbo.attach(GL.GL_DEPTH_ATTACHMENT, samplerCube)
-                point_light.depth_fbo.depth_attachment.wrap_s = GL.GL_CLAMP_TO_BORDER
-                point_light.depth_fbo.depth_attachment.wrap_t = GL.GL_CLAMP_TO_BORDER
-                point_light.depth_fbo.depth_attachment.border_color = glm.vec4(1, 1, 1, 1)
+                point_light.depth_fbo.depth_attachment.wrap = GL.GL_CLAMP_TO_EDGE
             
             with GLConfig.LocalConfig(depth_test=True, blend=False, cull_face=None, polygon_mode=GL.GL_FILL):
                 with point_light.depth_fbo:
-                    self.point_light_depth_program["light_pos"] = point_light.abs_position
+                    self.point_light_depth_program["point_light"] = point_light
                     for mesh, instances in self.scene.all_meshes.items():
                         if not mesh.material.cast_shadows:
                             continue
@@ -280,6 +279,7 @@ class CommonRenderer(Renderer):
                         mesh.draw(self.point_light_depth_program, instances)
 
             point_light.depth_map_handle = point_light.depth_fbo.depth_attachment.handle
+            point_light.need_update_depth_map = False
 
     def update_dir_lights_depth(self):
         for dir_light in self.scene.dir_lights:
