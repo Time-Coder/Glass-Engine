@@ -116,9 +116,8 @@ class GPUProgram(GLObject):
 		elif name in self._uniform_block_map:
 			return self._uniform_block[name]
 		else:
-			error_message = "'" + name + "' is not defined in following files:\n  "
-			all_files = self._get_compiled_files()
-			error_message += "\n  ".join(all_files)
+			error_message = "'" + name + "' is not defined in following files:\n"
+			error_message += "\n".join(self._get_compiled_files())
 			raise NameError(error_message)
 
 	def __setitem__(self, name:str, value):
@@ -132,9 +131,8 @@ class GPUProgram(GLObject):
 		elif name in self._uniform_block_map:
 			self._uniform_block[name] = value
 		else:
-			error_message = "'" + name + "' is not defined in following files:\n  "
-			all_files = self._get_compiled_files()
-			error_message += "\n  ".join(all_files)
+			error_message = "'" + name + "' is not defined in following files:\n"
+			error_message += "\n".join(self._get_compiled_files())
 			raise NameError(error_message)
 		
 	def __contains__(self, name:str):
@@ -243,11 +241,11 @@ class GPUProgram(GLObject):
 				used_shaders.append(used_shader)
 				return used_shader._line_message_map[line_number].replace("\\", "/").replace("./", "").format(message_type=message_type)
 			else:
-				return "Not sure error occured in which file:{all_files}  " + message_type + ": "
+				return message_type + ": "
 		
 		def _replace_message2(match):
 			message_type = match.group("message_type")
-			return "Not sure error occured in which file:{all_files}  " + message_type + ": "
+			return message_type + ": "
 		
 		def _replace_message3(match):
 			message_type = match.group("message_type")
@@ -272,16 +270,12 @@ class GPUProgram(GLObject):
 			if not line:
 				continue
 
-			if "{all_files}" in line:
-				all_files = self._get_compiled_files()
-				line = line.format(all_files="\n    " + "\n    ".join(all_files) + "\n")
-
 			line = line.replace("no program defined", "no 'void main()' defined")
 
-			if "error: " in line:
+			if "error" in line.lower():
 				error_messages.append(line)
 				last = "error"
-			elif "warning: " in line:
+			elif "warning" in line.lower():
 				warning_messages.append(line)
 				last = "warning"
 			elif last == "error":

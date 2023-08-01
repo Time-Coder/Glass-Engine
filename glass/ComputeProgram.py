@@ -70,11 +70,11 @@ class ComputeProgram(GPUProgram):
 
 			error_messages, warning_messages = self._format_error_warning(message)
 			if warning_messages:
-				warnings.warn("\n  " + "\n  ".join(warning_messages), category=LinkWarning)
+				warnings.warn("\n" + "\n".join(warning_messages), category=LinkWarning)
 
 			if error_messages:
 				self._is_linked = False
-				raise LinkError("\n  " + "\n  ".join(error_messages))
+				raise LinkError("\n" + "\n".join(error_messages))
 		
 		self._apply_uniform_blocks()
 		self._apply_shader_storage_blocks()

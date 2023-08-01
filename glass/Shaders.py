@@ -132,14 +132,11 @@ class BaseShader(GLObject):
 
 			error_messages, warning_messages = self._format_error_warning(message)
 			if warning_messages:
-				warning_message = "\n  " + "\n".join(warning_messages)
+				warning_message = f"\nWarning when compiling: {self._file_name}:\n" + "\n".join(warning_messages)
 				warnings.warn(warning_message, category=CompileWarning)
 
 			if error_messages:
-				self._code = ""
-				self._clean_code = ""
-				self._file_name = ""
-				error_message = "\n  " + "\n".join(error_messages)
+				error_message = f"\nError when compiling: {self._file_name}:\n" + "\n".join(error_messages)
 				raise CompileError(error_message)
 			
 		self._compiled_but_not_applied = False
@@ -318,7 +315,7 @@ class BaseShader(GLObject):
 			pos_filename_start = ShaderParser.skip_space(self._code, pos_filename_start)
 			if self._code[pos_filename_start] != '<' and self._code[pos_filename_start] != '"':
 				line_number = ShaderParser.line_number(self._code, pos_filename_start)
-				raise CompileError("\n  " + self._line_message_map[line_number].format(message_type="error") + '#include file name must be enveloped by <...> or "..."')
+				raise CompileError("\n" + self._line_message_map[line_number].format(message_type="error") + '#include file name must be enveloped by <...> or "..."')
 			
 			start_char = self._code[pos_filename_start]
 			end_char = ('>' if start_char == '<' else '"')
@@ -327,7 +324,7 @@ class BaseShader(GLObject):
 			pos_filename_end = self._code.find(end_char, pos_filename_start)
 			if pos_filename_end == -1:
 				line_number = ShaderParser.line_number(self._code, pos_filename_start)
-				raise CompileError("\n  " + self._line_message_map[line_number].format(message_type="error") + '#include file name must be enveloped by <...> or "..."')
+				raise CompileError("\n" + self._line_message_map[line_number].format(message_type="error") + '#include file name must be enveloped by <...> or "..."')
 			
 			pos_include_end = pos_filename_end + 1
 			pos_filename_end -= 1
@@ -376,7 +373,7 @@ class BaseShader(GLObject):
 				
 			if not found:
 				line_number = ShaderParser.line_number(self._code, pos_filename_start)
-				raise CompileError("\n  " + self._line_message_map[line_number].format(message_type="error") + f'File "{include_filename}" not exists.')
+				raise CompileError("\n" + self._line_message_map[line_number].format(message_type="error") + f'File "{include_filename}" not exists.')
 
 		return list(included_files)
 
@@ -391,7 +388,6 @@ class BaseShader(GLObject):
 		message = BaseShader.__message_prefix3.sub(_replace_message, message)
 		message = message.replace("syntax error syntax error", "syntax error")
 		message = message.strip(" \t\n\r")
-		message = message.replace("\n", "\n  ")
 
 		warning_messages = []
 		error_messages = []
@@ -403,10 +399,10 @@ class BaseShader(GLObject):
 			if not line:
 				continue
 
-			if "error: " in line:
+			if "error" in line.lower():
 				error_messages.append(line)
 				last = "error"
-			elif "warning: " in line:
+			elif "warning" in line.lower():
 				warning_messages.append(line)
 				last = "warning"
 			elif last == "error":

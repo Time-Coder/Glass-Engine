@@ -24,5 +24,5 @@ void main()
     vec3 world_pos = transform_apply(transform, position);
     gl_Position = vec4(world_pos, 1);
 
-    mesh_visible = visible;
+    vertex_visible = visible;
 }

@@ -331,7 +331,7 @@ class FBO(BO):
 		error_message = status.__repr__() + ": "
 		messages = GLInfo.fbo_status_errors[status]
 		if isinstance(messages, list):
-			error_message += "Maybe one of following reasons:\n" + "\n  ".join(messages)
+			error_message += "Maybe one of following reasons:\n" + "\n".join(messages)
 		else:
 			error_message += messages
 

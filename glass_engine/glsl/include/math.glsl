@@ -102,6 +102,32 @@ vec3 rand3(inout int seed)
     return result;
 }
 
+vec3 rand3_near_focus(vec3 direction, float max_angle_shift, inout int seed)
+{
+    float phi = max_angle_shift * rand(direction, seed);
+    float cos_half_phi = cos(phi/2);
+    float sin_half_phi = sin(phi/2);
+
+    vec3 axis = 2*rand3(direction, seed) - 1;
+    vec3 sin_half_phi_axis = sin_half_phi * normalize(axis);
+
+    quat rotation = quat(cos_half_phi, sin_half_phi_axis.x, sin_half_phi_axis.y, sin_half_phi_axis.z);
+    return quat_apply(rotation, direction);
+}
+
+vec3 rand3_near(vec3 direction, float max_angle_shift, inout int seed)
+{
+    float phi = max_angle_shift * sqrt(rand(direction, seed));
+    float cos_half_phi = cos(phi/2);
+    float sin_half_phi = sin(phi/2);
+
+    vec3 axis = 2*rand3(direction, seed) - 1;
+    vec3 sin_half_phi_axis = sin_half_phi * normalize(axis);
+
+    quat rotation = quat(cos_half_phi, sin_half_phi_axis.x, sin_half_phi_axis.y, sin_half_phi_axis.z);
+    return quat_apply(rotation, direction);
+}
+
 vec4 rand4(vec2 focus_point, inout int seed)
 {
     vec4 result;

@@ -23,14 +23,17 @@ struct PointLight
     float K2; // 二次衰减系数
     float coverage; // 覆盖范围
     bool generate_shadows; // 是否产生阴影
+    uvec2 depth_map_handle;
 
     // 外参数
     vec3 abs_position;
 };
 
-vec3 Phong_lighting(
+#include "PointLight_shadow_mapping.glsl"
+
+vec3 PhongBlinn_lighting(
     PointLight light, InternalMaterial material,
-    Camera camera, vec3 frag_pos, vec3 normal)
+    Camera camera, vec3 frag_pos, vec3 frag_normal)
 {
     // 基础向量
     vec3 to_light = light.abs_position - frag_pos;
@@ -48,8 +51,16 @@ vec3 Phong_lighting(
     material.diffuse = light.diffuse * material.diffuse;
     material.specular = light.specular * material.specular;
 
+    // 阴影
+    if (light.generate_shadows && material.recv_shadows && (light.depth_map_handle.x > 0 || light.depth_map_handle.y > 0))
+    {
+        float shadow_visibility = PCF(light, frag_pos, frag_normal);
+        material.diffuse *= shadow_visibility;
+        material.specular *= shadow_visibility;
+    }
+
     // 光照颜色
-    vec3 lighting_color = Phong_lighting(to_light, to_camera, normal, material);
+    vec3 lighting_color = PhongBlinn_lighting(to_light, to_camera, frag_normal, material);
 
     // 衰减
     float attenuation = 1.0 / (1 + light.K1 * d +  light.K2 * d2);
@@ -60,9 +71,9 @@ vec3 Phong_lighting(
     return final_color;
 }
 
-vec3 PhongBlinn_lighting(
+vec3 Phong_lighting(
     PointLight light, InternalMaterial material,
-    Camera camera, vec3 frag_pos, vec3 normal)
+    Camera camera, vec3 frag_pos, vec3 frag_normal)
 {
     // 基础向量
     vec3 to_light = light.abs_position - frag_pos;
@@ -80,8 +91,16 @@ vec3 PhongBlinn_lighting(
     material.diffuse = light.diffuse * material.diffuse;
     material.specular = light.specular * material.specular;
 
+    // 阴影
+    if (light.generate_shadows && material.recv_shadows && (light.depth_map_handle.x > 0 || light.depth_map_handle.y > 0))
+    {
+        float shadow_visibility = SSM(light, frag_pos, frag_normal);
+        material.diffuse *= shadow_visibility;
+        material.specular *= shadow_visibility;
+    }
+
     // 光照颜色
-    vec3 lighting_color = PhongBlinn_lighting(to_light, to_camera, normal, material);
+    vec3 lighting_color = Phong_lighting(to_light, to_camera, frag_normal, material);
 
     // 衰减
     float attenuation = 1.0 / (1 + light.K1 * d +  light.K2 * d2);

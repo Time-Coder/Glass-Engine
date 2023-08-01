@@ -28,7 +28,7 @@ class ImageLoader:
             if image is None:
                 image = ImageLoader.PIL_load(file_name)
         if image is None:
-            raise ValueError(f"\n  not supported image format: '{file_name}'")
+            raise ValueError(f"not supported image format: '{file_name}'")
 
         image = cv2.flip(image, 0)
         if image.dtype in [np.float32, np.float64] and image.max() > 1:
