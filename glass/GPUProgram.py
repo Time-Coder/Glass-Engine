@@ -10,7 +10,7 @@ from .Uniform import Uniform
 from .UniformBlock import UniformBlock
 from .ShaderStorageBlock import ShaderStorageBlock
 from .ShaderParser import ShaderParser
-from .utils import LP_LP_c_char, delete
+from .utils import LP_LP_c_char, delete, checktype
 
 _target_type_map = \
 {
@@ -86,6 +86,7 @@ class GPUProgram(GLObject):
 
 		self._is_linked = False
 		self._linked_but_not_applied = False
+		self._uniform_not_set_warning = True
 
 	def __hash__(self):
 		return id(self)
@@ -214,6 +215,15 @@ class GPUProgram(GLObject):
 	@property
 	def is_using(self):
 		return (self._id != 0 and GPUProgram.active_id == self._id)
+	
+	@property
+	def uniform_not_set_warning(self):
+		return self._uniform_not_set_warning
+	
+	@uniform_not_set_warning.setter
+	@checktype
+	def uniform_not_set_warning(self, flag:bool):
+		self._uniform_not_set_warning = flag
 
 	def _get_compiled_files(self):
 		return []

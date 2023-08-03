@@ -12,6 +12,7 @@ out vec4 frag_color;
 uniform sampler2D screen_image;
 uniform sampler2DArray screen_image_array;
 uniform int layer;
+uniform int index;
 
 uniform bool gray;
 uniform bool invert;
@@ -29,7 +30,7 @@ void main()
     
     if (gray)
     {
-        frag_color = vec4(vec3(frag_color.r), 1);
+        frag_color = vec4(vec3(frag_color[index]), 1);
     }
     if (invert)
     {

@@ -1,7 +1,7 @@
 from .Filters import Filter
 from ..Frame import Frame
 from glass.utils import checktype
-from glass import ShaderProgram, FBO, sampler2D, sampler2DArray, GLConfig, ShaderStorageBlock
+from glass import ShaderProgram, FBO, sampler2D, sampler2DArray, samplerCube, GLConfig, ShaderStorageBlock
 
 import numpy as np
 from OpenGL import GL
@@ -48,8 +48,14 @@ class KernelFilter(Filter):
 
         self.program = ShaderProgram()
         self.program.compile(Frame.draw_frame_vs)
-        self.program.compile("glsl/Filters/kernel_filter.fs")
+        self.program.compile("../glsl/Filters/kernel_filter.fs")
         self.program["Kernel"].bind(self._kernel)
+
+        self.cube_program = ShaderProgram()
+        self.cube_program.compile(Frame.draw_frame_vs)
+        self.cube_program.compile(Frame.draw_frame_array_gs(6))
+        self.cube_program.compile("../glsl/Filters/kernel_cube_filter.fs")
+        self.cube_program["Kernel"].bind(self._kernel)
 
         self.fbo = FBO()
         self.fbo.attach(0, sampler2D)
@@ -57,9 +63,12 @@ class KernelFilter(Filter):
         self.array_fbo = FBO()
         self.array_fbo.attach(0, sampler2DArray)
 
+        self.cube_fbo = FBO()
+        self.cube_fbo.attach(0, samplerCube)
+
         self.__array_programs = {}
 
-    def __call__(self, screen_image:(sampler2D,sampler2DArray))->(sampler2D,sampler2DArray):
+    def __call__(self, screen_image:(sampler2D,sampler2DArray,samplerCube))->(sampler2D,sampler2DArray,samplerCube):
         if isinstance(screen_image, sampler2D):
             self.fbo.resize(screen_image.width, screen_image.height)
             with GLConfig.LocalConfig(depth_test=False, cull_face=None, polygon_mode=GL.GL_FILL):
@@ -69,15 +78,22 @@ class KernelFilter(Filter):
 
             return self.fbo.color_attachment(0)
         elif isinstance(screen_image, sampler2DArray):
-            self.array_fbo.resize(screen_image.width, screen_image.height)
-            self.array_fbo.color_attachment(0).layers = screen_image.layers
+            self.array_fbo.resize(screen_image.width, screen_image.height, layers=screen_image.layers)
             program = self.array_program(screen_image.layers)
             with GLConfig.LocalConfig(depth_test=False, cull_face=None, polygon_mode=GL.GL_FILL):
                 with self.array_fbo:
                     program["screen_image"] = screen_image
                     program.draw_triangles(Frame.vertices, Frame.indices)
 
-            return self.fbo.color_attachment(0)
+            return self.array_fbo.color_attachment(0)
+        elif isinstance(screen_image, samplerCube):
+            self.cube_fbo.resize(screen_image.width, screen_image.height)
+            with GLConfig.LocalConfig(depth_test=False, cull_face=None, polygon_mode=GL.GL_FILL):
+                with self.cube_fbo:
+                    self.cube_program["screen_image"] = screen_image
+                    self.cube_program.draw_triangles(Frame.vertices, Frame.indices)
+
+            return self.cube_fbo.color_attachment(0)
         
     def draw_to_active(self, screen_image: sampler2D) -> None:
         with GLConfig.LocalConfig(depth_test=False, cull_face=None, polygon_mode=GL.GL_FILL):
@@ -97,9 +113,9 @@ class KernelFilter(Filter):
             return self.__array_programs[layers]
 
         program = ShaderProgram()
-        program.compile("../glsl/Pipelines/draw_frame.vs")
+        program.compile(Frame.draw_frame_vs)
         program.compile(Frame.draw_frame_array_gs(layers))
-        program.compile("../glsl/Filters/array_kernel_filter.fs")
+        program.compile("../glsl/Filters/kernel_array_filter.fs")
         program["Kernel"].bind(self._kernel)
 
         self.__array_programs[layers] = program

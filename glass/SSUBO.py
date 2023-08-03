@@ -300,145 +300,191 @@ class SSUBO(BO):
 
 	def _set_double(self, offset:int, value):
 		self.bufferSubData(offset, 8, np.array([float(value)], dtype=np.float64))
-
+	
+	@checktype
 	def _set_bvec2(self, offset:int, value:glm.bvec2):
 		self.bufferSubData(offset, sizeof(value), np.array(value, dtype=np.int32))
-
+	
+	@checktype
 	def _set_bvec3(self, offset:int, value:glm.bvec3):
 		self.bufferSubData(offset, sizeof(value), np.array(value, dtype=np.int32))
-
+	
+	@checktype
 	def _set_bvec4(self, offset:int, value:glm.bvec4):
 		self.bufferSubData(offset, sizeof(value), np.array(value, dtype=np.int32))
-
+	
+	@checktype
 	def _set_ivec2(self, offset:int, value:glm.ivec2):
 		self.bufferSubData(offset, sizeof(value), np.array(value, dtype=np.int32))
-
+	
+	@checktype
 	def _set_ivec3(self, offset:int, value:glm.ivec3):
 		self.bufferSubData(offset, sizeof(value), np.array(value, dtype=np.int32))
-
+	
+	@checktype
 	def _set_ivec4(self, offset:int, value:glm.ivec4):
 		self.bufferSubData(offset, sizeof(value), np.array(value, dtype=np.int32))
 	
+	@checktype
 	def _set_uvec2(self, offset:int, value:(glm.uvec2,int)):
 		if isinstance(value, glm.uvec2):
 			self.bufferSubData(offset, sizeof(value), np.array(value, dtype=np.uint32))
 		else:
 			self.bufferSubData(offset, 8, np.array([value], dtype=np.uint64))
 	
+	@checktype
 	def _set_uvec3(self, offset:int, value:glm.uvec3):
 		self.bufferSubData(offset, sizeof(value), np.array(value, dtype=np.uint32))
 	
+	@checktype
 	def _set_uvec4(self, offset:int, value:glm.uvec4):
 		self.bufferSubData(offset, sizeof(value), np.array(value, dtype=np.uint32))
 	
+	@checktype
 	def _set_vec2(self, offset:int, value:glm.vec2):
 		self.bufferSubData(offset, sizeof(value), np.array(value, dtype=np.float32))
 
+	@checktype
 	def _set_vec3(self, offset:int, value:glm.vec3):
 		self.bufferSubData(offset, sizeof(value), np.array(value, dtype=np.float32))
 	
+	@checktype
 	def _set_vec4(self, offset:int, value:glm.vec4):
 		self.bufferSubData(offset, sizeof(value), np.array(value, dtype=np.float32))
 
+	@checktype
 	def _set_dvec2(self, offset:int, value:glm.dvec2):
 		self.bufferSubData(offset, sizeof(value), np.array(value, dtype=np.float64))
 
+	@checktype
 	def _set_dvec3(self, offset:int, value:glm.dvec3):
 		self.bufferSubData(offset, sizeof(value), np.array(value, dtype=np.float64))
 	
+	@checktype
 	def _set_dvec4(self, offset:int, value:glm.dvec4):
 		self.bufferSubData(offset, sizeof(value), np.array(value, dtype=np.float64))
 	
+	@checktype
 	def _set_mat2(self, offset:int, value:glm.mat2x2):
 		self.bufferSubData(offset, sizeof(value), np.array(value, dtype=np.float32))
 	
+	@checktype
 	def _set_mat3x2(self, offset:int, value:glm.mat3x2):
 		self.bufferSubData(offset, sizeof(value), np.array(value, dtype=np.float32))
 
+	@checktype
 	def _set_mat4x2(self, offset:int, value:glm.mat4x2):
 		self.bufferSubData(offset, sizeof(value), np.array(value, dtype=np.float32))
 
+	@checktype
 	def _set_mat2x3(self, offset:int, value:glm.mat2x3):
 		self.bufferSubData(offset, sizeof(value), np.array(value, dtype=np.float32))
 	
+	@checktype
 	def _set_mat3(self, offset:int, value:glm.mat3x3):
 		self.bufferSubData(offset, sizeof(value), np.array(value, dtype=np.float32))
 	
+	@checktype
 	def _set_mat4x3(self, offset:int, value:glm.mat4x3):
 		self.bufferSubData(offset, sizeof(value), np.array(value, dtype=np.float32))
 	
+	@checktype
 	def _set_mat2x4(self, offset:int, value:glm.mat2x4):
 		self.bufferSubData(offset, sizeof(value), np.array(value, dtype=np.float32))
 	
+	@checktype
 	def _set_mat3x4(self, offset:int, value:glm.mat3x4):
 		self.bufferSubData(offset, sizeof(value), np.array(value, dtype=np.float32))
 	
+	@checktype
 	def _set_mat4(self, offset:int, value:glm.mat4x4):
 		self.bufferSubData(offset, sizeof(value), np.array(value, dtype=np.float32))
 
+	@checktype
 	def _set_mat2x2(self, offset:int, value:glm.mat2x2):
 		self.bufferSubData(offset, sizeof(value), np.array(value, dtype=np.float32))
 
+	@checktype
 	def _set_mat3x3(self, offset:int, value:glm.mat3x3):
 		self.bufferSubData(offset, sizeof(value), np.array(value, dtype=np.float32))
 
+	@checktype
 	def _set_mat4x4(self, offset:int, value:glm.mat4x4):
 		self.bufferSubData(offset, sizeof(value), np.array(value, dtype=np.float32))
 
+	@checktype
 	def _set_dmat2(self, offset:int, value:glm.mat2x2):
 		self.bufferSubData(offset, sizeof(value), np.array(value, dtype=np.float64))
 	
+	@checktype
 	def _set_dmat3x2(self, offset:int, value:glm.mat3x2):
 		self.bufferSubData(offset, sizeof(value), np.array(value, dtype=np.float64))
 
+	@checktype
 	def _set_dmat4x2(self, offset:int, value:glm.mat4x2):
 		self.bufferSubData(offset, sizeof(value), np.array(value, dtype=np.float64))
 
+	@checktype
 	def _set_dmat2x3(self, offset:int, value:glm.mat2x3):
 		self.bufferSubData(offset, sizeof(value), np.array(value, dtype=np.float64))
 	
+	@checktype
 	def _set_dmat3(self, offset:int, value:glm.mat3x3):
 		self.bufferSubData(offset, sizeof(value), np.array(value, dtype=np.float64))
 	
+	@checktype
 	def _set_dmat4x3(self, offset:int, value:glm.mat4x3):
 		self.bufferSubData(offset, sizeof(value), np.array(value, dtype=np.float64))
 	
+	@checktype
 	def _set_dmat2x4(self, offset:int, value:glm.mat2x4):
 		self.bufferSubData(offset, sizeof(value), np.array(value, dtype=np.float64))
 	
+	@checktype
 	def _set_dmat3x4(self, offset:int, value:glm.mat3x4):
 		self.bufferSubData(offset, sizeof(value), np.array(value, dtype=np.float64))
 	
+	@checktype
 	def _set_dmat4(self, offset:int, value:glm.mat4x4):
 		self.bufferSubData(offset, sizeof(value), np.array(value, dtype=np.float64))
 
+	@checktype
 	def _set_dmat2x2(self, offset:int, value:glm.dmat2x2):
 		self.bufferSubData(offset, sizeof(value), np.array(value, dtype=np.float64))
 
+	@checktype
 	def _set_dmat3x3(self, offset:int, value:glm.dmat3x3):
 		self.bufferSubData(offset, sizeof(value), np.array(value, dtype=np.float64))
 
+	@checktype
 	def _set_dmat4x4(self, offset:int, value:glm.dmat4x4):
 		self.bufferSubData(offset, sizeof(value), np.array(value, dtype=np.float64))
 
+	@checktype
 	def _set_sampler2D(self, offset:int, value:int):
 		self.bufferSubData(offset, 8, np.array(value, dtype=np.uint64))
 
+	@checktype
 	def _set_isampler2D(self, offset:int, value:int):
 		self.bufferSubData(offset, 8, np.array(value, dtype=np.uint64))
 
+	@checktype
 	def _set_usampler2D(self, offset:int, value:int):
 		self.bufferSubData(offset, 8, np.array(value, dtype=np.uint64))
 
+	@checktype
 	def _set_sampler2DMS(self, offset:int, value:int):
 		self.bufferSubData(offset, 8, np.array(value, dtype=np.uint64))
 
+	@checktype
 	def _set_isampler2DMS(self, offset:int, value:int):
 		self.bufferSubData(offset, 8, np.array(value, dtype=np.uint64))
 
+	@checktype
 	def _set_usampler2DMS(self, offset:int, value:int):
 		self.bufferSubData(offset, 8, np.array(value, dtype=np.uint64))
 
+	@checktype
 	def _set_samplerCube(self, offset:int, value:int):
 		self.bufferSubData(offset, 8, np.array(value, dtype=np.uint64))
 

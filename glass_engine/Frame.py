@@ -25,6 +25,7 @@ def _init_Frame(cls):
     cls.program = ShaderProgram()
     cls.program.compile(cls.draw_frame_vs)
     cls.program.compile(cls.draw_frame_fs)
+    cls.program.uniform_not_set_warning = False
 
     return cls
 
@@ -34,7 +35,7 @@ class Frame:
     __array_geo_shader_template_content = None
 
     @staticmethod
-    def draw(screen_image:(sampler2D,sampler2DArray), gray:bool=False, invert:bool=False, layer:int=-1):
+    def draw(screen_image:(sampler2D,sampler2DArray), gray:bool=False, invert:bool=False, layer:int=-1, index:int=0):
         with GLConfig.LocalConfig(cull_face=None, polygon_mode=GL.GL_FILL):
             if isinstance(screen_image, sampler2D):
                 Frame.program["screen_image"] = screen_image
@@ -45,6 +46,7 @@ class Frame:
 
             Frame.program["gray"] = gray
             Frame.program["invert"] = invert
+            Frame.program["index"] = index
             Frame.program.draw_triangles(Frame.vertices, Frame.indices)
 
     @staticmethod

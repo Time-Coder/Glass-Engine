@@ -86,7 +86,7 @@ class Mesh(Entity):
 
     def __hash__(self):
         return id(self)
-    
+
     @property
     def self_calculated_normal(self):
         return self.__self_calculated_normal
@@ -934,6 +934,9 @@ class Mesh(Entity):
             yield from generate_smooth_TBN(vertices, indices, not self.self_calculated_normal)
 
     def draw(self, program:ShaderProgram, instances:Instances=None):
+        if not self.visible:
+            return
+
         with self.render_hint:
             if self.__element_type in GLInfo.triangle_types:
                 program.draw_triangles(self._vertices, self._indices, instances, self.__element_type)

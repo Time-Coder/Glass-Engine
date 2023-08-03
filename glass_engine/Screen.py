@@ -85,6 +85,7 @@ class Screen(QOpenGLWidget):
         self.__before_filter_fbo = None
         self.__before_filter_fbo_ms = None
         self._is_gl_init = False
+        self._screen_image = None
         
         self.camera = camera
         self._manipulator = None
@@ -125,6 +126,7 @@ class Screen(QOpenGLWidget):
             should_update = self._renderer.startup(self.camera, self.camera.scene)
 
         if should_update:
+            self._screen_image = None
             self.update()
 
     @property
@@ -161,27 +163,34 @@ class Screen(QOpenGLWidget):
         self.makeCurrent()
 
         self.frame_started.emit()
-        should_update = self.camera.scene.generate_meshes()
+
+        should_update_scene = self.camera.scene.generate_meshes()
+        should_update_filter = False
 
         with self.render_hint:
             GLConfig.clear_buffers()
             if not self.renderer.filters.has_valid:
                 with self.renderer.render_hint:
-                    should_update = self.renderer.render(self.camera, self.camera.scene) or should_update
+                    should_update_scene = self.renderer.render(self.camera, self.camera.scene) or should_update_scene
             else:
-                with self._before_filter_fbo:
-                    with self.renderer.render_hint:
-                        should_update = self.renderer.render(self.camera, self.camera.scene) or should_update
+                if self._screen_image is None or should_update_scene:
+                    with self._before_filter_fbo:
+                        with self.renderer.render_hint:
+                            should_update_scene = self.renderer.render(self.camera, self.camera.scene) or should_update_scene
 
-                screen_image = self._before_filter_fbo.resolved.color_attachment(0)
-                should_update = self.renderer.filters.draw(screen_image) or should_update
-        
+                    self._screen_image = self._before_filter_fbo.resolved.color_attachment(0)
+                    self.renderer.filters.screen_update_time = time.time()
+
+                should_update_filter = self.renderer.filters.draw(self._screen_image)
+
         self.__calc_fps()
-
-        if should_update:
-            self.update()
-
         self.frame_ended.emit()
+
+        if should_update_scene or should_update_filter:
+            if should_update_scene:
+                self._screen_image = None
+                
+            self.update()
 
     @property
     def _before_filter_fbo(self):
@@ -233,6 +242,7 @@ class Screen(QOpenGLWidget):
         self.mouse_pressed.emit(button, screen_pos, global_pos)
 
         if should_update:
+            self._screen_image = None
             self.update()
 
     def mouseReleaseEvent(self, mouse_event: QMouseEvent)->None:
@@ -247,6 +257,7 @@ class Screen(QOpenGLWidget):
         self.mouse_released.emit(button, screen_pos, global_pos)
         
         if should_update:
+            self._screen_image = None
             self.update()
 
     def mouseDoubleClickEvent(self, mouse_event:QMouseEvent)->None:
@@ -261,6 +272,7 @@ class Screen(QOpenGLWidget):
         self.mouse_double_clicked.emit(button, screen_pos, global_pos)
         
         if should_update:
+            self._screen_image = None
             self.update()
 
     def __mouseMoveEvent(self, screen_pos:glm.vec2, global_pos:glm.vec2)->bool:
@@ -273,6 +285,7 @@ class Screen(QOpenGLWidget):
         self.mouse_moved.emit(screen_pos, global_pos)
 
         if should_update:
+            self._screen_image = None
             self.update()
 
     def keyPressEvent(self, key_event:QKeyEvent)->None:
@@ -289,6 +302,7 @@ class Screen(QOpenGLWidget):
         self.key_pressed.emit(key)
 
         if should_update:
+            self._screen_image = None
             self.update()
 
     def keyReleaseEvent(self, key_event: QKeyEvent)->None:
@@ -305,6 +319,7 @@ class Screen(QOpenGLWidget):
         self.key_released.emit(key)
 
         if should_update:
+            self._screen_image = None
             self.update()
 
     def __keyRepeateEvent(self, keys:set[Manipulator.Key])->bool:
@@ -317,6 +332,7 @@ class Screen(QOpenGLWidget):
         self.key_repeated.emit(keys)
 
         if should_update:
+            self._screen_image = None
             self.update()
 
     def wheelEvent(self, wheel_event:QWheelEvent)->None:
@@ -331,6 +347,7 @@ class Screen(QOpenGLWidget):
         self.wheel_scrolled.emit(angle, screen_pos, global_pos)
 
         if should_update:
+            self._screen_image = None
             self.update()
     
     def __calc_fps(self):
@@ -397,6 +414,7 @@ class Screen(QOpenGLWidget):
         manipulator._camera = self.camera
         should_update = manipulator.on_start()
         if should_update:
+            self._screen_image = None
             self.update()
 
     def timerEvent(self, timer_event: QTimerEvent)->None:
@@ -429,5 +447,6 @@ class Screen(QOpenGLWidget):
                 should_update = self.__mouseMoveEvent(screen_pos, global_pos) or should_update
 
             if should_update:
+                self._screen_image = None
                 self.update()
             

@@ -1,7 +1,7 @@
-#ifndef _POINT_LIGHT_SHADOW_MAPPING_GLSL__
-#define _POINT_LIGHT_SHADOW_MAPPING_GLSL__
+#ifndef _SPOT_LIGHT_SHADOW_MAPPING_GLSL__
+#define _SPOT_LIGHT_SHADOW_MAPPING_GLSL__
 
-float SSM(PointLight light, vec3 frag_pos, vec3 frag_normal)
+float SSM(SpotLight light, vec3 frag_pos, vec3 frag_normal)
 {
     vec3 depth_map_tex_coord = frag_pos - light.abs_position;
     float self_depth = length(depth_map_tex_coord);
@@ -10,6 +10,13 @@ float SSM(PointLight light, vec3 frag_pos, vec3 frag_normal)
         return 1;
     }
     depth_map_tex_coord /= self_depth;
+
+    float theta = acos(dot(normalize(light.direction), depth_map_tex_coord));
+    float cutoff = soft_step(light.half_span_angle_rad+light.half_softness_rad-theta, light.half_softness_rad);
+    if(cutoff < 1E-6)
+    {
+        return 1;
+    }
     
     float beta = acos(dot(frag_normal, -depth_map_tex_coord));
     float bias = 0.005 * self_depth * tan(beta);
@@ -23,7 +30,7 @@ float SSM(PointLight light, vec3 frag_pos, vec3 frag_normal)
     return visibility;
 }
 
-float PCF(PointLight light, vec3 frag_pos, vec3 frag_normal)
+float PCF(SpotLight light, vec3 frag_pos, vec3 frag_normal)
 {
     vec3 depth_map_tex_coord = frag_pos - light.abs_position;
     float self_depth = length(depth_map_tex_coord);
@@ -33,11 +40,18 @@ float PCF(PointLight light, vec3 frag_pos, vec3 frag_normal)
     }
     depth_map_tex_coord /= self_depth;
 
+    float theta = acos(dot(normalize(light.direction), depth_map_tex_coord));
+    float cutoff = soft_step(light.half_span_angle_rad+light.half_softness_rad-theta, light.half_softness_rad);
+    if(cutoff < 1E-6)
+    {
+        return 1;
+    }
+
     float beta = acos(dot(frag_normal, -depth_map_tex_coord));
     float bias = 0.005 * self_depth * tan(beta);
     self_depth -= bias;
 
-    float max_angle_shift = 0.005;
+    float max_angle_shift = atan(0.05/self_depth);
     int n_samples = 16;
 
     int rand_seed = 0;

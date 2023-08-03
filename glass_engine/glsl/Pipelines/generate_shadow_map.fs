@@ -13,18 +13,12 @@ in GeometryOut
     flat bool visible;
 } fs_in;
 
-layout(location=0) out float shadow_factor;
+layout(location=0) out vec2 shadow_and_dev;
 
 #include "../include/Material.glsl"
-#include "../Lights/DirLight_shadow_mapping.glsl"
+#include "../Lights/Lights.glsl"
 #include "../include/fragment_utils.glsl"
 #include "../include/math.glsl"
-
-buffer DirLights
-{
-    int n_dir_lights;
-    DirLight dir_lights[];
-};
 
 uniform Camera camera;
 uniform Material material;
@@ -49,7 +43,7 @@ void main()
     view_TBN[2] = view_normal;
     if (hasnan(view_TBN))
     {
-        shadow_factor = 0;
+        shadow_and_dev = vec2(0, 0);
         return;
     }
 
@@ -80,11 +74,12 @@ void main()
 
     if (shading_model == 9) // Unlit
     {
-        shadow_factor = 0;
+        shadow_and_dev = vec2(0, 0);
         return;
     }
 
     float visibility = 1;
+    float dev = 0;
     for (int i = 0; i < n_dir_lights; i++)
     {
         if (internal_material.shading_model == 9 ||
@@ -95,7 +90,29 @@ void main()
             continue;
         }
 
-        visibility *= PCF(dir_lights[i], camera, frag_pos, frag_normal);
+        vec2 visibility_dev = PCF(dir_lights[i], camera, frag_pos, frag_normal);
+
+        visibility *= visibility_dev.x;
+        dev += visibility_dev.y;
     }
-    shadow_factor = 1 - visibility;
+
+    for (int i = 0; i < n_point_lights; i++)
+    {
+        if (internal_material.shading_model == 9 ||
+            !point_lights[i].generate_shadows ||
+            point_lights[i].depth_map_handle == 0 ||
+            !internal_material.recv_shadows)
+        {
+            continue;
+        }
+
+        vec2 visibility_dev = PCF(point_lights[i], frag_pos, frag_normal);
+
+        visibility *= visibility_dev.x;
+        dev += visibility_dev.y;
+    }
+
+    dev /= (n_dir_lights + n_point_lights);
+
+    shadow_and_dev = vec2(1 - visibility, dev);
 }

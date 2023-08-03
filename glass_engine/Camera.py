@@ -6,6 +6,7 @@ from glass.utils import checktype
 import glm
 import math
 from enum import Enum
+import numpy as np
 
 class Camera(SinglePathNode):
 
@@ -28,7 +29,7 @@ class Camera(SinglePathNode):
 		self.__clip = self.__far - self.__near
 		self.__height = 40*2*self.__near*self.__tan_half_fov
 		self.__focus = 0.9*self.__near
-		self.__aperture = 0.01
+		self.__aperture = 0.05
 		self.__auto_focus = True
 		self.__focus_tex_coord = glm.vec2(0.5, 0.5)
 		self.__focus_change_speed = 0.005 # m/s
@@ -234,3 +235,9 @@ class Camera(SinglePathNode):
 	@checktype
 	def CSM_levels(self, levels:int):
 		self.__CSM_levels = levels
+
+	def capture(self, save_path:str=None)->np.ndarray:
+		pass
+
+	def capture_video(self, save_path:str):
+		pass

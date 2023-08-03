@@ -76,10 +76,13 @@ void draw_filled_to_gbuffer()
     reflection = internal_material.reflection;    
     refraction = internal_material.refraction;
 
-    mix_uint.x = internal_material.shading_model;
+    mix_uint.x = uint(255*internal_material.refractive_index);
     mix_uint.y = env_map_handle.x;
     mix_uint.z = env_map_handle.y;
-    mix_uint.w = uint((uint(255*internal_material.refractive_index) << 1) | uint(is_sphere));
+    mix_uint.w = uint(
+        (internal_material.shading_model << 2) |
+        (uint(internal_material.recv_shadows) << 1) |
+        uint(is_sphere));
 }
 
 #endif

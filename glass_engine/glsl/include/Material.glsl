@@ -18,7 +18,6 @@ struct Material
     // PBR = 0xb
 
     bool recv_shadows;
-    bool cast_shadows;
 	vec3 ambient;
 	vec3 diffuse;
 	vec3 specular;
@@ -71,7 +70,6 @@ struct InternalMaterial
 {
 	uint shading_model;
     bool recv_shadows;
-    bool cast_shadows;
 	vec3 ambient;
 	vec3 diffuse;
 	vec3 specular;
@@ -92,7 +90,6 @@ InternalMaterial fetch_internal_material(vec4 frag_color, Material material, vec
     InternalMaterial internal_material; // 实际使用的材质
     internal_material.shading_model = material.shading_model;
     internal_material.recv_shadows = material.recv_shadows;
-    internal_material.cast_shadows = material.cast_shadows;
 
     // 材质不透明度
     float material_opacity = material.opacity;

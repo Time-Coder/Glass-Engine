@@ -6,7 +6,7 @@
 #define CURRENT_GOURAUD_COLOR (gl_FrontFacing ? pre_shading_colors.Gouraud_color : pre_shading_colors.Gouraud_back_color)
 #define CURRENT_FLAT_COLOR (gl_FrontFacing ? pre_shading_colors.Flat_color : pre_shading_colors.Flat_back_color)
 
-vec4 draw_filled(Camera camera)
+vec4 draw_filled(Camera camera, Camera CSM_camera)
 {
     mat3 view_TBN = fs_in.view_TBN;
     vec3 view_normal = normalize(view_TBN[2]);
@@ -57,7 +57,7 @@ vec4 draw_filled(Camera camera)
     }
 
     vec3 frag_pos = view_to_world(camera, view_pos);
-    vec3 normal = view_dir_to_world(camera, view_normal);
+    vec3 frag_normal = view_dir_to_world(camera, view_normal);
     uint shading_model = internal_material.shading_model;
 
     vec3 out_color3 = vec3(0, 0, 0);
@@ -65,17 +65,26 @@ vec4 draw_filled(Camera camera)
     {
         out_color3 = vec3(0, 0, 0);
     }
-    else if (shading_model == 1) // Flat
+    else if (shading_model == 1 || shading_model == 2) // Flat
     {
-        out_color3 = CURRENT_FLAT_COLOR;
-    }
-    else if (shading_model == 2) // Gouraud
-    {
-        out_color3 = CURRENT_GOURAUD_COLOR;
+        float shadow_visibility = 1;
+        if (internal_material.recv_shadows)
+        {
+            shadow_visibility = SHADOW_VISIBILITY(CSM_camera, frag_pos, frag_normal);
+        }
+        
+        if (shading_model == 1)
+        {
+            out_color3 = max(shadow_visibility, 0.1) * CURRENT_FLAT_COLOR;
+        }
+        else if (shading_model == 2)
+        {
+            out_color3 = max(shadow_visibility, 0.1) * CURRENT_GOURAUD_COLOR;
+        }
     }
     else // Phong, PhongBlinn, CookTorrance(PBR)
     {
-        out_color3 = FRAG_LIGHTING(internal_material, camera, frag_pos, normal);
+        out_color3 = FRAG_LIGHTING(internal_material, CSM_camera, camera.abs_position, frag_pos, frag_normal);
     }
 
     if (shading_model != 9)
@@ -102,7 +111,7 @@ vec4 draw_filled(Camera camera)
             internal_material.reflection,
             internal_material.refraction,
             internal_material.refractive_index,
-            view_dir, normal, 
+            view_dir, frag_normal, 
             use_skybox_map, skybox_map,
             use_skydome_map, skydome_map,
             use_env_map, sampler2D(env_map_handle)
@@ -114,7 +123,7 @@ vec4 draw_filled(Camera camera)
             internal_material.reflection,
             internal_material.refraction,
             internal_material.refractive_index,
-            view_dir, normal, 
+            view_dir, frag_normal, 
             use_skybox_map, skybox_map,
             use_skydome_map, skydome_map,
             use_env_map, sampler2D(env_map_handle)
@@ -124,6 +133,11 @@ vec4 draw_filled(Camera camera)
 
     // 最终颜色
     return vec4(out_color3, internal_material.opacity);
+}
+
+vec4 draw_filled(Camera camera)
+{
+    return draw_filled(camera, camera);
 }
 
 #endif

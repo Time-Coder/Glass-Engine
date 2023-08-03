@@ -52,9 +52,9 @@ uniform sampler2D skydome_map;
 
 void main()
 {
-    vec3 v1 = gl_in[1].gl_Position.xyz - gl_in[0].gl_Position.xyz;
-    vec3 v2 = gl_in[2].gl_Position.xyz - gl_in[0].gl_Position.xyz;
-    vec3 face_view_normal = normalize(cross(v1, v2));
+    vec3 v01 = gl_in[1].gl_Position.xyz - gl_in[0].gl_Position.xyz;
+    vec3 v02 = gl_in[2].gl_Position.xyz - gl_in[0].gl_Position.xyz;
+    vec3 face_view_normal = normalize(cross(v01, v02));
     vec3 face_world_normal = view_dir_to_world(camera, face_view_normal);
 
     vec2 face_tex_coord = (gs_in[0].tex_coord.xy + gs_in[1].tex_coord.xy + gs_in[2].tex_coord.xy)/3;
@@ -63,10 +63,34 @@ void main()
     vec4 face_color = (gs_in[0].color + gs_in[1].color + gs_in[2].color)/3;
     vec4 face_back_color = (gs_in[0].back_color + gs_in[1].back_color + gs_in[2].back_color)/3;
 
+    vec2 st01 = gs_in[1].tex_coord.xy - gs_in[0].tex_coord.xy;
+    vec2 st02 = gs_in[2].tex_coord.xy - gs_in[0].tex_coord.xy;
+    float det = st01.s * st02.t - st02.s * st01.t;
+    
+    vec3 face_view_tangent = st02.t*v01 - st01.t*v02;
+    vec3 face_view_bitangent = st01.s*v02 - st02.s*v01;
+    if (abs(det) > 1E-6)
+    {
+        face_view_tangent /= det;
+        face_view_bitangent /= det;
+    }
+    else
+    {
+        face_view_tangent = vec3(0, 0, 0);
+        face_view_bitangent = vec3(0, 0, 0);
+    }
+
     for (int i = 0; i < 3; i++)
     {
         gs_out.view_pos = gl_in[i].gl_Position.xyz + explode_distance * face_view_normal;
-        gs_out.view_TBN = gs_in[i].view_TBN;
+        if (material.shading_model == 1) // Flat
+        {
+            gs_out.view_TBN = mat3(face_view_tangent, face_view_bitangent, face_view_normal);
+        }
+        else
+        {
+            gs_out.view_TBN = gs_in[i].view_TBN;
+        }
         gs_out.color = gs_in[i].color;
         gs_out.back_color = gs_in[i].back_color;
         gs_out.tex_coord = gs_in[i].tex_coord;
@@ -86,11 +110,11 @@ void main()
             {
                 // front
                 InternalMaterial internal_material = fetch_internal_material(face_color, material, face_tex_coord);
-                FLAT_LIGHTING(pre_shading_colors.Flat_color, internal_material, camera, face_world_pos, face_world_normal);
+                FLAT_LIGHTING(pre_shading_colors.Flat_color, internal_material, camera, camera.abs_position, face_world_pos, face_world_normal);
             
                 // back
                 internal_material = fetch_internal_material(face_back_color, back_material, face_tex_coord);
-                FLAT_LIGHTING(pre_shading_colors.Flat_back_color, internal_material, camera, face_world_pos, -face_world_normal);
+                FLAT_LIGHTING(pre_shading_colors.Flat_back_color, internal_material, camera, camera.abs_position, face_world_pos, -face_world_normal);
             }
 
             if (material.shading_model == 2) // Gouraud
@@ -99,11 +123,11 @@ void main()
                 vec3 vertex_world_pos = view_to_world(camera, gs_out.view_pos);
                 vec3 vertex_world_normal = view_dir_to_world(camera, gs_out.view_TBN[2]);
                 InternalMaterial internal_material = fetch_internal_material(gs_out.color, material, gs_out.tex_coord.xy);
-                GOURAUD_LIGHTING(pre_shading_colors.Gouraud_color, internal_material, camera, vertex_world_pos, vertex_world_normal);
+                GOURAUD_LIGHTING(pre_shading_colors.Gouraud_color, internal_material, camera, camera.abs_position, vertex_world_pos, vertex_world_normal);
             
                 // back
                 internal_material = fetch_internal_material(gs_out.back_color, back_material, gs_out.tex_coord.xy);
-                GOURAUD_LIGHTING(pre_shading_colors.Gouraud_back_color, internal_material, camera, vertex_world_pos, -vertex_world_normal);
+                GOURAUD_LIGHTING(pre_shading_colors.Gouraud_back_color, internal_material, camera, camera.abs_position, vertex_world_pos, -vertex_world_normal);
             }
         }
 

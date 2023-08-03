@@ -30,12 +30,12 @@ struct DirLight
 #include "DirLight_shadow_mapping.glsl"
 
 vec3 PhongBlinn_lighting(
-    DirLight light, InternalMaterial material,
-    Camera camera, vec3 frag_pos, vec3 frag_normal)
+    DirLight light, InternalMaterial material, Camera CSM_camera,
+    vec3 camera_pos, vec3 frag_pos, vec3 frag_normal)
 {
     // 基础向量
     vec3 to_light = -normalize(light.direction);
-    vec3 to_camera = normalize(camera.abs_position - frag_pos);
+    vec3 to_camera = normalize(camera_pos - frag_pos);
 
     // 光照参数
     material.ambient = light.ambient * material.ambient;
@@ -44,7 +44,7 @@ vec3 PhongBlinn_lighting(
 
     if (light.generate_shadows && material.recv_shadows && (light.depth_map_handle.x > 0 || light.depth_map_handle.y > 0))
     {
-        float shadow_visibility = PCF(light, camera, frag_pos, frag_normal);
+        float shadow_visibility = PCF(light, CSM_camera, frag_pos, frag_normal);
         material.diffuse *= shadow_visibility;
         material.specular *= shadow_visibility;
     }
@@ -59,12 +59,12 @@ vec3 PhongBlinn_lighting(
 }
 
 vec3 Phong_lighting(
-    DirLight light, InternalMaterial material,
-    Camera camera, vec3 frag_pos, vec3 frag_normal)
+    DirLight light, InternalMaterial material, Camera CSM_camera,
+    vec3 camera_pos, vec3 frag_pos, vec3 frag_normal)
 {
     // 基础向量
     vec3 to_light = -normalize(light.direction);
-    vec3 to_camera = normalize(camera.abs_position - frag_pos);
+    vec3 to_camera = normalize(camera_pos - frag_pos);
 
     // 光照参数
     material.ambient = light.ambient * material.ambient;
@@ -73,7 +73,7 @@ vec3 Phong_lighting(
 
     if (light.generate_shadows && material.recv_shadows && (light.depth_map_handle.x > 0 || light.depth_map_handle.y > 0))
     {
-        float shadow_visibility = PCF(light, camera, frag_pos, frag_normal);
+        float shadow_visibility = PCF(light, CSM_camera, frag_pos, frag_normal);
         material.diffuse *= shadow_visibility;
         material.specular *= shadow_visibility;
     }
@@ -88,13 +88,15 @@ vec3 Phong_lighting(
 }
 
 vec3 Gouraud_lighting(
-    DirLight light, InternalMaterial material,
-    Camera camera, vec3 frag_pos, vec3 frag_normal)
+    DirLight light, InternalMaterial material, Camera CSM_camera,
+    vec3 camera_pos, vec3 frag_pos, vec3 frag_normal)
 {
-    return Phong_lighting(light, material, camera, frag_pos, frag_normal);
+    return Phong_lighting(light, material, CSM_camera, camera_pos, frag_pos, frag_normal);
 }
 
-vec3 Flat_lighting(DirLight light, InternalMaterial material, Camera camera, vec3 face_pos, vec3 face_normal)
+vec3 Flat_lighting(
+    DirLight light, InternalMaterial material,
+    vec3 face_pos, vec3 face_normal)
 {
     vec3 to_light = -normalize(light.direction);
     
@@ -102,13 +104,6 @@ vec3 Flat_lighting(DirLight light, InternalMaterial material, Camera camera, vec
     material.ambient = light.ambient * material.ambient;
     material.diffuse = light.diffuse * material.diffuse;
     material.specular = light.specular * material.specular;
-
-    if (light.generate_shadows && material.recv_shadows && (light.depth_map_handle.x > 0 || light.depth_map_handle.y > 0))
-    {
-        float shadow_visibility = PCF(light, camera, face_pos, face_normal);
-        material.diffuse *= shadow_visibility;
-        material.specular *= shadow_visibility;
-    }
 
     // 光照颜色
     vec3 lighting_color = Flat_lighting(to_light, face_normal, material);
@@ -119,27 +114,32 @@ vec3 Flat_lighting(DirLight light, InternalMaterial material, Camera camera, vec
     return final_color;
 }
 
+vec3 Flat_lighting(
+    DirLight light, InternalMaterial material, Camera CSM_camera,
+    vec3 camera_pos, vec3 face_pos, vec3 face_normal)
+{
+    return Flat_lighting(light, material, face_pos, face_normal);
+}
+
 vec3 CookTorrance_lighting(
-    DirLight light, InternalMaterial material,
-    Camera camera, vec3 frag_pos, vec3 frag_normal)
+    DirLight light, InternalMaterial material, Camera CSM_camera,
+    vec3 camera_pos, vec3 frag_pos, vec3 frag_normal)
 {
     // 基础向量
     vec3 to_light = -normalize(light.direction);
-    vec3 to_camera = normalize(camera.abs_position - frag_pos);
+    vec3 to_camera = normalize(camera_pos - frag_pos);
 
     // 光照颜色
-    if (light.generate_shadows && material.recv_shadows && (light.depth_map_handle.x > 0 || light.depth_map_handle.y > 0))
-    {
-        float shadow_visibility = PCF(light, camera, frag_pos, frag_normal);
-        material.albedo *= shadow_visibility;
-    }
-
     vec3 lighting_color = CookTorrance_lighting(to_light, to_camera, frag_normal, material);
-
-    
 
     // 最终颜色
     vec3 final_color = light.brightness * light.color * lighting_color;
+    
+    if (light.generate_shadows && material.recv_shadows && (light.depth_map_handle.x > 0 || light.depth_map_handle.y > 0))
+    {
+        float shadow_visibility = PCF(light, CSM_camera, frag_pos, frag_normal);
+        final_color *= max(shadow_visibility, 0.1);
+    }
     
     return final_color;
 }

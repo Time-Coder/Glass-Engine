@@ -409,6 +409,18 @@ class samplerCube(FBOAttachment):
 			face.malloc(width, height, internal_format)
 
 	@property
+	def width(self):
+		return self.faces[0].width
+	
+	@property
+	def height(self):
+		return self.faces[0].height
+	
+	@property
+	def layers(self):
+		return 6
+
+	@property
 	def faces(self):
 		return self._faces
 
