@@ -22,17 +22,17 @@ class BloomFilter(Filter):
         self.light_extract_filter = LightExtractFilter()
 
         self.down_program = ShaderProgram()
-        self.down_program.compile("../glsl/Pipelines/draw_frame.vs")
+        self.down_program.compile(Frame.draw_frame_vs)
         self.down_program.compile("../glsl/Filters/bloom_downsampling.fs")
 
         self.up_program = ShaderProgram()
-        self.up_program.compile("../glsl/Pipelines/draw_frame.vs")
+        self.up_program.compile(Frame.draw_frame_vs)
         self.up_program.compile("../glsl/Filters/bloom_upsampling.fs")
 
         self.mix_fbo = FBO()
         self.mix_fbo.attach(0, sampler2D)
         self.mix_program = ShaderProgram()
-        self.mix_program.compile("../glsl/Pipelines/draw_frame.vs")
+        self.mix_program.compile(Frame.draw_frame_vs)
         self.mix_program.compile("../glsl/Filters/bloom_mix.fs")
 
     def __get_bloom_image(self, screen_image):

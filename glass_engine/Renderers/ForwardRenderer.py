@@ -46,15 +46,15 @@ class ForwardRenderer(CommonRenderer):
         self.OIT_fbo.draw_to_active(0)
 
     @property
-    def ssao_gbuffer_program(self):
-        if "ssao_gbuffer" in self.programs:
-            return self.programs["ssao_gbuffer"]
+    def draw_to_ssao_gbuffer_program(self):
+        if "draw_to_ssao_gbuffer" in self.programs:
+            return self.programs["draw_to_ssao_gbuffer"]
         
         program = ShaderProgram()
         program.compile("../glsl/Pipelines/forward_rendering/forward_rendering.vs")
         program.compile("../glsl/Pipelines/forward_rendering/forward_rendering.gs")
-        program.compile("../glsl/Pipelines/SSAO/ssao_gbuffer.fs")
-        self.programs["ssao_gbuffer"] = program
+        program.compile("../glsl/Pipelines/SSAO/draw_to_ssao_gbuffer.fs")
+        self.programs["draw_to_ssao_gbuffer"] = program
         return program
     
     @property
@@ -93,15 +93,16 @@ class ForwardRenderer(CommonRenderer):
             GLConfig.clear_buffers()
             if self._enable_SSAO or self.DOF:
                 with self.ssao_gbuffer:
-                    self.ssao_gbuffer_program["camera"] = self.camera
+                    self.draw_to_ssao_gbuffer_program["camera"] = self.camera
                     for mesh, instances in self.scene.all_meshes.items():
                         if not mesh.is_filled:
                             continue
 
-                        self.ssao_gbuffer_program["material"] = mesh.material
-                        self.ssao_gbuffer_program["back_material"] = mesh._back_material
-                        self.ssao_gbuffer_program["explode_distance"] = mesh.explode_distance
-                        mesh.draw(self.ssao_gbuffer_program, instances)
+                        self.draw_to_ssao_gbuffer_program["is_filled"] = True
+                        self.draw_to_ssao_gbuffer_program["material"] = mesh.material
+                        self.draw_to_ssao_gbuffer_program["back_material"] = mesh._back_material
+                        self.draw_to_ssao_gbuffer_program["explode_distance"] = mesh.explode_distance
+                        mesh.draw(self.draw_to_ssao_gbuffer_program, instances)
 
                 view_pos_alpha_map = self.ssao_gbuffer.resolved.color_attachment(0)
                 view_normal_map = self.ssao_gbuffer.resolved.color_attachment(1)
@@ -111,21 +112,22 @@ class ForwardRenderer(CommonRenderer):
             if self._enable_SSAO:
                 with GLConfig.LocalConfig(cull_face=None, polygon_mode=GL.GL_FILL):
                     with self.ssao_fbo:
-                        self.ssao_generate_program["camera"] = self.camera
-                        self.ssao_generate_program["view_pos_alpha_map"] = view_pos_alpha_map
-                        self.ssao_generate_program["view_normal_map"] = view_normal_map
-                        self.ssao_generate_program["SSAO_radius"] = self.SSAO_radius
-                        self.ssao_generate_program["SSAO_samples"] = self.SSAO_samples
-                        self.ssao_generate_program["SSAO_power"] = self.SSAO_power
-                        self.ssao_generate_program.draw_triangles(Frame.vertices, Frame.indices)
+                        self.generate_ssao_program["camera"] = self.camera
+                        self.generate_ssao_program["view_pos_alpha_map"] = view_pos_alpha_map
+                        self.generate_ssao_program["view_normal_map"] = view_normal_map
+                        self.generate_ssao_program["SSAO_radius"] = self.SSAO_radius
+                        self.generate_ssao_program["SSAO_samples"] = self.SSAO_samples
+                        self.generate_ssao_program["SSAO_power"] = self.SSAO_power
+                        self.generate_ssao_program.draw_triangles(Frame.vertices, Frame.indices)
 
-                self._SSAO_map = self._SSAO_blur_filter(self.ssao_fbo.color_attachment(0))
-                
+                self._SSAO_map = self._SSAO_filter(self.ssao_fbo.color_attachment(0))
+    
     def render(self, camera, scene):
         # profiler.enable()
         self._should_update = False
         self.update_dir_lights_depth()
         self.update_point_lights_depth()
+        self.update_spot_lights_depth()
         self.generate_SSAO()
         self.draw_opaque()
         self.draw_transparent()

@@ -117,4 +117,4 @@ class ComputeProgram(GPUProgram):
 		return self._work_group_size
 
 	def _get_compiled_files(self):
-		return [self.compute_shader._file_name.replace("\\", "/")]
+		return [self.compute_shader._file_name]

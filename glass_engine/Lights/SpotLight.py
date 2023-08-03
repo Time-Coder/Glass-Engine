@@ -80,6 +80,9 @@ class FlatSpotLight:
         self.aggregate_coeff = spot_light.aggregate_coeff
 
         self.generate_shadows = spot_light.generate_shadows
+        self.depth_fbo = None
+        self.depth_map_handle = 0
+        self.need_update_depth_map = True
 
         self._source = spot_light
         spot_light._flats.add(self)

@@ -3,6 +3,7 @@ from ..Frame import Frame
 from glass import sampler2D, ShaderProgram, FBO, ShaderStorageBlock, GLConfig
 
 from OpenGL import GL
+import time
 
 class HDRFilter(Filter):
 
@@ -28,7 +29,7 @@ class HDRFilter(Filter):
         self.camera = None
 
         self.program = ShaderProgram()
-        self.program.compile("../glsl/Pipelines/draw_frame.vs")
+        self.program.compile(Frame.draw_frame_vs)
         self.program.compile("../glsl/Filters/hdr_filter.fs")
         self.program["CurrentLuma"].bind(self.current_luma)
 
@@ -57,7 +58,7 @@ class HDRFilter(Filter):
 
     @property
     def should_update(self) -> bool:
-        return True
+        return self._enabled and (self.screen_update_time == 0 or time.time()-self.screen_update_time <= 2)
     
     @should_update.setter
     def should_update(self, flag:bool):

@@ -46,7 +46,6 @@ void main()
     mat3 view_TBN = mat3(view_tangent, view_bitangent, view_normal);
 
     float occlulated_samples = 0;
-    float PI = acos(-1);
     for(int i = 0; i < SSAO_samples; i++)
     {
         float radius = rand(fs_in.tex_coord, rand_seed);

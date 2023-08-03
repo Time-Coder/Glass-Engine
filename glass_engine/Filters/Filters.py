@@ -11,6 +11,7 @@ class Filter(ABC):
     def __init__(self):
         self._should_update = False
         self._enabled = True
+        self._screen_update_time = 0
 
     @abstractmethod
     def __call__(self, screen_image:sampler2D)->sampler2D:
@@ -38,7 +39,20 @@ class Filter(ABC):
     def should_update(self, flag:bool):
         self._should_update = flag
 
+    @property
+    def screen_update_time(self):
+        return self._screen_update_time
+    
+    @screen_update_time.setter
+    @checktype
+    def screen_update_time(self, screen_update_time:float):
+        self._screen_update_time = screen_update_time
+
 class Filters(DictList):
+
+    def __init__(self):
+        DictList.__init__(self)
+        self._screen_update_time = 0
 
     @property
     def has_valid(self):
@@ -76,4 +90,15 @@ class Filters(DictList):
         should_update = last_filter.should_update or should_update
         last_filter.should_update = False
         return should_update
+    
+    @property
+    def screen_update_time(self):
+        return self._screen_update_time
+    
+    @screen_update_time.setter
+    @checktype
+    def screen_update_time(self, screen_update_time:float):
+        self._screen_update_time = screen_update_time
+        for f in self:
+            f.screen_update_time = screen_update_time
     

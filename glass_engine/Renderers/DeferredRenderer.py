@@ -19,7 +19,7 @@ class DeferredRenderer(CommonRenderer):
             return self.programs["deferred_render"]
         
         program = ShaderProgram()
-        program.compile("../glsl/Pipelines/draw_frame.vs")
+        program.compile(Frame.draw_frame_vs)
         program.compile("../glsl/Pipelines/deferred_rendering/deferred_rendering.fs")
         program["PointLights"].bind(self.scene.point_lights)
         program["DirLights"].bind(self.scene.dir_lights)
@@ -208,18 +208,21 @@ class DeferredRenderer(CommonRenderer):
         
         with GLConfig.LocalConfig(cull_face=None, polygon_mode=GL.GL_FILL):
             with self.ssao_fbo:
-                self.ssao_generate_program["camera"] = self.camera
-                self.ssao_generate_program["view_pos_alpha_map"] = view_pos_alpha_map
-                self.ssao_generate_program["view_normal_map"] = view_normal_map
-                self.ssao_generate_program["SSAO_radius"] = self.SSAO_radius
-                self.ssao_generate_program["SSAO_samples"] = self.SSAO_samples
-                self.ssao_generate_program["SSAO_power"] = self.SSAO_power
-                self.ssao_generate_program.draw_triangles(Frame.vertices, Frame.indices)
+                self.generate_ssao_program["camera"] = self.camera
+                self.generate_ssao_program["view_pos_alpha_map"] = view_pos_alpha_map
+                self.generate_ssao_program["view_normal_map"] = view_normal_map
+                self.generate_ssao_program["SSAO_radius"] = self.SSAO_radius
+                self.generate_ssao_program["SSAO_samples"] = self.SSAO_samples
+                self.generate_ssao_program["SSAO_power"] = self.SSAO_power
+                self.generate_ssao_program.draw_triangles(Frame.vertices, Frame.indices)
 
-        self._SSAO_map = self._SSAO_blur_filter(self.ssao_fbo.color_attachment(0))
+        self._SSAO_map = self._SSAO_filter(self.ssao_fbo.color_attachment(0))
 
     def render(self, camera, scene):
         self._should_update = False
+        self.update_dir_lights_depth()
+        self.update_point_lights_depth()
+        self.update_spot_lights_depth()
         self.draw_opaque()
         self.draw_transparent()
         return self._should_update

@@ -41,7 +41,7 @@ class DOFFilter(Filter):
         self.vertical_fbo.attach(0, sampler2D, GL.GL_RGBA32F)
 
         self.program = ShaderProgram()
-        self.program.compile("../glsl/Pipelines/draw_frame.vs")
+        self.program.compile(Frame.draw_frame_vs)
         self.program.compile("../glsl/Filters/dof_filter.fs")
         self.program["CurrentFocus"].bind(self.current_focus)
 
@@ -108,7 +108,7 @@ class DOFFilter(Filter):
     
     @property
     def should_update(self) -> bool:
-        return self._enabled
+        return self._enabled and (self.screen_update_time == 0 or time.time()-self.screen_update_time <= 2)
     
     @should_update.setter
     @checktype

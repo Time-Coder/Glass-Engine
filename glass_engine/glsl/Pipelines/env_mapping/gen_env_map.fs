@@ -36,18 +36,14 @@ layout(location=2) out float reveal;
 #include "../../include/OIT.glsl"
 #include "../../include/env_mapping.glsl"
 
+uniform vec3 view_center;
 uniform Material material;
 uniform Material back_material;
-uniform vec3 camera_pos;
 uniform sampler2D SSAO_map;
 uniform bool is_opaque_pass;
 uniform bool is_filled;
 uniform bool is_sphere;
-
-uniform CubeCameras
-{
-    Camera cube_cameras[6];
-};
+uniform Camera CSM_camera;
 
 // 环境映射
 uniform bool use_skybox_map;
@@ -65,12 +61,12 @@ void main()
         discard;
     }
 
-    Camera camera = cube_cameras[gl_Layer];
-    camera.abs_position = camera_pos;
-
     if (is_filled)
     {
-        out_color = draw_filled(camera);
+        // Camera camera = cube_cameras[gl_Layer];
+        // camera.abs_position = view_center;
+        Camera camera = cube_camera(gl_Layer, view_center);
+        out_color = draw_filled(camera, CSM_camera);
     }
     else
     {

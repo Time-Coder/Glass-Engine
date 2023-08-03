@@ -9,7 +9,6 @@ struct Camera
 	// 共有
 	float near;
 	float far;
-	float clip;
 	float focus;
 	float aperture;
 	bool auto_focus;
@@ -74,18 +73,19 @@ vec4 view_to_NDC(Camera camera, vec3 view_coord, uint projection_mode)
 {
 	// 标准设备坐标
 	vec4 NDC_coord;
+	float clip = camera.far - camera.near;
 	if(projection_mode == 0) // 透视投影
 	{
 		NDC_coord.x = view_coord.x / (camera.aspect * camera.tan_half_fov);
 		NDC_coord.y = view_coord.z / camera.tan_half_fov;
-		NDC_coord.z = 2*camera.far*(view_coord.y-camera.near)/camera.clip-view_coord.y;
+		NDC_coord.z = 2*camera.far*(view_coord.y-camera.near)/clip-view_coord.y;
 		NDC_coord.w = view_coord.y;
 	}
 	else // 正射投影
 	{
 		NDC_coord.x = 2*view_coord.x / camera.width;
 		NDC_coord.y = 2*view_coord.z / camera.height;
-		NDC_coord.z = 2*(view_coord.y-camera.near)/camera.clip-1;
+		NDC_coord.z = 2*(view_coord.y-camera.near)/clip-1;
 		NDC_coord.w = 1;
 	}
 	
@@ -190,6 +190,38 @@ BoundingSphere Frustum_bounding_sphere(Camera camera, int i)
 
 	bounding_sphere.center = view_to_world(camera, bounding_sphere.center);
 	return bounding_sphere;
+}
+
+Camera cube_camera(int face_id, vec3 center_pos, float near, float far)
+{
+	Camera camera;
+	camera.abs_position = center_pos;
+	camera.near = near;
+	camera.far = far;
+	camera.tan_half_fov = 1;
+	camera.sin_half_fov = sin45;
+	camera.aspect = 1;
+	camera.projection_mode = 0;
+	switch(face_id)
+	{
+	case 0: camera.abs_orientation = quat(cos45, 0, 0, -sin45); break; // right
+	case 1: camera.abs_orientation = quat(cos45, 0, 0, sin45); break; // left
+	case 2: camera.abs_orientation = quat(cos45, -sin45, 0, 0); break; // bottom
+	case 3: camera.abs_orientation = quat(cos45, sin45, 0, 0); break; // top
+	case 4: camera.abs_orientation = quat(1, 0, 0, 0); break; // front
+	case 5: camera.abs_orientation = quat(0, 0, 0, 1); break; // back
+	}
+	return camera;
+}
+
+Camera cube_camera(int face_id, vec3 center_pos)
+{
+	return cube_camera(face_id, center_pos, 0.1, 100);
+}
+
+Camera cube_camera(int face_id)
+{
+	return cube_camera(face_id, vec3(0, 0, 0), 0.1, 100);
 }
 
 #endif

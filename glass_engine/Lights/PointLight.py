@@ -161,8 +161,8 @@ class FlatPointLight:
         self.K2 = point_light._K2
         self.coverage = point_light._coverage
         self.abs_position = glm.vec3(0, 0, 0)
+        
         self.generate_shadows = point_light.generate_shadows
-
         self.depth_fbo = None
         self.depth_map_handle = 0
         self.need_update_depth_map = True

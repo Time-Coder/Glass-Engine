@@ -23,10 +23,11 @@ vec4 draw_filled_with_gbuffer(Camera camera,
         return vec4(0, 0, 0, 0);
     }
 
-    uint shading_model = mix_uint.x;
+    float refractive_index = mix_uint.x * 255;
     uvec2 env_map_handle = mix_uint.yz;
+    uint shading_model = (mix_uint.w >> 2);
+    bool recv_shadows = bool((mix_uint.w >> 1) & 0x1);
     bool is_sphere = bool(mix_uint.w & 0x1);
-    float refractive_index = (mix_uint.w >> 1) / 255.0;
 
     InternalMaterial internal_material;
     internal_material.shading_model = shading_model;
@@ -35,6 +36,7 @@ vec4 draw_filled_with_gbuffer(Camera camera,
     internal_material.reflection = reflection;
     internal_material.refraction = refraction;
     internal_material.refractive_index = refractive_index;
+    internal_material.recv_shadows = recv_shadows;
 
     internal_material.ambient_occlusion = 1;
     if(shading_model == 8 || shading_model == 11)
@@ -59,7 +61,7 @@ vec4 draw_filled_with_gbuffer(Camera camera,
     }
 
     vec3 frag_pos = view_to_world(camera, view_pos);
-    vec3 normal = view_dir_to_world(camera, view_normal);
+    vec3 frag_normal = view_dir_to_world(camera, view_normal);
 
     vec3 out_color3 = vec3(0, 0, 0);
     if (shading_model == 9) // Unlit
@@ -68,11 +70,16 @@ vec4 draw_filled_with_gbuffer(Camera camera,
     }
     else if (shading_model == 1 || shading_model == 2) // Flat
     {
-        out_color3 = specular_or_prelight_and_shininess.rgb;
+        float shadow_visibility = 1;
+        if (internal_material.recv_shadows)
+        {
+            shadow_visibility = SHADOW_VISIBILITY(camera, frag_pos, frag_normal);
+        }
+        out_color3 = max(shadow_visibility, 0.1) * specular_or_prelight_and_shininess.rgb;
     }
     else // Phong, PhongBlinn, CookTorrance
     {
-        out_color3 = FRAG_LIGHTING(internal_material, camera, frag_pos, normal);
+        out_color3 = FRAG_LIGHTING(internal_material, camera, camera.abs_position, frag_pos, frag_normal);
     }
 
     if (shading_model != 9) // Unlit
@@ -97,7 +104,7 @@ vec4 draw_filled_with_gbuffer(Camera camera,
             internal_material.reflection,
             internal_material.refraction,
             internal_material.refractive_index,
-            view_dir, normal, 
+            view_dir, frag_normal, 
             use_skybox_map, skybox_map,
             use_skydome_map, skydome_map,
             use_env_map, sampler2D(env_map_handle)
@@ -109,7 +116,7 @@ vec4 draw_filled_with_gbuffer(Camera camera,
             internal_material.reflection,
             internal_material.refraction,
             internal_material.refractive_index,
-            view_dir, normal, 
+            view_dir, frag_normal, 
             use_skybox_map, skybox_map,
             use_skydome_map, skydome_map,
             use_env_map, sampler2D(env_map_handle)

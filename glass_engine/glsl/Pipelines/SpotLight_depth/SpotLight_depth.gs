@@ -10,9 +10,9 @@ out flat int visible;
 out vec3 world_pos;
 
 #include "../../include/Camera.glsl"
-#include "../../Lights/PointLight.glsl"
+#include "../../Lights/SpotLight.glsl"
 
-uniform PointLight point_light;
+uniform SpotLight spot_light;
 uniform float explode_distance;
 
 void main()
@@ -22,8 +22,7 @@ void main()
     vec3 face_world_normal = normalize(cross(v1, v2));
 
     gl_Layer = gl_InvocationID;
-
-    Camera camera = cube_camera(gl_InvocationID, point_light.abs_position, 0.1, point_light.coverage);
+    Camera camera = cube_camera(gl_InvocationID, spot_light.abs_position, 0.1, spot_light.coverage);
     for (int i = 0; i < 3; i++)
     {
         world_pos = gl_in[i].gl_Position.xyz + explode_distance * face_world_normal;

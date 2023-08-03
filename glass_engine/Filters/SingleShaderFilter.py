@@ -74,7 +74,7 @@ class SingleShaderFilter(Filter):
         out_file.close()
 
         self.program = ShaderProgram()
-        self.program.compile("../glsl/Pipelines/draw_frame.vs")
+        self.program.compile(Frame.draw_frame_vs)
         self.program.compile(dest_file_name, GL.GL_FRAGMENT_SHADER)
 
         self._shader_path = shader_path

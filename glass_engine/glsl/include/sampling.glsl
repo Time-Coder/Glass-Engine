@@ -3,12 +3,13 @@
 
 #include "math.glsl"
 
-vec3 vec2_to_cube_tex_coord(vec2 tex_coord, int camera_index)
+vec3 vec2_to_cube_tex_coord(vec2 tex_coord, int face_id)
 {
+    tex_coord = clamp(tex_coord, vec2(0), vec2(1));
     vec3 cube_tex_coord = vec3(0, 0, 0);
     tex_coord -= vec2(0.5, 0.5);
     tex_coord *= 2;
-    switch (camera_index)
+    switch (face_id)
     {
     case 0: // right
     {
@@ -70,6 +71,12 @@ vec4 textureHQ(sampler2D image, vec2 tex_coord)
     vec2 uv = (uv_int + uv_frac - 0.5) / tex_size;
 
     return texture(image, uv);
+}
+
+vec4 textureCubeFace(samplerCube cube_image, vec2 tex_coord, int face_id)
+{
+    vec3 cube_tex_coord = vec2_to_cube_tex_coord(tex_coord, face_id);
+    return texture(cube_image, cube_tex_coord);
 }
 
 #endif

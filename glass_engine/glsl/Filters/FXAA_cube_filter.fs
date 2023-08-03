@@ -11,9 +11,9 @@ out vec4 frag_color;
 
 #include "../include/FXAA.glsl"
 
-uniform sampler2D screen_image;
+uniform samplerCube screen_image;
 
 void main()
 {
-    frag_color = textureFXAA(screen_image, fs_in.tex_coord);
+    frag_color = textureCubeFaceFXAA(screen_image, fs_in.tex_coord, gl_Layer);
 }
