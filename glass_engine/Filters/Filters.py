@@ -53,6 +53,7 @@ class Filters(DictList):
     def __init__(self):
         DictList.__init__(self)
         self._screen_update_time = 0
+        self._should_update = False
 
     @property
     def has_valid(self):
@@ -61,6 +62,31 @@ class Filters(DictList):
                 return True
             
         return False
+    
+    @property
+    def last_valid(self):
+        for i in range(len(self)-1, -1, -1):
+            f = self[i]
+            if f.enabled:
+                return f
+            
+        return None
+
+    def __call__(self, screen_image:sampler2D)->sampler2D:
+        self._should_update = False
+        for f in self:
+            if not f.enabled:
+                continue
+
+            screen_image = f(screen_image)
+            self._should_update = self._should_update or f.should_update
+            f.should_update = False
+
+        return screen_image
+    
+    @property
+    def should_update(self):
+        return self._should_update
 
     def draw(self, screen_image:sampler2D)->bool:
         should_update = False

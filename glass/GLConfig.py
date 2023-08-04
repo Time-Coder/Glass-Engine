@@ -442,7 +442,7 @@ class _MetaGLConfig(type):
 
     @viewport.setter
     def viewport(cls, viewport:tuple):
-        GL.glViewport(viewport)
+        GL.glViewport(*viewport)
 
     @property
     def screen_size(cls):
