@@ -2,21 +2,26 @@ from .Manipulators.Manipulator import Manipulator
 from .Manipulators.SceneRoamManipulator import SceneRoamManipulator
 from .Renderers.Renderer import Renderer
 from .Renderers.ForwardRenderer import ForwardRenderer
-from .Filters import Filters, SingleShaderFilter
 from .Frame import Frame
 
 from glass import GLConfig, FBO, RBO, sampler2DMS, sampler2D, RenderHint, SSBO, UBO
-from glass.utils import checktype
+from glass.utils import checktype, extname
 
 from PyQt6.QtOpenGLWidgets import QOpenGLWidget
 from PyQt6.QtGui import QMouseEvent, QKeyEvent, QCursor, QWheelEvent, QSurfaceFormat, QFont, QColor, QPen
 from PyQt6.QtCore import Qt, QPointF, QPoint, QTimerEvent, pyqtSignal, QSize
 from PyQt6.QtWidgets import QApplication
 
+import queue
 import time
 import glm
 import sys
 from OpenGL import GL
+import numpy as np
+import os
+import cv2
+import threading
+import math
 
 class SlideAverageFilter:
 
@@ -44,6 +49,89 @@ class SlideAverageFilter:
     @checktype
     def window_width(self, window_width:int):
         self._window_width = window_width
+
+def convert_to_image(data, viewport):
+    if viewport[0] != 0 or \
+       viewport[1] != 0 or \
+       viewport[2] != data.shape[1] or \
+       viewport[3] != data.shape[0]:
+        width_pad = max(viewport[0] + viewport[2] - data.shape[1], 0)
+        height_pad = max(viewport[1] + viewport[3] - data.shape[0], 0)
+        if len(data.shape) == 2:
+            if width_pad > 0 or height_pad > 0:
+                data = np.pad(data, ((height_pad,0), (0,width_pad)))
+            data = data[viewport[1]:viewport[1]+viewport[3], viewport[0]:viewport[0]+viewport[2]]
+        else:
+            if width_pad > 0 or height_pad > 0:
+                data = np.pad(data, ((height_pad,0), (0,width_pad), (0, 0)))
+            data = data[viewport[1]:viewport[1]+viewport[3], viewport[0]:viewport[0]+viewport[2], :]
+
+    image = data
+    if "float" in str(data.dtype):
+        image = 255*data
+
+    image = image.astype(np.uint8)
+    image = cv2.flip(image, 0)
+
+    channels = (1 if len(image.shape) < 3 else image.shape[2])
+    if channels == 3:
+        image = cv2.cvtColor(image, cv2.COLOR_RGB2BGR)
+    elif channels == 4:
+        image = cv2.cvtColor(image, cv2.COLOR_RGBA2BGR)
+
+    return image
+
+class VideoWriter:
+    def __init__(self, screen_video_writers, file_name:str, fourcc, viewport:tuple, fps:float):
+        self._screen_video_writers = screen_video_writers
+
+        self._cv_video_writer = cv2.VideoWriter(file_name, fourcc, fps, (viewport[2], viewport[3]))
+        self._viewport = viewport
+        self._last_frame = None
+        self._frame_queue = queue.Queue()
+        self._start_time = time.time()
+        self._stop_time = float("inf")
+        self._dt = 1/fps
+        self._writing_thread = threading.Thread(target=self._writing_loop, daemon=True)
+        self._writing_thread.start()
+
+    def __del__(self):
+        self.stop()
+
+    def stop(self):
+        if math.isinf(self._stop_time):
+            self._stop_time = time.time()
+            self._frame_queue.put(None)
+
+    def _writing_loop(self):
+        t = self._start_time
+        while t < self._stop_time:
+            frame = self._frame_queue.get()
+            if frame is None:
+                if self._last_frame is None:
+                    break
+
+                while t < self._stop_time:
+                    self._cv_video_writer.write(self._last_frame[1])
+                    t += self._dt
+
+                break
+            image = convert_to_image(frame[1], self._viewport)
+
+            if self._last_frame is None:
+                self._last_frame = (frame[0], image)
+
+            while t <= min(self._stop_time, frame[0]):
+                self._cv_video_writer.write(self._last_frame[1])
+                t += self._dt
+
+            self._last_frame = (frame[0], image)
+
+        self._cv_video_writer.release()
+        try:
+            self._screen_video_writers.remove(self)
+        except:
+            pass
 
 class Screen(QOpenGLWidget):
 
@@ -86,6 +174,7 @@ class Screen(QOpenGLWidget):
         self.__before_filter_fbo_ms = None
         self._is_gl_init = False
         self._screen_image = None
+        self._video_writers = []
         
         self.camera = camera
         self._manipulator = None
@@ -159,6 +248,10 @@ class Screen(QOpenGLWidget):
         SSBO.makeCurrent()
         UBO.makeCurrent()
 
+    def resizeGL(self, width, height):
+        QOpenGLWidget.resizeGL(self, width, height)
+        self._screen_image = None
+
     def paintGL(self):
         self.makeCurrent()
 
@@ -169,10 +262,7 @@ class Screen(QOpenGLWidget):
 
         with self.render_hint:
             GLConfig.clear_buffers()
-            if not self.renderer.filters.has_valid:
-                with self.renderer.render_hint:
-                    should_update_scene = self.renderer.render(self.camera, self.camera.scene) or should_update_scene
-            else:
+            if self._video_writers:
                 if self._screen_image is None or should_update_scene:
                     with self._before_filter_fbo:
                         with self.renderer.render_hint:
@@ -180,8 +270,23 @@ class Screen(QOpenGLWidget):
 
                     self._screen_image = self._before_filter_fbo.resolved.color_attachment(0)
                     self.renderer.filters.screen_update_time = time.time()
+                screen_image = self.renderer.filters(self._screen_image)
+                should_update_filter = self.renderer.filters.should_update
+                Frame.draw(screen_image)
+                for video_writer in self._video_writers:
+                    video_writer._frame_queue.put((time.time(), screen_image.fbo.data(0)))
+            elif self.renderer.filters.has_valid:
+                if self._screen_image is None or should_update_scene:
+                    with self._before_filter_fbo:
+                        with self.renderer.render_hint:
+                            should_update_scene = self.renderer.render(self.camera, self.camera.scene) or should_update_scene
 
+                    self._screen_image = self._before_filter_fbo.resolved.color_attachment(0)
+                    self.renderer.filters.screen_update_time = time.time()
                 should_update_filter = self.renderer.filters.draw(self._screen_image)
+            else:
+                with self.renderer.render_hint:
+                    should_update_scene = self.renderer.render(self.camera, self.camera.scene) or should_update_scene
 
         self.__calc_fps()
         self.frame_ended.emit()
@@ -449,4 +554,64 @@ class Screen(QOpenGLWidget):
             if should_update:
                 self._screen_image = None
                 self.update()
-            
+
+    @checktype
+    def capture(self, save_path:str=None, viewport:tuple=None)->np.ndarray:
+        self.makeCurrent()
+        with self._before_filter_fbo:
+            with self.renderer.render_hint:
+                self.renderer.render(self.camera, self.camera.scene)
+
+        image = None
+        if self.renderer.filters.has_valid:
+            self._screen_image = self._before_filter_fbo.resolved.color_attachment(0)
+            self.renderer.filters.screen_update_time = time.time()
+            result_sampler = self.renderer.filters(self._screen_image)
+            image = result_sampler.fbo.data(0)
+        else:
+            image = self._before_filter_fbo.resolved.data(0)
+
+        if viewport is None:
+            viewport = GLConfig.viewport
+        image = convert_to_image(image, viewport)
+        
+        if save_path is not None:
+            folder_name = os.path.dirname(os.path.abspath(save_path))
+            if not os.path.isdir(folder_name):
+                os.makedirs(folder_name)
+
+            cv2.imwrite(save_path, image)
+
+        return image
+
+    def capture_video(self, save_path:str, viewport:tuple=None, fps:float=None)->VideoWriter:
+        ext_name = extname(save_path)
+        if ext_name not in ["mp4", "avi"]:
+            raise ValueError(f"not supported video type: .{ext_name}, only support .mp4 and .avi")
+        
+        fourcc = None
+        if ext_name == "mp4":
+            fourcc = cv2.VideoWriter_fourcc(*"MP4V")
+        elif ext_name == "avi":
+            fourcc = cv2.VideoWriter_fourcc(*"XVID")
+
+        folder_path = os.path.dirname(os.path.abspath(save_path))
+        if not os.path.isdir(folder_path):
+            os.makedirs(folder_path)
+
+        if fps is None:
+            fps = self.smooth_fps
+
+        if viewport is None:
+            QOpenGLWidget.makeCurrent(self)
+            viewport = GLConfig.viewport
+
+        video_writer = VideoWriter(self._video_writers, save_path, fourcc, viewport, fps)
+        self._video_writers.append(video_writer)
+
+        return video_writer
+
+    def closeEvent(self, close_event)->None:
+        while self._video_writers:
+            video_writer = self._video_writers.pop()
+            video_writer.stop()

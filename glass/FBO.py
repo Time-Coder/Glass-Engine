@@ -352,7 +352,7 @@ class FBO(BO):
 
 	def unbind(self):
 		self._unbind()
-		GL.glViewport(*self._old_viewport)
+		GLConfig.viewport = self._old_viewport
 	
 	def copy_from_active(self, *targets):
 		if self.id == FBO.active_id:
@@ -581,25 +581,21 @@ class FBO(BO):
 	def depth_stencil_attachment(self):
 		return self._depth_stencil_attachment
 
-	def data(self, target:int=0):
+	def data(self, attach_point:int=0):
+		if attach_point in [GL.GL_DEPTH_ATTACHMENT, GL.GL_STENCIL_ATTACHMENT, GL.GL_DEPTH_STENCIL_ATTACHMENT]:
+			raise RuntimeError("cannot read depth or stencil data")
+
 		attachment = None
-		if target == GL.GL_DEPTH_ATTACHMENT:
-			attachment = self._depth_attachment
-		elif target == GL.GL_STENCIL_ATTACHMENT:
-			attachment = self._stencil_attachment
-		elif target == GL.GL_DEPTH_STENCIL_ATTACHMENT:
-			attachment = self._depth_stencil_attachment
+		if GL.GL_COLOR_ATTACHMENT0 <= attach_point < GL.GL_COLOR_ATTACHMENT0 + GLConfig.max_color_attachments:
+			attachment = self._color_attachments[attach_point - GL.GL_COLOR_ATTACHMENT0]
 		else:
-			if GL.GL_COLOR_ATTACHMENT0 <= target < GL.GL_COLOR_ATTACHMENT0 + GLConfig.max_color_attachments:
-				attachment = self._color_attachments[target - GL.GL_COLOR_ATTACHMENT0]
-			else:
-				attachment = self._color_attachments[target]
-				target = GL.GL_COLOR_ATTACHMENT0 + target			
+			attachment = self._color_attachments[attach_point]
+			attach_point = GL.GL_COLOR_ATTACHMENT0 + attach_point			
 
 		self._last_active_id = FBO.active_id
 		BO.bind(self)
 		GL.glBindBuffer(GL.GL_PIXEL_PACK_BUFFER, 0)
-		GL.glReadBuffer(target)
+		GL.glReadBuffer(attach_point)
 		GL.glPixelStorei(GL.GL_PACK_ALIGNMENT, 1)
 
 		external_format = get_external_format(attachment.internal_format)
@@ -614,7 +610,6 @@ class FBO(BO):
 			result_data = np.zeros((self._height, self._width, channels), dtype=np_dtype)
 		
 		GL.glReadPixels(0, 0, self._width, self._height, external_format, dtype, result_data)
-		
 		self._unbind()
 
 		return result_data
