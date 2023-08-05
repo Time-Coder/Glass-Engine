@@ -344,12 +344,20 @@ class CommonRenderer(Renderer):
 
             if dir_light.depth_fbo is None:
                 dir_light.depth_fbo = FBO(1024, 1024, layers=self.camera.CSM_levels)
+                # dir_light.depth_fbo.attach(0, sampler2DArray)
                 dir_light.depth_fbo.attach(GL.GL_DEPTH_ATTACHMENT, sampler2DArray)
+
+                # dir_light.depth_fbo.color_attachment(0).wrap_s = GL.GL_CLAMP_TO_BORDER
+                # dir_light.depth_fbo.color_attachment(0).wrap_t = GL.GL_CLAMP_TO_BORDER
+                # dir_light.depth_fbo.color_attachment(0).border_color = glm.vec4(1, 1, 1, 1)
+
                 dir_light.depth_fbo.depth_attachment.wrap_s = GL.GL_CLAMP_TO_BORDER
                 dir_light.depth_fbo.depth_attachment.wrap_t = GL.GL_CLAMP_TO_BORDER
                 dir_light.depth_fbo.depth_attachment.border_color = glm.vec4(1, 1, 1, 1)
+
+                dir_light.depth_filter = GaussFilter(5)
             
-            with GLConfig.LocalConfig(depth_test=True, blend=False, cull_face=None, polygon_mode=GL.GL_FILL):
+            with GLConfig.LocalConfig(clear_color=glm.vec4(1,1,1,1), depth_test=True, blend=False, cull_face=None, polygon_mode=GL.GL_FILL):
                 with dir_light.depth_fbo:
                     self.dir_light_depth_program["dir_light"] = dir_light
                     self.dir_light_depth_program["camera"] = self.camera
@@ -360,6 +368,7 @@ class CommonRenderer(Renderer):
                         self.dir_light_depth_program["explode_distance"] = mesh.explode_distance
                         mesh.draw(self.dir_light_depth_program, instances)
 
+            # new_handle = dir_light.depth_filter(dir_light.depth_fbo.color_attachment(0)).handle
             new_handle = dir_light.depth_fbo.depth_attachment.handle
             if dir_light.depth_map_handle != new_handle:
                 dir_light.depth_map_handle = new_handle
