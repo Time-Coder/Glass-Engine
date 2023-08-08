@@ -39,6 +39,7 @@ class BaseShader(GLObject):
 		self._line_message_map = {}
 		self._file_name = ""
 		self._include_paths = []
+		self._predefines = {}
 		self._compiled_but_not_applied = False
 		self._should_recompile = True
 
@@ -49,6 +50,7 @@ class BaseShader(GLObject):
 		self.structs_info = {}
 		self.outs_info = {}
 		self.work_group_size = tuple()
+		self.related_files = []
 
 	@delete
 	def clear(self):
@@ -124,21 +126,38 @@ class BaseShader(GLObject):
 		GL.glShaderSource(self._id, self._code)
 		GL.glCompileShader(self._id)
 
-		if GLConfig.debug:
-			message_bytes = GL.glGetShaderInfoLog(self._id)
-			message = message_bytes
-			if isinstance(message_bytes, bytes):
-				message = str(message_bytes, encoding="utf-8")
+		message_bytes = GL.glGetShaderInfoLog(self._id)
+		message = message_bytes
+		if isinstance(message_bytes, bytes):
+			message = str(message_bytes, encoding="utf-8")
 
-			error_messages, warning_messages = self._format_error_warning(message)
-			if warning_messages:
-				warning_message = f"\nWarning when compiling: {self._file_name}:\n" + "\n".join(warning_messages)
-				warnings.warn(warning_message, category=CompileWarning)
+		error_messages, warning_messages = self._format_error_warning(message)
+		if warning_messages:
+			warning_message = f"\nWarning when compiling: {self._file_name}:\n" + "\n".join(warning_messages)
+			warnings.warn(warning_message, category=CompileWarning)
 
-			if error_messages:
-				error_message = f"\nError when compiling: {self._file_name}:\n" + "\n".join(error_messages)
-				raise CompileError(error_message)
-			
+		if error_messages:
+			error_message = f"\nError when compiling: {self._file_name}:\n" + "\n".join(error_messages)
+			raise CompileError(error_message)
+		
+		success = GL.glGetShaderiv(self._id, GL.GL_COMPILE_STATUS)
+		if success != GL.GL_TRUE:
+			raise CompileError(message)
+		
+		meta_info = {}
+		meta_info["related_files"] = self.related_files
+		meta_info["code"] = self._code
+		meta_info["clean_code"] = self._clean_code
+		meta_info["line_message_map"] = self._line_message_map
+		meta_info["attributes_info"] = self.attributes_info
+		meta_info["uniforms_info"] = self.uniforms_info
+		meta_info["uniform_blocks_info"] = self.uniform_blocks_info
+		meta_info["shader_storage_blocks_info"] = self.shader_storage_blocks_info
+		meta_info["structs_info"] = self.structs_info
+		meta_info["outs_info"] = self.outs_info
+		meta_info["work_group_size"] = self.work_group_size
+		save_var(meta_info, self._meta_file_name)
+		
 		self._compiled_but_not_applied = False
 
 	def _test_should_recompile(self):
@@ -167,9 +186,24 @@ class BaseShader(GLObject):
 		self.structs_info = meta_info["structs_info"]
 		self.outs_info = meta_info["outs_info"]
 		self.work_group_size = meta_info["work_group_size"]
+		self.related_files = related_files
 
 		self._should_recompile = False
 		return False
+
+	def _predefine_shader_type(self):
+		if self._type == GL.GL_VERTEX_SHADER:
+			self.predefine("VERTEX_SHADER")
+		elif self._type == GL.GL_TESS_CONTROL_SHADER:
+			self.predefine("TESS_CONTROL_SHADER")
+		elif self._type == GL.GL_TESS_EVALUATION_SHADER:
+			self.predefine("TESS_EVALUATION_SHADER")
+		elif self._type == GL.GL_GEOMETRY_SHADER:
+			self.predefine("GEOMETRY_SHADER")
+		elif self._type == GL.GL_FRAGMENT_SHADER:
+			self.predefine("FRAGMENT_SHADER")
+		elif self._type == GL.GL_COMPUTE_SHADER:
+			self.predefine("COMPUTE_SHADER")
 
 	def compile(self, file_name):
 		if self.is_compiled and not self._compiled_but_not_applied:
@@ -193,13 +227,14 @@ class BaseShader(GLObject):
 
 		if self._test_should_recompile():
 			self._code = cat(file_name)
-			related_files = [abs_name]
+			self.related_files = [abs_name]
 			self.add_include_path(".")
+			self._predefine_shader_type()
 			include_path = os.path.dirname(abs_name)
 			if not os.path.isabs(file_name):
 				include_path = os.path.relpath(include_path)
 			self.add_include_path(include_path)
-			related_files.extend(self._replace_includes())
+			self.related_files.extend(self._replace_includes())
 
 			self._clean_code = ShaderParser.delete_C_comments(self._code)
 			self.attributes_info = {}
@@ -224,24 +259,13 @@ class BaseShader(GLObject):
 			if self._type == GL.GL_COMPUTE_SHADER:
 				self.work_group_size = ShaderParser.find_work_group_size(self._clean_code)
 
-			meta_info = {}
-			meta_info["related_files"] = related_files
-			meta_info["code"] = self._code
-			meta_info["clean_code"] = self._clean_code
-			meta_info["line_message_map"] = self._line_message_map
-			meta_info["attributes_info"] = self.attributes_info
-			meta_info["uniforms_info"] = self.uniforms_info
-			meta_info["uniform_blocks_info"] = self.uniform_blocks_info
-			meta_info["shader_storage_blocks_info"] = self.shader_storage_blocks_info
-			meta_info["structs_info"] = self.structs_info
-			meta_info["outs_info"] = self.outs_info
-			meta_info["work_group_size"] = self.work_group_size
-			save_var(meta_info, self._meta_file_name)
-
 		self._compiled_but_not_applied = True
 
 	def add_include_path(self, include_path):
 		self._include_paths.insert(0, include_path)
+
+	def predefine(self, name:str, value=None):
+		self._predefines[name] = value
 
 	def _find_comments(self):
 		self._comments_set.clear()
@@ -283,18 +307,52 @@ class BaseShader(GLObject):
 				break
 
 	def _replace_includes(self):
+		predefine_str = ""
+		for name, value in self._predefines.items():
+			if value is None:
+				predefine_str += f"#define {name}\n"
+			else:
+				predefine_str += f"#define {name} {value}\n"
+		lines_of_predefine_str = ShaderParser.lines(predefine_str)
+		
+		len_version = len("#version")
+		self._find_comments()
+		pos_version = 0
+		while True:
+			pos_version = self._code.find("#version", pos_version)
+			if pos_version == -1:
+				if predefine_str:
+					self._code = predefine_str + self._code
+				break
+			elif pos_version in self._comments_set:
+				pos_version += len_version
+				continue
+			else:
+				pos_endl = self._code.find("\n", pos_version)
+				if predefine_str:
+					if pos_endl == -1:
+						self._code = self._code + "\n" + predefine_str
+					else:
+						self._code = self._code[:pos_endl+1] + predefine_str + self._code[pos_endl+1:]
+				break
+		line_num_version = ShaderParser.line_of(self._code, pos_version)
+
 		pos_include_start = 0
 		pos_filename_start = 0
 		pos_include_end = 0
 		pos_filename_end = 0
 		n_lines = ShaderParser.lines(self._code)
-		file_name = self._file_name.replace("\\", "/").replace("./", "")
-		self._line_message_map[0] = file_name + ": {message_type}: "
+		self._line_message_map[0] = self._file_name + ": {message_type}: "
 		for i in range(1, n_lines+1):
-			self._line_message_map[i] = file_name + ":" + str(i) + ": {message_type}: "
+			if i <= line_num_version:
+				self._line_message_map[i] = self._file_name + ":" + str(i) + ": {message_type}: "
+			elif i < line_num_version + lines_of_predefine_str:
+				self._line_message_map[i] = self._file_name + ":" + str(line_num_version) + ": {message_type}: "
+			else:
+				self._line_message_map[i] = self._file_name + ":" + str(i-lines_of_predefine_str+1) + ": {message_type}: "
 
 		included_files = set()
-		should_find_comments = True
+		should_find_comments = False
 		len_include = len("#include")
 		while True:
 			if should_find_comments:
@@ -314,8 +372,8 @@ class BaseShader(GLObject):
 			pos_filename_start = pos_include_start + len_include
 			pos_filename_start = ShaderParser.skip_space(self._code, pos_filename_start)
 			if self._code[pos_filename_start] != '<' and self._code[pos_filename_start] != '"':
-				line_number = ShaderParser.line_number(self._code, pos_filename_start)
-				raise CompileError("\n" + self._line_message_map[line_number].format(message_type="error") + '#include file name must be enveloped by <...> or "..."')
+				line_num = ShaderParser.line_of(self._code, pos_filename_start)
+				raise CompileError("\n" + self._line_message_map[line_num].format(message_type="error") + '#include file name must be enveloped by <...> or "..."')
 			
 			start_char = self._code[pos_filename_start]
 			end_char = ('>' if start_char == '<' else '"')
@@ -323,8 +381,8 @@ class BaseShader(GLObject):
 			pos_filename_start = ShaderParser.skip_space(self._code, pos_filename_start)
 			pos_filename_end = self._code.find(end_char, pos_filename_start)
 			if pos_filename_end == -1:
-				line_number = ShaderParser.line_number(self._code, pos_filename_start)
-				raise CompileError("\n" + self._line_message_map[line_number].format(message_type="error") + '#include file name must be enveloped by <...> or "..."')
+				line_num = ShaderParser.line_of(self._code, pos_filename_start)
+				raise CompileError("\n" + self._line_message_map[line_num].format(message_type="error") + '#include file name must be enveloped by <...> or "..."')
 			
 			pos_include_end = pos_filename_end + 1
 			pos_filename_end -= 1
@@ -351,17 +409,17 @@ class BaseShader(GLObject):
 
 				self._code = self._code[:pos_include_start] + include_content + self._code[pos_include_end:]
 				if include_content:
-					include_line_number = ShaderParser.line_number(self._code, pos_include_start)
+					include_line_num = ShaderParser.line_of(self._code, pos_include_start)
 					include_lines = ShaderParser.lines(include_content)
-					include_line_end = include_line_number + include_lines
+					include_line_end = include_line_num + include_lines
 					n_lines = ShaderParser.lines(self._code)
 
 					old_line_message_map = copy.deepcopy(self._line_message_map)
 					for i in range(include_line_end, n_lines+1):
 						self._line_message_map[i] = old_line_message_map[i - include_lines + 1]
 
-					for i in range(include_line_number, include_line_end):
-						self._line_message_map[i] = used_name + ":" + str(i-include_line_number+1) + ": {message_type}: "
+					for i in range(include_line_num, include_line_end):
+						self._line_message_map[i] = used_name + ":" + str(i-include_line_num+1) + ": {message_type}: "
 				
 					self._include_paths.insert(0, os.path.dirname(full_name))
 					should_find_comments = True
@@ -372,8 +430,8 @@ class BaseShader(GLObject):
 				break
 				
 			if not found:
-				line_number = ShaderParser.line_number(self._code, pos_filename_start)
-				raise CompileError("\n" + self._line_message_map[line_number].format(message_type="error") + f'File "{include_filename}" not exists.')
+				line_num = ShaderParser.line_of(self._code, pos_filename_start)
+				raise CompileError("\n" + self._line_message_map[line_num].format(message_type="error") + f'File "{include_filename}" not exists.')
 
 		return list(included_files)
 

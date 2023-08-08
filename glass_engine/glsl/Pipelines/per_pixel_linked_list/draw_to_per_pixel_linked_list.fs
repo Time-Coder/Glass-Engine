@@ -25,7 +25,7 @@ out vec4 out_color;
 #include "PointLight.glsl"
 #include "DirLight.glsl"
 #include "SpotLight.glsl"
-#include "fragment_utils.glsl"
+#include "parallax_mapping.glsl"
 #include "env_mapping.glsl"
 #include "math.glsl"
 

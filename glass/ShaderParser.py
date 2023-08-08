@@ -11,7 +11,7 @@ class ShaderParser:
 		return len(content.split("\n"))
 
 	@staticmethod
-	def line_number(content, pos):
+	def line_of(content, pos):
 		content_size = len(content)
 		size = min(content_size, pos+1)
 		n_line = 1

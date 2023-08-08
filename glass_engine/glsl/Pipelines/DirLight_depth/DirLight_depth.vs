@@ -17,10 +17,7 @@ out VertexOut
     int visible;
 } vs_out;
 
-#include "../../Lights/DirLight.glsl"
 #include "../../include/Transform.glsl"
-
-uniform DirLight dir_light;
 
 void main()
 {

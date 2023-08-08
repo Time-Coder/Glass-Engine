@@ -114,29 +114,28 @@ class ShaderProgram(GPUProgram):
 
         GL.glProgramParameteri(self._id, GL.GL_PROGRAM_BINARY_RETRIEVABLE_HINT, GL.GL_TRUE)
         GL.glLinkProgram(self._id)
+        
+        message_bytes = GL.glGetProgramInfoLog(self._id)
+        message = message_bytes
+        if isinstance(message_bytes, bytes):
+            message = str(message_bytes, encoding="utf-8")
 
-        if GLConfig.debug:
-            message_bytes = GL.glGetProgramInfoLog(self._id)
-            message = message_bytes
-            if isinstance(message_bytes, bytes):
-                message = str(message_bytes, encoding="utf-8")
-
-            error_messages, warning_messages = self._format_error_warning(message)
-            if warning_messages:
-                warning_message = "Warning when linking following files:\n  " + \
-                                  "\n  ".join(self._get_compiled_files()) + "\n" + \
-                                  "\n".join(warning_messages)
-                warnings.warn(warning_message, category=LinkWarning)
-
-            if error_messages:
-                error_message = "Error when linking following files:\n  " + \
+        error_messages, warning_messages = self._format_error_warning(message)
+        if warning_messages:
+            warning_message = "Warning when linking following files:\n  " + \
                                 "\n  ".join(self._get_compiled_files()) + "\n" + \
-                                "\n".join(error_messages)
-                raise LinkError(error_message)
-            
-            status = GL.glGetProgramiv(self._id, GL.GL_LINK_STATUS)
-            if status != GL.GL_TRUE:
-                raise LinkError(message)
+                                "\n".join(warning_messages)
+            warnings.warn(warning_message, category=LinkWarning)
+
+        if error_messages:
+            error_message = "Error when linking following files:\n  " + \
+                            "\n  ".join(self._get_compiled_files()) + "\n" + \
+                            "\n".join(error_messages)
+            raise LinkError(error_message)
+        
+        status = GL.glGetProgramiv(self._id, GL.GL_LINK_STATUS)
+        if status != GL.GL_TRUE:
+            raise LinkError(message)
             
         binary_length = int(GL.glGetProgramiv(self._id, GL.GL_PROGRAM_BINARY_LENGTH))
         length = GL.GLsizei()

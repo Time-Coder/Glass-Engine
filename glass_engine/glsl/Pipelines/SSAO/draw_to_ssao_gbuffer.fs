@@ -14,7 +14,7 @@ in GeometryOut
 } fs_in;
 
 #include "../../include/Material.glsl"
-#include "../../include/fragment_utils.glsl"
+#include "../../include/parallax_mapping.glsl"
 #include "../../include/math.glsl"
 
 uniform Material material;

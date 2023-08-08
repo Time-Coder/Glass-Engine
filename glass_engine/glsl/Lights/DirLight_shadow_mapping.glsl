@@ -175,12 +175,12 @@ float _get_LMSM_value(DirLight light, Camera camera, int level, vec3 frag_pos, v
         return 1;
     }
 
-    // BoundingSphere bounding_sphere = Frustum_bounding_sphere(camera, level);
+    BoundingSphere bounding_sphere = Frustum_bounding_sphere(camera, level);
     ivec2 tex_size = textureSize(sampler2DArray(light.depth_map_handle), 0).xy;
-    // float beta = max(0, acos(dot(frag_normal, -light.direction)));
-    // float bias = 17 * bounding_sphere.radius / max(tex_size.x, tex_size.y) * tan(beta);
-    // bias /= depth_length;
-    // self_depth -= bias;
+    float beta = max(0, acos(dot(frag_normal, -light.direction)));
+    float bias = 17 * bounding_sphere.radius / max(tex_size.x, tex_size.y) * tan(beta);
+    bias /= depth_length;
+    self_depth -= bias;
 
     vec3 depth_map_tex_coord;
     depth_map_tex_coord.xy = (light_NDC.xy / light_NDC.w + 1) / 2;
@@ -233,9 +233,9 @@ float LMSM(DirLight light, Camera camera, vec3 frag_pos, vec3 frag_normal)
         float visibility2 = _get_LMSM_value(light, camera, leveli+1, frag_pos, frag_normal);
         visibility = mix(visibility, visibility2, level_rear);
     }
-    
+
     float a = 0.75;
-    return min(1, pow(max(0, min(1, visibility))/a, 2));
+    return min(1, pow(max(0, min(1, visibility))/a, 3));
 }
 
 #endif

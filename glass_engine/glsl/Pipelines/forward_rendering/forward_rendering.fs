@@ -30,7 +30,7 @@ layout(location=2) out float reveal;
 
 #include "../../include/Material.glsl"
 #include "../../Lights/Lights.glsl"
-#include "../../include/fragment_utils.glsl"
+#include "../../include/parallax_mapping.glsl"
 #include "../../include/env_mapping.glsl"
 #include "../../include/math.glsl"
 #include "../../include/OIT.glsl"

@@ -379,6 +379,7 @@ class GLInfo:
 		".geom": GL.GL_GEOMETRY_SHADER,
 		".frag": GL.GL_FRAGMENT_SHADER,
 		".comp": GL.GL_COMPUTE_SHADER,
+		
 		".vs": GL.GL_VERTEX_SHADER,
 		".tcs": GL.GL_TESS_CONTROL_SHADER,
 		".tes": GL.GL_TESS_EVALUATION_SHADER,
