@@ -34,7 +34,7 @@ layout(location=6) out vec4 refraction;
 layout(location=7) out uvec4 mix_uint;
 
 #include "../../include/Material.glsl"
-#include "../../include/fragment_utils.glsl"
+#include "../../include/parallax_mapping.glsl"
 #include "../../include/math.glsl"
 
 uniform Material material;

@@ -17,7 +17,7 @@ layout(location=0) out vec2 shadow_and_dev;
 
 #include "../include/Material.glsl"
 #include "../Lights/Lights.glsl"
-#include "../include/fragment_utils.glsl"
+#include "../include/parallax_mapping.glsl"
 #include "../include/math.glsl"
 
 uniform Camera camera;

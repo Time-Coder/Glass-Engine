@@ -2,7 +2,6 @@
 #define _ENVIRONMENT_MAPPING_GLSL__
 
 #include "sampling.glsl"
-#include "sampling_fs.glsl"
 #include "FresnelRefract.glsl"
 
 vec3 fetch_env_color(
