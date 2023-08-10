@@ -252,6 +252,15 @@ class Screen(QOpenGLWidget):
         QOpenGLWidget.resizeGL(self, width, height)
         self._screen_image = None
 
+    def _draw_to_screen_image(self, should_update_scene):
+        if self._screen_image is None or should_update_scene:
+            with self._before_filter_fbo:
+                with self.renderer.render_hint:
+                    should_update_scene = self.renderer.render(self.camera, self.camera.scene) or should_update_scene
+
+            self._screen_image = self._before_filter_fbo.resolved.color_attachment(0)
+            self.renderer.filters.screen_update_time = time.time()
+
     def paintGL(self):
         self.makeCurrent()
 
@@ -259,34 +268,20 @@ class Screen(QOpenGLWidget):
 
         should_update_scene = self.camera.scene.generate_meshes()
         should_update_filter = False
-
-        with self.render_hint:
-            GLConfig.clear_buffers()
-            if self._video_writers:
-                if self._screen_image is None or should_update_scene:
-                    with self._before_filter_fbo:
-                        with self.renderer.render_hint:
-                            should_update_scene = self.renderer.render(self.camera, self.camera.scene) or should_update_scene
-
-                    self._screen_image = self._before_filter_fbo.resolved.color_attachment(0)
-                    self.renderer.filters.screen_update_time = time.time()
-                screen_image = self.renderer.filters(self._screen_image)
-                should_update_filter = self.renderer.filters.should_update
-                Frame.draw(screen_image)
-                for video_writer in self._video_writers:
-                    video_writer._frame_queue.put((time.time(), screen_image.fbo.data(0)))
-            elif self.renderer.filters.has_valid:
-                if self._screen_image is None or should_update_scene:
-                    with self._before_filter_fbo:
-                        with self.renderer.render_hint:
-                            should_update_scene = self.renderer.render(self.camera, self.camera.scene) or should_update_scene
-
-                    self._screen_image = self._before_filter_fbo.resolved.color_attachment(0)
-                    self.renderer.filters.screen_update_time = time.time()
-                should_update_filter = self.renderer.filters.draw(self._screen_image)
-            else:
-                with self.renderer.render_hint:
-                    should_update_scene = self.renderer.render(self.camera, self.camera.scene) or should_update_scene
+        
+        if self._video_writers:
+            self._draw_to_screen_image(should_update_scene)
+            screen_image = self.renderer.filters(self._screen_image)
+            should_update_filter = self.renderer.filters.should_update
+            Frame.draw(screen_image)
+            for video_writer in self._video_writers:
+                video_writer._frame_queue.put((time.time(), screen_image.fbo.data(0)))
+        elif self.renderer.filters.has_valid:
+            self._draw_to_screen_image(should_update_scene)
+            should_update_filter = self.renderer.filters.draw(self._screen_image)
+        else:
+            with self.renderer.render_hint:
+                should_update_scene = self.renderer.render(self.camera, self.camera.scene) or should_update_scene
 
         self.__calc_fps()
         self.frame_ended.emit()

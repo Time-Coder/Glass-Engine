@@ -14,13 +14,15 @@ vec4 draw_filled_with_gbuffer(Camera camera,
     vec3 view_pos = view_pos_and_alpha.xyz;
     if(hasnan(view_pos) || length(view_pos) < 1E-6)
     {
-        return vec4(0, 0, 0, 0);
+        discard;
+        // return vec4(0, 0, 0, 0);
     }
 
     vec3 view_normal = view_normal_and_emission_r.rgb;
     if(hasnan(view_normal) || length(view_normal) < 1E-6)
     {
-        return vec4(0, 0, 0, 0);
+        discard;
+        // return vec4(0, 0, 0, 0);
     }
 
     float refractive_index = mix_uint.x * 255;

@@ -1,6 +1,7 @@
 from .Renderer import Renderer
-from ..Filters import GaussFilter, KernelFilter, BloomFilter, DOFFilter, HDRFilter, FXAAFilter, BackgroundFilter
+from ..Filters import GaussFilter, KernelFilter, BloomFilter, DOFFilter, HDRFilter, FXAAFilter
 from ..Frame import Frame
+from glass import RenderHint
 
 from glass import \
     ShaderProgram, GLConfig, FBO, RBO, sampler2D, sampler2DMS, samplerCube, sampler2DArray
@@ -39,30 +40,28 @@ class CommonRenderer(Renderer):
         self.filters["bloom"] = BloomFilter()
         self.filters["DOF"] = DOFFilter()
         self.filters["HDR"] = HDRFilter()
-        self.filters["FXAA"] = FXAAFilter()
-        self.filters["background"] = BackgroundFilter()
+        self.filters["FXAA"] = FXAAFilter(internal_format=GL.GL_RGBA8)
 
         self.filters["bloom"].enabled = False
         self.filters["DOF"].enabled = False
         self.filters["HDR"].enabled = False
         self.filters["FXAA"].enabled = False
-        self.filters["background"].enabled = False
 
     @property
     def background_color(self):
-        if not self.filters["background"].enabled:
-            return glm.vec4(0, 0, 0, 0)
+        result = self.render_hint.clear_color
+        if result == RenderHint.inherit:
+            return GLConfig.clear_color
         else:
-            return self.filters["background"].background_color
+            return result
         
     @background_color.setter
     @checktype
-    def background_color(self, color:(glm.vec3, glm.vec4)):
-        if glm.length(color) > 1E-6:
-            self.filters["background"].enabled = True
-            self.filters["background"].background_color = color
-        else:
-            self.filters["background"].enabled = False
+    def background_color(self, color:(glm.vec4,glm.vec3)):
+        if isinstance(color, glm.vec3):
+            color = glm.vec4(color, 1)
+
+        self.render_hint.clear_color = color
 
     @property
     def bloom(self):
