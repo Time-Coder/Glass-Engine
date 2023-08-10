@@ -10,7 +10,7 @@ import glm
 class FSurf(Mesh):
 
     @checktype
-    def __init__(self, func, x_range=[-3,3], y_range=[-3,3], z_range=[-3,3], dep_var:["X", "Y", "Z", "x", "y", "z"]="Z",
+    def __init__(self, func, x_range=[-3,3], y_range=[-3,3], z_range=[-3,3], dep_var="Z",
                  color_map:ColorMap=None, back_color_map:ColorMap=None,
                  color:(glm.vec3,glm.vec4)=None, back_color:(glm.vec3,glm.vec4)=None,
                  surf_type:Mesh.SurfType=Mesh.SurfType.Smooth,

@@ -1,6 +1,5 @@
 from .FBOAttachment import FBOAttachment
 from .GLInfo import GLInfo
-from .BO import BO
 from .utils import checktype
 from .helper import get_dtype
 

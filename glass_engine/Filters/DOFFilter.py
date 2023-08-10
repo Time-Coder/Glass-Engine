@@ -7,6 +7,7 @@ from glass.ShaderStorageBlock import ShaderStorageBlock
 
 from OpenGL import GL
 import time
+import os
 
 class DOFFilter(Filter):
 
@@ -25,7 +26,7 @@ class DOFFilter(Filter):
         def current_focus(self, focus:float):
             self._current_focus = focus
 
-    def __init__(self, camera:'Camera'=None, view_pos_map:sampler2D=None):
+    def __init__(self, camera=None, view_pos_map:sampler2D=None):
         Filter.__init__(self)
 
         self.__camera = camera
@@ -42,7 +43,7 @@ class DOFFilter(Filter):
 
         self.program = ShaderProgram()
         self.program.compile(Frame.draw_frame_vs)
-        self.program.compile("../glsl/Filters/dof_filter.fs")
+        self.program.compile(os.path.dirname(os.path.abspath(__file__)) + "/../glsl/Filters/dof_filter.fs")
         self.program["CurrentFocus"].bind(self.current_focus)
 
     def __call__(self, screen_image:sampler2D)->sampler2D:
@@ -88,7 +89,7 @@ class DOFFilter(Filter):
         return self.__camera
     
     @camera.setter
-    def camera(self, camera:'Camera'):
+    def camera(self, camera):
         if self.__camera is camera:
             return
         

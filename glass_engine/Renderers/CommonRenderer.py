@@ -1,12 +1,10 @@
 from .Renderer import Renderer
-from ..Filters import *
+from ..Filters import GaussFilter, KernelFilter, BloomFilter, DOFFilter, HDRFilter, FXAAFilter, BackgroundFilter
 from ..Frame import Frame
 
 from glass import \
-    ShaderProgram, GLConfig, FBO, RBO, sampler2D, sampler2DMS, ACBO, uimage2D, image2D, samplerCube, sampler2DArray, GLInfo
-from glass.DictList import DictList
+    ShaderProgram, GLConfig, FBO, RBO, sampler2D, sampler2DMS, samplerCube, sampler2DArray
 from glass.utils import checktype, cat, modify_time
-from ..Lights.DirLight import FlatDirLight
 
 from OpenGL import GL
 import glm
@@ -41,12 +39,30 @@ class CommonRenderer(Renderer):
         self.filters["bloom"] = BloomFilter()
         self.filters["DOF"] = DOFFilter()
         self.filters["HDR"] = HDRFilter()
-        self.filters["FXAA"] = FXAAFilter(internal_format=GL.GL_RGB8)
+        self.filters["FXAA"] = FXAAFilter()
+        self.filters["background"] = BackgroundFilter()
 
         self.filters["bloom"].enabled = False
         self.filters["DOF"].enabled = False
         self.filters["HDR"].enabled = False
         self.filters["FXAA"].enabled = False
+        self.filters["background"].enabled = False
+
+    @property
+    def background_color(self):
+        if not self.filters["background"].enabled:
+            return glm.vec4(0, 0, 0, 0)
+        else:
+            return self.filters["background"].background_color
+        
+    @background_color.setter
+    @checktype
+    def background_color(self, color:(glm.vec3, glm.vec4)):
+        if glm.length(color) > 1E-6:
+            self.filters["background"].enabled = True
+            self.filters["background"].background_color = color
+        else:
+            self.filters["background"].enabled = False
 
     @property
     def bloom(self):
@@ -217,9 +233,9 @@ class CommonRenderer(Renderer):
         
         program = ShaderProgram()
         program.add_include_path(os.path.dirname(os.path.abspath(__file__)) + "/../glsl/Pipelines/DirLight_depth")
-        program.compile("../glsl/Pipelines/DirLight_depth/DirLight_depth.vs")
+        program.compile(os.path.dirname(os.path.abspath(__file__)) + "/../glsl/Pipelines/DirLight_depth/DirLight_depth.vs")
         program.compile(self.dir_light_depth_geo_shader_path)
-        program.compile("../glsl/Pipelines/DirLight_depth/DirLight_depth.fs")
+        program.compile(os.path.dirname(os.path.abspath(__file__)) + "/../glsl/Pipelines/DirLight_depth/DirLight_depth.fs")
 
         self.programs[key] = program
 
@@ -231,9 +247,9 @@ class CommonRenderer(Renderer):
             return self.programs["point_light_depth"]
         
         program = ShaderProgram()
-        program.compile("../glsl/Pipelines/PointLight_depth/PointLight_depth.vs")
-        program.compile("../glsl/Pipelines/PointLight_depth/PointLight_depth.gs")
-        program.compile("../glsl/Pipelines/PointLight_depth/PointLight_depth.fs")
+        program.compile(os.path.dirname(os.path.abspath(__file__)) + "/../glsl/Pipelines/PointLight_depth/PointLight_depth.vs")
+        program.compile(os.path.dirname(os.path.abspath(__file__)) + "/../glsl/Pipelines/PointLight_depth/PointLight_depth.gs")
+        program.compile(os.path.dirname(os.path.abspath(__file__)) + "/../glsl/Pipelines/PointLight_depth/PointLight_depth.fs")
 
         self.programs["point_light_depth"] = program
 
@@ -245,9 +261,9 @@ class CommonRenderer(Renderer):
             return self.programs["spot_light_depth"]
         
         program = ShaderProgram()
-        program.compile("../glsl/Pipelines/PointLight_depth/PointLight_depth.vs")
-        program.compile("../glsl/Pipelines/SpotLight_depth/SpotLight_depth.gs")
-        program.compile("../glsl/Pipelines/SpotLight_depth/SpotLight_depth.fs")
+        program.compile(os.path.dirname(os.path.abspath(__file__)) + "/../glsl/Pipelines/PointLight_depth/PointLight_depth.vs")
+        program.compile(os.path.dirname(os.path.abspath(__file__)) + "/../glsl/Pipelines/SpotLight_depth/SpotLight_depth.gs")
+        program.compile(os.path.dirname(os.path.abspath(__file__)) + "/../glsl/Pipelines/SpotLight_depth/SpotLight_depth.fs")
 
         self.programs["spot_light_depth"] = program
 
@@ -344,12 +360,7 @@ class CommonRenderer(Renderer):
 
             if dir_light.depth_fbo is None:
                 dir_light.depth_fbo = FBO(1024, 1024, layers=self.camera.CSM_levels)
-                # dir_light.depth_fbo.attach(0, sampler2DArray)
                 dir_light.depth_fbo.attach(GL.GL_DEPTH_ATTACHMENT, sampler2DArray)
-
-                # dir_light.depth_fbo.color_attachment(0).wrap_s = GL.GL_CLAMP_TO_BORDER
-                # dir_light.depth_fbo.color_attachment(0).wrap_t = GL.GL_CLAMP_TO_BORDER
-                # dir_light.depth_fbo.color_attachment(0).border_color = glm.vec4(1, 1, 1, 1)
 
                 dir_light.depth_fbo.depth_attachment.wrap_s = GL.GL_CLAMP_TO_BORDER
                 dir_light.depth_fbo.depth_attachment.wrap_t = GL.GL_CLAMP_TO_BORDER
@@ -368,7 +379,6 @@ class CommonRenderer(Renderer):
                         self.dir_light_depth_program["explode_distance"] = mesh.explode_distance
                         mesh.draw(self.dir_light_depth_program, instances)
 
-            # new_handle = dir_light.depth_filter(dir_light.depth_fbo.color_attachment(0)).handle
             new_handle = dir_light.depth_fbo.depth_attachment.handle
             if dir_light.depth_map_handle != new_handle:
                 dir_light.depth_map_handle = new_handle
@@ -381,9 +391,9 @@ class CommonRenderer(Renderer):
             return self.programs["forward"]
         
         program = ShaderProgram()
-        program.compile("../glsl/Pipelines/forward_rendering/forward_rendering.vs")
-        program.compile("../glsl/Pipelines/forward_rendering/forward_rendering.gs")
-        program.compile("../glsl/Pipelines/forward_rendering/forward_rendering.fs")
+        program.compile(os.path.dirname(os.path.abspath(__file__)) + "/../glsl/Pipelines/forward_rendering/forward_rendering.vs")
+        program.compile(os.path.dirname(os.path.abspath(__file__)) + "/../glsl/Pipelines/forward_rendering/forward_rendering.gs")
+        program.compile(os.path.dirname(os.path.abspath(__file__)) + "/../glsl/Pipelines/forward_rendering/forward_rendering.fs")
 
         program["PointLights"].bind(self.scene.point_lights)
         program["DirLights"].bind(self.scene.dir_lights)
@@ -400,7 +410,7 @@ class CommonRenderer(Renderer):
         
         program = ShaderProgram()
         program.compile(Frame.draw_frame_vs)
-        program.compile("../glsl/Pipelines/OIT_blend.fs")
+        program.compile(os.path.dirname(os.path.abspath(__file__)) + "/../glsl/Pipelines/OIT_blend.fs")
         self.programs["OIT_blend"] = program
         return program
     
@@ -466,9 +476,9 @@ class CommonRenderer(Renderer):
     def gen_env_map_program(self):
         if "gen_env_map" not in self.programs:
             program = ShaderProgram()
-            program.compile("../glsl/Pipelines/env_mapping/gen_env_map.vs")
-            program.compile("../glsl/Pipelines/env_mapping/gen_env_map.gs")
-            program.compile("../glsl/Pipelines/env_mapping/gen_env_map.fs")
+            program.compile(os.path.dirname(os.path.abspath(__file__)) + "/../glsl/Pipelines/env_mapping/gen_env_map.vs")
+            program.compile(os.path.dirname(os.path.abspath(__file__)) + "/../glsl/Pipelines/env_mapping/gen_env_map.gs")
+            program.compile(os.path.dirname(os.path.abspath(__file__)) + "/../glsl/Pipelines/env_mapping/gen_env_map.fs")
             program["DirLights"].bind(self.scene.dir_lights)
             program["PointLights"].bind(self.scene.point_lights)
             program["SpotLights"].bind(self.scene.spot_lights)
@@ -484,7 +494,7 @@ class CommonRenderer(Renderer):
         
         program = ShaderProgram()
         program.compile(Frame.draw_frame_vs)
-        program.compile("../glsl/Pipelines/SSAO/generate_ssao.fs")
+        program.compile(os.path.dirname(os.path.abspath(__file__)) + "/../glsl/Pipelines/SSAO/generate_ssao.fs")
         self.programs["generate_ssao"] = program
         
         return program
@@ -692,7 +702,7 @@ class CommonRenderer(Renderer):
         
         program = ShaderProgram()
         program.compile(Frame.draw_frame_vs)
-        program.compile("../glsl/Pipelines/env_mapping/env_OIT_blend.fs")
+        program.compile(os.path.dirname(os.path.abspath(__file__)) + "/../glsl/Pipelines/env_mapping/env_OIT_blend.fs")
         self.programs["env_OIT_blend"] = program
 
         return program

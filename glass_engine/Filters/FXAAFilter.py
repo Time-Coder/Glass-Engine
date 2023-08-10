@@ -2,15 +2,17 @@ from .Filters import Filter
 from glass import ShaderProgram, FBO, sampler2D, GLInfo, samplerCube, sampler2DArray
 from ..Frame import Frame
 
+import os
+
 def init_FXAAFilter(cls):
     cls.program = ShaderProgram()
     cls.program.compile(Frame.draw_frame_vs)
-    cls.program.compile("../glsl/Filters/FXAA_filter.fs")
+    cls.program.compile(os.path.dirname(os.path.abspath(__file__)) + "/../glsl/Filters/FXAA_filter.fs")
 
     cls.cube_program = ShaderProgram()
     cls.cube_program.compile(Frame.draw_frame_vs)
     cls.cube_program.compile(Frame.draw_frame_array_gs(6))
-    cls.cube_program.compile("../glsl/Filters/FXAA_cube_filter.fs")
+    cls.cube_program.compile(os.path.dirname(os.path.abspath(__file__)) + "/../glsl/Filters/FXAA_cube_filter.fs")
 
     return cls
 
@@ -67,7 +69,7 @@ class FXAAFilter(Filter):
         program = ShaderProgram()
         program.compile(Frame.draw_frame_vs)
         program.compile(Frame.draw_frame_array_gs(layers))
-        program.compile("../glsl/Filters/FXAA_array_filter.fs")
+        program.compile(os.path.dirname(os.path.abspath(__file__)) + "/../glsl/Filters/FXAA_array_filter.fs")
 
         FXAAFilter.__array_programs[layers] = program
 

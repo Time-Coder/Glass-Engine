@@ -6,16 +6,17 @@ from glass.utils import checktype
 
 from OpenGL import GL
 import glm
+import os
 
 def _init_GaussFilter(cls):
     cls.program = ShaderProgram()
     cls.program.compile(Frame.draw_frame_vs)
-    cls.program.compile("../glsl/Filters/gauss_filter.fs")
+    cls.program.compile(os.path.dirname(os.path.abspath(__file__)) + "/../glsl/Filters/gauss_filter.fs")
 
     cls.cube_program = ShaderProgram()
     cls.cube_program.compile(Frame.draw_frame_vs)
     cls.cube_program.compile(Frame.draw_frame_array_gs(6))
-    cls.cube_program.compile("../glsl/Filters/gauss_cube_filter.fs")
+    cls.cube_program.compile(os.path.dirname(os.path.abspath(__file__)) + "/../glsl/Filters/gauss_cube_filter.fs")
 
     return cls
 
@@ -220,7 +221,7 @@ class GaussFilter(Filter):
         program = ShaderProgram()
         program.compile(Frame.draw_frame_vs)
         program.compile(Frame.draw_frame_array_gs(layers))
-        program.compile("../glsl/Filters/gauss_array_filter.fs")
+        program.compile(os.path.dirname(os.path.abspath(__file__)) + "/../glsl/Filters/gauss_array_filter.fs")
 
         GaussFilter.__array_programs[layers] = program
 

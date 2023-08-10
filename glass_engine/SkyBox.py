@@ -6,6 +6,7 @@ from glass import Vertex, samplerCube, ShaderProgram
 
 import glm
 from OpenGL import GL
+import os
 
 class SkyBox(Mesh):
 
@@ -124,8 +125,8 @@ class SkyBox(Mesh):
     def program(self):
         if self.__program is None:
             self.__program = ShaderProgram()
-            self.__program.compile("glsl/Pipelines/skybox/skybox.vs")
-            self.__program.compile("glsl/Pipelines/skybox/skybox.fs")
+            self.__program.compile(os.path.dirname(os.path.abspath(__file__)) + "/glsl/Pipelines/skybox/skybox.vs")
+            self.__program.compile(os.path.dirname(os.path.abspath(__file__)) + "/glsl/Pipelines/skybox/skybox.fs")
 
         return self.__program
     

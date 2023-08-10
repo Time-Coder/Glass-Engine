@@ -8,7 +8,7 @@ from glass import GLConfig, FBO, RBO, sampler2DMS, sampler2D, RenderHint, SSBO, 
 from glass.utils import checktype, extname
 
 from PyQt6.QtOpenGLWidgets import QOpenGLWidget
-from PyQt6.QtGui import QMouseEvent, QKeyEvent, QCursor, QWheelEvent, QSurfaceFormat, QFont, QColor, QPen
+from PyQt6.QtGui import QMouseEvent, QKeyEvent, QCursor, QWheelEvent, QSurfaceFormat
 from PyQt6.QtCore import Qt, QPointF, QPoint, QTimerEvent, pyqtSignal, QSize
 from PyQt6.QtWidgets import QApplication
 
@@ -517,7 +517,7 @@ class Screen(QOpenGLWidget):
 
         self._manipulator = manipulator
         manipulator._camera = self.camera
-        should_update = manipulator.on_start()
+        should_update = manipulator.startup()
         if should_update:
             self._screen_image = None
             self.update()

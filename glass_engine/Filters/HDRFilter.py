@@ -4,6 +4,7 @@ from glass import sampler2D, ShaderProgram, FBO, ShaderStorageBlock, GLConfig
 
 from OpenGL import GL
 import time
+import os
 
 class HDRFilter(Filter):
 
@@ -30,7 +31,7 @@ class HDRFilter(Filter):
 
         self.program = ShaderProgram()
         self.program.compile(Frame.draw_frame_vs)
-        self.program.compile("../glsl/Filters/hdr_filter.fs")
+        self.program.compile(os.path.dirname(os.path.abspath(__file__)) + "/../glsl/Filters/hdr_filter.fs")
         self.program["CurrentLuma"].bind(self.current_luma)
 
         self.fbo = FBO()

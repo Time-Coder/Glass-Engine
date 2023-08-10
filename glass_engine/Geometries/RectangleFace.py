@@ -9,7 +9,7 @@ class RectangleFace(Mesh):
 
     @checktype
     def __init__(self, width:float=2, height:float=1,
-                 color:(glm.vec3,glm.vec4)=glm.vec4(0.5, 0.5, 0.5,1), back_color:(glm.vec3,glm.vec4)=None,
+                 color:(glm.vec3,glm.vec4)=glm.vec4(0.396, 0.74151, 0.69102, 1), back_color:(glm.vec3,glm.vec4)=None,
                  vertical:bool=False, normalize_tex_coord:bool=False, name:str=""):
         Mesh.__init__(self, color=color, back_color=back_color, name=name, block=True)
         self.__width = width

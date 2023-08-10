@@ -15,3 +15,4 @@ from .DOFFilter import DOFFilter
 from .FXAAFilter import FXAAFilter
 from .ShadowFilter import ShadowFilter
 from .MedianFilter import MedianFilter
+from .BackgroundFilter import BackgroundFilter

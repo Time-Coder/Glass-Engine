@@ -1,11 +1,12 @@
 from .Filters import Filter
 from glass import ShaderProgram, FBO, sampler2D, GLInfo
 from ..Frame import Frame
+import os
 
 def init_MedianFilter(cls):
     cls.program = ShaderProgram()
     cls.program.compile(Frame.draw_frame_vs)
-    cls.program.compile("../glsl/Filters/median_filter.fs")
+    cls.program.compile(os.path.dirname(os.path.abspath(__file__)) + "/../glsl/Filters/median_filter.fs")
 
     return cls
 

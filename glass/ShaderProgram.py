@@ -2,7 +2,6 @@ import os
 
 from OpenGL import GL
 import pathlib
-import inspect
 import warnings
 import struct
 import sys
@@ -19,9 +18,6 @@ from .GLInfo import GLInfo
 from .GLConfig import GLConfig
 from .TextureUnits import TextureUnits
 from .ImageUnits import ImageUnits
-from .VAO import VAO
-from .VBO import VBO
-from .EBO import EBO
 
 class ShaderProgram(GPUProgram):
 
@@ -51,12 +47,6 @@ class ShaderProgram(GPUProgram):
     def compile(self, file_name:str, shader_type:GLInfo.shader_types=None):
         if self._is_linked:
             raise RuntimeError("linked shader program cannot compile other shaders")
-
-        if not os.path.isfile(file_name):
-            current_frame = inspect.currentframe().f_back.f_back
-            calling_path = os.path.dirname(current_frame.f_code.co_filename)
-            calling_path = calling_path.replace("\\", "/")
-            file_name = calling_path + "/" + file_name
         
         if not os.path.isfile(file_name):
             raise FileNotFoundError(file_name)
@@ -448,7 +438,7 @@ class ShaderProgram(GPUProgram):
                 if len(not_set_uniforms) == 1:
                     warning_message += f"uniform variable '{not_set_uniforms[0]}' is not set but used"
                 else:
-                    warning_message += f"following uniform variables are not set but used:\n"
+                    warning_message += "following uniform variables are not set but used:\n"
                     warning_message += "\n".join(not_set_uniforms)
                     
                 warnings.warn(warning_message, category=RuntimeWarning)

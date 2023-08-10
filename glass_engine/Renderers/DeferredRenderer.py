@@ -6,6 +6,7 @@ from glass import \
 
 from OpenGL import GL
 import glm
+import os
         
 class DeferredRenderer(CommonRenderer):
 
@@ -20,7 +21,7 @@ class DeferredRenderer(CommonRenderer):
         
         program = ShaderProgram()
         program.compile(Frame.draw_frame_vs)
-        program.compile("../glsl/Pipelines/deferred_rendering/deferred_rendering.fs")
+        program.compile(os.path.dirname(os.path.abspath(__file__)) + "/../glsl/Pipelines/deferred_rendering/deferred_rendering.fs")
         program["PointLights"].bind(self.scene.point_lights)
         program["DirLights"].bind(self.scene.dir_lights)
         program["SpotLights"].bind(self.scene.spot_lights)
@@ -35,9 +36,9 @@ class DeferredRenderer(CommonRenderer):
             return self.programs["draw_to_gbuffer"]
         
         program = ShaderProgram()
-        program.compile("../glsl/Pipelines/forward_rendering/forward_rendering.vs")
-        program.compile("../glsl/Pipelines/forward_rendering/forward_rendering.gs")
-        program.compile("../glsl/Pipelines/deferred_rendering/draw_to_gbuffer.fs")
+        program.compile(os.path.dirname(os.path.abspath(__file__)) + "/../glsl/Pipelines/forward_rendering/forward_rendering.vs")
+        program.compile(os.path.dirname(os.path.abspath(__file__)) + "/../glsl/Pipelines/forward_rendering/forward_rendering.gs")
+        program.compile(os.path.dirname(os.path.abspath(__file__)) + "/../glsl/Pipelines/deferred_rendering/draw_to_gbuffer.fs")
         program["PointLights"].bind(self.scene.point_lights)
         program["DirLights"].bind(self.scene.dir_lights)
         program["SpotLights"].bind(self.scene.spot_lights)

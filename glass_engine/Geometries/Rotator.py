@@ -1,19 +1,17 @@
 from ..Mesh import Mesh
-from ..algorithm import cos_angle_of
 
 from glass import Vertex
 
 import math
 import glm
 import numpy as np
-import copy
 
 class Rotator(Mesh):
     def __init__(self, section:(list,tuple,np.ndarray),
                  axis_start:glm.vec3=glm.vec3(0,0,0), axis_stop:glm.vec3=glm.vec3(0,0,1),
                  n_divide:int=100, start_angle:float=0, span_angle:float=360,
                  n_lat_divide:int=100,
-                 color:(glm.vec3,glm.vec4)=glm.vec4(0.5, 0.5, 0.5,1), back_color:(glm.vec3,glm.vec4)=None,
+                 color:(glm.vec3,glm.vec4)=glm.vec4(0.396, 0.74151, 0.69102, 1), back_color:(glm.vec3,glm.vec4)=None,
                  normalize_tex_coord:bool=False,
                  name:str="", block=True, surf_type:Mesh.SurfType=Mesh.SurfType.Auto):
         Mesh.__init__(self, color=color, back_color=back_color, name=name, block=block, surf_type=surf_type)
@@ -36,7 +34,6 @@ class Rotator(Mesh):
         start_angle = self.__start_angle/180*math.pi
         span_angle = self.__span_angle/180*math.pi
         n_divide = self.__n_divide
-        n_lat_divide = self.__n_lat_divide
         normalize_tex_coord = self.__normalize_tex_coord
 
         i_vertex = 0

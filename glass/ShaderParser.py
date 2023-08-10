@@ -353,7 +353,7 @@ class ShaderParser:
 				layout_qualifiers_str = match.group("layout_qualifiers")
 				layout_args, layout_kwargs = ShaderParser.get_layout_qualifiers(layout_qualifiers_str)
 				internal_format = ShaderParser.get_internal_format(layout_args)
-			except IndexError as e:
+			except IndexError:
 				pass
 
 			binding_point = -1
@@ -373,7 +373,7 @@ class ShaderParser:
 			try:
 				memory_qualifiers_str = match.group("memory_qualifiers")
 				memory_qualifiers = ShaderParser.get_memory_qualifiers(memory_qualifiers_str)
-			except IndexError as e:
+			except IndexError:
 				pass
 
 			uniforms_info[var_name] = \
@@ -428,7 +428,7 @@ class ShaderParser:
 				layout_qualifiers_str = match.group("layout_qualifiers")
 				layout_args, layout_kwargs = ShaderParser.get_layout_qualifiers(layout_qualifiers_str)
 				internal_format = ShaderParser.get_internal_format(layout_args)
-			except IndexError as e:
+			except IndexError:
 				pass
 
 			binding_point = -1
@@ -439,7 +439,7 @@ class ShaderParser:
 			try:
 				memory_qualifiers_str = match.group("memory_qualifiers")
 				memory_qualifiers = ShaderParser.get_memory_qualifiers(memory_qualifiers_str)
-			except IndexError as e:
+			except IndexError:
 				pass
 
 			uniform_blocks_info[match.group("name")] = \
@@ -492,7 +492,7 @@ class ShaderParser:
 				layout_qualifiers_str = match.group("layout_qualifiers")
 				layout_args, layout_kwargs = ShaderParser.get_layout_qualifiers(layout_qualifiers_str)
 				internal_format = ShaderParser.get_internal_format(layout_args)
-			except IndexError as e:
+			except IndexError:
 				pass
 
 			binding_point = -1
@@ -503,7 +503,7 @@ class ShaderParser:
 			try:
 				memory_qualifiers_str = match.group("memory_qualifiers")
 				memory_qualifiers = ShaderParser.get_memory_qualifiers(memory_qualifiers_str)
-			except IndexError as e:
+			except IndexError:
 				pass
 			
 			shader_storage_blocks_info[match.group("name")] = \

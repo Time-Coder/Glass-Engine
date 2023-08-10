@@ -7,7 +7,7 @@ from enum import Enum
 from .GLConfig import GLConfig
 from .GLInfo import GLInfo
 from .BO import BO
-from .utils import checktype, capacity_of, subscript, subscript_set
+from .utils import checktype, capacity_of, subscript
 from .helper import sizeof, type_from_str
 
 class BindingPointsPool:

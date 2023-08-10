@@ -1,4 +1,5 @@
-from .Mesh import Mesh, Camera
+from .Mesh import Mesh
+from .Camera import Camera
 
 from glass.utils import checktype
 from glass import Vertex, sampler2D, ShaderProgram
@@ -7,6 +8,7 @@ import glm
 import math
 import numpy as np
 from OpenGL import GL
+import os
 
 class SkyDome(Mesh):
 
@@ -95,20 +97,6 @@ class SkyDome(Mesh):
         self.__n_lon_divide = n_lon_divide
 
     @property
-    def cube_map(self):
-        if not self.is_completed:
-            return None
-        self.skydome_map.bind()
-        return spherical_to_cube(self.skydome_map)
-
-    @property
-    def cube_map_ms(self):
-        if not self.is_completed:
-            return None
-        self.skydome_map.bind()
-        return spherical_to_cube_ms(self.skydome_map)
-
-    @property
     def skydome_map(self):
         return self.__skydome_map
     
@@ -136,8 +124,8 @@ class SkyDome(Mesh):
     def program(self):
         if self.__program is None:
             self.__program = ShaderProgram()
-            self.__program.compile("glsl/Pipelines/skydome/skydome.vs")
-            self.__program.compile("glsl/Pipelines/skydome/skydome.fs")
+            self.__program.compile(os.path.dirname(os.path.abspath(__file__)) + "/glsl/Pipelines/skydome/skydome.vs")
+            self.__program.compile(os.path.dirname(os.path.abspath(__file__)) + "/glsl/Pipelines/skydome/skydome.fs")
             self.__program["skydome_map"].bind(self.skydome_map)
 
         return self.__program

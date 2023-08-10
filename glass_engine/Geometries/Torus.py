@@ -7,7 +7,7 @@ import math
 
 class Torus(Mesh):
     def __init__(self, radius_tube:float=0.5, radius_torus:float=1,
-                 color:(glm.vec3,glm.vec4)=glm.vec4(0.5,0.5,0.5,1), back_color:(glm.vec3,glm.vec4)=None,
+                 color:(glm.vec3,glm.vec4)=glm.vec4(0.396, 0.74151, 0.69102, 1), back_color:(glm.vec3,glm.vec4)=None,
                  vertical:bool=False, normalize_tex_coord=False,
                  n_lon_divide:int=100, start_lon:float=0, span_lon:float=360,
                  n_lat_divide:int=100, start_lat:float=0, span_lat:float=360,

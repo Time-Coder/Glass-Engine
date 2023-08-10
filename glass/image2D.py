@@ -12,7 +12,7 @@ from .GLInfo import GLInfo
 from .utils import checktype
 from .ImageLoader import ImageLoader
 from .TextureUnits import TextureUnits
-from .helper import *
+from .helper import get_external_format, get_dtype, width_adapt, get_channels
 
 class image2D(GLObject):
 

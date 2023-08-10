@@ -2,7 +2,6 @@ from .utils import capacity_of
 from .CSRMat import CSRMat
 
 import threading
-import time
 
 class Increment(CSRMat):
 	def __init__(self, original_list):
