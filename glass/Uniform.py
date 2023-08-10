@@ -88,7 +88,7 @@ class Uniform:
                 atom_name = atom["name"]
                 atom_suffix = atom["name"][len_name:]
                 subscript_chain = get_subscript_chain(atom_suffix)
-                atom_value = subscript(var, subscript_chain)
+                subscript(var, subscript_chain)
                 if atom_name not in Uniform._bound_vars[id_var]:
                     Uniform._bound_vars[id_var][atom_name] = {}
 

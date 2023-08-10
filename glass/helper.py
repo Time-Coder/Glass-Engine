@@ -1,7 +1,6 @@
 from OpenGL import GL, constant
 import numpy as np
 import glm
-import ctypes
 import struct
 
 from .GLInfo import GLInfo

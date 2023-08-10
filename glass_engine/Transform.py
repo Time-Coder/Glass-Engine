@@ -1,5 +1,5 @@
 import glm
-from glass import Instance, samplerCube
+from glass import Instance
 from glass.utils import vec4_to_quat
 
 class Transform(Instance):

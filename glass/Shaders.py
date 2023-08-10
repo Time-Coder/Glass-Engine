@@ -5,15 +5,11 @@ from OpenGL import GL
 import re
 import copy
 import warnings
-import inspect
-import numpy as np
 
-from .utils import delete, md5s, modify_time, load_var, save_var, run_exe, cat, bincat
+from .utils import delete, md5s, modify_time, load_var, save_var, cat, relative_path
 from .GLObject import GLObject
 from .ShaderParser import ShaderParser
-from .GLConfig import GLConfig
 from .GPUProgram import CompileError, CompileWarning
-from .GLInfo import GLInfo
 
 class BaseShader(GLObject):
 
@@ -72,12 +68,6 @@ class BaseShader(GLObject):
 	def load(cls, file_name:str, include_paths:list=None):
 		if include_paths is None:
 			include_paths = []
-
-		if not os.path.isfile(file_name):
-			current_frame = inspect.currentframe().f_back.f_back
-			calling_path = os.path.dirname(current_frame.f_code.co_filename)
-			calling_path = calling_path.replace("\\", "/")
-			file_name = calling_path + "/" + file_name
 		
 		if not os.path.isfile(file_name):
 			raise FileNotFoundError(file_name)
@@ -212,8 +202,8 @@ class BaseShader(GLObject):
 		if not os.path.isfile(file_name):
 			raise FileNotFoundError(file_name)
 		
-		rel_name = os.path.relpath(file_name).replace("\\", "/")
-		abs_name = os.path.abspath(file_name)
+		rel_name = relative_path(file_name)
+		abs_name = os.path.abspath(file_name).replace("\\", "/")
 		used_name = rel_name if len(rel_name) < len(abs_name) else abs_name
 		self._file_name = used_name
 		base_name = os.path.basename(abs_name)
@@ -232,7 +222,7 @@ class BaseShader(GLObject):
 			self._predefine_shader_type()
 			include_path = os.path.dirname(abs_name)
 			if not os.path.isabs(file_name):
-				include_path = os.path.relpath(include_path)
+				include_path = relative_path(include_path)
 			self.add_include_path(include_path)
 			self.related_files.extend(self._replace_includes())
 
@@ -398,7 +388,7 @@ class BaseShader(GLObject):
 				if not os.path.isfile(full_name):
 					continue
 
-				rel_name = os.path.relpath(full_name, ".").replace("\\", "/")
+				rel_name = relative_path(full_name)
 				abs_name = os.path.abspath(full_name).replace("\\", "/")
 				used_name = rel_name if len(rel_name) < len(abs_name) else abs_name
 

@@ -166,20 +166,15 @@ class GPUProgram(GLObject):
 		return self._shader_storage_block
 	
 	def download(self, var):
-		id_var = id(block_var._bound_var)
+		id_var = id(var)
 		if id_var not in ShaderStorageBlock._bound_vars:
 			raise ValueError(f"{var} is not bound with any shader storage blocks")
 
-		success = False
 		for block_var in self._shader_storage_block._block_var_map.values():
-			if block_var._bound_var is not var:
+			if block_var._bound_var is var:
 				for ssbo in ShaderStorageBlock._bound_vars[id_var].values():
 					if block_var in ssbo._bound_block_vars:
 						ssbo.download()
-						success = True
-
-		if not success:
-			raise ValueError(f"{var} is not bound with any current program's shader storage blocks")
 
 	def compile(self, shader_type, file_name=None):
 		pass

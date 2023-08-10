@@ -17,7 +17,7 @@ class Extruder(Mesh):
         BevelJoin = 2
 
     def __init__(self, section, path, join_style:JoinStyle=JoinStyle.MiterJoin,
-                 color:(glm.vec3,glm.vec4)=glm.vec4(0.5, 0.5, 0.5,1), back_color:(glm.vec3,glm.vec4)=None,
+                 color:(glm.vec3,glm.vec4)=glm.vec4(0.396, 0.74151, 0.69102, 1), back_color:(glm.vec3,glm.vec4)=None,
                  n_corner_divide:int=100,
                  normalize_tex_coord:bool=False,
                  name:str="", block:bool=True, surf_type:Mesh.SurfType=Mesh.SurfType.Auto):

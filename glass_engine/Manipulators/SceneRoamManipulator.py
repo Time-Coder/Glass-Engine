@@ -1,6 +1,5 @@
 from .Manipulator import Manipulator
 from glass.RenderHint import RenderHint
-from glass.utils import checktype
 
 import glm
 from OpenGL import GL
@@ -124,21 +123,21 @@ class SceneRoamManipulator(Manipulator):
             elif polygon_mode == GL.GL_POINT:
                 self.camera.screen.renderer.render_hint.polygon_mode = GL.GL_FILL
             return True
-        elif key == Manipulator.Key.Key_O:
-            self.camera.screen.renderer.SSAO = (not self.camera.screen.renderer.SSAO)
-            return True
-        elif key == Manipulator.Key.Key_P:
-            now = datetime.datetime.now()
-            file_name = "capture_" + now.strftime("%Y-%m-%d_%H-%M-%S") + ".png"
-            self.camera.screen.capture(file_name)
-        elif key == Manipulator.Key.Key_V:
-            if self._video_writer is None:
-                now = datetime.datetime.now()
-                file_name = "capture_" + now.strftime("%Y-%m-%d_%H-%M-%S") + ".avi"
-                self._video_writer = self.camera.screen.capture_video(file_name)
-            else:
-                self._video_writer.stop()
-                self._video_writer = None
+        # elif key == Manipulator.Key.Key_O:
+        #     self.camera.screen.renderer.SSAO = (not self.camera.screen.renderer.SSAO)
+        #     return True
+        # elif key == Manipulator.Key.Key_P:
+        #     now = datetime.datetime.now()
+        #     file_name = "capture_" + now.strftime("%Y-%m-%d_%H-%M-%S") + ".png"
+        #     self.camera.screen.capture(file_name)
+        # elif key == Manipulator.Key.Key_V:
+        #     if self._video_writer is None:
+        #         now = datetime.datetime.now()
+        #         file_name = "capture_" + now.strftime("%Y-%m-%d_%H-%M-%S") + ".avi"
+        #         self._video_writer = self.camera.screen.capture_video(file_name)
+        #     else:
+        #         self._video_writer.stop()
+        #         self._video_writer = None
         
         return False
 

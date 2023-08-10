@@ -1,7 +1,6 @@
 from .sampler2DMS import sampler2DMS
 from .GLInfo import GLInfo
 from .utils import checktype
-from .ShaderStorageBlock import ShaderStorageBlock
 
 from OpenGL import GL
 import OpenGL.GL.ARB.bindless_texture as bt

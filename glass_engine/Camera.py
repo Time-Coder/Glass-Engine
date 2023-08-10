@@ -205,27 +205,6 @@ class Camera(SinglePathNode):
     def focus_change_speed(self, speed:float):
         self.__focus_change_speed = speed
 
-    def project(self, world_coord:glm.vec3):
-        # 相机坐标系下的坐标
-        q = self.abs_orientation
-        p = glm.quat(q.w, -q.x, -q.y, -q.z)
-        view_coord = p * (world_coord - self.abs_position)
-
-        # 标准设备坐标系下的坐标
-        device_coord = glm.vec4(0, 0, 0, 0)
-        if self.projection_mode == Camera.ProjectionMode.Perspective:
-            device_coord.x = view_coord.x/view_coord.y / (self.aspect * self.tan_half_fov)
-            device_coord.y = view_coord.z/view_coord.y / self.tan_half_fov
-            device_coord.z = 2*self.far*(1-self.near/view_coord.y)/self.clip-1
-            device_coord.w = 1
-        else:
-            device_coord.x = 2*view_coord.x / self.width
-            device_coord.y = 2*view_coord.z / self.height
-            device_coord.z = 2*(view_coord.y-self.near)/self.clip-1
-            device_coord.w = 1
-        
-        return device_coord
-    
     @property
     def CSM_levels(self):
         return self.__CSM_levels
@@ -234,3 +213,68 @@ class Camera(SinglePathNode):
     @checktype
     def CSM_levels(self, levels:int):
         self.__CSM_levels = levels
+
+    @property
+    def near_height(self):
+        return 2 * self.near * self.tan_half_fov
+    
+    @property
+    def near_width(self):
+        return self.aspect * self.near_height
+
+    @checktype
+    def project(self, world_coord:glm.vec3)->glm.vec4:
+        return self.view_to_NDC(self.world_to_view(world_coord))
+    
+    @checktype
+    def project3(self, world_coord:glm.vec3)->glm.vec3:
+        NDC = self.project(world_coord)
+        return NDC.xyz / NDC.w
+
+    @checktype
+    def world_to_view(self, world_coord:glm.vec3)->glm.vec3:
+        return glm.inverse(self.abs_orientation) * (world_coord - self.abs_position)
+
+    @checktype
+    def view_to_world(self, view_coord:glm.vec3)->glm.vec3:
+        return self.abs_orientation * view_coord + self.abs_position
+
+    @checktype
+    def world_dir_to_view(self, world_dir:glm.vec3)->glm.vec3:
+        return glm.inverse(self.abs_orientation) * world_dir
+
+    @checktype
+    def view_dir_to_world(self, view_dir:glm.vec3)->glm.vec3:
+        return self.abs_orientation * view_dir
+    
+    @checktype
+    def view_to_NDC(self, view_coord:glm.vec3)->glm.vec4:
+        NDC_coord = glm.vec4()
+        if self.projection_mode == Camera.ProjectionMode.Perspective:
+            NDC_coord.x = view_coord.x / (self.aspect * self.tan_half_fov)
+            NDC_coord.y = view_coord.z / self.tan_half_fov
+            NDC_coord.z = 2*self.far*(view_coord.y-self.near)/self.clip-view_coord.y
+            NDC_coord.w = view_coord.y
+        else:
+            NDC_coord.x = 2*view_coord.x / self.width
+            NDC_coord.y = 2*view_coord.z / self.height
+            NDC_coord.z = 2*(view_coord.y-self.near)/self.clip-1
+            NDC_coord.w = 1
+        
+        return NDC_coord
+    
+    @checktype
+    def screen_to_view_dir(self, screen_pos:glm.vec2)->glm.vec3:
+        xNDC = 2*screen_pos.x / self.screen.width() - 1
+        yNDC = 1 - 2*screen_pos.y / self.screen.height()
+
+        view_dir = glm.vec3()
+        view_dir.x = xNDC * self.aspect * self.tan_half_fov
+        view_dir.y = 1
+        view_dir.z = yNDC * self.tan_half_fov
+        return glm.normalize(view_dir)
+    
+    @checktype
+    def screen_to_world_dir(self, screen_pos:glm.vec2)->glm.vec3:
+        return self.view_dir_to_world(self.screen_to_view_dir(screen_pos))
+    

@@ -1,5 +1,5 @@
 from glass.utils import checktype
-from glass import sampler2D, samplerCube
+from glass import sampler2D
 
 import glm
 from enum import Enum

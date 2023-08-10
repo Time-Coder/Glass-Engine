@@ -10,7 +10,7 @@ class EllipseFace(Mesh):
 
     @checktype
     def __init__(self, a:float=2, b:float=1,
-                 color:(glm.vec3,glm.vec4)=glm.vec4(0.5, 0.5, 0.5,1), back_color:(glm.vec3,glm.vec4)=None,
+                 color:(glm.vec3,glm.vec4)=glm.vec4(0.396, 0.74151, 0.69102, 1), back_color:(glm.vec3,glm.vec4)=None,
                  start_angle:float=0, span_angle:float=360, n_divide:int=100,
                  vertical=False, normalize_tex_coord=False,
                  name:str="", block=True):

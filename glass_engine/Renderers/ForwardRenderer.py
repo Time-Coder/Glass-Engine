@@ -4,10 +4,11 @@ from ..Frame import Frame
 
 from glass import \
     ShaderProgram, GLConfig, sampler2D, FBO, RBO, sampler2DMS
-from glass.utils import profiler
+# from glass.utils import profiler
 
 from OpenGL import GL
 import glm
+import os
         
 class ForwardRenderer(CommonRenderer):
 
@@ -51,9 +52,9 @@ class ForwardRenderer(CommonRenderer):
             return self.programs["draw_to_ssao_gbuffer"]
         
         program = ShaderProgram()
-        program.compile("../glsl/Pipelines/forward_rendering/forward_rendering.vs")
-        program.compile("../glsl/Pipelines/forward_rendering/forward_rendering.gs")
-        program.compile("../glsl/Pipelines/SSAO/draw_to_ssao_gbuffer.fs")
+        program.compile(os.path.dirname(os.path.abspath(__file__)) + "/../glsl/Pipelines/forward_rendering/forward_rendering.vs")
+        program.compile(os.path.dirname(os.path.abspath(__file__)) + "/../glsl/Pipelines/forward_rendering/forward_rendering.gs")
+        program.compile(os.path.dirname(os.path.abspath(__file__)) + "/../glsl/Pipelines/SSAO/draw_to_ssao_gbuffer.fs")
         self.programs["draw_to_ssao_gbuffer"] = program
         return program
     

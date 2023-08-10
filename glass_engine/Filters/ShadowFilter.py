@@ -5,12 +5,12 @@ from glass import FBO, ShaderProgram, sampler2D, GLConfig
 from glass.utils import checktype
 
 from OpenGL import GL
-import glm
+import os
 
 def _init_ShadowFilter(cls):
     cls.program = ShaderProgram()
     cls.program.compile(Frame.draw_frame_vs)
-    cls.program.compile("../glsl/Filters/shadow_filter.fs")
+    cls.program.compile(os.path.dirname(os.path.abspath(__file__)) + "/../glsl/Filters/shadow_filter.fs")
     return cls
 
 @_init_ShadowFilter

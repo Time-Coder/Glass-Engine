@@ -2,7 +2,7 @@ import copy
 import numpy as np
 
 from .utils import capacity_of
-from .helper import nitems, sizeof
+from .helper import nitems
 from .GLConfig import GLConfig
 from .GLInfo import GLInfo
 

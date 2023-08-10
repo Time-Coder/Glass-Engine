@@ -5,6 +5,7 @@ from glass import ShaderProgram, FBO, sampler2D, sampler2DArray, samplerCube, GL
 
 import numpy as np
 from OpenGL import GL
+import os
 
 class KernelFilter(Filter):
 
@@ -48,13 +49,13 @@ class KernelFilter(Filter):
 
         self.program = ShaderProgram()
         self.program.compile(Frame.draw_frame_vs)
-        self.program.compile("../glsl/Filters/kernel_filter.fs")
+        self.program.compile(os.path.dirname(os.path.abspath(__file__)) + "/../glsl/Filters/kernel_filter.fs")
         self.program["Kernel"].bind(self._kernel)
 
         self.cube_program = ShaderProgram()
         self.cube_program.compile(Frame.draw_frame_vs)
         self.cube_program.compile(Frame.draw_frame_array_gs(6))
-        self.cube_program.compile("../glsl/Filters/kernel_cube_filter.fs")
+        self.cube_program.compile(os.path.dirname(os.path.abspath(__file__)) + "/../glsl/Filters/kernel_cube_filter.fs")
         self.cube_program["Kernel"].bind(self._kernel)
 
         self.fbo = FBO()
@@ -115,7 +116,7 @@ class KernelFilter(Filter):
         program = ShaderProgram()
         program.compile(Frame.draw_frame_vs)
         program.compile(Frame.draw_frame_array_gs(layers))
-        program.compile("../glsl/Filters/kernel_array_filter.fs")
+        program.compile(os.path.dirname(os.path.abspath(__file__)) + "/../glsl/Filters/kernel_array_filter.fs")
         program["Kernel"].bind(self._kernel)
 
         self.__array_programs[layers] = program

@@ -1,7 +1,6 @@
 import glm
 import math
 import uuid
-from functools import wraps
 
 from glass.utils import checktype
 from glass.DictList import DictList

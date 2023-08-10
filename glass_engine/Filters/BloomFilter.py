@@ -6,6 +6,7 @@ from glass import FBO, sampler2D, ShaderProgram, GLConfig
 from glass.utils import checktype
 
 from OpenGL import GL
+import os
 
 class BloomFilter(Filter):
 
@@ -23,17 +24,17 @@ class BloomFilter(Filter):
 
         self.down_program = ShaderProgram()
         self.down_program.compile(Frame.draw_frame_vs)
-        self.down_program.compile("../glsl/Filters/bloom_downsampling.fs")
+        self.down_program.compile(os.path.dirname(os.path.abspath(__file__)) + "/../glsl/Filters/bloom_downsampling.fs")
 
         self.up_program = ShaderProgram()
         self.up_program.compile(Frame.draw_frame_vs)
-        self.up_program.compile("../glsl/Filters/bloom_upsampling.fs")
+        self.up_program.compile(os.path.dirname(os.path.abspath(__file__)) + "/../glsl/Filters/bloom_upsampling.fs")
 
         self.mix_fbo = FBO()
         self.mix_fbo.attach(0, sampler2D)
         self.mix_program = ShaderProgram()
         self.mix_program.compile(Frame.draw_frame_vs)
-        self.mix_program.compile("../glsl/Filters/bloom_mix.fs")
+        self.mix_program.compile(os.path.dirname(os.path.abspath(__file__)) + "/../glsl/Filters/bloom_mix.fs")
 
     def __get_bloom_image(self, screen_image):
         self.__update_fbo_list(screen_image.width, screen_image.height)

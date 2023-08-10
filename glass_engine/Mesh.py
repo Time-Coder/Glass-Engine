@@ -1,14 +1,12 @@
 from .Entity import Entity
 from .Material import Material
-from .algorithm import generate_auto_TBN, generate_sharp_TBN, generate_smooth_TBN, bounding_box
-from .Camera import Camera
+from .algorithm import generate_auto_TBN, generate_sharp_TBN, generate_smooth_TBN
 
 from glass import ShaderProgram, Instances, Vertices, Indices, GLInfo, RenderHint
-from glass.utils import checktype, vec4_to_quat
+from glass.utils import checktype
 from glass.AttrList import AttrList
 
 import glm
-import math
 from functools import wraps
 from OpenGL import GL
 import inspect
@@ -29,7 +27,7 @@ class Mesh(Entity):
 
     @checktype
     def __init__(self, element_type:GLInfo.element_types=GL.GL_TRIANGLES,
-                   color:(glm.vec3,glm.vec4)=glm.vec4(0.5,0.5,0.5,1), back_color:(glm.vec3,glm.vec4)=None,
+                 color:(glm.vec3,glm.vec4)=glm.vec4(0.396, 0.74151, 0.69102, 1), back_color:(glm.vec3,glm.vec4)=None,
                  name:str="", block:bool=True, shared:bool=True,
                  auto_build:bool=True, surf_type:SurfType=None):
         Entity.__init__(self, name)
@@ -716,10 +714,6 @@ class Mesh(Entity):
         if Mesh.__mesh_vars is None:
             temp_mesh = Mesh()
             Mesh.__mesh_vars = set(temp_mesh.__dict__.keys())
-            if "_color" in Mesh.__mesh_vars:
-                Mesh.__mesh_vars.remove("_color")
-            if "_back_color" in Mesh.__mesh_vars:
-                Mesh.__mesh_vars.remove("_back_color")
 
         self_vars = set(self.__dict__.keys())
         new_vars = sorted(list(self_vars - Mesh.__mesh_vars))

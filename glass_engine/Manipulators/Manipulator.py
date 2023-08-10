@@ -14,7 +14,7 @@ class Manipulator:
         else:
             return None
 
-    def on_start(self)->bool:
+    def startup(self)->bool:
         return False
 
     def on_mouse_pressed(self, button:MouseButton, screen_pos:glm.vec2, global_pos:glm.vec2)->bool:

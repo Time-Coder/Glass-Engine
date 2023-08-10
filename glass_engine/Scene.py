@@ -231,14 +231,13 @@ class Scene:
     def __remove_path_prefix(instance_map, path_str):
         if isinstance(instance_map, dict):
             should_remove_meshes = []
-            len_instances = len(instances)
             for mesh, instances in instance_map.items():
                 should_remove_keys = []
                 for key in instances.keys():
                     if key.starts_with(path_str):
                         should_remove_keys.append(key)
                 
-                if len(should_remove_keys) == len_instances:
+                if len(should_remove_keys) == len(instances):
                     should_remove_meshes.append(mesh)
                 else:
                     for key in should_remove_keys:

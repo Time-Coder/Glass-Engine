@@ -7,8 +7,8 @@ import math
 
 class TrefoilKnot(Mesh):
 
-    def __init__(self, tube_radius:float=0.5, knot_radius:float=1,
-                 color:(glm.vec3,glm.vec4)=glm.vec4(0.5,0.5,0.5,1), back_color:(glm.vec3,glm.vec4)=None,
+    def __init__(self, tube_radius:float=0.2, knot_radius:float=1,
+                 color:(glm.vec3,glm.vec4)=glm.vec4(0.396, 0.74151, 0.69102, 1), back_color:(glm.vec3,glm.vec4)=None,
                  vertical:bool=False, normalize_tex_coord=False,
                  n_lon_divide:int=200, start_lon:float=0, span_lon:float=360,
                  n_lat_divide:int=36, start_lat:float=0, span_lat:float=360,
@@ -34,7 +34,7 @@ class TrefoilKnot(Mesh):
         vertices = self.vertices
         indices = self.indices
         r = self.__tube_radius
-        R = self.__knot_radius
+        R = self.__knot_radius/3
         vertical = self.__vertical
         normalize_tex_coord = self.__normalize_tex_coord
         n_lon_divide = self.__n_lon_divide
@@ -60,7 +60,7 @@ class TrefoilKnot(Mesh):
 
             x0 = sin_theta + 2*sin_2theta
             y0 = cos_theta - 2*cos_2theta
-            z0 = -math.sin(3*theta)
+            z0 = -sin_3theta
             normalized_center = glm.vec3(x0, y0, z0)
 
             if i > 0:

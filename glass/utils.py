@@ -274,6 +274,12 @@ def modify_time(file_name):
     
     return os.path.getmtime(file_name)
 
+def relative_path(file_name):
+    try:
+        return os.path.relpath(file_name).replace("\\", "/")
+    except:
+        return os.path.abspath(file_name).replace("\\", "/")
+
 def save_var(var, file_path):
     with open(file_path, 'wb') as file:
         pickle.dump(var, file)

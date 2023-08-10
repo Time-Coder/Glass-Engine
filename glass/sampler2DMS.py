@@ -4,7 +4,7 @@ import OpenGL.GL.ARB.bindless_texture as bt
 from .FBOAttachment import FBOAttachment
 from .GLInfo import GLInfo
 from .utils import checktype
-from .helper import *
+from .helper import get_dtype
 
 class sampler2DMS(FBOAttachment):
 

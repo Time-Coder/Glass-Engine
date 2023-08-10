@@ -5,15 +5,14 @@ import numpy as np
 import glm
 from OpenGL import GL
 import OpenGL.GL.ARB.bindless_texture as bt
-from functools import wraps
 import time
 from datetime import datetime
 
 from .FBOAttachment import FBOAttachment
 from .GLInfo import GLInfo
 from .utils import checktype, cat
+from .helper import get_external_format, width_adapt, get_dtype, get_channels
 from .ImageLoader import ImageLoader
-from .helper import *
 from .Indices import Indices
 from .Vertices import Vertices, Vertex
 from .GLConfig import GLConfig
@@ -518,7 +517,7 @@ class sampler2D(FBOAttachment):
             out_file.close()
 
         program = ShaderProgram()
-        program.compile("glsl/draw_frame.vs")
+        program.compile(os.path.dirname(os.path.abspath(__file__)) + "/glsl/draw_frame.vs")
         program.compile(out_file_name, GL.GL_FRAGMENT_SHADER)
 
         fbo = FBO(self.width, self.height)

@@ -1,14 +1,11 @@
 import copy
-import warnings
 from OpenGL import GL
 import glm
 import numpy as np
 
 from .GLConfig import GLConfig
 from .VAO import VAO
-from .VBO import VBO
 from .utils import checktype
-from .helper import sizeof
 from .AttrList import AttrList
 from .GLInfo import GLInfo
 from .SameTypeList import SameTypeList

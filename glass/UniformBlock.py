@@ -2,6 +2,7 @@ from .Block import Block
 from .UBO import UBO
 
 from .utils import checktype
+from functools import wraps
 
 class UniformBlock(Block):
 	

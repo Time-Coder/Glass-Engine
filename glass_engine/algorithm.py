@@ -24,32 +24,32 @@ def fzero(f, interval):
     return (lower + upper)/2
 
 def angle_of(v1, v2):
-	len_v1 = glm.length(v1)
-	len_v2 = glm.length(v2)
-	if len_v1 < 1E-6 or len_v2 < 1E-6:
-		return 0
+    len_v1 = glm.length(v1)
+    len_v2 = glm.length(v2)
+    if len_v1 < 1E-6 or len_v2 < 1E-6:
+        return 0
 
-	cos_theta = glm.dot(v1, v2) / (len_v1 * len_v2)
-	if cos_theta < -1:
-		cos_theta = -1
-	if cos_theta > 1:
-		cos_theta = 1
+    cos_theta = glm.dot(v1, v2) / (len_v1 * len_v2)
+    if cos_theta < -1:
+        cos_theta = -1
+    if cos_theta > 1:
+        cos_theta = 1
 
-	return math.acos(cos_theta)
+    return math.acos(cos_theta)
 
 def cos_angle_of(v1, v2):
-	len_v1 = glm.length(v1)
-	len_v2 = glm.length(v2)
-	if len_v1 < 1E-6 or len_v2 < 1E-6:
-		return 0
+    len_v1 = glm.length(v1)
+    len_v2 = glm.length(v2)
+    if len_v1 < 1E-6 or len_v2 < 1E-6:
+        return 0
 
-	cos_theta = glm.dot(v1, v2) / (len_v1 * len_v2)
-	if cos_theta < -1:
-		cos_theta = -1
-	if cos_theta > 1:
-		cos_theta = 1
-		
-	return cos_theta
+    cos_theta = glm.dot(v1, v2) / (len_v1 * len_v2)
+    if cos_theta < -1:
+        cos_theta = -1
+    if cos_theta > 1:
+        cos_theta = 1
+        
+    return cos_theta
 
 def approx_pos(pos, precision:int=7):
     return glm.vec3(round(pos.x, precision), round(pos.y, precision), round(pos.z, precision))

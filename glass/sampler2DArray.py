@@ -3,13 +3,12 @@ import numpy as np
 import glm
 from OpenGL import GL
 import OpenGL.GL.ARB.bindless_texture as bt
-from functools import wraps
 
 from .FBOAttachment import FBOAttachment
 from .GLInfo import GLInfo
 from .utils import checktype
 from .ImageLoader import ImageLoader
-from .helper import *
+from .helper import get_external_format, width_adapt, get_dtype, get_channels
 
 class sampler2DArray(FBOAttachment):
 

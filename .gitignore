@@ -4,3 +4,8 @@ workspace
 temp_shaders
 *.txt
 *.png
+*.c
+*.pyd/*
+build
+dist
+*.egg-info

@@ -2,7 +2,6 @@ import numpy as np
 from OpenGL import GL
 
 from .ObjectSet import ObjectSet
-from .GLConfig import GLConfig
 
 class _MetaGLObject(type):
 
