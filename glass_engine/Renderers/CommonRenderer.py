@@ -20,9 +20,6 @@ class CommonRenderer(Renderer):
     def __init__(self):
         Renderer.__init__(self)
 
-        self.camera = None
-        self.scene = None
-
         self._enable_SSAO = False
         self._SSAO_map = None
         self._SSAO_samples = 64
@@ -196,11 +193,9 @@ class CommonRenderer(Renderer):
     def SSAO_power(self, power:float):
         self._SSAO_power = power
 
-    def startup(self, camera, scene):
-        self.camera = camera
-        self.scene = scene
-        self.filters["DOF"].camera = camera
-        self.filters["HDR"].camera = camera
+    def startup(self):
+        self.filters["DOF"].camera = self.camera
+        self.filters["HDR"].camera = self.camera
 
         return False
     

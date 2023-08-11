@@ -16,7 +16,7 @@ class SameTypeList:
 
         def __next__(self):
             if self.__current_index >= self.__len_list:
-                raise StopIteration
+                raise StopIteration()
             
             value = self.__list[self.__current_index]
             self.__current_index += 1
@@ -35,7 +35,7 @@ class SameTypeList:
 
         def __next__(self):
             if self.__current_index >= self.__len_list:
-                raise StopIteration
+                raise StopIteration()
             
             value = self.__list.const_get(self.__current_index)
             self.__current_index += 1

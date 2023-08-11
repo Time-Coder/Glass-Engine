@@ -2,7 +2,7 @@ from .Filters import Filter
 from ..Frame import Frame
 
 from glass import FBO, ShaderProgram, sampler2D, GLConfig
-from glass.utils import checktype
+from glass.utils import checktype, id_to_var
 from glass.ShaderStorageBlock import ShaderStorageBlock
 
 from OpenGL import GL
@@ -28,8 +28,9 @@ class DOFFilter(Filter):
 
     def __init__(self, camera=None, view_pos_map:sampler2D=None):
         Filter.__init__(self)
+        
+        self._camera_id = id(camera)
 
-        self.__camera = camera
         self.__view_pos_map = view_pos_map
         self._last_not_should_update_time = 0
 
@@ -45,6 +46,14 @@ class DOFFilter(Filter):
         self.program.compile(Frame.draw_frame_vs)
         self.program.compile(os.path.dirname(os.path.abspath(__file__)) + "/../glsl/Filters/dof_filter.fs")
         self.program["CurrentFocus"].bind(self.current_focus)
+
+    @property
+    def camera(self):        
+        return id_to_var(self._camera_id)
+    
+    @camera.setter
+    def camera(self, camera):
+        self._camera_id = id(camera)
 
     def __call__(self, screen_image:sampler2D)->sampler2D:
         self.horizontal_fbo.resize(screen_image.width, screen_image.height)
@@ -83,17 +92,6 @@ class DOFFilter(Filter):
             self.program["screen_image"] = self.horizontal_fbo.color_attachment(0)
             self.program["horizontal"] = False
             self.program.draw_triangles(Frame.vertices, Frame.indices)
-
-    @property
-    def camera(self):
-        return self.__camera
-    
-    @camera.setter
-    def camera(self, camera):
-        if self.__camera is camera:
-            return
-        
-        self.__camera = camera
 
     @property
     def view_pos_map(self):

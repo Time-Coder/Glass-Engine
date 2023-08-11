@@ -1,4 +1,5 @@
 from ._Manipulator import _MouseButton, _Key
+from glass.utils import id_to_var
 
 import glm
 
@@ -7,12 +8,12 @@ class Manipulator:
     MouseButton = _MouseButton
     Key = _Key
 
+    def __init__(self):
+        self._camera_id = id(None)
+
     @property
-    def camera(self):
-        if hasattr(self, "_camera"):
-            return self._camera
-        else:
-            return None
+    def camera(self):        
+        return id_to_var(self._camera_id)
 
     def startup(self)->bool:
         return False

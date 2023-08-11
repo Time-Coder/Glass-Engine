@@ -1,16 +1,16 @@
 from OpenGL import GL
+from .utils import id_to_var
 
 class Block:
 
 	class Variable:
 		def __init__(self, block, name):
-			self._block = block
-			self._program = self._block._program
+			self._block_id = id(block)
 			self._name = name
 			self._bound_var = None
 			self._binding_point = 0
 
-			atom_info_list = self._block._block_map[self._name]["atoms"]
+			atom_info_list = block._block_map[self._name]["atoms"]
 			if not atom_info_list:
 				return
 
@@ -23,6 +23,10 @@ class Block:
 				structure_key_list.append("(" + atom_info["type"] + ", " + atom_name + ")")
 			self._structure_key = ", ".join(structure_key_list)
 
+		@property
+		def block(self):
+			return id_to_var(self._block_id)
+
 		def bind(self, var):
 			if var is self._bound_var:
 				return
@@ -33,7 +37,7 @@ class Block:
 
 			self.unbind()
 
-			cls = self._block.__class__
+			cls = self.block.__class__
 			id_var = id(var)
 			if id_var not in cls._bound_vars:
 				cls._bound_vars[id_var] = {}
@@ -90,11 +94,12 @@ class Block:
 			if self._binding_point == binding_point:
 				return
 
-			cls_name = self._block.__class__.__name__
+			block = self.block
+			cls_name = block.__class__.__name__
 			if cls_name == "UniformBlock":
-				GL.glUniformBlockBinding(self._program._id, self._block._blocks_info[self._name]["index"], binding_point)
+				GL.glUniformBlockBinding(block.program.id, block._blocks_info[self._name]["index"], binding_point)
 			elif cls_name == "ShaderStorageBlock":
-				GL.glShaderStorageBlockBinding(self._program._id, self._block._blocks_info[self._name]["index"], binding_point)
+				GL.glShaderStorageBlockBinding(block.program.id, block._blocks_info[self._name]["index"], binding_point)
 
 			self._binding_point = binding_point
 
@@ -102,7 +107,7 @@ class Block:
 			if self._bound_var is None:
 				return
 
-			cls = self._block.__class__
+			cls = self.block.__class__
 			id_var = id(self._bound_var)
 			if id_var not in cls._bound_vars:
 				return
@@ -122,9 +127,13 @@ class Block:
 			self.bind_to_point(binding_point)
 
 	def __init__(self, program):
-		self._program = program
+		self._program_id = id(program)
 		self._block_var_map = {}
 		self._auto_upload = True
+
+	@property
+	def program(self):
+		return id_to_var(self._program_id)
 
 	@property
 	def auto_upload(self):
@@ -165,13 +174,13 @@ class Block:
 	@property
 	def _block_map(self):
 		if self.__class__.__name__ == "UniformBlock":
-			return self._program._uniform_block_map
+			return self.program._uniform_block_map
 		elif self.__class__.__name__ == "ShaderStorageBlock":
-			return self._program._shader_storage_block_map
+			return self.program._shader_storage_block_map
 
 	@property
 	def _blocks_info(self):
 		if self.__class__.__name__ == "UniformBlock":
-			return self._program._uniform_blocks_info
+			return self.program._uniform_blocks_info
 		elif self.__class__.__name__ == "ShaderStorageBlock":
-			return self._program._shader_storage_blocks_info
+			return self.program._shader_storage_blocks_info
