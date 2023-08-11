@@ -1,14 +1,12 @@
 from .Manipulators.Manipulator import Manipulator
-from .Manipulators.SceneRoamManipulator import SceneRoamManipulator
 from .Renderers.Renderer import Renderer
-from .Renderers.ForwardRenderer import ForwardRenderer
 from .Frame import Frame
 
 from glass import GLConfig, FBO, RBO, sampler2DMS, sampler2D, RenderHint, SSBO, UBO
-from glass.utils import checktype, extname
+from glass.utils import checktype, extname, id_to_var
 
 from PyQt6.QtOpenGLWidgets import QOpenGLWidget
-from PyQt6.QtGui import QMouseEvent, QKeyEvent, QCursor, QWheelEvent, QSurfaceFormat
+from PyQt6.QtGui import QMouseEvent, QKeyEvent, QCursor, QWheelEvent, QSurfaceFormat, QPainter, QPen, QColor
 from PyQt6.QtCore import Qt, QPointF, QPoint, QTimerEvent, pyqtSignal, QSize
 from PyQt6.QtWidgets import QApplication
 
@@ -161,6 +159,7 @@ class Screen(QOpenGLWidget):
 
         self.setFocusPolicy(Qt.FocusPolicy.StrongFocus)
         self._samples = 1
+        self._samples_set_by_user = False
     
         self._pressed_keys = set()
         self._last_frame_time = 0
@@ -176,16 +175,20 @@ class Screen(QOpenGLWidget):
         self._screen_image = None
         self._video_writers = []
         
-        self.camera = camera
+        self._camera_id = id(camera)
+
         self._manipulator = None
-        self.manipulator = SceneRoamManipulator()
-        self._renderer = ForwardRenderer()
+        self._renderer = None
         
         self.__render_hint = RenderHint()
         self._listen_cursor_timer = self.startTimer(10)
 
     def sizeHint(self):
         return QSize(800, 600)
+
+    @property
+    def camera(self):
+        return id_to_var(self._camera_id)
 
     @property
     def samples(self):
@@ -198,6 +201,7 @@ class Screen(QOpenGLWidget):
         self.setFormat(surface_format)
         if not self._is_gl_init:
             self._samples = samples
+            self._samples_set_by_user = True
 
     @property
     def renderer(self):
@@ -208,12 +212,41 @@ class Screen(QOpenGLWidget):
         if self._renderer is renderer:
             return
         
-        should_update = False
-        self._renderer = renderer
-        if self._is_gl_init and renderer is not None:
-            self.makeCurrent()
-            should_update = self._renderer.startup(self.camera, self.camera.scene)
+        if renderer is None:
+            self._renderer._camera_id = id(None)
+            self._renderer = None
+            return
 
+        if renderer._camera_id != id(None):
+            renderer.camera.screen.renderer = None
+
+        self._renderer = renderer
+        renderer._camera_id = self._camera_id
+        should_update = renderer.startup()
+        if should_update:
+            self._screen_image = None
+            self.update()
+
+    @property
+    def manipulator(self):
+        return self._manipulator
+    
+    @manipulator.setter
+    def manipulator(self, manipulator:Manipulator):
+        if self._manipulator is manipulator:
+            return
+        
+        if manipulator is None:
+            self._manipulator._camera_id = id(None)
+            self._manipulator = None
+            return
+
+        if manipulator._camera_id != id(None):
+            manipulator.camera.screen.manipulator = None
+
+        self._manipulator = manipulator
+        manipulator._camera_id = self._camera_id
+        should_update = manipulator.startup()
         if should_update:
             self._screen_image = None
             self.update()
@@ -235,9 +268,6 @@ class Screen(QOpenGLWidget):
 
         if self.camera.scene is None:
             raise RuntimeError(f"{self.camera} is not in any scene, please add it to one scene before show it's screen")
-        
-        if not self._is_gl_init and self.renderer is not None:
-            self.renderer.startup(self.camera, self.camera.scene)
 
         self._is_gl_init = True
 
@@ -256,7 +286,7 @@ class Screen(QOpenGLWidget):
         if self._screen_image is None or should_update_scene:
             with self._before_filter_fbo:
                 with self.renderer.render_hint:
-                    should_update_scene = self.renderer.render(self.camera, self.camera.scene) or should_update_scene
+                    should_update_scene = self.renderer.render() or should_update_scene
 
             self._screen_image = self._before_filter_fbo.resolved.color_attachment(0)
             self.renderer.filters.screen_update_time = time.time()
@@ -281,7 +311,7 @@ class Screen(QOpenGLWidget):
             should_update_filter = self.renderer.filters.draw(self._screen_image)
         else:
             with self.renderer.render_hint:
-                should_update_scene = self.renderer.render(self.camera, self.camera.scene) or should_update_scene
+                should_update_scene = self.renderer.render() or should_update_scene
 
         self.__calc_fps()
         self.frame_ended.emit()
@@ -493,30 +523,6 @@ class Screen(QOpenGLWidget):
     def smooth_fps(self):
         return self._smooth_fps
 
-    @property
-    def manipulator(self):
-        return self._manipulator
-    
-    @manipulator.setter
-    def manipulator(self, manipulator:Manipulator):
-        if self._manipulator is manipulator:
-            return
-        
-        if manipulator is None:
-            self._manipulator._camera = None
-            self._manipulator = None
-            return
-
-        if manipulator.camera is not None:
-            manipulator.camera.screen.manipulator = None
-
-        self._manipulator = manipulator
-        manipulator._camera = self.camera
-        should_update = manipulator.startup()
-        if should_update:
-            self._screen_image = None
-            self.update()
-
     def timerEvent(self, timer_event: QTimerEvent)->None:
         if timer_event.timerId() == self._listen_cursor_timer:
             cursor_global_pos = QCursor.pos()
@@ -555,7 +561,7 @@ class Screen(QOpenGLWidget):
         self.makeCurrent()
         with self._before_filter_fbo:
             with self.renderer.render_hint:
-                self.renderer.render(self.camera, self.camera.scene)
+                self.renderer.render()
 
         image = None
         if self.renderer.filters.has_valid:

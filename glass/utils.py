@@ -489,7 +489,7 @@ def split_var_str(var_str):
             return "", ""
 
 def id_to_var(id_var):
-    return ctypes.cast(int(id_var), ctypes.py_object).value
+    return ctypes.cast(id_var, ctypes.py_object).value
 
 def LP_LP_c_char(str_list):
     lp_c_char = ctypes.POINTER(ctypes.c_char)

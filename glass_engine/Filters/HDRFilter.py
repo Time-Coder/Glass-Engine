@@ -1,6 +1,7 @@
 from .Filters import Filter
 from ..Frame import Frame
 from glass import sampler2D, ShaderProgram, FBO, ShaderStorageBlock, GLConfig
+from glass.utils import id_to_var
 
 from OpenGL import GL
 import time
@@ -27,7 +28,7 @@ class HDRFilter(Filter):
 
         self.current_luma = HDRFilter.CurrentLuma()
 
-        self.camera = None
+        self._camera_id = id(None)
 
         self.program = ShaderProgram()
         self.program.compile(Frame.draw_frame_vs)
@@ -36,6 +37,14 @@ class HDRFilter(Filter):
 
         self.fbo = FBO()
         self.fbo.attach(0, sampler2D)
+
+    @property
+    def camera(self):        
+        return id_to_var(self._camera_id)
+    
+    @camera.setter
+    def camera(self, camera):
+        self._camera_id = id(camera)
 
     def __call__(self, screen_image:sampler2D)->sampler2D:
         screen_image.filter_mipmap = GL.GL_LINEAR

@@ -4,7 +4,7 @@ import glm
 import copy
 from enum import Enum
 
-from .utils import checktype, get_subscript_chain, uint64_to_uvec2
+from .utils import checktype, get_subscript_chain, uint64_to_uvec2, id_to_var
 from .sampler2D import sampler2D
 from .image2D import image2D
 from .FBOAttachment import FBOAttachment
@@ -41,10 +41,14 @@ class Uniform:
                       "bind", "unbind", "location"]
 
         def __init__(self, uniform, name):
-            self._uniform = uniform
+            self._uniform_id = id(uniform)
             self._name = name
             self._bound_var = None
             self._bound_var_id = None
+
+        @property
+        def uniform(self):
+            return id_to_var(self._uniform_id)
 
         def __del__(self):
             self.unbind()
@@ -57,7 +61,7 @@ class Uniform:
 
         @property
         def location(self):
-            program = self._uniform._program
+            program = self.uniform.program
             if "location" not in program._uniform_map[self._name]:
                 program.use()
                 location = GL.glGetUniformLocation(program._id, self._name)
@@ -84,7 +88,7 @@ class Uniform:
                 Uniform._bound_vars[id_var] = {}
 
             len_name = len(self._name)
-            for atom in self._uniform._program._uniform_map[self._name]["atoms"]:
+            for atom in self._uniform.program._uniform_map[self._name]["atoms"]:
                 atom_name = atom["name"]
                 atom_suffix = atom["name"][len_name:]
                 subscript_chain = get_subscript_chain(atom_suffix)
@@ -129,7 +133,7 @@ class Uniform:
             elif isinstance(name, int):
                 full_name += "[" + str(name) + "]"
 
-            return (full_name in self._uniform._program._uniform_map)
+            return (full_name in self.uniform.program._uniform_map)
 
         def __getitem__(self, name:(str, int)):
             full_name = self._name
@@ -138,16 +142,18 @@ class Uniform:
             elif isinstance(name, int):
                 full_name += "[" + str(name) + "]"
 
-            if full_name not in self._uniform._program._uniform_map:
+            uniform = self.uniform
+            program = uniform.program
+            if full_name not in program._uniform_map:
                 error_message = "uniform variable '" + full_name + "' is not defined in following files:\n"
-                all_files = self._uniform._program._get_compiled_files()
+                all_files = program._get_compiled_files()
                 error_message += "\n".join(all_files)
                 raise NameError(error_message)
             
-            if full_name not in self._uniform._uniform_var_map:
-                self._uniform._uniform_var_map[full_name] = Uniform.Variable(self._uniform, full_name)
+            if full_name not in uniform._uniform_var_map:
+                uniform._uniform_var_map[full_name] = Uniform.Variable(self._uniform, full_name)
 
-            return self._uniform._uniform_var_map[full_name]
+            return uniform._uniform_var_map[full_name]
 
         @checktype
         def __setitem__(self, name:(str, int), value):
@@ -157,13 +163,15 @@ class Uniform:
             elif isinstance(name, int):
                 full_name += "[" + str(name) + "]"
 
-            if full_name not in self._uniform._program._uniform_map:
+            uniform = self.uniform
+            program = uniform.program
+            if full_name not in program._uniform_map:
                 error_message = "uniform variable '" + full_name + "' is not defined in following files:\n"
-                all_files = self._uniform._program._get_compiled_files()
+                all_files = program._get_compiled_files()
                 error_message += "\n".join(all_files)
                 raise NameError(error_message)
 
-            self._uniform[full_name] = value
+            uniform[full_name] = value
 
         def __getattr__(self, name:str):
             if name in Uniform.Variable._all_attrs:
@@ -178,17 +186,22 @@ class Uniform:
             self.__setitem__(name, value)
 
     def __init__(self, shader_program):
-        self._program = shader_program
+        self._program_id = id(shader_program)
         self._should_update_atoms = {}
         self._uniform_var_map = {}
         self._atom_value_map = {}
         self._texture_value_map = {}
         self._current_atom_name = ""
 
+    @property
+    def program(self):
+        return id_to_var(self._program_id)
+
     def __getitem__(self, name:str):
-        if name not in self._program._uniform_map:
+        program = self.program
+        if name not in program._uniform_map:
             error_message = "uniform variable '" + name + "' is not defined in following files:\n"
-            all_files = self._program._get_compiled_files()
+            all_files = program._get_compiled_files()
             error_message += "\n".join(all_files)
             raise NameError(error_message)
 
@@ -198,20 +211,21 @@ class Uniform:
         return self._uniform_var_map[name]
 
     def __setitem__(self, name:str, value):
-        if GLConfig.debug and name not in self._program._uniform_map:
+        program = self.program
+        if GLConfig.debug and name not in program._uniform_map:
             error_message = "uniform variable '" + name + "' is not defined in following files:\n"
-            all_files = self._program._get_compiled_files()
+            all_files = program._get_compiled_files()
             error_message += "\n".join(all_files)
             raise NameError(error_message)
 
-        for atom in self._program._uniform_map[name]["atoms"]:
+        for atom in program._uniform_map[name]["atoms"]:
             atom_value = subscript(value, atom["subscript_chain"])
             self._set_atom(atom["name"], atom_value)
             # self._set_atom(atom["name"], eval("value" + atom["name"][len_name:]))
 
     @checktype
     def __contains__(self, name:str):
-        return (name in self._program._uniform_map)
+        return (name in self.program._uniform_map)
 
     @staticmethod
     def _copy(value):
@@ -228,14 +242,15 @@ class Uniform:
             return
         
         if GL.glGetUniformLocation:
-            self._program.use()
+            program = self.program
+            program.use()
 
-            uniform_info = self._program._uniform_map[name]
+            uniform_info = program._uniform_map[name]
             uniform_type = uniform_info["type"]
             if uniform_type != "atomic_uint":
                 location = -1
                 if "location" not in uniform_info:
-                    location = GL.glGetUniformLocation(self._program._id, name)
+                    location = GL.glGetUniformLocation(program._id, name)
                     uniform_info["location"] = location
                 else:
                     location = uniform_info["location"]
@@ -475,8 +490,9 @@ class Uniform:
         if value is not None:
             value.bind()
 
-        self._program._sampler_map[self._current_atom_name]["location"] = location
-        self._program._sampler_map[self._current_atom_name]["sampler"] = value
+        program = self.program
+        program._sampler_map[self._current_atom_name]["location"] = location
+        program._sampler_map[self._current_atom_name]["sampler"] = value
         
     @checktype
     def _set_isampler2D(self, location:int, value:(isampler2D,str)):
@@ -491,8 +507,9 @@ class Uniform:
         if value is not None:
             value.bind()
 
-        self._program._sampler_map[self._current_atom_name]["location"] = location
-        self._program._sampler_map[self._current_atom_name]["sampler"] = value
+        program = self.program
+        program._sampler_map[self._current_atom_name]["location"] = location
+        program._sampler_map[self._current_atom_name]["sampler"] = value
         
     @checktype
     def _set_isampler2DMS(self, location:int, value:isampler2DMS):
@@ -507,16 +524,18 @@ class Uniform:
         if value is not None:
             value.bind()
 
-        self._program._sampler_map[self._current_atom_name]["location"] = location
-        self._program._sampler_map[self._current_atom_name]["sampler"] = value
+        program = self.program
+        program._sampler_map[self._current_atom_name]["location"] = location
+        program._sampler_map[self._current_atom_name]["sampler"] = value
 
     def __set_general_image2D(self, location:int, value:(image2D,iimage2D,uimage2D,str), image_type:[image2D,iimage2D,uimage2D]=image2D):
         if isinstance(value, str):
             value = image_type.load(value, internal_format=self._current_internal_format)
 
         access = GL.GL_READ_WRITE
-        memory_qualifiers = self._program._uniform_map[self._current_atom_name]["memory_qualifiers"]
-        internal_format = self._program._uniform_map[self._current_atom_name]["internal_format"]
+        program = self.program
+        memory_qualifiers = program._uniform_map[self._current_atom_name]["memory_qualifiers"]
+        internal_format = program._uniform_map[self._current_atom_name]["internal_format"]
         if value is not None:
             if GLConfig.debug and internal_format != value.internal_format:
                 raise ValueError(f"uniform image2D {self._current_atom_name} need format {internal_format}, {value.internal_format} were given")
@@ -529,9 +548,9 @@ class Uniform:
             
             value.bind()
             
-        self._program._sampler_map[self._current_atom_name]["location"] = location
-        self._program._sampler_map[self._current_atom_name]["access"] = access
-        self._program._sampler_map[self._current_atom_name]["sampler"] = value
+        program._sampler_map[self._current_atom_name]["location"] = location
+        program._sampler_map[self._current_atom_name]["access"] = access
+        program._sampler_map[self._current_atom_name]["sampler"] = value
         
     @checktype
     def _set_iimage2D(self, location:int, value:(iimage2D,str)):
@@ -553,5 +572,6 @@ class Uniform:
         if value is not None:
             value.bind()
 
-        self._program._sampler_map[self._current_atom_name]["sampler"] = value
-        self._program._sampler_map[self._current_atom_name]["location"] = location
+        program = self.program
+        program._sampler_map[self._current_atom_name]["sampler"] = value
+        program._sampler_map[self._current_atom_name]["location"] = location

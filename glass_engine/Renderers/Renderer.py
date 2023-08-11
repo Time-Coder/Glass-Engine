@@ -1,7 +1,7 @@
 from abc import ABC, abstractmethod
 
 from glass import RenderHint
-from glass.utils import checktype
+from glass.utils import checktype, id_to_var
 
 from ..Filters import Filters
 
@@ -11,9 +11,18 @@ class Renderer(ABC):
         self._render_hint = RenderHint()
         self._render_hint.depth_test = True
         self._filters = Filters()
+        self._camera_id = id(None)
 
     @property
-    def render_hint(self):            
+    def camera(self): 
+        return id_to_var(self._camera_id)
+
+    @property
+    def scene(self):        
+        return self.camera.scene
+
+    @property
+    def render_hint(self):
         return self._render_hint
     
     @render_hint.setter
@@ -30,10 +39,9 @@ class Renderer(ABC):
     def filters(self, filters:Filters):
         self._filters = filters
         
-    @abstractmethod
-    def startup(self, camera, scene)->bool:
+    def startup(self):
         pass
 
     @abstractmethod
-    def render(self, camera, scene)->bool:
+    def render(self)->bool:
         pass

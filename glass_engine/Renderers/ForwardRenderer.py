@@ -15,6 +15,12 @@ class ForwardRenderer(CommonRenderer):
     def __init__(self):
         CommonRenderer.__init__(self)
 
+    def startup(self):
+        CommonRenderer.startup(self)
+        screen = self.camera.screen
+        if not screen._samples_set_by_user and not screen._is_gl_init:
+            screen.samples = 4
+
     def draw_opaque(self):
         self._transparent_meshes.clear()
         with GLConfig.LocalConfig(depth_test=True, blend=False):
@@ -123,7 +129,7 @@ class ForwardRenderer(CommonRenderer):
 
                 self._SSAO_map = self._SSAO_filter(self.ssao_fbo.color_attachment(0))
     
-    def render(self, camera, scene):
+    def render(self):
         # profiler.enable()
         self._should_update = False
         self.update_dir_lights_depth()

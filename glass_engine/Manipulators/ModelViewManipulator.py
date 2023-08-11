@@ -9,6 +9,8 @@ import glm
 class ModelViewManipulator(Manipulator):
 
     def __init__(self, azimuth_deg:float=0, elevation_deg:float=30, distance:float=2):
+        Manipulator.__init__(self)
+        
         self.__is_left_pressed = False
         self.__left_press_global_posF = glm.vec2(0, 0)
         self.__left_press_azimuth_deg = 0

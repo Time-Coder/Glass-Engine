@@ -1,5 +1,7 @@
 from .SinglePathNode import SinglePathNode
 from .Screen import Screen
+from .Manipulators.SceneRoamManipulator import SceneRoamManipulator
+from .Renderers.ForwardRenderer import ForwardRenderer
 
 from glass.utils import checktype
 
@@ -33,6 +35,8 @@ class Camera(SinglePathNode):
         self.__focus_tex_coord = glm.vec2(0.5, 0.5)
         self.__focus_change_speed = 0.005 # m/s
         self.__screen = Screen(self)
+        self.__screen.manipulator = SceneRoamManipulator()
+        self.__screen.renderer = ForwardRenderer()
         self.__CSM_levels = 5
 
     @property

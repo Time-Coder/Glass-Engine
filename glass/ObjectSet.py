@@ -40,3 +40,8 @@ class ObjectSet:
     def clear(self):
         self._set.clear()
     
+    def update(self, new_set):
+        if isinstance(new_set, ObjectSet):
+            self._set.update(new_set._set)
+        else:
+            self._set.update(map(lambda x:id(x), new_set))

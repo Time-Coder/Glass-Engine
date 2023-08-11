@@ -5,7 +5,7 @@ import numpy as np
 
 from .GLConfig import GLConfig
 from .VAO import VAO
-from .utils import checktype
+from .utils import checktype, id_to_var
 from .AttrList import AttrList
 from .GLInfo import GLInfo
 from .SameTypeList import SameTypeList
@@ -36,10 +36,11 @@ class Vertex(dict):
         return self._user_attrs
 
     def _add_array_index(self, array, index):
-        if array not in self._array_index_map:
-            self._array_index_map[array] = set()
+        id_array = id(array)
+        if id_array not in self._array_index_map:
+            self._array_index_map[id_array] = set()
 
-        self._array_index_map[array].add(index)
+        self._array_index_map[id_array].add(index)
 
     def __hash__(self):
         return id(self)
@@ -65,7 +66,8 @@ class Vertex(dict):
     def __setitem__(self, name:str, value):
         dict.__setitem__(self, name, value)
 
-        for parent_array, index_set in self._array_index_map.items():
+        for id_parent_array, index_set in self._array_index_map.items():
+            parent_array = id_to_var(id_parent_array)
             if name not in parent_array._attr_list_map:
                 parent_array._attr_list_map[name] = AttrList()
 
@@ -73,7 +75,8 @@ class Vertex(dict):
                 parent_array._attr_list_map[name][index] = value
 
     def __getitem__(self, name:str):
-        for parent_array, index_set in self._array_index_map.items():
+        for id_parent_array, index_set in self._array_index_map.items():
+            parent_array = id_to_var(id_parent_array)
             if name not in parent_array._attr_list_map:
                 parent_array._attr_list_map[name] = AttrList()
                 value = dict.__getitem__(self, name)

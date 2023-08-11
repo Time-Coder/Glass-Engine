@@ -3,6 +3,7 @@ import math
 import uuid
 
 from glass.utils import checktype
+from glass.ObjectSet import ObjectSet
 from glass.DictList import DictList
 
 class SceneNode:
@@ -76,9 +77,9 @@ class SceneNode:
         self._scale = SceneNode.vec3(1, 1, 1, callback=self._set_dirty)
         self._yaw_pitch_roll = glm.vec3(0, 0, 0)
 
-        self._parents = DictList()
+        self._parents = DictList(strong_ref=False)
         self._children = DictList()
-        self._scenes = set()
+        self._scenes = ObjectSet()
         self._transform_dirty = set()
         self._children_transform_dirty = {}
         self._should_update_yaw_pitch_roll = True

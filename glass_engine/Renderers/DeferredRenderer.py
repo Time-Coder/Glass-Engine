@@ -219,7 +219,7 @@ class DeferredRenderer(CommonRenderer):
 
         self._SSAO_map = self._SSAO_filter(self.ssao_fbo.color_attachment(0))
 
-    def render(self, camera, scene):
+    def render(self):
         self._should_update = False
         self.update_dir_lights_depth()
         self.update_point_lights_depth()

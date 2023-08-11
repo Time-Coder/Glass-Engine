@@ -1,14 +1,105 @@
-class ExtendableList(list):
+from .utils import id_to_var
+
+class ExtendableList:
+
+    class iterator:
+        def __init__(self, _list):
+            self.__list = _list
+            self.__len_list = len(_list)
+            self.__current_index = 0
+
+        def __next__(self):
+            if self.__current_index >= self.__len_list:
+                raise StopIteration()
+            
+            value = self.__list[self.__current_index]
+            self.__current_index += 1
+
+            return value
+        
+        def __iter__(self):
+            self.__current_index = 0
+            return self
+
+    def __init__(self, strong_ref:bool=True):
+        self._strong_ref = strong_ref
+        self._list = []
+
     def __setitem__(self, index, value):
         len_self = len(self)
         if isinstance(index, int) and index >= len_self:
-            self.extend([None]*(index-len_self+1))
+            self._list.extend([id(None)]*(index-len_self+1))
+        
+        if self._strong_ref:
+            self._list[index] = value
+        else:
+            self._list[index] = id(value)
+
+    def __getitem__(self, index):
+        value = self._list[index]
+        if self._strong_ref:
+            return value
+        else:
+            if isinstance(index, slice):
+                return list(map(lambda x:id_to_var(x), value))
+            else:
+                return id_to_var(value)
             
-        list.__setitem__(self, index, value)
+    def __delitem__(self, index):
+        del self._list[index]
+        
+    def __contains__(self, value):
+        if self._strong_ref:
+            return value in self._list
+        else:
+            return id(value) in self._list
+        
+    def __len__(self):
+        return self._list.__len__()
+    
+    def __bool__(self):
+        return bool(self._list)
+    
+    def __iter__(self):
+        return ExtendableList.iterator(self)
+    
+    def append(self, value):
+        if self._strong_ref:
+            self._list.append(value)
+        else:
+            self._list.append(id(value))
+
+    def insert(self, index, value):
+        if self._strong_ref:
+            self._list.insert(index, value)
+        else:
+            self._list.insert(index, id(value))
+
+    def extend(self, value_list):
+        if self._strong_ref:
+            self._list.extend(value_list)
+        else:
+            self._list.extend(map(lambda x:id(x), value_list))
+
+    def remove(self, value):
+        if self._strong_ref:
+            self._list.remove(value)
+        else:
+            self._list.remove(id(value))
+
+    def pop(self, index):
+        value = self._list.pop(index)
+        if self._strong_ref:
+            return value
+        else:
+            return id(value)
+        
+    def clear(self):
+        self._list.clear()
 
 class DictList(ExtendableList):
-    def __init__(self, values:(list,dict)=None, **kwargs):
-        ExtendableList.__init__(self)
+    def __init__(self, values:(list,dict)=None, strong_ref:bool=True, **kwargs):
+        ExtendableList.__init__(self, strong_ref)
 
         self._key_index_map = {}
         self._key_list = ExtendableList()
