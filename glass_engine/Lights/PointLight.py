@@ -1,7 +1,7 @@
 from .Light import Light
 from ..algorithm import fzero
 
-from glass.utils import checktype
+from glass.utils import checktype, id_to_var
 from glass.DictList import DictList
 from glass.ShaderStorageBlock import ShaderStorageBlock
 
@@ -152,6 +152,13 @@ class PointLight(Light):
 class FlatPointLight:
 
     def __init__(self, point_light:PointLight):
+        self.abs_position = glm.vec3(0, 0, 0)
+        self.depth_fbo = None
+        self.depth_map_handle = 0
+        self.need_update_depth_map = True
+        self.update(point_light)
+
+    def update(self, point_light:PointLight):
         self.color = point_light._color.flat
         self.brightness = point_light._brightness
         self.ambient = point_light._ambient.flat
@@ -160,15 +167,13 @@ class FlatPointLight:
         self.K1 = point_light._K1
         self.K2 = point_light._K2
         self.coverage = point_light._coverage
-        self.abs_position = glm.vec3(0, 0, 0)
-        
         self.generate_shadows = point_light.generate_shadows
-        self.depth_fbo = None
-        self.depth_map_handle = 0
-        self.need_update_depth_map = True
-
-        self._source = point_light
+        self._source_id = id(point_light)
         point_light._flats.add(self)
+
+    def before_del(self):
+        point_light = id_to_var(self._source_id)
+        point_light._flats.remove(self)
 
 class PointLights(ShaderStorageBlock.HostClass):
 
@@ -192,6 +197,9 @@ class PointLights(ShaderStorageBlock.HostClass):
     
     def __len__(self):
         return len(self.point_lights)
+    
+    def __iter__(self):
+        return iter(self.point_lights)
     
     def keys(self):
         return self.point_lights.keys()

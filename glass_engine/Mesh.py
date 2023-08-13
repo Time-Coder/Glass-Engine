@@ -1,4 +1,4 @@
-from .Entity import Entity
+from .SceneNode import SceneNode
 from .Material import Material
 from .algorithm import generate_auto_TBN, generate_sharp_TBN, generate_smooth_TBN
 
@@ -14,7 +14,7 @@ import types
 from enum import Enum
 import copy
 
-class Mesh(Entity):
+class Mesh(SceneNode):
 
     __geometry_map = {}
     __builder_map = {}
@@ -30,7 +30,7 @@ class Mesh(Entity):
                  color:(glm.vec3,glm.vec4)=glm.vec4(0.396, 0.74151, 0.69102, 1), back_color:(glm.vec3,glm.vec4)=None,
                  name:str="", block:bool=True, shared:bool=True,
                  auto_build:bool=True, surf_type:SurfType=None):
-        Entity.__init__(self, name)
+        SceneNode.__init__(self, name)
 
         draw_type = GL.GL_DYNAMIC_DRAW if not block else GL.GL_STATIC_DRAW
         self._vertices = Vertices(draw_type=draw_type)
@@ -84,6 +84,10 @@ class Mesh(Entity):
 
     def __hash__(self):
         return id(self)
+
+    def _set_transform_dirty(self, scenes):
+        self._transform_dirty.update(scenes)
+        return True
 
     @property
     def self_calculated_normal(self):
@@ -262,7 +266,7 @@ class Mesh(Entity):
         used_path = node_path
         if used_path[-1] is not self:
             used_path = [*node_path, self]
-        key = Entity.path_str(used_path)
+        key = SceneNode.path_str(used_path)
 
         if flag:
             if width is None:
@@ -275,7 +279,7 @@ class Mesh(Entity):
         if node_path is None:
             return (self._draw_all_outlines or self._draw_outline_map)
         else:
-            return (Entity.path_str(node_path) in self._draw_outline_map)
+            return (SceneNode.path_str(node_path) in self._draw_outline_map)
         
     def clear_outline(self):
         self._draw_outline_map.clear()
@@ -945,6 +949,9 @@ class Mesh(Entity):
                 program.draw_patches(self._vertices, self._indices, instances)
 
     def _test_transparent(self):
+        if not self._vertices:
+            return
+
         front_has_transparent = self._vertices.front_has_transparent and self._material.has_transparent
         back_has_transparent = self._vertices.back_has_transparent and self._back_material.has_transparent
         self.__has_transparent = (front_has_transparent or back_has_transparent)

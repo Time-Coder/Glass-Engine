@@ -63,5 +63,8 @@ from .Extruder import Extruder
 # 特殊几何体
 from .Floor import Floor
 from .Peaks import Peaks
+from .Zernike import Zernike
+from .Flower import Flower
 from .Torus import Torus
 from .TrefoilKnot import TrefoilKnot
+from .SphericalHarmonics import SphericalHarmonics

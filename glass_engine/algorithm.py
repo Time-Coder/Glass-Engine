@@ -2,6 +2,9 @@ import glm
 import math
 import copy
 import numpy as np
+from cacheout import Cache
+
+cache = Cache(maxsize=100)
 
 def fzero(f, interval):
     lower = interval[0]
@@ -662,3 +665,74 @@ def polygon_normal(polygon, centroid=None):
         normal += weight * n
 
     return glm.normalize(normal)
+
+def is_even(num:int):
+    return num % 2 == 0
+
+def is_odd(num:int):
+    return num % 2 != 0
+
+@cache.memoize()
+def factorial(n:int):
+    return np.math.factorial(n)
+
+@cache.memoize()
+def Zernike_coeff(n:int, m:int, k:int):
+    sgn = 1 if is_even(k) else -1
+    C = factorial(n - k) / (factorial(k) * factorial((n+m)//2 - k) * factorial((n-m)//2 - k))
+    return sgn * C
+
+@cache.memoize()
+def Zernike_eval(n:int, m:int, theta:float, r:float):
+    use_cos = (m >= 0)
+    m = abs(m)
+
+    if n < 0 or is_odd(n - m):
+        return 0
+    
+    R = 0
+    ub = (n - m) // 2
+    for k in range(ub+1):
+        R += Zernike_coeff(n, m, k) * r**(n-2*k)
+
+    if use_cos:
+        return R * math.cos(m*theta)
+    else:
+        return R * math.sin(m*theta)
+
+@cache.memoize()
+def associated_Legendre_coeff(n:int, m:int, k:int):
+    sgn = 1 if is_even(k) else -1
+    C = factorial(2*(n - k)) / (2**n * factorial(k) * factorial(n-k) * factorial(n - 2*k - m))
+    return sgn * C
+
+@cache.memoize()
+def associated_Legendre_eval(n:int, m:int, x:float):
+    if n < 0 or n < abs(m):
+        return 0
+
+    if m < 0:
+        m = abs(m)
+        sgn = 1 if is_even(m) else -1
+        C = factorial(n - m) / factorial(n + m)
+        return sgn * C * associated_Legendre_eval(n, m, x)
+
+    P = 0
+    ub = int((n - m)/2)
+    for k in range(ub + 1):
+        P += associated_Legendre_coeff(n, m, k) * x**(n - 2*k - m)
+
+    P *= (1 - x**2)**(m/2)
+    return P
+
+@cache.memoize()
+def spherical_harmonics_coeff(n:int, m:int):
+    sgn = 1 if is_even(m) else -1
+    return sgn * math.sqrt((2*n+1)/(4*math.pi) * factorial(n-m)/factorial(n+m))
+
+@cache.memoize()
+def spherical_harmonics_eval(n:int, m:int, theta:float, phi:float):
+    A = spherical_harmonics_coeff(n, m)
+    P = associated_Legendre_eval(n, m, math.cos(theta))
+    return A * P * complex(math.cos(m*phi), math.sin(m*phi))
+    
