@@ -31,10 +31,13 @@ class Surf(Mesh):
         if color is not None:
             self.color = color
 
+        if back_color is None:
+            back_color = color
+
         self.__color_map = color_map
 
         self.__back_color_map_user_set = (back_color_map is not None)
-        self.__back_use_color_map = (back_color is None)
+        self.__back_use_color_map = (back_color is None and color is None)
         if back_color_map is None:
             back_color_map = copy.deepcopy(color_map)
 
@@ -46,6 +49,8 @@ class Surf(Mesh):
         self.start_building()
 
     def build(self):
+        self.should_add_color = False
+
         vertices = self.vertices
         indices = self.indices
         X = self.__XData
@@ -59,6 +64,8 @@ class Surf(Mesh):
         back_color_map = self.__back_color_map
         use_color_map = self.__use_color_map
         back_use_color_map = self.__back_use_color_map
+        color = self._color
+        back_color = self._back_color
 
         use_cmap = False
         if len(C.shape) == 2 or C.shape[2] == 1:
@@ -89,6 +96,8 @@ class Surf(Mesh):
                         vertex.color = glm.vec4(C[i,j,0], C[i,j,1], C[i,j,2], C[i,j,3])
                     elif C.shape[2] == 3:
                         vertex.color = glm.vec4(C[i,j,0], C[i,j,1], C[i,j,2], 1)
+                else:
+                    vertex.color = color
 
                 if back_use_color_map:
                     if back_use_cmap:
@@ -97,6 +106,8 @@ class Surf(Mesh):
                         vertex.back_color = glm.vec4(back_C[i,j,0], back_C[i,j,1], back_C[i,j,2], back_C[i,j,3])
                     elif back_C.shape[3] == 3:
                         vertex.back_color = glm.vec4(back_C[i,j,0], back_C[i,j,1], back_C[i,j,2], 1)
+                else:
+                    vertex.back_color = back_color
 
                 vertex.tex_coord = glm.vec3(s, t, 0)
                 vertices[i_vertex] = vertex

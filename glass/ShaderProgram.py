@@ -326,17 +326,11 @@ class ShaderProgram(GPUProgram):
 
     def __update_uniforms(self):
         for uniform_var in self._uniform._uniform_var_map.values():
-            if uniform_var._bound_var is None:
-                continue
-
-            var = None
-            id_var = uniform_var._bound_var_id
-            try:
-                var = id_to_var(id_var)
-            except:
+            var = uniform_var._bound_var
+            if var is None:
                 continue
             
-            for atom_name, atom_info in Uniform._bound_vars[id_var].items():
+            for atom_name, atom_info in Uniform._bound_vars[id(var)].items():
                 # atom_value = eval("var" + atom_info["suffix"])
                 atom_value = subscript(var, atom_info["subscript_chain"])
                 self._uniform._set_atom(atom_name, atom_value)
@@ -394,6 +388,7 @@ class ShaderProgram(GPUProgram):
                 self.uniform._texture_value_map[location] = texture_unit
 
         if not_set_samplers:
+            print(self_used_texture_units)
             available_units = GLConfig.available_texture_units - self_used_texture_units
             it_available_units = iter(available_units)
             for sampler_info in not_set_samplers:

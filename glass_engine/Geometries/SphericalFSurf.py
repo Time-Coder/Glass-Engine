@@ -29,6 +29,9 @@ class SphericalFSurf(Mesh):
         if color is not None:
             self.color = color
 
+        if back_color is None:
+            back_color = color
+
         self.__color_map = color_map
 
         self.__back_color_map_user_set = (back_color_map is not None)
@@ -44,6 +47,8 @@ class SphericalFSurf(Mesh):
         self.start_building()
             
     def build(self):
+        self.should_add_color = False
+
         func = self.__func
         theta_range = self.__theta_range
         phi_range = self.__phi_range
@@ -51,6 +56,8 @@ class SphericalFSurf(Mesh):
         back_color_map = self.__back_color_map
         use_color_map = self.__use_color_map
         back_use_color_map = self.__back_use_color_map
+        color = self._color
+        back_color = self._back_color
 
         vertices = self.vertices
         indices = self.indices
@@ -89,9 +96,13 @@ class SphericalFSurf(Mesh):
                 vertex.position = glm.vec3(X[i,j], Y[i,j], Z[i,j])
                 if use_color_map:
                     vertex.color = glm.vec4(color_map(C[i,j]), 1)
+                else:
+                    vertex.color = color
 
                 if back_use_color_map:
                     vertex.back_color = glm.vec4(back_color_map(C[i,j]), 1)
+                else:
+                    vertex.back_color = back_color
 
                 vertex.tex_coord = glm.vec3(s, t, 0)
                 vertices[i_vertex] = vertex

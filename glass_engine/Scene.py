@@ -76,6 +76,7 @@ class Scene:
         if success:
             self._point_lights.dirty = True
 
+        success = False
         for spot_light in self._spot_lights:
             if not spot_light.need_update_depth_map:
                 spot_light.need_update_depth_map = True
@@ -125,29 +126,47 @@ class Scene:
                     self._all_meshes[mesh][new_path] = new_instance
                 self.__anything_changed = True
             elif isinstance(scene_node, SpotLight):
-                spot_light = FlatSpotLight(scene_node)
+                spot_light = None
+                if new_path not in self._spot_lights:
+                    spot_light = FlatSpotLight(scene_node)
+                    self._spot_lights[new_path] = spot_light
+                else:
+                    spot_light = self._spot_lights[new_path]
+                    spot_light.update(scene_node)
+
                 spot_light.abs_position = new_instance.abs_position
                 spot_light.direction = quat * glm.vec3(0, 1, 0)
-                if new_path in self._spot_lights:
-                    scene_node._flats.remove(self._spot_lights[new_path])
-                self._spot_lights[new_path] = spot_light
+                self._spot_lights.dirty = True
+
                 self.__anything_changed = True
                 self._spot_lights_changed = True
             elif isinstance(scene_node, PointLight):
-                point_light = FlatPointLight(scene_node)
+                point_light = None
+                if new_path not in self._point_lights:
+                    point_light = FlatPointLight(scene_node)
+                    self._point_lights[new_path] = point_light
+                else:
+                    point_light = self._point_lights[new_path]
+                    point_light.update(scene_node)
+
                 point_light.abs_position = new_instance.abs_position
-                if new_path in self._point_lights:
-                    scene_node._flats.remove(self._point_lights[new_path])
-                self._point_lights[new_path] = point_light
+                self._point_lights.dirty = True
+
                 self.__anything_changed = True
                 self._point_lights_changed = True
             elif isinstance(scene_node, DirLight):
-                dir_light = FlatDirLight(scene_node)
+                dir_light = None
+                if new_path not in self._dir_lights:
+                    dir_light = FlatDirLight(scene_node)
+                    self._dir_lights[new_path] = dir_light
+                else:
+                    dir_light = self._dir_lights[new_path]
+                    dir_light.update(scene_node)
+
                 dir_light.direction = quat * dir_light.direction
                 dir_light.abs_orientation = quat
-                if new_path in self._dir_lights:
-                    scene_node._flats.remove(self._dir_lights[new_path])
-                self._dir_lights[new_path] = dir_light
+                self._dir_lights.dirty = True
+
                 self.__anything_changed = True
                 self._dir_lights_changed = True
 
@@ -234,7 +253,7 @@ class Scene:
             for mesh, instances in instance_map.items():
                 should_remove_keys = []
                 for key in instances.keys():
-                    if key.starts_with(path_str):
+                    if key == path_str or key.starts_with(path_str + "/"):
                         should_remove_keys.append(key)
                 
                 if len(should_remove_keys) == len(instances):
@@ -249,11 +268,11 @@ class Scene:
             lights = instance_map
             should_remove_keys = []
             for key in lights.keys():
-                if key.starts_with(path_str):
+                if key == path_str or key.starts_with(path_str + "/"):
                     should_remove_keys.append(key)
 
             for key in should_remove_keys:
-                lights[key]._source._flats.remove(lights[key])
+                lights[key].before_del()
                 del lights[key]
 
     def _remove_paths_prefix(self, paths_str:set):

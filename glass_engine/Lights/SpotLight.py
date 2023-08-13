@@ -1,5 +1,5 @@
 from .PointLight import PointLight
-from glass.utils import checktype
+from glass.utils import checktype, id_to_var
 from glass.DictList import DictList
 from glass.ShaderStorageBlock import ShaderStorageBlock
 
@@ -60,32 +60,33 @@ class SpotLight(PointLight):
 
 class FlatSpotLight:
 
-    @checktype
     def __init__(self, spot_light:SpotLight):
+        self.abs_position = glm.vec3(0, 0, 0)
+        self.direction = glm.vec3(0, 1, 0)
+        self.depth_fbo = None
+        self.depth_map_handle = 0
+        self.need_update_depth_map = True
+        self.update(spot_light)
+
+    def update(self, spot_light:SpotLight):
         self.color = spot_light._color.flat
         self.brightness = spot_light._brightness
         self.ambient = spot_light._ambient.flat
         self.diffuse = spot_light._diffuse.flat
         self.specular = spot_light._specular.flat
-        
         self.half_span_angle_rad = spot_light._span_angle/180*math.pi/2
         self.half_softness_rad = spot_light._softness/180*math.pi/2
-
         self.K1 = spot_light._K1
         self.K2 = spot_light._K2
         self.coverage = spot_light._coverage
-
-        self.abs_position = glm.vec3(0, 0, 0)
-        self.direction = glm.vec3(0, 1, 0)
         self.aggregate_coeff = spot_light.aggregate_coeff
-
         self.generate_shadows = spot_light.generate_shadows
-        self.depth_fbo = None
-        self.depth_map_handle = 0
-        self.need_update_depth_map = True
-
-        self._source = spot_light
+        self._source_id = id(spot_light)
         spot_light._flats.add(self)
+
+    def before_del(self):
+        spot_light = id_to_var(self._source_id)
+        spot_light._flats.remove(self)
 
 class SpotLights(ShaderStorageBlock.HostClass):
 
@@ -109,6 +110,12 @@ class SpotLights(ShaderStorageBlock.HostClass):
     
     def __len__(self):
         return len(self.spot_lights)
+    
+    def __iter__(self):
+        return iter(self.spot_lights)
+
+    def keys(self):
+        return self.spot_lights.keys()
 
     @property
     def n_spot_lights(self):

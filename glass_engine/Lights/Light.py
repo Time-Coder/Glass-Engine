@@ -1,12 +1,12 @@
-from ..Entity import Entity, SceneNode
+from ..SceneNode import SceneNode
 from glass.utils import checktype
 
 import glm
 
-class Light(Entity):
+class Light(SceneNode):
 
     def __init__(self, name:str=""):
-        Entity.__init__(self, name)
+        SceneNode.__init__(self, name)
         self._color = SceneNode.vec3(1, 1, 1, callback=self._update_color)
         self._brightness = 1.0
         self._ambient = SceneNode.vec3(1, 1, 1, callback=self._update_ambient)
@@ -14,6 +14,10 @@ class Light(Entity):
         self._specular = SceneNode.vec3(1, 1, 1, callback=self._update_specular)
         self._generate_shadows = True
         self._flats = set()
+
+    def _set_transform_dirty(self, scenes):
+        self._transform_dirty.update(scenes)
+        return True
 
     @property
     def color(self):

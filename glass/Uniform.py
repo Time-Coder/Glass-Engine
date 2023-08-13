@@ -36,15 +36,14 @@ class Uniform:
     _set_atom_map = {}
 
     class Variable:
-        _all_attrs = ["__init__", "__getitem__", "__setitem__", "__getattr__", "__setattr__",
-                      "_uniform", "_name", "_bound_var", "_bound_var_id",
-                      "bind", "unbind", "location"]
+        _all_attrs = {"__init__", "__getitem__", "__setitem__", "__getattr__", "__setattr__",
+                      "_uniform_id", "_name", "_bound_var",
+                      "bind", "unbind", "location"}
 
-        def __init__(self, uniform, name):
-            self._uniform_id = id(uniform)
+        def __init__(self, uniform_id, name):
+            self._uniform_id = uniform_id
             self._name = name
             self._bound_var = None
-            self._bound_var_id = None
 
         @property
         def uniform(self):
@@ -83,12 +82,12 @@ class Uniform:
 
             self.unbind()
 
-            id_var = str(id(var))
+            id_var = id(var)
             if id_var not in Uniform._bound_vars:
                 Uniform._bound_vars[id_var] = {}
 
             len_name = len(self._name)
-            for atom in self._uniform.program._uniform_map[self._name]["atoms"]:
+            for atom in self.uniform.program._uniform_map[self._name]["atoms"]:
                 atom_name = atom["name"]
                 atom_suffix = atom["name"][len_name:]
                 subscript_chain = get_subscript_chain(atom_suffix)
@@ -101,30 +100,29 @@ class Uniform:
                 atom_info["subscript_chain"] = subscript_chain
                 if "uniforms" not in atom_info:
                     atom_info["uniforms"] = set()
-                atom_info["uniforms"].add(self._uniform)
+                atom_info["uniforms"].add(self._uniform_id)
 
             self._bound_var = var
-            self._bound_var_id = id_var
 
         def unbind(self):
             if self._bound_var is None:
                 return
 
-            if self._bound_var_id in Uniform._bound_vars:
-                var_info = Uniform._bound_vars[self._bound_var_id]
+            id_var = id(self._bound_var)
+            if id_var in Uniform._bound_vars:
+                var_info = Uniform._bound_vars[id_var]
                 should_remove_atoms = []
                 for atom_name, info in var_info.items():
-                    if self._uniform in info["uniforms"]:
-                        info["uniforms"].remove(self._uniform)
+                    if self._uniform_id in info["uniforms"]:
+                        info["uniforms"].remove(self._uniform_id)
                     if not info["uniforms"]:
                         should_remove_atoms.append(atom_name)
                 for atom_name in should_remove_atoms:
                     del var_info[atom_name]
                 if not var_info:
-                    del Uniform._bound_vars[self._bound_var_id]
+                    del Uniform._bound_vars[id_var]
             
             self._bound_var = None
-            self._bound_var_id = None
 
         def __contains__(self, name:(str, int)):
             full_name = self._name
@@ -151,7 +149,7 @@ class Uniform:
                 raise NameError(error_message)
             
             if full_name not in uniform._uniform_var_map:
-                uniform._uniform_var_map[full_name] = Uniform.Variable(self._uniform, full_name)
+                uniform._uniform_var_map[full_name] = Uniform.Variable(self._uniform_id, full_name)
 
             return uniform._uniform_var_map[full_name]
 
@@ -206,7 +204,7 @@ class Uniform:
             raise NameError(error_message)
 
         if name not in self._uniform_var_map:
-            self._uniform_var_map[name] = Uniform.Variable(self, name)
+            self._uniform_var_map[name] = Uniform.Variable(id(self), name)
 
         return self._uniform_var_map[name]
 

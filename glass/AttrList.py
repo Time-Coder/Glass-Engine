@@ -93,11 +93,10 @@ class AttrList(SameTypeList):
 
         new_data = patch["new_data"]
         patch_update = patch["update"]
-        len_patch_update = len(patch_update)
 
         if new_data and patch_update:
             temp_buffer = np.array(new_data)
-            if len_patch_update > 1:
+            if len(patch_update) > 1:
                 temp_vbo = VBO()
                 temp_vbo.bufferData(temp_buffer, self._draw_type)
                 for update in patch_update:
