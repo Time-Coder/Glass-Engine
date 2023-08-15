@@ -23,7 +23,7 @@ class Surf(Mesh):
 
         self._back_CData_user_set = (back_C is not None)
         self._back_CData = back_C if self._back_CData_user_set else self._CData
-        
+
         Surf._set_colors(self, color, back_color, color_map, back_color_map)
         self.start_building()
 
@@ -76,7 +76,8 @@ class Surf(Mesh):
         colors = None
         if use_color_map:
             if len(C.shape) == 2 or C.shape[2] == 1:
-                color_map.range = (C.min(), C.max())
+                if not color_map.range_user_set:
+                    color_map.range = (C.min(), C.max())
                 colors = color_map(C).flatten().reshape(len(xx), 4)
             else:
                 if C.shape[2] == 4:
@@ -90,7 +91,8 @@ class Surf(Mesh):
         back_colors = None
         if back_use_color_map:
             if len(back_C.shape) == 2 or back_C.shape[2] == 1:
-                back_color_map.range = (back_C.min(), back_C.max())
+                if not back_color_map.range_user_set:
+                    back_color_map.range = (back_C.min(), back_C.max())
                 back_colors = back_color_map(back_C).flatten().reshape(len(xx), 4)
             else:
                 if back_C.shape[2] == 4:

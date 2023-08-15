@@ -3,7 +3,7 @@ from .Material import Material
 from .algorithm import generate_auto_TBN, generate_sharp_TBN, generate_smooth_TBN
 
 from glass import ShaderProgram, Instances, Vertices, Indices, GLInfo, RenderHint
-from glass.utils import checktype
+from glass.utils import checktype, md5s
 from glass.AttrList import AttrList
 
 import glm
@@ -13,6 +13,7 @@ import inspect
 import types
 from enum import Enum
 import copy
+import pickle
 
 class Mesh(SceneNode):
 
@@ -694,7 +695,17 @@ class Mesh(SceneNode):
         instance_key = self.__class__.__name__ + "("
         for i in range(len_new_vars):
             key = new_vars[i]
-            instance_key += (key + "=" + str(self.__dict__[key]))
+            value = self.__dict__[key]
+            str_value = None
+            if isinstance(value, (int,float,bool,complex,str,bytes,bytearray)):
+                str_value = str(value)
+            else:
+                try:
+                    str_value = f"md5({md5s(value)})"
+                except:
+                    str_value = f"id({id(value)})"
+
+            instance_key += (key + "=" + str_value)
             if i < len_new_vars-1:
                 instance_key += ", "
         instance_key += ")"

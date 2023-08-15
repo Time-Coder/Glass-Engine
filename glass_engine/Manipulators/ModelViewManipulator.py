@@ -8,7 +8,7 @@ import glm
 
 class ModelViewManipulator(Manipulator):
 
-    def __init__(self, azimuth_deg:float=0, elevation_deg:float=30, distance:float=2):
+    def __init__(self, distance:float=2, azimuth_deg:float=0, elevation_deg:float=0):
         Manipulator.__init__(self)
         
         self.__is_left_pressed = False

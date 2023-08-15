@@ -2,8 +2,9 @@ from .Scene import Scene
 from .Camera import Camera
 from .Geometries.Floor import Floor
 from .Lights.DirLight import DirLight
+from .Manipulators import *
 
-def BasicScene(add_floor=True):
+def SceneRoam(add_floor=True):
     scene = Scene()
 
     camera = Camera()
@@ -24,3 +25,17 @@ def BasicScene(add_floor=True):
     scene.add(dir_light)
 
     return scene, camera, dir_light, floor
+
+def ModelView(distance:float=2, azimuth_deg:float=0, elevation_deg:float=0):
+    scene = Scene()
+
+    camera = Camera()
+    camera.screen.manipulator = ModelViewManipulator(distance, azimuth_deg, elevation_deg)
+    scene.add(camera)
+
+    dir_light = DirLight()
+    dir_light.pitch = -45
+    dir_light.yaw = 45
+    scene.add(dir_light)
+
+    return scene, camera, dir_light

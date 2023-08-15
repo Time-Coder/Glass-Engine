@@ -1,7 +1,7 @@
 from .Scene import Scene
 from .SceneNode import SceneNode
 from .SinglePathNode import SinglePathNode
-from .BasicScene import BasicScene
+from .BasicScene import SceneRoam, ModelView
 
 from .Camera import Camera
 from .Screen import Screen
