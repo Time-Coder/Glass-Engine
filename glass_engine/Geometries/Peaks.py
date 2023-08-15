@@ -15,7 +15,7 @@ class Peaks(Surf):
                  color_map:ColorMap=None, back_color_map:ColorMap=None,
                  color:(glm.vec3,glm.vec4)=None, back_color:(glm.vec3,glm.vec4)=None,
                  surf_type:Mesh.SurfType=Mesh.SurfType.Smooth,
-                 name:str="", block:bool=True):
+                 name:str=""):
         X = np.linspace(x_range[0], x_range[1]) if len(x_range) == 2 else x_range
         Y = np.linspace(y_range[0], y_range[1]) if len(y_range) == 2 else y_range
         X, Y = np.meshgrid(X, Y)
@@ -25,4 +25,4 @@ class Peaks(Surf):
         Surf.__init__(self, X, Y, Z/3,
                       color_map=color_map, back_color_map=back_color_map,
                       color=color, back_color=back_color,
-                      surf_type=surf_type, name=name, block=block)
+                      surf_type=surf_type, name=name)
