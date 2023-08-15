@@ -1,7 +1,7 @@
 from .Light import Light
 from ..algorithm import fzero
 
-from glass.utils import checktype, id_to_var
+from glass.utils import checktype, di
 from glass.DictList import DictList
 from glass.ShaderStorageBlock import ShaderStorageBlock
 
@@ -172,7 +172,7 @@ class FlatPointLight:
         point_light._flats.add(self)
 
     def before_del(self):
-        point_light = id_to_var(self._source_id)
+        point_light = di(self._source_id)
         point_light._flats.remove(self)
 
 class PointLights(ShaderStorageBlock.HostClass):

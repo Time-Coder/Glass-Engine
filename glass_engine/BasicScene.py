@@ -8,8 +8,9 @@ def BasicScene(add_floor=True):
 
     camera = Camera()
     camera.position.y = -5
-    camera.position.z = 1.7
-    camera.pitch = -10
+    if add_floor:
+        camera.position.z = 1.7
+        camera.pitch = -10
     scene.add(camera)
 
     floor = None

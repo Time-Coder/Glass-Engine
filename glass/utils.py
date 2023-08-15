@@ -10,6 +10,7 @@ import hashlib
 import pickle
 import subprocess
 import sys
+from _ctypes import PyObj_FromPtr
 
 from .GLConfig import GLConfig
 
@@ -488,8 +489,8 @@ def split_var_str(var_str):
         else:
             return "", ""
 
-def id_to_var(id_var):
-    return ctypes.cast(id_var, ctypes.py_object).value
+def di(id_var):
+    return PyObj_FromPtr(id_var)
 
 def LP_LP_c_char(str_list):
     lp_c_char = ctypes.POINTER(ctypes.c_char)

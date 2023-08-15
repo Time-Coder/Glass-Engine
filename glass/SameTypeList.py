@@ -47,6 +47,9 @@ class SameTypeList:
             return self
 
     def __init__(self, _list:(list,np.ndarray)=None, dtype=None):
+        self.reset(_list, dtype)
+
+    def reset(self, _list=None, dtype=None):
         if _list is None:
             _list = []
 
@@ -63,7 +66,7 @@ class SameTypeList:
         self._checked_out_items = {}
 
     @property
-    def ndarray(self):
+    def ndarray(self)->np.ndarray:
         if self._list_dirty:
             if isinstance(self._list, np.ndarray):
                 self._list_ndarray = self._list
@@ -89,6 +92,16 @@ class SameTypeList:
 
         return self._list_ndarray
 
+    @ndarray.setter
+    def ndarray(self, array:np.ndarray):
+        self._list_dirty = False
+        self._list_ndarray = array
+        self._list = array
+
+        if self._increment is not None:
+            _list = list(map(lambda x : self._dtype(*x), self._list))
+            self._increment.reset(_list)
+
     @classmethod
     def frombuffer(cls, buffer:(bytes,bytearray), dtype):
         np_dtype = GLInfo.np_dtype_map[dtype]
@@ -111,7 +124,7 @@ class SameTypeList:
 
     def _change_to_list(self):
         if not isinstance(self._list, list):
-            self._list = list(map(lambda x : self._dtype(x), self._list))
+            self._list = list(map(lambda x : self._dtype(*x), self._list))
 
     def append(self, value):
         self._change_to_list()
@@ -206,10 +219,13 @@ class SameTypeList:
         self._list_dirty = True
 
     def __len__(self):
-        return self._list.__len__()
+        if isinstance(self._list, np.ndarray):
+            return self._list.shape[0]
+        else:
+            return len(self._list)
     
     def __bool__(self):
-        return (self._list.__len__() > 0)
+        return (len(self._list) > 0)
 
     def __setitem__(self, index, value):
         self._check_in_items()
@@ -255,7 +271,7 @@ class SameTypeList:
     def const_get(self, index):
         result = self._list[index]
         if not isinstance(self._list, list):
-            result = self._dtype(result)
+            result = self._dtype(*result)
         return result
 
     def const_items(self):

@@ -602,13 +602,10 @@ class Mesh(SceneNode):
                         while True:
                             next(builder)
                     except StopIteration:
-                        if builder in Mesh.__builder_map:
-                            del Mesh.__builder_map[builder]
-
-                        builder = self.__post_build(self.__geometry_info)
-                        self.__geometry_info["builder"] = builder
-                        self.__geometry_info["build_state"] = "post_build"
-                        Mesh.__builder_map[builder] = self.__geometry_info
+                        del Mesh.__builder_map[builder]
+                        self.__post_build(self.__geometry_info)
+                        self.__geometry_info["builder"] = None
+                        self.__geometry_info["build_state"] = "done"
 
                 if self.__geometry_info["build_state"] == "post_build":
                     try:
@@ -660,22 +657,11 @@ class Mesh(SceneNode):
                     while True:
                         next(builder)
                 except StopIteration:
-                    builder = self.__post_build(self.__geometry_info)
-
-                try:
-                    while True:
-                        next(builder)
-                except StopIteration:
-                    pass
+                    self.__post_build(self.__geometry_info)
                 
             else: # not generator
                 self.build()
-                builder = self.__post_build(self.__geometry_info)
-                try:
-                    while True:
-                        next(builder)
-                except StopIteration:
-                    pass
+                self.__post_build(self.__geometry_info)
 
             self.__geometry_info["build_state"] = "done"
         else: # not block
@@ -687,31 +673,14 @@ class Mesh(SceneNode):
                     next(builder)
                 except StopIteration:
                     del Mesh.__builder_map[builder]
-
-                    builder = self.__post_build(self.__geometry_info)
-                    self.__geometry_info["builder"] = builder
-                    self.__geometry_info["build_state"] = "post_build"
-                    Mesh.__builder_map[builder] = self.__geometry_info
-
-                if self.__geometry_info["build_state"] == "post_build":
-                    try:
-                        next(builder)
-                    except StopIteration:
-                        del Mesh.__builder_map[builder]
-                        self.__geometry_info["build_state"] = "done"
-                        self.__geometry_info["builder"] = None
-            else:
-                self.build()
-                builder = self.__post_build(self.__geometry_info)
-                self.__geometry_info["builder"] = builder
-                self.__geometry_info["build_state"] = "post_build"
-                Mesh.__builder_map[builder] = self.__geometry_info
-                try:
-                    next(builder)
-                except StopIteration:
-                    del Mesh.__builder_map[builder]
+                    self.__post_build(self.__geometry_info)
                     self.__geometry_info["build_state"] = "done"
                     self.__geometry_info["builder"] = None
+            else:
+                self.build()
+                self.__post_build(self.__geometry_info)
+                self.__geometry_info["builder"] = None
+                self.__geometry_info["build_state"] = "done"
 
     @property
     def __instance_key(self):
@@ -748,13 +717,10 @@ class Mesh(SceneNode):
             try:
                 next(builder)
             except StopIteration:
-                if builder in Mesh.__builder_map:
-                    del Mesh.__builder_map[builder]
-
-                builder = self.__post_build(self.__geometry_info)
-                self.__geometry_info["builder"] = builder
-                self.__geometry_info["build_state"] = "post_build"
-                Mesh.__builder_map[builder] = self.__geometry_info
+                del Mesh.__builder_map[builder]
+                self.__post_build(self.__geometry_info)
+                self.__geometry_info["builder"] = None
+                self.__geometry_info["build_state"] = "done"
 
         if self.__geometry_info["build_state"] == "post_build":
             try:
@@ -828,7 +794,7 @@ class Mesh(SceneNode):
     def __post_build(self, geometry_info):
         self.__set_color()
         self.__calculate_bounding_box(geometry_info)
-        return self.__generate_TBN(geometry_info)
+        self.__generate_TBN(geometry_info)
 
     def __calculate_bounding_box(self, geometry_info):
         vertices = geometry_info["vertices"]
@@ -925,11 +891,11 @@ class Mesh(SceneNode):
             return
 
         if self.__surf_type == Mesh.SurfType.Auto:
-            yield from generate_auto_TBN(vertices, indices, not self.self_calculated_normal)
+            generate_auto_TBN(vertices, indices, not self.self_calculated_normal)
         elif self.__surf_type == Mesh.SurfType.Sharp:
-            yield from generate_sharp_TBN(vertices, indices, not self.self_calculated_normal)
+            generate_sharp_TBN(vertices, indices, not self.self_calculated_normal)
         elif self.__surf_type == Mesh.SurfType.Smooth:
-            yield from generate_smooth_TBN(vertices, indices, not self.self_calculated_normal)
+            generate_smooth_TBN(vertices, indices, not self.self_calculated_normal)
 
     def draw(self, program:ShaderProgram, instances:Instances=None):
         if not self.visible:

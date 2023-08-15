@@ -2,7 +2,7 @@ from .Filters import Filter
 from ..Frame import Frame
 
 from glass import FBO, ShaderProgram, sampler2D, GLConfig
-from glass.utils import checktype, id_to_var
+from glass.utils import checktype, di
 from glass.ShaderStorageBlock import ShaderStorageBlock
 
 from OpenGL import GL
@@ -49,7 +49,7 @@ class DOFFilter(Filter):
 
     @property
     def camera(self):        
-        return id_to_var(self._camera_id)
+        return di(self._camera_id)
     
     @camera.setter
     def camera(self, camera):

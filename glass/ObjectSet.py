@@ -1,4 +1,4 @@
-from .utils import id_to_var
+from .utils import di
 
 class ObjectSet:
 
@@ -8,7 +8,7 @@ class ObjectSet:
 
         def __next__(self):
             id_var = self._set_iterator.__next__()
-            return id_to_var(id_var)
+            return di(id_var)
         
         def __iter__(self):
             return self

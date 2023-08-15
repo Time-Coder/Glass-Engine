@@ -1,4 +1,4 @@
-from .utils import id_to_var
+from .utils import di
 
 class ExtendableList:
 
@@ -41,9 +41,9 @@ class ExtendableList:
             return value
         else:
             if isinstance(index, slice):
-                return list(map(lambda x:id_to_var(x), value))
+                return list(map(lambda x:di(x), value))
             else:
-                return id_to_var(value)
+                return di(value)
             
     def __delitem__(self, index):
         del self._list[index]

@@ -1,5 +1,5 @@
 from .Light import Light
-from glass.utils import id_to_var
+from glass.utils import di
 from glass.DictList import DictList
 from glass.ShaderStorageBlock import ShaderStorageBlock
 
@@ -29,7 +29,7 @@ class FlatDirLight:
         dir_light._flats.add(self)
 
     def before_del(self):
-        dir_light = id_to_var(self._source_id)
+        dir_light = di(self._source_id)
         dir_light._flats.remove(self)
 
 class DirLights(ShaderStorageBlock.HostClass):

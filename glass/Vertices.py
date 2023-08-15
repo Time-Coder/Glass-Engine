@@ -5,7 +5,7 @@ import numpy as np
 
 from .GLConfig import GLConfig
 from .VAO import VAO
-from .utils import checktype, id_to_var
+from .utils import checktype, di
 from .AttrList import AttrList
 from .GLInfo import GLInfo
 from .SameTypeList import SameTypeList
@@ -67,7 +67,7 @@ class Vertex(dict):
         dict.__setitem__(self, name, value)
 
         for id_parent_array, index_set in self._array_index_map.items():
-            parent_array = id_to_var(id_parent_array)
+            parent_array = di(id_parent_array)
             if name not in parent_array._attr_list_map:
                 parent_array._attr_list_map[name] = AttrList()
 
@@ -76,7 +76,7 @@ class Vertex(dict):
 
     def __getitem__(self, name:str):
         for id_parent_array, index_set in self._array_index_map.items():
-            parent_array = id_to_var(id_parent_array)
+            parent_array = di(id_parent_array)
             if name not in parent_array._attr_list_map:
                 parent_array._attr_list_map[name] = AttrList()
                 value = dict.__getitem__(self, name)
@@ -84,7 +84,9 @@ class Vertex(dict):
                     parent_array._attr_list_map[name][index] = value
 
             for index in index_set:
-                return parent_array._attr_list_map[name][index]
+                value = parent_array._attr_list_map[name][index]
+                dict.__setitem__(self, name, value)
+                return value
             
         return dict.__getitem__(self, name)
 
@@ -116,6 +118,19 @@ class Vertices:
 
     def hasattr(self, attr_name:str):
         return (attr_name in self._attr_list_map)
+    
+    def reset(self, **kwargs):
+        self._attr_list_map = kwargs
+        self._program_vao_map = {}
+        self._program_warning_map = {}
+        self._not_set_attributes = {}
+        self._index_vertex_map = {}
+        self._tested_front_transparent = False
+        self._tested_back_transparent = False
+        self._front_has_transparent = False
+        self._front_has_opaque = True
+        self._back_has_transparent = False
+        self._back_has_opaque = True
 
     @property
     def draw_type(self):
@@ -306,7 +321,10 @@ class Vertices:
                 result = self.__class__.element_type()
                 result._add_array_index(self, index)
                 for key, attr_list in self._attr_list_map.items():
-                    result[key] = attr_list[index]
+                    if index >= len(attr_list):
+                        result[key] = attr_list.dtype()
+                    else:
+                        result[key] = attr_list[index]
                 self._index_vertex_map[index] = result
 
         return result
@@ -355,7 +373,11 @@ class Vertices:
             del self._index_vertex_map[sub_index]
             self._index_vertex_map[sub_index-1] = vertex
 
-    def __delitem__(self, index:(int,slice)):
+    def __delitem__(self, index:(str,int,slice)):
+        if isinstance(index, str):
+            del self._attr_list_map[index]
+            return
+
         for key in self._attr_list_map:
             del self._attr_list_map[key][index]
 

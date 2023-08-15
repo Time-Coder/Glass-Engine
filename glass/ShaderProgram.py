@@ -13,7 +13,7 @@ from .Shaders import VertexShader, FragmentShader, GeometryShader, TessControlSh
 from .Vertices import Vertices
 from .Indices import Indices
 from .Instances import Instances
-from .utils import checktype, id_to_var, subscript, md5s, modify_time, save_var, load_var
+from .utils import checktype, di, subscript, md5s, modify_time, save_var, load_var
 from .GLInfo import GLInfo
 from .GLConfig import GLConfig
 from .TextureUnits import TextureUnits
@@ -388,7 +388,6 @@ class ShaderProgram(GPUProgram):
                 self.uniform._texture_value_map[location] = texture_unit
 
         if not_set_samplers:
-            print(self_used_texture_units)
             available_units = GLConfig.available_texture_units - self_used_texture_units
             it_available_units = iter(available_units)
             for sampler_info in not_set_samplers:

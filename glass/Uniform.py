@@ -4,7 +4,7 @@ import glm
 import copy
 from enum import Enum
 
-from .utils import checktype, get_subscript_chain, uint64_to_uvec2, id_to_var
+from .utils import checktype, get_subscript_chain, uint64_to_uvec2, di
 from .sampler2D import sampler2D
 from .image2D import image2D
 from .FBOAttachment import FBOAttachment
@@ -47,7 +47,7 @@ class Uniform:
 
         @property
         def uniform(self):
-            return id_to_var(self._uniform_id)
+            return di(self._uniform_id)
 
         def __del__(self):
             self.unbind()
@@ -193,7 +193,7 @@ class Uniform:
 
     @property
     def program(self):
-        return id_to_var(self._program_id)
+        return di(self._program_id)
 
     def __getitem__(self, name:str):
         program = self.program

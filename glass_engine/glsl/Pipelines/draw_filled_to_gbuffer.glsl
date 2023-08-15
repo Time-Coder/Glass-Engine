@@ -9,11 +9,11 @@ void draw_filled_to_gbuffer()
     {
         view_normal = -view_normal;
     }
-    view_TBN[2] = view_normal;
-    if (hasnan(view_TBN))
+    if (hasnan(view_normal))
     {
         return;
     }
+    view_TBN[2] = view_normal;
 
     vec3 view_pos = fs_in.view_pos;
     vec2 frag_tex_coord = fs_in.tex_coord.st;

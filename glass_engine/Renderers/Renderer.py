@@ -1,7 +1,7 @@
 from abc import ABC, abstractmethod
 
 from glass import RenderHint
-from glass.utils import checktype, id_to_var
+from glass.utils import checktype, di
 
 from ..Filters import Filters
 
@@ -15,7 +15,7 @@ class Renderer(ABC):
 
     @property
     def camera(self): 
-        return id_to_var(self._camera_id)
+        return di(self._camera_id)
 
     @property
     def scene(self):        

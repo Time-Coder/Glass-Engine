@@ -1,7 +1,7 @@
 from .Filters import Filter
 from ..Frame import Frame
 from glass import sampler2D, ShaderProgram, FBO, ShaderStorageBlock, GLConfig
-from glass.utils import id_to_var
+from glass.utils import di
 
 from OpenGL import GL
 import time
@@ -40,7 +40,7 @@ class HDRFilter(Filter):
 
     @property
     def camera(self):        
-        return id_to_var(self._camera_id)
+        return di(self._camera_id)
     
     @camera.setter
     def camera(self, camera):

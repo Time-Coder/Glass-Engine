@@ -20,6 +20,7 @@ from .sampler2DArray import sampler2DArray
 from .Vertices import Vertices, Vertex
 from .Indices import Indices
 from .Instances import Instance, Instances
+from .AttrList import AttrList
 
 from .ShaderProgram import ShaderProgram
 from .ComputeProgram import ComputeProgram

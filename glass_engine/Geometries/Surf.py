@@ -2,7 +2,7 @@ from ..Mesh import Mesh
 from ..ColorMap import ColorMap
 
 from glass.utils import checktype
-from glass import Vertex
+from glass import AttrList
 
 import glm
 import numpy as np
@@ -16,196 +16,191 @@ class Surf(Mesh):
                  color:(glm.vec3,glm.vec4)=None, back_color:(glm.vec3,glm.vec4)=None,
                  surf_type:Mesh.SurfType=Mesh.SurfType.Smooth, name="", block=True):
         Mesh.__init__(self, name=name, block=block, surf_type=surf_type)
-        self.__XData = X
-        self.__YData = Y
-        self.__ZData = Z
-        self.__CData = C if C is not None else Z
+        self._XData = X
+        self._YData = Y
+        self._ZData = Z
+        self._CData = C if C is not None else Z
 
-        self.__back_CData_user_set = (back_C is not None)
-        self.__back_CData = back_C if self.__back_CData_user_set else self.__CData
+        self._back_CData_user_set = (back_C is not None)
+        self._back_CData = back_C if self._back_CData_user_set else self._CData
+        
+        Surf._set_colors(self, color, back_color, color_map, back_color_map)
+        self.start_building()
 
-        self.__use_color_map = (color is None)
+    @staticmethod
+    def _set_colors(obj, color, back_color, color_map, back_color_map):
+        obj._use_color_map = (color is None)
         if color_map is None:
             color_map = ColorMap.parula()
 
         if color is not None:
-            self.color = color
+            obj.color = color
 
         if back_color is None:
             back_color = color
 
-        self.__color_map = color_map
-
-        self.__back_color_map_user_set = (back_color_map is not None)
-        self.__back_use_color_map = (back_color is None and color is None)
+        obj._color_map = color_map
+        obj._back_color_map_user_set = (back_color_map is not None)
+        obj._back_use_color_map = (back_color is None or back_color_map is not None)
         if back_color_map is None:
             back_color_map = copy.deepcopy(color_map)
 
         if back_color is not None:
-            self.back_color = back_color
+            obj.back_color = back_color
 
-        self.__back_color_map = back_color_map
+        obj._back_color_map = back_color_map
 
-        self.start_building()
-
-    def build(self):
-        self.should_add_color = False
-
-        vertices = self.vertices
-        indices = self.indices
-        X = self.__XData
-        Y = self.__YData
-        Z = self.__ZData
-        C = self.__CData if self.__CData is not None else Z
-        back_C = self.__back_CData if self.__back_CData is not None else C
+    @staticmethod
+    def _build(obj, X, Y, Z, C, back_C):
+        obj.should_add_color = False
         rows = X.shape[0]
         cols = X.shape[1]
-        color_map = self.__color_map
-        back_color_map = self.__back_color_map
-        use_color_map = self.__use_color_map
-        back_use_color_map = self.__back_use_color_map
-        color = self._color
-        back_color = self._back_color
+        color_map = obj._color_map
+        back_color_map = obj._back_color_map
+        use_color_map = obj._use_color_map
+        back_use_color_map = obj._back_use_color_map
+        color = obj._color
+        back_color = obj._back_color
 
-        use_cmap = False
-        if len(C.shape) == 2 or C.shape[2] == 1:
-            use_cmap = True
-            color_map.range = (C.min(), C.max())
-
-        back_use_cmap = False
-        if len(back_C.shape) == 2 or back_C.shape[2] == 1:
-            back_use_cmap = True
-            back_color_map.range = (back_C.min(), back_C.max())
-
-        i_vertex = 0
-        i_index = 0
-
-        for i in range(rows):
-            t = 1 - i/(rows-1)
-            for j in range(cols):
-                s = j/(cols-1)
-                vertex = Vertex()
-                vertex.position = glm.vec3(X[i,j], Y[i,j], Z[i,j])
-                vertex.tangent = glm.vec3(0, 0, 0)
-                vertex.bitangent = glm.vec3(0, 0, 0)
-                vertex.normal = glm.vec3(0, 0, 0)
-                if use_color_map:
-                    if use_cmap:
-                        vertex.color = glm.vec4(color_map(C[i,j]), 1)
-                    elif C.shape[2] == 4:
-                        vertex.color = glm.vec4(C[i,j,0], C[i,j,1], C[i,j,2], C[i,j,3])
-                    elif C.shape[2] == 3:
-                        vertex.color = glm.vec4(C[i,j,0], C[i,j,1], C[i,j,2], 1)
+        xx = X.flatten()
+        yy = Y.flatten()
+        zz = Z.flatten()
+        pos = np.vstack((xx, yy, zz))
+        pos = pos.transpose().astype(np.float32)
+        it_vertex = np.arange(0, len(xx), dtype=np.uint32)
+        jj = it_vertex % cols
+        ii = it_vertex // cols
+        tt = 1 - ii/(rows - 1)
+        ss = jj/(cols - 1)
+        tex_coords = np.vstack((ss, tt, np.zeros_like(ss))).transpose().astype(np.float32)
+        colors = None
+        if use_color_map:
+            if len(C.shape) == 2 or C.shape[2] == 1:
+                color_map.range = (C.min(), C.max())
+                colors = color_map(C).flatten().reshape(len(xx), 4)
+            else:
+                if C.shape[2] == 4:
+                    colors = C.flatten().reshape(len(xx), 4)
                 else:
-                    vertex.color = color
+                    colors = np.insert(C, 3, np.ones(C.shape[:2], dtype=np.float32), axis=2).flatten().reshape(len(xx), 4)
+        else:
+            colors = np.tile([color.r, color.g, color.b, color.a], len(xx)).reshape(len(xx), 4)
+        colors = colors.astype(np.float32)
 
-                if back_use_color_map:
-                    if back_use_cmap:
-                        vertex.back_color = glm.vec4(back_color_map(back_C[i,j]), 1)
-                    elif back_C.shape[2] == 4:
-                        vertex.back_color = glm.vec4(back_C[i,j,0], back_C[i,j,1], back_C[i,j,2], back_C[i,j,3])
-                    elif back_C.shape[3] == 3:
-                        vertex.back_color = glm.vec4(back_C[i,j,0], back_C[i,j,1], back_C[i,j,2], 1)
+        back_colors = None
+        if back_use_color_map:
+            if len(back_C.shape) == 2 or back_C.shape[2] == 1:
+                back_color_map.range = (back_C.min(), back_C.max())
+                back_colors = back_color_map(back_C).flatten().reshape(len(xx), 4)
+            else:
+                if back_C.shape[2] == 4:
+                    back_colors = back_C.flatten().reshape(len(xx), 4)
                 else:
-                    vertex.back_color = back_color
+                    back_colors = np.insert(back_C, 3, np.ones(back_C.shape[:2], dtype=np.float32), axis=2).flatten().reshape(len(xx), 4)
+        else:
+            back_colors = np.tile([back_color.r, back_color.g, back_color.b, back_color.a], len(xx)).reshape(len(xx), 4)
+        back_colors = back_colors.astype(np.float32)
 
-                vertex.tex_coord = glm.vec3(s, t, 0)
-                vertices[i_vertex] = vertex
-                i_vertex += 1
+        obj.vertices.reset(
+            position=AttrList.fromarray(pos, glm.vec3),
+            tangent=AttrList.fromarray(np.zeros_like(pos), glm.vec3),
+            bitangent=AttrList.fromarray(np.zeros_like(pos), glm.vec3),
+            normal=AttrList.fromarray(np.zeros_like(pos), glm.vec3),
+            tex_coord=AttrList.fromarray(tex_coords, glm.vec3),
+            color=AttrList.fromarray(colors, glm.vec4),
+            back_color=AttrList.fromarray(back_colors, glm.vec4)
+        )
 
-                if i > 0 and j > 0:
-                    triangle = glm.uvec3(0, 0, 0)
-                    triangle[0] = i_vertex-1
-                    triangle[1] = i_vertex-1-1
-                    triangle[2] = i_vertex-1-1-cols
-                    indices[i_index] = triangle
-                    i_index += 1
-                    self.generate_temp_TBN(vertices[triangle[0]], vertices[triangle[1]], vertices[triangle[2]])
+        it_vertex = it_vertex[(ii != 0) & (jj != 0)]
+        indices0 = it_vertex
+        indices1 = it_vertex - 1
+        indices2 = it_vertex - 1 - cols
+        indices3 = it_vertex
+        indices4 = it_vertex - 1 - cols
+        indices5 = it_vertex - cols
+        indices_mat = np.vstack((indices0, indices1, indices2, indices3, indices4, indices5))
+        indices_mat = indices_mat.transpose().reshape(-1, 3)
+        obj.indices.reset(indices_mat, dtype=glm.uvec3)
 
-                    triangle = glm.uvec3(0, 0, 0)
-                    triangle[0] = i_vertex-1
-                    triangle[1] = i_vertex-1-1-cols
-                    triangle[2] = i_vertex-1-cols
-                    indices[i_index] = triangle
-                    i_index += 1
-                    self.generate_temp_TBN(vertices[triangle[0]], vertices[triangle[1]], vertices[triangle[2]])
-
-            yield
-
-        del vertices[i_vertex:]
-        del indices[i_index:]
+    def build(self):
+        X = self._XData
+        Y = self._YData
+        Z = self._ZData
+        C = self._CData if self._CData is not None else Z
+        back_C = self._back_CData if self._back_CData is not None else C
+        Surf._build(self, X, Y, Z, C, back_C)
 
     @property
     def XData(self):
-        return self.__XData
+        return self._XData
     
     @XData.setter
     @Mesh.param_setter
     def XData(self, X:np.ndarray):
-        self.__XData = X
+        self._XData = X
     
     @property
     def YData(self):
-        return self.__YData
+        return self._YData
     
     @YData.setter
     @Mesh.param_setter
     def YData(self, Y:np.ndarray):
-        self.__YData = Y
+        self._YData = Y
     
     @property
     def ZData(self):
-        return self.__ZData
+        return self._ZData
     
     @ZData.setter
     @Mesh.param_setter
     def ZData(self, Z:np.ndarray):
-        self.__ZData = Z
+        self._ZData = Z
     
     @property
     def CData(self):
-        return self.__CData
+        return self._CData
     
     @CData.setter
     @Mesh.param_setter
     def CData(self, C:np.ndarray):
-        self.__CData = C
-        self.__use_color_map = True
-        if not self.__back_CData_user_set:
-            self.__back_CData = C
-            self.__back_use_color_map = True
+        self._CData = C
+        self._use_color_map = True
+        if not self._back_CData_user_set:
+            self._back_CData = C
+            self._back_use_color_map = True
 
     @property
     def back_CData(self):
-        return self.__back_CData
+        return self._back_CData
     
     @back_CData.setter
     @Mesh.param_setter
     def back_CData(self, C:np.ndarray):
-        self.__back_CData = C
-        self.__back_CData_user_set = True
-        self.__back_use_color_map = True
+        self._back_CData = C
+        self._back_CData_user_set = True
+        self._back_use_color_map = True
     
     @property
     def color_map(self):
-        return self.__color_map
+        return self._color_map
     
     @color_map.setter
     @Mesh.param_setter
     def color_map(self, color_map:ColorMap):
-        self.__color_map = color_map
-        self.__use_color_map = True
-        if not self.__back_color_map_user_set:
-            self.__back_color_map = color_map
-            self.__back_use_color_map = True
+        self._color_map = color_map
+        self._use_color_map = True
+        if not self._back_color_map_user_set:
+            self._back_color_map = color_map
+            self._back_use_color_map = True
 
     @property
     def back_color_map(self):
-        return self.__back_color_map
+        return self._back_color_map
     
     @back_color_map.setter
     @Mesh.param_setter
     def back_color_map(self, color_map:ColorMap):
-        self.__back_color_map = color_map
-        self.__back_use_color_map = True
-        self.__back_color_map_user_set = True
+        self._back_color_map = color_map
+        self._back_use_color_map = True
+        self._back_color_map_user_set = True

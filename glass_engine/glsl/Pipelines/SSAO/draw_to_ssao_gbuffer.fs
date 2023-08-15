@@ -35,7 +35,7 @@ void main()
         view_normal = -view_normal;
     }
     view_TBN[2] = view_normal;
-    if (hasnan(view_TBN))
+    if (hasnan(view_normal))
     {
         return;
     }

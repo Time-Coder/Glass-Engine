@@ -1,5 +1,6 @@
 import glm
 import math
+import numpy as np
 
 from .SphericalFSurf import SphericalFSurf
 from ..ColorMap import ColorMap
@@ -15,15 +16,15 @@ class SphericalHarmonics(SphericalFSurf):
                  name:str="", block:bool=True):
         
         def SH(lon, lat):
-            theta = math.pi/2-lat
+            theta = np.pi/2-lat
             phi = lon
             SH_value = spherical_harmonics_eval(n, m, theta, phi)
             if m > 0:
-                return math.sqrt(2) * abs(SH_value.real)
+                return np.sqrt(2) * np.abs(SH_value.real)
             elif m < 0:
-                return math.sqrt(2) * abs(SH_value.imag)
+                return np.sqrt(2) * np.abs(SH_value.imag)
             else:
-                return abs(SH_value.real)
+                return np.abs(SH_value.real)
 
         SphericalFSurf.__init__(self, SH,
                       color_map=color_map, back_color_map=back_color_map,

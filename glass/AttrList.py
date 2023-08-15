@@ -109,4 +109,3 @@ class AttrList(SameTypeList):
                 dest_start = update["dest_start"]
                 size = update["size"]
                 self._vbo.bufferSubData(dest_start*self.stride, size*self.stride, temp_buffer)
-                

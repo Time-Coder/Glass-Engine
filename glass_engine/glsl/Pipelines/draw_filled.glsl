@@ -15,7 +15,7 @@ vec4 draw_filled(Camera camera, Camera CSM_camera)
         view_normal = -view_normal;
     }
     view_TBN[2] = view_normal;
-    if (hasnan(view_TBN))
+    if (hasnan(view_normal))
     {
         return vec4(0, 0, 0, 0);
     }

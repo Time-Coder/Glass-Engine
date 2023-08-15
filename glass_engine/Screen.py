@@ -3,7 +3,7 @@ from .Renderers.Renderer import Renderer
 from .Frame import Frame
 
 from glass import GLConfig, FBO, RBO, sampler2DMS, sampler2D, RenderHint, SSBO, UBO
-from glass.utils import checktype, extname, id_to_var
+from glass.utils import checktype, extname, di
 
 from PyQt6.QtOpenGLWidgets import QOpenGLWidget
 from PyQt6.QtGui import QMouseEvent, QKeyEvent, QCursor, QWheelEvent, QSurfaceFormat, QPainter, QPen, QColor
@@ -188,7 +188,7 @@ class Screen(QOpenGLWidget):
 
     @property
     def camera(self):
-        return id_to_var(self._camera_id)
+        return di(self._camera_id)
 
     @property
     def samples(self):
