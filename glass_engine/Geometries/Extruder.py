@@ -1,6 +1,6 @@
 from ..Mesh import Mesh
 from ..algorithm import line_intersect_plane, \
-    point_mirror_by_plane, polygon_centroid, polygon_normal
+    point_mirror_by_plane, polygon_centroid, polygon_normal, cos_angle_of
 
 from glass import Vertex
 
@@ -49,6 +49,8 @@ class Extruder(Mesh):
         
         centroid = polygon_centroid(section)
         normal = -polygon_normal(section, centroid=centroid)
+        section = self.__used_section
+
         dem = math.sqrt(normal.x**2 + normal.y**2)
         current_yaw = 0
         current_pitch = math.pi/2 if normal.z > 0 else -math.pi/2
@@ -531,6 +533,24 @@ class Extruder(Mesh):
     def section(self, section):
         self.__section = section
         self.start_building()
+
+    @property
+    def __used_section(self):
+        should_duplicate_indices = set()
+        for i in range(1, len(self.__section)-1):
+            v1 = self.__section[i-1] - self.__section[i]
+            v2 = self.__section[i+1] - self.__section[i]
+            cos_angle = cos_angle_of(v1, v2)
+            if cos_angle > -0.9:
+                should_duplicate_indices.add(i)
+
+        used_section = []
+        for i in range(len(self.__section)):
+            used_section.append(self.__section[i])
+            if i in should_duplicate_indices:
+                used_section.append(self.__section[i])
+
+        return used_section
 
     @property
     def path(self):

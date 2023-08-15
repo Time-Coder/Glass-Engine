@@ -1,5 +1,5 @@
 from ._Manipulator import _MouseButton, _Key
-from glass.utils import id_to_var
+from glass.utils import di
 
 import glm
 
@@ -13,7 +13,7 @@ class Manipulator:
 
     @property
     def camera(self):        
-        return id_to_var(self._camera_id)
+        return di(self._camera_id)
 
     def startup(self)->bool:
         return False

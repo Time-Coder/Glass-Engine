@@ -1,4 +1,5 @@
 from ..Mesh import Mesh
+from ..algorithm import cos_angle_of
 
 from glass import Vertex
 
@@ -28,7 +29,7 @@ class Rotator(Mesh):
     def build(self):
         vertices = self.vertices
         indices = self.indices
-        section = self.__section
+        section = self.__used_section
         axis_start = self.__axis_start
         axis_stop = self.__axis_stop
         start_angle = self.__start_angle/180*math.pi
@@ -113,6 +114,24 @@ class Rotator(Mesh):
     @Mesh.param_setter
     def section(self, section:(list,tuple,np.ndarray)):
         self.__section = section
+
+    @property
+    def __used_section(self):
+        should_duplicate_indices = set()
+        for i in range(1, len(self.__section)-1):
+            v1 = self.__section[i-1] - self.__section[i]
+            v2 = self.__section[i+1] - self.__section[i]
+            cos_angle = cos_angle_of(v1, v2)
+            if cos_angle > -0.9:
+                should_duplicate_indices.add(i)
+
+        used_section = []
+        for i in range(len(self.__section)):
+            used_section.append(self.__section[i])
+            if i in should_duplicate_indices:
+                used_section.append(self.__section[i])
+
+        return used_section
     
     @property
     def axis_start(self):

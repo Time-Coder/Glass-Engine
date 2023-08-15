@@ -1,5 +1,5 @@
 from OpenGL import GL
-from .utils import id_to_var
+from .utils import di
 
 class Block:
 
@@ -25,7 +25,7 @@ class Block:
 
 		@property
 		def block(self):
-			return id_to_var(self._block_id)
+			return di(self._block_id)
 
 		def bind(self, var):
 			if var is self._bound_var:
@@ -133,7 +133,7 @@ class Block:
 
 	@property
 	def program(self):
-		return id_to_var(self._program_id)
+		return di(self._program_id)
 
 	@property
 	def auto_upload(self):

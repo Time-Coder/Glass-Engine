@@ -51,6 +51,31 @@ uniform bool use_skydome_map;
 uniform sampler2D skydome_map;
 uniform Camera CSM_camera;
 
+mat3 choose_good_TBN(int index, mat3 backup_TBN)
+{
+    if (!hasnan(gs_in[index].world_TBN) &&
+        length(gs_in[index].world_TBN[0]) > 1E-6 &&
+        length(gs_in[index].world_TBN[1]) > 1E-6 &&
+        length(gs_in[index].world_TBN[2]) > 1E-6)
+    {
+        return gs_in[index].world_TBN;
+    }
+
+    for (int i = 0; i < 3; i++)
+    {
+        if (i != index &&
+            !hasnan(gs_in[i].world_TBN) &&
+            length(gs_in[i].world_TBN[0]) > 1E-6 &&
+            length(gs_in[i].world_TBN[1]) > 1E-6 &&
+            length(gs_in[i].world_TBN[2]) > 1E-6)
+        {
+            return gs_in[i].world_TBN;
+        }
+    }
+
+    return backup_TBN;
+}
+
 void main()
 {
     vec3 v01 = (gl_in[1].gl_Position - gl_in[0].gl_Position).xyz;
@@ -84,14 +109,16 @@ void main()
     for (int i = 0; i < 3; i++)
     {
         gs_out.view_pos = world_to_view(camera, gl_in[i].gl_Position.xyz) + explode_distance * face_view_normal;
+        mat3 backup_TBN = mat3(face_world_tangent, face_world_bitangent, face_world_normal);
         if (material.shading_model == 1) // Flat
         {
-            gs_out.view_TBN = world_TBN_to_view(camera, mat3(face_world_tangent, face_world_bitangent, face_world_normal));
+            gs_out.view_TBN = world_TBN_to_view(camera, backup_TBN);
         }
         else
         {
-            gs_out.view_TBN = world_TBN_to_view(camera, gs_in[i].world_TBN);
+            gs_out.view_TBN = world_TBN_to_view(camera, choose_good_TBN(i, backup_TBN));
         }
+        
         gs_out.tex_coord = gs_in[i].tex_coord;
         gs_out.color = gs_in[i].color;
         gs_out.back_color = gs_in[i].back_color;

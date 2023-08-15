@@ -3,6 +3,7 @@ import math
 import copy
 import numpy as np
 from cacheout import Cache
+from glass.utils import profiler
 
 cache = Cache(maxsize=100)
 
@@ -27,12 +28,12 @@ def fzero(f, interval):
     return (lower + upper)/2
 
 def angle_of(v1, v2):
-    len_v1 = glm.length(v1)
-    len_v2 = glm.length(v2)
+    len_v1 = math.sqrt(v1[0]**2 + v1[1]**2 + v1[2]**2)
+    len_v2 = math.sqrt(v2[0]**2 + v2[1]**2 + v2[2]**2)
     if len_v1 < 1E-6 or len_v2 < 1E-6:
         return 0
 
-    cos_theta = glm.dot(v1, v2) / (len_v1 * len_v2)
+    cos_theta = (v1[0]*v2[0] + v1[1]*v2[1] + v1[2]*v2[2]) / (len_v1 * len_v2)
     if cos_theta < -1:
         cos_theta = -1
     if cos_theta > 1:
@@ -57,19 +58,19 @@ def cos_angle_of(v1, v2):
 def approx_pos(pos, precision:int=7):
     return glm.vec3(round(pos.x, precision), round(pos.y, precision), round(pos.z, precision))
 
-def hash_pos(pos, precision:int=7):
-    negtive_zero = "-0." + "0"*precision
-    zero = "0." + "0"*precision
+def hash_pos(pos):
+    negtive_zero = "-0.0000000"
+    zero = "0.0000000"
 
-    x_str = eval('f"{pos.x:.'+str(precision)+'f}"')
+    x_str = f"{pos[0]:.7f}"
     if x_str == negtive_zero:
         x_str = zero
 
-    y_str = eval('f"{pos.y:.'+str(precision)+'f}"')
+    y_str = f"{pos[1]:.7f}"
     if y_str == negtive_zero:
         y_str = zero
 
-    z_str = eval('f"{pos.z:.'+str(precision)+'f}"')
+    z_str = f"{pos[2]:.7f}"
     if z_str == negtive_zero:
         z_str = zero
 
@@ -188,400 +189,145 @@ def is_closed(vertices, indices):
     
     return (not points_map)
 
+def normalize(arr):
+    if len(arr.shape) == 2:
+        lens = np.sqrt( arr[:,0]**2 + arr[:,1]**2 + arr[:,2]**2 )
+        good_lens_it = (lens > 1E-6)
+
+        normalized_arr = arr[:]
+        normalized_arr[:,0][good_lens_it] /= lens[good_lens_it]
+        normalized_arr[:,1][good_lens_it] /= lens[good_lens_it]
+        normalized_arr[:,2][good_lens_it] /= lens[good_lens_it]
+        return normalized_arr
+    else:
+        len_arr = np.linalg.norm(arr)
+        if len_arr > 1E-6:
+            return arr / len_arr
+        else:
+            return arr[:]
+
+def generate_TBN(vertices, indices):
+    position_view = vertices["position"].ndarray[indices.ndarray.flat, :]
+    position0_view = position_view[0::3, :]
+    position1_view = position_view[1::3, :]
+    position2_view = position_view[2::3, :]
+
+    tex_coord_view = vertices["tex_coord"].ndarray[indices.ndarray.flat, :]
+    tex_coord0_view = tex_coord_view[0::3, :]
+    tex_coord1_view = tex_coord_view[1::3, :]
+    tex_coord2_view = tex_coord_view[2::3, :]
+
+    v01 = position1_view - position0_view
+    v02 = position2_view - position0_view
+
+    st01 = tex_coord1_view - tex_coord0_view
+    st02 = tex_coord2_view - tex_coord0_view
+
+    det = st01[:,0] * st02[:,1] - st02[:,0] * st01[:,0]
+    good_det_id = (abs(det) > 1E-6)
+    det = det.reshape(st01.shape[0], 1)
+
+    normal = normalize(np.cross(v01, v02))
+    tangent = st02[:,1].reshape(v01.shape[0], 1)*v01 - st01[:,1].reshape(v01.shape[0], 1)*v02
+    bitangent = st01[:,0].reshape(v01.shape[0], 1)*v02 - st02[:,0].reshape(v01.shape[0], 1)*v01
+    
+    tangent[good_det_id,:] /= det[good_det_id,:]
+    bitangent[good_det_id,:] /= det[good_det_id,:]
+
+    return tangent, bitangent, normal
+
 def generate_auto_TBN(vertices, indices, calculate_normal=True):
+    points_list = []
+    for i in range(vertices["position"].ndarray.shape[0]):
+        points_list.append({
+            "tangent": np.array([0, 0, 0], dtype=np.float32),
+            "bitangent": np.array([0, 0, 0], dtype=np.float32),
+            "normal": np.array([0, 0, 0], dtype=np.float32),
+            "num": 0,
+            "index": set()
+        })
 
-    points_map = {}
+    tangent, bitangent, normal = generate_TBN(vertices, indices)
 
-    for index in indices:
-        vertex0 = vertices[index[0]]
-        vertex1 = vertices[index[1]]
-        vertex2 = vertices[index[2]]
-        vertex = [vertex0, vertex1, vertex2]
-
-        pos0_key = hash_pos(vertex0.position)
-        pos1_key = hash_pos(vertex1.position)
-        pos2_key = hash_pos(vertex2.position)
-        pos_keys = [pos0_key, pos1_key, pos2_key]
-
-        v01 = vertex1.position - vertex0.position
-        v02 = vertex2.position - vertex0.position
-        v12 = vertex2.position - vertex1.position
-        v10 = -v01
-        v20 = -v02
-        v21 = -v12
-
-        weight0 = angle_of(v01, v02)
-        weight1 = angle_of(v10, v12)
-        weight2 = angle_of(v20, v21)
-        weight = [weight0, weight1, weight2]
-
-        normal = glm.cross(v01, v02)
-        len_normal = glm.length(normal)
-        if len_normal < 1E-6:
-            continue
-        normal /= len_normal
-
-        st01 = vertex1.tex_coord - vertex0.tex_coord
-        st02 = vertex2.tex_coord - vertex0.tex_coord
-        det = st01.s * st02.t - st02.s * st01.t
-
-        tangent = st02.t*v01 - st01.t*v02
-        bitangent = st01.s*v02 - st02.s*v01
-        if abs(det) < 1E-6:
-            continue
-        tangent /= det
-        bitangent /= det
-
-        for i in range(3):
-            if pos_keys[i] not in points_map:
-                points_map[pos_keys[i]] = \
-                [
-                    {
-                        "tangent": tangent,
-                        "bitangent": bitangent,
-                        "normal": normal,
-                        "weight": weight[i],
-                        "vertices": {vertex[i]}
-                    }
-                ]
-                vertex[i].tangent = tangent
-                vertex[i].bitangent = bitangent
-                if calculate_normal:
-                    vertex[i].normal = normal
-            else:
-                nearest_info = None
-                min_difference = float("inf")
-                in_some_group = False
-                for info in points_map[pos_keys[i]]:
-                    old_normal = info["normal"]
-                    old_tangent = info["tangent"]
-                    old_bitangent = info["bitangent"]
-
-                    normal_difference = angle_of(normal, old_normal)**2
-                    tangent_difference = angle_of(tangent, old_tangent)**2 + abs(glm.length2(tangent) - glm.length2(old_tangent))
-                    bitangent_difference = angle_of(bitangent, old_bitangent)**2 + abs(glm.length2(bitangent) - glm.length2(old_bitangent))
-                    current_difference = normal_difference + tangent_difference + bitangent_difference
-
-                    if current_difference < min_difference:
-                        min_difference = current_difference
-                        nearest_info = info
-
-                    if vertex[i] in info["vertices"]:
-                        in_some_group = True
+    for i in range(len(indices.ndarray.flat)):
+        index = indices.ndarray.flat[i]
+        info = points_list[index]
+        info["num"] += 1
+        info["tangent"] += tangent[i//3, :]
+        info["bitangent"] += bitangent[i//3, :]
+        info["normal"] += normal[i//3, :]
+        info["index"].add(index)
                 
-                if min_difference < 0.01:
-                    if vertex[i] not in nearest_info["vertices"]:
-                        old_tangent = nearest_info["tangent"]
-                        old_bitangent = nearest_info["bitangent"]
-                        old_normal = nearest_info["normal"]
-                        old_weight = nearest_info["weight"]
+    for info in points_list:
+        if info["num"] == 0:
+            continue
 
-                        new_weight = old_weight + weight[i]
-                        new_tangent = (old_weight*old_tangent + weight[i]*tangent)/new_weight
-                        new_bitangent = (old_weight*old_bitangent + weight[i]*bitangent)/new_weight
-                        new_normal = glm.normalize(old_weight * old_normal + weight[i] * normal)
-                        new_vertex = copy.deepcopy(vertex[i]) if in_some_group else vertex[i]
+        info["tangent"] = info["tangent"] / info["num"]
+        info["bitangent"] = info["bitangent"] / info["num"]
+        len_normal = np.linalg.norm(info["normal"])
+        if len_normal > 1E-6:
+            info["normal"] = info["normal"] / len_normal
 
-                        new_vertex.tangent = new_tangent
-                        new_vertex.bitangent = new_bitangent
-                        if calculate_normal:
-                            new_vertex.normal = new_normal
+        for index in info["index"]:
+            vertices["tangent"].ndarray[index, :] = info["tangent"]
+            vertices["bitangent"].ndarray[index, :] = info["bitangent"]
+            if calculate_normal:
+                vertices["normal"].ndarray[index, :] = info["normal"]
 
-                        nearest_info["tangent"] = new_tangent
-                        nearest_info["bitangent"] = new_bitangent
-                        nearest_info["normal"] = new_normal
-                        nearest_info["weight"] = new_weight
-                        nearest_info["vertices"].add(new_vertex)
-                        
-                        if in_some_group:
-                            new_index = len(vertices)
-                            vertices.append(new_vertex)
-                            index[i] = new_index
-                else:
-                    new_vertex = copy.deepcopy(vertex[i]) if in_some_group else vertex[i]
-                    new_info = \
-                    {
-                        "tangent": tangent,
-                        "bitangent": bitangent,
-                        "normal": normal,
-                        "weight": weight[i],
-                        "vertices": {new_vertex}
-                    }
-                    points_map[pos_keys[i]].append(new_info)
-
-                    new_vertex.tangent = tangent
-                    new_vertex.bitangent = bitangent
-                    if calculate_normal:
-                        new_vertex.normal = normal
-
-                    if in_some_group:
-                        new_index = len(vertices)
-                        vertices.append(new_vertex)
-                        index[i] = new_index
-
-            yield
-
-    for infos in points_map.values():
-        for info in infos:
-            tangent = info["tangent"]
-            bitangent = info["bitangent"]
-            normal = info["normal"]
-            for vertex in info["vertices"]:
-                vertex.tangent = tangent
-                vertex.bitangent = bitangent
-                if calculate_normal:
-                    vertex.normal = normal
-                yield
-
-    for vertex in vertices:
-        pos_key = None
-        if "tangent" not in vertex:
-            pos_key = hash_pos(vertex.position)
-            vertex.tangent = points_map[pos_key][0]["tangent"]
-
-        if "bitangent" not in vertex:
-            if pos_key is None:
-                pos_key = hash_pos(vertex.position)
-            vertex.bitangent = points_map[pos_key][0]["bitangent"]
-
-        if calculate_normal and "normal" not in vertex:
-            if pos_key is None:
-                pos_key = hash_pos(vertex.position)
-            vertex.normal = points_map[pos_key][0]["normal"]
-            
 def generate_smooth_TBN(vertices, indices, calculate_normal=True):
-
     points_map = {}
+    pos_keys = []
+    for i in range(vertices["position"].ndarray.shape[0]):
+        pos = vertices["position"].ndarray[i]
+        pos_key = hash_pos(pos)
+        pos_keys.append(pos_key)
+        if pos_key not in points_map:
+            points_map[pos_key] = \
+            {
+                "tangent": np.array([0, 0, 0], dtype=np.float32),
+                "bitangent": np.array([0, 0, 0], dtype=np.float32),
+                "normal": np.array([0, 0, 0], dtype=np.float32),
+                "num": 0,
+                "index": set()
+            }
 
-    for index in indices:
-        vertex0 = vertices[index[0]]
-        vertex1 = vertices[index[1]]
-        vertex2 = vertices[index[2]]
-        vertex = [vertex0, vertex1, vertex2]
+    tangent, bitangent, normal = generate_TBN(vertices, indices)
 
-        pos0_key = hash_pos(vertex0.position)
-        pos1_key = hash_pos(vertex1.position)
-        pos2_key = hash_pos(vertex2.position)
-        pos_keys = [pos0_key, pos1_key, pos2_key]
-
-        v01 = vertex1.position - vertex0.position
-        v02 = vertex2.position - vertex0.position
-        v12 = vertex2.position - vertex1.position
-        v10 = -v01
-        v20 = -v02
-        v21 = -v12
-
-        st01 = vertex1.tex_coord - vertex0.tex_coord
-        st02 = vertex2.tex_coord - vertex0.tex_coord
-
-        det = st01.s * st02.t - st02.s * st01.t
-
-        weight0 = angle_of(v01, v02)
-        weight1 = angle_of(v10, v12)
-        weight2 = angle_of(v20, v21)
-        weight = [weight0, weight1, weight2]
-
-        normal = glm.cross(v01, v02)
-        len_normal = glm.length(normal)
-        if len_normal < 1E-6:
-            continue
-        normal /= len_normal
-
-        tangent = st02.t*v01 - st01.t*v02
-        bitangent = st01.s*v02 - st02.s*v01
-        if abs(det) < 1E-6:
-            continue
-        tangent /= det
-        bitangent /= det
-
-        for i in range(3):
-            if pos_keys[i] not in points_map:
-                points_map[pos_keys[i]] = \
-                {
-                    "tangent": tangent,
-                    "bitangent": bitangent,
-                    "normal": normal,
-                    "weight": weight[i],
-                    "vertices": {vertex[i]}
-                }
-                vertex[i].tangent = tangent
-                vertex[i].bitangent = bitangent
-                if calculate_normal:
-                    vertex[i].normal = normal
-            else:
-                nearest_info = points_map[pos_keys[i]]
-                old_tangent = nearest_info["tangent"]
-                old_bitangent = nearest_info["bitangent"]
-                old_normal = nearest_info["normal"]
-                old_weight = nearest_info["weight"]
-
-                new_weight = old_weight + weight[i]
-                if new_weight > 1E-6:
-                    new_tangent = (old_weight * old_tangent + weight[i] * tangent)/new_weight
-                    new_bitangent = (old_weight * old_bitangent + weight[i] * bitangent)/new_weight
-                else:
-                    new_tangent = 0.5*(old_tangent + tangent)
-                    new_bitangent = 0.5*(old_bitangent + bitangent)
-                new_normal = glm.normalize(old_weight * old_normal + weight[i] * normal)
-                
-                nearest_info["tangent"] = new_tangent
-                nearest_info["bitangent"] = new_bitangent
-                nearest_info["normal"] = new_normal
-                nearest_info["weight"] = new_weight
-                nearest_info["vertices"].add(vertex[i])
-                vertex[i].tangent = new_tangent
-                vertex[i].bitangent = new_bitangent
-                if calculate_normal:
-                    vertex[i].normal = new_normal
-            yield
+    for i in range(len(indices.ndarray.flat)):
+        index = indices.ndarray.flat[i]
+        pos_key = pos_keys[index]
+        info = points_map[pos_key]
+        info["num"] += 1
+        info["tangent"] += tangent[i//3, :]
+        info["bitangent"] += bitangent[i//3, :]
+        info["normal"] += normal[i//3, :]
+        info["index"].add(index)
                 
     for info in points_map.values():
-        tangent = info["tangent"]
-        bitangent = info["bitangent"]
-        normal = info["normal"]
-        for vertex in info["vertices"]:
-            vertex.tangent = tangent
-            vertex.bitangent = bitangent
+        if info["num"] == 0:
+            continue
+
+        info["tangent"] = info["tangent"] / info["num"]
+        info["bitangent"] = info["bitangent"] / info["num"]
+        len_normal = np.linalg.norm(info["normal"])
+        if len_normal > 1E-6:
+            info["normal"] = info["normal"] / len_normal
+
+        for index in info["index"]:
+            vertices["tangent"].ndarray[index, :] = info["tangent"]
+            vertices["bitangent"].ndarray[index, :] = info["bitangent"]
             if calculate_normal:
-                vertex.normal = normal
-            yield
-
-    for vertex in vertices:
-        pos_key = None
-        if "tangent" not in vertex:
-            pos_key = hash_pos(vertex.position)
-            vertex.tangent = points_map[pos_key]["tangent"]
-            yield
-
-        if "bitangent" not in vertex:
-            if pos_key is None:
-                pos_key = hash_pos(vertex.position)
-            vertex.bitangent = points_map[pos_key]["bitangent"]
-            yield
-
-        if calculate_normal and "normal" not in vertex:
-            if pos_key is None:
-                pos_key = hash_pos(vertex.position)
-            vertex.normal = points_map[pos_key]["normal"]
-            yield
+                vertices["normal"].ndarray[index, :] = info["normal"]
 
 def generate_sharp_TBN(vertices, indices, calculate_normal=True):
+    if "tangent" in vertices:
+        vertices["tangent"].ndarray = np.zeros_like(vertices["tangent"].ndarray)
 
-    already_set_vertices = set()
+    if "bitangent" in vertices:
+        vertices["bitangent"].ndarray = np.zeros_like(vertices["bitangent"].ndarray)
 
-    for index in indices:
-        vertex0 = vertices[index[0]]
-        vertex1 = vertices[index[1]]
-        vertex2 = vertices[index[2]]
-        vertex = [vertex0, vertex1, vertex2]
-
-        v01 = vertex1.position - vertex0.position
-        v02 = vertex2.position - vertex0.position
-
-        st01 = vertex1.tex_coord - vertex0.tex_coord
-        st02 = vertex2.tex_coord - vertex0.tex_coord
-
-        det = st01.s * st02.t - st02.s * st01.t
-
-        normal = glm.cross(v01, v02)
-        len_normal = glm.length(normal)
-        if len_normal < 1E-6:
-            continue
-        normal /= len_normal
-
-        tangent = st02.t*v01 - st01.t*v02
-        bitangent = st01.s*v02 - st02.s*v01
-        if abs(det) < 1E-6:
-            continue
-        tangent /= det
-        bitangent /= det
-
-        for i in range(3):
-            if vertex[i] in already_set_vertices:
-                new_vertex = copy.deepcopy(vertex[i])
-                new_vertex.tangent = tangent
-                new_vertex.bitangent = bitangent
-                if calculate_normal:
-                    new_vertex.normal = normal
-                new_index = len(vertices)
-                index[i] = new_index
-                vertices.append(new_vertex)
-            else:
-                vertex[i].tangent = tangent
-                vertex[i].bitangent = bitangent
-                if calculate_normal:
-                    vertex[i].normal = normal
-                already_set_vertices.add(vertex[i])
-
-            yield
-
-    for index in indices:
-        vertex0 = vertices[index[0]]
-        vertex1 = vertices[index[1]]
-        vertex2 = vertices[index[2]]
-
-        if "tangent" not in vertex0:
-            if "tangent" in vertex1 and "tangent" not in vertex2:
-                vertex0["tangent"] = vertex1["tangent"]
-                vertex0["bitangent"] = vertex1["bitangent"]
-                if calculate_normal:
-                    vertex0["normal"] = vertex1["normal"]
-            
-            if "tangent" in vertex2 and "tangent" not in vertex1:
-                vertex0["tangent"] = vertex2["tangent"]
-                vertex0["bitangent"] = vertex2["bitangent"]
-                if calculate_normal:
-                    vertex0["normal"] = vertex2["normal"]
-
-            if "tangent" in vertex1 and "tangent" in vertex2:
-                vertex0["tangent"] = 0.5*(vertex1["tangent"] + vertex2["tangent"])
-                vertex0["bitangent"] = 0.5*(vertex1["bitangent"] + vertex2["bitangent"])
-                if calculate_normal:
-                    vertex0["normal"] = glm.normalize(vertex1["normal"] + vertex2["normal"])
-
-            yield
-
-        if "tangent" not in vertex1:
-            if "tangent" in vertex0 and "tangent" not in vertex2:
-                vertex1["tangent"] = vertex0["tangent"]
-                vertex1["bitangent"] = vertex0["bitangent"]
-                if calculate_normal:
-                    vertex1["normal"] = vertex0["normal"]
-            
-            if "tangent" in vertex2 and "tangent" not in vertex0:
-                vertex1["tangent"] = vertex2["tangent"]
-                vertex1["bitangent"] = vertex2["bitangent"]
-                if calculate_normal:
-                    vertex1["normal"] = vertex2["normal"]
-
-            if "tangent" in vertex0 and "tangent" in vertex2:
-                vertex1["tangent"] = 0.5*(vertex0["tangent"] + vertex2["tangent"])
-                vertex1["bitangent"] = 0.5*(vertex0["bitangent"] + vertex2["bitangent"])
-                if calculate_normal:
-                    vertex1["normal"] = glm.normalize(vertex0["normal"] + vertex2["normal"])
-                
-            yield
-
-        if "tangent" not in vertex2:
-            if "tangent" in vertex0 and "tangent" not in vertex1:
-                vertex2["tangent"] = vertex0["tangent"]
-                vertex2["bitangent"] = vertex0["bitangent"]
-                if calculate_normal:
-                    vertex2["normal"] = vertex0["normal"]
-            
-            if "tangent" in vertex1 and "tangent" not in vertex0:
-                vertex2["tangent"] = vertex1["tangent"]
-                vertex2["bitangent"] = vertex1["bitangent"]
-                if calculate_normal:
-                    vertex2["normal"] = vertex1["normal"]
-
-            if "tangent" in vertex0 and "tangent" in vertex1:
-                vertex2["tangent"] = 0.5*(vertex0["tangent"] + vertex1["tangent"])
-                vertex2["bitangent"] = 0.5*(vertex0["bitangent"] + vertex1["bitangent"])
-                if calculate_normal:
-                    vertex2["normal"] = glm.normalize(vertex0["normal"] + vertex1["normal"])
-
-            yield
+    if "normal" in vertices:
+        vertices["normal"].ndarray = np.zeros_like(vertices["normal"].ndarray)
 
 def line_intersect_plane(line_start:glm.vec3, line_direction:glm.vec3,
                          plane_start:glm.vec3, plane_normal:glm.vec3):
@@ -607,13 +353,6 @@ def point_mirror_by_plane(point:glm.vec3, plane_start:glm.vec3, plane_normal:glm
 
 def polygon_centroid(polygon):
     polygon = copy.copy(polygon)
-
-    i = 1
-    while i < len(polygon):
-        while glm.length(polygon[i]-polygon[i-1]) < 1E-6:
-            del polygon[i]
-
-        i += 1
 
     O = None
     for point in polygon:
@@ -683,7 +422,7 @@ def Zernike_coeff(n:int, m:int, k:int):
     return sgn * C
 
 @cache.memoize()
-def Zernike_eval(n:int, m:int, theta:float, r:float):
+def Zernike_eval(n:int, m:int, r:float, theta:float):
     use_cos = (m >= 0)
     m = abs(m)
 
@@ -696,9 +435,9 @@ def Zernike_eval(n:int, m:int, theta:float, r:float):
         R += Zernike_coeff(n, m, k) * r**(n-2*k)
 
     if use_cos:
-        return R * math.cos(m*theta)
+        return R * np.cos(m*theta)
     else:
-        return R * math.sin(m*theta)
+        return R * np.sin(m*theta)
 
 @cache.memoize()
 def associated_Legendre_coeff(n:int, m:int, k:int):
@@ -733,6 +472,6 @@ def spherical_harmonics_coeff(n:int, m:int):
 @cache.memoize()
 def spherical_harmonics_eval(n:int, m:int, theta:float, phi:float):
     A = spherical_harmonics_coeff(n, m)
-    P = associated_Legendre_eval(n, m, math.cos(theta))
-    return A * P * complex(math.cos(m*phi), math.sin(m*phi))
+    P = associated_Legendre_eval(n, m, np.cos(theta))
+    return A * P * np.exp(m*phi*1j)
     

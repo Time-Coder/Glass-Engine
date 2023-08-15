@@ -84,6 +84,11 @@ void parallax_mapping(sampler2D height_map, float height_scale, mat3 view_TBN, i
 void change_geometry(Material material, inout vec3 view_pos, inout vec3 view_normal,
                      inout vec2 frag_tex_coord, mat3 view_TBN)
 {
+    if (hasnan(view_TBN))
+    {
+        return;
+    }
+
     // 视差贴图
     if (material.use_height_map)
     {
