@@ -14,8 +14,8 @@ class FSurf(Mesh):
                  color_map:ColorMap=None, back_color_map:ColorMap=None,
                  color:(glm.vec3,glm.vec4)=None, back_color:(glm.vec3,glm.vec4)=None,
                  surf_type:Mesh.SurfType=Mesh.SurfType.Smooth,
-                 name:str="", block:bool=True):
-        Mesh.__init__(self, name=name, block=block, surf_type=surf_type)
+                 name:str=""):
+        Mesh.__init__(self, name=name, surf_type=surf_type)
         self._func = func
         self._x_range = x_range
         self._y_range = y_range

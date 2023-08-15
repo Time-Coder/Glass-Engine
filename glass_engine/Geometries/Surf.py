@@ -14,8 +14,8 @@ class Surf(Mesh):
                  C:np.ndarray=None, back_C:np.ndarray=None,
                  color_map:ColorMap=None, back_color_map:ColorMap=None, 
                  color:(glm.vec3,glm.vec4)=None, back_color:(glm.vec3,glm.vec4)=None,
-                 surf_type:Mesh.SurfType=Mesh.SurfType.Smooth, name="", block=True):
-        Mesh.__init__(self, name=name, block=block, surf_type=surf_type)
+                 surf_type:Mesh.SurfType=Mesh.SurfType.Smooth, name=""):
+        Mesh.__init__(self, name=name, surf_type=surf_type)
         self._XData = X
         self._YData = Y
         self._ZData = Z

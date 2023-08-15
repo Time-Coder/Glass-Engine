@@ -13,7 +13,7 @@ class SphericalHarmonics(SphericalFSurf):
     def __init__(self, n:int, m:int, surf_type=Mesh.SurfType.Smooth,
                  color_map:ColorMap=None, back_color_map:ColorMap=None,
                  color:(glm.vec3,glm.vec4)=None, back_color:(glm.vec3,glm.vec4)=None,
-                 name:str="", block:bool=True):
+                 name:str=""):
         
         def SH(lon, lat):
             theta = np.pi/2-lat
@@ -29,4 +29,4 @@ class SphericalHarmonics(SphericalFSurf):
         SphericalFSurf.__init__(self, SH, surf_type=surf_type,
                       color_map=color_map, back_color_map=back_color_map,
                       color=color, back_color=back_color,
-                      name=name, block=block)
+                      name=name)
