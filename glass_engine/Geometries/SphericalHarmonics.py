@@ -1,16 +1,16 @@
 import glm
-import math
 import numpy as np
 
 from .SphericalFSurf import SphericalFSurf
 from ..ColorMap import ColorMap
+from ..Mesh import Mesh
 from glass.utils import checktype
 from ..algorithm import spherical_harmonics_eval
 
 class SphericalHarmonics(SphericalFSurf):
 
     @checktype
-    def __init__(self, n:int, m:int,
+    def __init__(self, n:int, m:int, surf_type=Mesh.SurfType.Smooth,
                  color_map:ColorMap=None, back_color_map:ColorMap=None,
                  color:(glm.vec3,glm.vec4)=None, back_color:(glm.vec3,glm.vec4)=None,
                  name:str="", block:bool=True):
@@ -26,7 +26,7 @@ class SphericalHarmonics(SphericalFSurf):
             else:
                 return np.abs(SH_value.real)
 
-        SphericalFSurf.__init__(self, SH,
+        SphericalFSurf.__init__(self, SH, surf_type=surf_type,
                       color_map=color_map, back_color_map=back_color_map,
                       color=color, back_color=back_color,
                       name=name, block=block)
