@@ -265,9 +265,14 @@ def find_pair(content, i):
 
 def md5s(content):
     md5_hash = hashlib.md5()
-    md5_hash.update(content.encode('utf-8'))
-    md5_code = md5_hash.hexdigest()
-    return md5_code
+    if isinstance(content, str):
+        md5_hash.update(content.encode('utf-8'))
+    elif isinstance(content, (bytes,bytearray)):
+        md5_hash.update(content)
+    else:
+        md5_hash.update(pickle.dumps(content))
+
+    return md5_hash.hexdigest()
 
 def modify_time(file_name):
     if not os.path.isfile(file_name):

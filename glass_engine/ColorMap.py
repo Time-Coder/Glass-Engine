@@ -9,20 +9,12 @@ class ColorMap:
 		jet = 1
 	
 	@staticmethod
-	def parula(min_value=None, max_value=None):
-		color_map = ColorMap(ColorMap.Type.parula)
-		if min_value is not None and max_value is not None:
-			color_map.range = (min_value, max_value)
-
-		return color_map
+	def parula(min_value:float=None, max_value:float=None, scale:float=1, alpha:float=1):
+		return ColorMap(ColorMap.Type.parula, min_value, max_value, scale, alpha)
 	
 	@staticmethod
-	def jet(min_value=None, max_value=None):
-		color_map = ColorMap(ColorMap.Type.jet)
-		if min_value is not None and max_value is not None:
-			color_map.range = (min_value, max_value)
-
-		return color_map
+	def jet(min_value:float=None, max_value:float=None, scale:float=1, alpha:float=1):
+		return ColorMap(ColorMap.Type.jet, min_value, max_value, scale, alpha)
 	
 	def __call__(self, value:(float,np.ndarray)):
 		if isinstance(value, (float,int)):
@@ -33,17 +25,33 @@ class ColorMap:
 			x = (x - self.min_value)/(self.max_value - self.min_value)
 
 		if self.__type == ColorMap.Type.parula:
-			r = np.interp(x, self.__x, self.__r).reshape(value.shape)
-			g = np.interp(x, self.__x, self.__g).reshape(value.shape)
-			b = np.interp(x, self.__x, self.__b).reshape(value.shape)
-			a = np.ones_like(r)
+			r = self.__scale * np.interp(x, self.__x, self.__r).reshape(value.shape)
+			g = self.__scale * np.interp(x, self.__x, self.__g).reshape(value.shape)
+			b = self.__scale * np.interp(x, self.__x, self.__b).reshape(value.shape)
+			a = self.__alpha * np.ones_like(r)
 			return np.dstack((r, g, b, a))
 		elif self.__type == ColorMap.Type.jet:
-			r = np.exp( - 60.0 * np.power(np.abs(x - 0.75), 3.2) )
-			g = np.exp( - 60.0 * np.power(np.abs(x - 0.50), 3.2) )
-			b = np.exp( - 60.0 * np.power(np.abs(x - 0.25), 3.2) )
-			a = np.ones_like(r)
+			r = self.__scale * np.exp( - 60.0 * np.power(np.abs(x - 0.75), 3.2) )
+			g = self.__scale * np.exp( - 60.0 * np.power(np.abs(x - 0.50), 3.2) )
+			b = self.__scale * np.exp( - 60.0 * np.power(np.abs(x - 0.25), 3.2) )
+			a = self.__alpha * np.ones_like(r)
 			return np.dstack((r, g, b, a))
+
+	@property
+	def scale(self):
+		return self.__scale
+	
+	@scale.setter
+	def scale(self, scale:float):
+		self.__scale = scale
+
+	@property
+	def alpha(self):
+		return self.__alpha
+	
+	@alpha.setter
+	def alpha(self, alpha:float):
+		self.__alpha = alpha
 
 	@property
 	def range(self):
@@ -53,6 +61,7 @@ class ColorMap:
 	@checktype
 	def range(self, range:(tuple,list)):
 		self.__range = list(range)
+		self.__range_user_set = True
 	
 	@property
 	def min_value(self):
@@ -62,6 +71,7 @@ class ColorMap:
 	@checktype
 	def min_value(self, min_value:float):
 		self.__range[0] = min_value
+		self.__range_user_set = True
 	
 	@property
 	def max_value(self):
@@ -71,11 +81,27 @@ class ColorMap:
 	@checktype
 	def max_value(self, max_value:float):
 		self.__range[1] = max_value
+		self.__range_user_set = True
+
+	@property
+	def range_user_set(self):
+		return self.__range_user_set
 
 	@checktype
-	def __init__(self, type:Type):
+	def __init__(self, type:Type, min_value:float=None, max_value:float=None, scale:float=1, alpha:float=1):
 		self.__type = type
 		self.__range = [0, 1]
+		self.__range_user_set = False
+		self.__scale = scale
+		self.__alpha = alpha
+		if min_value is not None:
+			self.__range[0] = min_value
+			self.__range_user_set = True
+
+		if max_value is not None:
+			self.__range[1] = max_value
+			self.__range_user_set = True
+
 		if type == ColorMap.Type.parula:
 			self.__colors = \
 			np.array([

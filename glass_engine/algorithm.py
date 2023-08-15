@@ -4,8 +4,7 @@ import copy
 import numpy as np
 from cacheout import Cache
 from glass.utils import profiler
-
-cache = Cache(maxsize=100)
+from functools import cache
 
 def fzero(f, interval):
     lower = interval[0]
@@ -411,17 +410,17 @@ def is_even(num:int):
 def is_odd(num:int):
     return num % 2 != 0
 
-@cache.memoize()
+@cache
 def factorial(n:int):
     return np.math.factorial(n)
 
-@cache.memoize()
+@cache
 def Zernike_coeff(n:int, m:int, k:int):
     sgn = 1 if is_even(k) else -1
     C = factorial(n - k) / (factorial(k) * factorial((n+m)//2 - k) * factorial((n-m)//2 - k))
     return sgn * C
 
-@cache.memoize()
+@cache
 def Zernike_eval(n:int, m:int, r:float, theta:float):
     use_cos = (m >= 0)
     m = abs(m)
@@ -439,13 +438,13 @@ def Zernike_eval(n:int, m:int, r:float, theta:float):
     else:
         return R * np.sin(m*theta)
 
-@cache.memoize()
+@cache
 def associated_Legendre_coeff(n:int, m:int, k:int):
     sgn = 1 if is_even(k) else -1
     C = factorial(2*(n - k)) / (2**n * factorial(k) * factorial(n-k) * factorial(n - 2*k - m))
     return sgn * C
 
-@cache.memoize()
+@cache
 def associated_Legendre_eval(n:int, m:int, x:float):
     if n < 0 or n < abs(m):
         return 0
@@ -464,12 +463,12 @@ def associated_Legendre_eval(n:int, m:int, x:float):
     P *= (1 - x**2)**(m/2)
     return P
 
-@cache.memoize()
+@cache
 def spherical_harmonics_coeff(n:int, m:int):
     sgn = 1 if is_even(m) else -1
     return sgn * math.sqrt((2*n+1)/(4*math.pi) * factorial(n-m)/factorial(n+m))
 
-@cache.memoize()
+@cache
 def spherical_harmonics_eval(n:int, m:int, theta:float, phi:float):
     A = spherical_harmonics_coeff(n, m)
     P = associated_Legendre_eval(n, m, np.cos(theta))
