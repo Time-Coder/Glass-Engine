@@ -106,6 +106,8 @@ class image2D(GLObject):
         TextureUnits[texture_unit] = (target_type, self._id)
 
         if force_update_image or self._image_changed:
+            GL.glTexParameteri(GL.GL_TEXTURE_2D, GL.GL_TEXTURE_MIN_FILTER, GL.GL_NEAREST)
+            GL.glTexParameteri(GL.GL_TEXTURE_2D, GL.GL_TEXTURE_MAG_FILTER, GL.GL_NEAREST)
             external_format = get_external_format(self._internal_format)
             width_adapt(self._width)
             GL.glTexImage2D(GL.GL_TEXTURE_2D, 0, self._internal_format,
@@ -226,9 +228,9 @@ class image2D(GLObject):
             old_np_dtype = self._image.dtype
             new_np_dtype = GLInfo.dtype_map[get_dtype(self._internal_format)]
             if old_np_dtype != new_np_dtype:
-                if "int" in old_np_dtype.__name__ and "float" in new_np_dtype.__name__:
+                if "int" in str(old_np_dtype) and "float" in str(new_np_dtype):
                     self._image = (self._image / 255).astype(new_np_dtype)
-                elif "float" in old_np_dtype.__name__ and "int" in new_np_dtype.__name__:
+                elif "float" in str(old_np_dtype) and "int" in str(new_np_dtype):
                     self._image = (self._image * 255).astype(new_np_dtype)
                 else:
                     self._image = self._image.astype(new_np_dtype)

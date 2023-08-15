@@ -315,9 +315,9 @@ class sampler2DArray(FBOAttachment):
             old_np_dtype = self._images[layer].dtype
             new_np_dtype = GLInfo.dtype_map[get_dtype(self._internal_format)]
             if old_np_dtype != new_np_dtype:
-                if "int" in old_np_dtype.__name__ and "float" in new_np_dtype.__name__:
+                if "int" in str(old_np_dtype) and "float" in str(new_np_dtype):
                     self._images[layer] = (self._images[layer] / 255).astype(new_np_dtype)
-                elif "float" in old_np_dtype.__name__ and "int" in new_np_dtype.__name__:
+                elif "float" in str(old_np_dtype) and "int" in str(new_np_dtype):
                     self._images[layer] = (self._images[layer] * 255).astype(new_np_dtype)
                 else:
                     self._images[layer] = self._images[layer].astype(new_np_dtype)
