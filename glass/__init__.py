@@ -8,9 +8,11 @@ from .UBO import UBO
 from .ACBO import ACBO
 
 from .sampler2D import sampler2D
+from .usampler2D import usampler2D
+from .isampler2D import isampler2D
 from .image2D import image2D
-from .usampler2D import usampler2D, uimage2D
-from .isampler2D import isampler2D, iimage2D
+from .uimage2D import uimage2D
+from .iimage2D import iimage2D
 from .sampler2DMS import sampler2DMS
 from .isampler2DMS import isampler2DMS
 from .usampler2DMS import usampler2DMS

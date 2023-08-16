@@ -60,9 +60,9 @@ class DOFFilter(Filter):
         self.vertical_fbo.resize(screen_image.width, screen_image.height)
 
         with GLConfig.LocalConfig(cull_face=None, polygon_mode=GL.GL_FILL):
-            self.program["camera"] = self.__camera
+            self.program["camera"] = self.camera
             self.program["view_pos_map"] = self.__view_pos_map
-            self.program["fps"] = self.__camera.screen.smooth_fps
+            self.program["fps"] = self.camera.screen.smooth_fps
             with self.horizontal_fbo:
                 self.program["screen_image"] = screen_image
                 self.program["horizontal"] = True
@@ -80,9 +80,9 @@ class DOFFilter(Filter):
         self.vertical_fbo.resize(screen_image.width, screen_image.height)
 
         with GLConfig.LocalConfig(cull_face=None, polygon_mode=GL.GL_FILL):
-            self.program["camera"] = self.__camera
+            self.program["camera"] = self.camera
             self.program["view_pos_map"] = self.__view_pos_map
-            self.program["fps"] = self.__camera.screen.smooth_fps
+            self.program["fps"] = self.camera.screen.smooth_fps
             with self.horizontal_fbo:
                 self.program["screen_image"] = screen_image
                 self.program["horizontal"] = True
