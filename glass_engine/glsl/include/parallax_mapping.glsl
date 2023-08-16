@@ -2,6 +2,7 @@
 #define _PARALLAX_MAPPING_GLSL__
 
 #include "Material.glsl"
+#include "math.glsl"
 
 void parallax_mapping(sampler2D height_map, float height_scale, mat3 view_TBN, inout vec3 view_pos, inout vec2 frag_tex_coord)
 {

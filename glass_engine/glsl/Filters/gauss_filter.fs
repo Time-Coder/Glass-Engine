@@ -25,9 +25,10 @@ void main()
         float weight_sum = 0;
         for(int j = 0; j < kernel_shape.x; j++)
         {
-            float d = (j - 0.5*(kernel_shape.x-1))*tex_offset.x;
-            float s = fs_in.tex_coord.s + d;
-            float weight = exp(-d*d/double_sigma_x2);
+            float dj = j - 0.5*(kernel_shape.x-1);
+            float ds = dj*tex_offset.x;
+            float s = fs_in.tex_coord.s + ds;
+            float weight = exp(-dj*dj/double_sigma_x2);
             frag_color += weight * texture(screen_image, vec2(s, t));
             weight_sum += weight;
         }
@@ -40,9 +41,10 @@ void main()
         float weight_sum = 0;
         for(int i = 0; i < kernel_shape.y; i++)
         {
-            float d = (i - 0.5*(kernel_shape.y-1))*tex_offset.y;
-            float t = fs_in.tex_coord.t + d;
-            float weight = exp(-d*d/double_sigma_y2);
+            float di = i - 0.5*(kernel_shape.y-1);
+            float dt = di*tex_offset.y;
+            float t = fs_in.tex_coord.t + dt;
+            float weight = exp(-di*di/double_sigma_y2);
             frag_color += weight * texture(screen_image, vec2(s, t));
             weight_sum += weight;
         }

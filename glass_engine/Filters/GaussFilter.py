@@ -136,9 +136,9 @@ class GaussFilter(Filter):
         self.vertical_fbo.resize(screen_image.width, screen_image.height)
 
         if self.__sigma.x == 0:
-            self.__sigma.x = 0.3 * ((self.__kernel_shape.x-1)*0.5 - 1) + 0.8
+            self.__sigma.x = ((self.__kernel_shape.x-1)*0.5 - 1)/3
         if self.__sigma.y == 0:
-            self.__sigma.y = 0.3 * ((self.__kernel_shape.y-1)*0.5 - 1) + 0.8
+            self.__sigma.y = ((self.__kernel_shape.y-1)*0.5 - 1)/3
 
         with GLConfig.LocalConfig(cull_face=None, polygon_mode=GL.GL_FILL):
 

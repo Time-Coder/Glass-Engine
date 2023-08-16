@@ -65,15 +65,15 @@ void main()
     vec2 tex_offset = 1.0 / tex_size;
     frag_color = vec4(0, 0, 0, 0);
     
-    float dpi = 0.5 * tex_size.y / (camera.near*camera.tan_half_fov);
-    float coc_in_pixel = dpi * abs(camera.aperture*(1-camera.near*factor));
+    float pixel_per_meter = 0.5 * tex_size.y / (camera.near*camera.tan_half_fov);
+    float coc_in_pixel = pixel_per_meter * abs(camera.aperture*(1-camera.near*factor));
     if (coc_in_pixel <= 1)
     {
         frag_color = texture(screen_image, fs_in.tex_coord);
         return;
     }
 
-    float sigma = 0.3 * ((coc_in_pixel-1)*0.5 - 1) + 0.8;
+    float sigma = ((coc_in_pixel-1)*0.5 - 1)/3.0;
     
     float double_sigma2 = 2*sigma*sigma;
     if(horizontal)
@@ -82,9 +82,10 @@ void main()
         float weight_sum = 0;
         for(int j = 0; j < coc_in_pixel; j++)
         {
-            float d = (j - 0.5*(coc_in_pixel-1))*tex_offset.x;
-            float s = fs_in.tex_coord.s + d;
-            float weight = exp(-d*d/double_sigma2);
+            float dj = j - 0.5*(coc_in_pixel-1);
+            float ds = dj*tex_offset.x;
+            float s = fs_in.tex_coord.s + ds;
+            float weight = exp(-dj*dj/double_sigma2);
             frag_color += weight * texture(screen_image, vec2(s, t));
             weight_sum += weight;
         }
@@ -96,9 +97,10 @@ void main()
         float weight_sum = 0;
         for(int i = 0; i < coc_in_pixel; i++)
         {
-            float d = (i - 0.5*(coc_in_pixel-1))*tex_offset.y;
-            float t = fs_in.tex_coord.t + d;
-            float weight = exp(-d*d/double_sigma2);
+            float di = i - 0.5*(coc_in_pixel-1);
+            float dt = di*tex_offset.t;
+            float t = fs_in.tex_coord.t + dt;
+            float weight = exp(-di*di/double_sigma2);
             frag_color += weight * texture(screen_image, vec2(s, t));
             weight_sum += weight;
         }

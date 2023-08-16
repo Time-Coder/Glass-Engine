@@ -66,7 +66,7 @@ def convert_to_image(data, viewport):
 
     image = data
     if "float" in str(data.dtype):
-        image = 255*data
+        image = np.clip(255*data, 0, 255)
 
     image = image.astype(np.uint8)
     image = cv2.flip(image, 0)
@@ -172,7 +172,7 @@ class Screen(QOpenGLWidget):
         self.__before_filter_fbo = None
         self.__before_filter_fbo_ms = None
         self._is_gl_init = False
-        self._screen_image = None
+        self._before_filter_image = None
         self._video_writers = []
         
         self._camera_id = id(camera)
@@ -224,7 +224,7 @@ class Screen(QOpenGLWidget):
         renderer._camera_id = self._camera_id
         should_update = renderer.startup()
         if should_update:
-            self._screen_image = None
+            self._before_filter_image = None
             self.update()
 
     @property
@@ -248,7 +248,7 @@ class Screen(QOpenGLWidget):
         manipulator._camera_id = self._camera_id
         should_update = manipulator.startup()
         if should_update:
-            self._screen_image = None
+            self._before_filter_image = None
             self.update()
 
     @property
@@ -280,16 +280,18 @@ class Screen(QOpenGLWidget):
 
     def resizeGL(self, width, height):
         QOpenGLWidget.resizeGL(self, width, height)
-        self._screen_image = None
+        self._before_filter_image = None
 
-    def _draw_to_screen_image(self, should_update_scene):
-        if self._screen_image is None or should_update_scene:
+    def _draw_to_before_filter_image(self, should_update_scene):
+        if self._before_filter_image is None or should_update_scene:
             with self._before_filter_fbo:
                 with self.renderer.render_hint:
                     should_update_scene = self.renderer.render() or should_update_scene
 
-            self._screen_image = self._before_filter_fbo.resolved.color_attachment(0)
+            self._before_filter_image = self._before_filter_fbo.resolved.color_attachment(0)
             self.renderer.filters.screen_update_time = time.time()
+
+        return should_update_scene
 
     def paintGL(self):
         self.makeCurrent()
@@ -300,15 +302,15 @@ class Screen(QOpenGLWidget):
         should_update_filter = False
         
         if self._video_writers:
-            self._draw_to_screen_image(should_update_scene)
-            screen_image = self.renderer.filters(self._screen_image)
+            should_update_scene = self._draw_to_before_filter_image(should_update_scene)
+            screen_image = self.renderer.filters(self._before_filter_image)
             should_update_filter = self.renderer.filters.should_update
             Frame.draw(screen_image)
             for video_writer in self._video_writers:
                 video_writer._frame_queue.put((time.time(), screen_image.fbo.data(0)))
         elif self.renderer.filters.has_valid:
-            self._draw_to_screen_image(should_update_scene)
-            should_update_filter = self.renderer.filters.draw(self._screen_image)
+            should_update_scene = self._draw_to_before_filter_image(should_update_scene)
+            should_update_filter = self.renderer.filters.draw(self._before_filter_image)
         else:
             with self.renderer.render_hint:
                 should_update_scene = self.renderer.render() or should_update_scene
@@ -318,7 +320,7 @@ class Screen(QOpenGLWidget):
 
         if should_update_scene or should_update_filter:
             if should_update_scene:
-                self._screen_image = None
+                self._before_filter_image = None
                 
             self.update()
 
@@ -372,7 +374,7 @@ class Screen(QOpenGLWidget):
         self.mouse_pressed.emit(button, screen_pos, global_pos)
 
         if should_update:
-            self._screen_image = None
+            self._before_filter_image = None
             self.update()
 
     def mouseReleaseEvent(self, mouse_event: QMouseEvent)->None:
@@ -387,7 +389,7 @@ class Screen(QOpenGLWidget):
         self.mouse_released.emit(button, screen_pos, global_pos)
         
         if should_update:
-            self._screen_image = None
+            self._before_filter_image = None
             self.update()
 
     def mouseDoubleClickEvent(self, mouse_event:QMouseEvent)->None:
@@ -402,7 +404,7 @@ class Screen(QOpenGLWidget):
         self.mouse_double_clicked.emit(button, screen_pos, global_pos)
         
         if should_update:
-            self._screen_image = None
+            self._before_filter_image = None
             self.update()
 
     def __mouseMoveEvent(self, screen_pos:glm.vec2, global_pos:glm.vec2)->bool:
@@ -415,7 +417,7 @@ class Screen(QOpenGLWidget):
         self.mouse_moved.emit(screen_pos, global_pos)
 
         if should_update:
-            self._screen_image = None
+            self._before_filter_image = None
             self.update()
 
     def keyPressEvent(self, key_event:QKeyEvent)->None:
@@ -432,7 +434,7 @@ class Screen(QOpenGLWidget):
         self.key_pressed.emit(key)
 
         if should_update:
-            self._screen_image = None
+            self._before_filter_image = None
             self.update()
 
     def keyReleaseEvent(self, key_event: QKeyEvent)->None:
@@ -449,7 +451,7 @@ class Screen(QOpenGLWidget):
         self.key_released.emit(key)
 
         if should_update:
-            self._screen_image = None
+            self._before_filter_image = None
             self.update()
 
     def __keyRepeateEvent(self, keys:set[Manipulator.Key])->bool:
@@ -462,7 +464,7 @@ class Screen(QOpenGLWidget):
         self.key_repeated.emit(keys)
 
         if should_update:
-            self._screen_image = None
+            self._before_filter_image = None
             self.update()
 
     def wheelEvent(self, wheel_event:QWheelEvent)->None:
@@ -477,7 +479,7 @@ class Screen(QOpenGLWidget):
         self.wheel_scrolled.emit(angle, screen_pos, global_pos)
 
         if should_update:
-            self._screen_image = None
+            self._before_filter_image = None
             self.update()
     
     def __calc_fps(self):
@@ -553,7 +555,7 @@ class Screen(QOpenGLWidget):
                 should_update = self.__mouseMoveEvent(screen_pos, global_pos) or should_update
 
             if should_update:
-                self._screen_image = None
+                self._before_filter_image = None
                 self.update()
 
     @checktype
@@ -565,9 +567,9 @@ class Screen(QOpenGLWidget):
 
         image = None
         if self.renderer.filters.has_valid:
-            self._screen_image = self._before_filter_fbo.resolved.color_attachment(0)
+            self._before_filter_image = self._before_filter_fbo.resolved.color_attachment(0)
             self.renderer.filters.screen_update_time = time.time()
-            result_sampler = self.renderer.filters(self._screen_image)
+            result_sampler = self.renderer.filters(self._before_filter_image)
             image = result_sampler.fbo.data(0)
         else:
             image = self._before_filter_fbo.resolved.data(0)

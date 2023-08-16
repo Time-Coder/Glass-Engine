@@ -14,6 +14,7 @@ in GeometryOut
 } fs_in;
 
 #include "../../include/Material.glsl"
+#include "../../include/Camera.glsl"
 #include "../../include/parallax_mapping.glsl"
 #include "../../include/math.glsl"
 

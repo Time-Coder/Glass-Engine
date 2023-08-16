@@ -41,5 +41,3 @@ class isampler2D(sampler2D):
             self._dynamic = False
 
         return self._handle
-    
-iimage2D = isampler2D

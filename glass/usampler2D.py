@@ -41,4 +41,3 @@ class usampler2D(sampler2D):
 
         return self._handle
     
-uimage2D = usampler2D
