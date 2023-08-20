@@ -1,7 +1,7 @@
 import numpy as np
 from OpenGL import GL
 
-from .ObjectSet import ObjectSet
+from .WeakSet import WeakSet
 
 class _MetaGLObject(type):
 
@@ -17,7 +17,7 @@ class _MetaGLObject(type):
     @property
     def all_instances(cls):
         if cls not in _MetaGLObject._all_instances:
-            _MetaGLObject._all_instances[cls] = ObjectSet()
+            _MetaGLObject._all_instances[cls] = WeakSet()
 
         return _MetaGLObject._all_instances[cls]
 
@@ -26,7 +26,7 @@ class GLObject(metaclass=_MetaGLObject):
     def __init__(self):
         self._id = 0
         if self.__class__ not in _MetaGLObject._all_instances:
-            _MetaGLObject._all_instances[self.__class__] = ObjectSet()
+            _MetaGLObject._all_instances[self.__class__] = WeakSet()
 
         _MetaGLObject._all_instances[self.__class__].add(self)
 

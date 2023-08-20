@@ -57,7 +57,7 @@ void main()
     if (!fs_in.visible)
     {
         discard;
-    }    
+    }
 
     if (is_filled)
     {

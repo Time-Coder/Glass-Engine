@@ -8,7 +8,11 @@ float PhongBlinn_specular(vec3 to_light, vec3 to_camera, vec3 normal, float shin
 {
     vec3 halfway_vec = normalize(to_light + to_camera);
     float cos_out = max(dot(halfway_vec, normal), 0.0);
-    return pow(cos_out, shininess*128);
+    if (shininess < 1)
+    {
+        shininess *= 128;
+    }
+    return pow(cos_out, shininess);
 }
 
 vec3 PhongBlinn_lighting(

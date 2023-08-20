@@ -6,10 +6,11 @@
 layout (location = 0) in vec3 position;
 
 // instance
-layout (location = 1) in vec3 abs_position;
-layout (location = 2) in vec4 abs_orientation;
-layout (location = 3) in vec3 abs_scale;
-layout (location = 4) in int visible;
+layout (location = 1) in vec4 col0;
+layout (location = 2) in vec4 col1;
+layout (location = 3) in vec4 col2;
+layout (location = 4) in vec4 col3;
+layout (location = 5) in int visible;
 
 out VertexOut
 {
@@ -21,10 +22,7 @@ out VertexOut
 
 void main()
 {
-    Transform transform;
-    transform.abs_position = abs_position;
-    transform.abs_orientation = vec4_to_quat(abs_orientation);
-    transform.abs_scale = abs_scale;
+    mat4 transform = mat4(col0, col1, col2, col3);
 
     vs_out.world_pos = transform_apply(transform, position);
     gl_Position = vec4(vs_out.world_pos, 1);

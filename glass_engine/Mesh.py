@@ -49,6 +49,7 @@ class Mesh(SceneNode):
         self._should_add_color = True
         
         self._material = Material()
+        self._material._opacity = 0
         self._material._parent_meshes.add(self)
         self._back_material = self._material
         self._back_material_user_set = False
@@ -580,6 +581,8 @@ class Mesh(SceneNode):
             if key not in ["color", "back_color"]:
                 self._vertices._attr_list_map[key] = value
 
+        self.__set_color()
+
     def start_building(self):
         if self.__class__.__name__ == "Mesh":
             return
@@ -605,17 +608,6 @@ class Mesh(SceneNode):
                     except StopIteration:
                         del Mesh.__builder_map[builder]
                         self.__post_build(self.__geometry_info)
-                        self.__geometry_info["builder"] = None
-                        self.__geometry_info["build_state"] = "done"
-
-                if self.__geometry_info["build_state"] == "post_build":
-                    try:
-                        while True:
-                            next(builder)
-                    except StopIteration:
-                        if builder in Mesh.__builder_map:
-                            del Mesh.__builder_map[builder]
-
                         self.__geometry_info["builder"] = None
                         self.__geometry_info["build_state"] = "done"
 
@@ -732,16 +724,6 @@ class Mesh(SceneNode):
                 self.__post_build(self.__geometry_info)
                 self.__geometry_info["builder"] = None
                 self.__geometry_info["build_state"] = "done"
-
-        if self.__geometry_info["build_state"] == "post_build":
-            try:
-                next(builder)
-            except StopIteration:
-                if builder in Mesh.__builder_map:
-                    del Mesh.__builder_map[builder]
-                
-                self.__geometry_info["builder"] = None
-                self.__geometry_info["build_state"] = "done"
     
     def __eq__(self, other):
         return (id(self) == id(other))
@@ -797,6 +779,10 @@ class Mesh(SceneNode):
         material._parent_meshes.add(self)
 
         self._material = material
+        
+        if not material.opacity_user_set:
+            material._opacity = 1
+
         if not self._back_color_user_set:
             self._back_material = material
 

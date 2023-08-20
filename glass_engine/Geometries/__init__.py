@@ -68,3 +68,4 @@ from .Flower import Flower
 from .Torus import Torus
 from .TrefoilKnot import TrefoilKnot
 from .SphericalHarmonics import SphericalHarmonics
+from .CoordSys import CoordSys

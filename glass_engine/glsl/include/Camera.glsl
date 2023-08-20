@@ -158,6 +158,7 @@ float locate_CSM_level(Camera camera, vec3 world_pos)
 		float z1 = PSSM(camera, i+1);
 		if (z0 <= view_pos.y && view_pos.y <= z1)
 		{
+			// level = i + (view_pos.y - z0) / (z1 - z0);
 			level = soft_floor(i + (view_pos.y - z0) / (z1 - z0), 0.5);
 			break;
 		}
@@ -170,7 +171,6 @@ BoundingSphere Frustum_bounding_sphere(Camera camera, int i)
 	float z0 = PSSM(camera, i);
 	float z1 = PSSM(camera, i+1);
 	float clip = z1 - z0;
-	// if(i > 0) z0 -= 0.6*clip;
 	if(i+1 < camera.CSM_levels) z1 += 0.5*clip;
 
 	float ratio = camera.tan_half_fov * sqrt(1 + camera.aspect*camera.aspect);

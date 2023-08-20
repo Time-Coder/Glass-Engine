@@ -3,8 +3,9 @@ import math
 import uuid
 
 from glass.utils import checktype
-from glass.ObjectSet import ObjectSet
 from glass.DictList import DictList
+from glass.WeakSet import WeakSet
+from glass.WeakDict import WeakDict
 
 class SceneNode:
 
@@ -66,6 +67,7 @@ class SceneNode:
         def __rmul__(self, other):
             return other * self.flat
 
+    @checktype
     def __init__(self, name:str=""):
         if name:
             self._name = name
@@ -77,11 +79,11 @@ class SceneNode:
         self._scale = SceneNode.vec3(1, 1, 1, callback=self._set_dirty)
         self._yaw_pitch_roll = glm.vec3(0, 0, 0)
 
-        self._parents = DictList(strong_ref=False)
+        self._parents = DictList(weak_ref=True)
         self._children = DictList()
-        self._scenes = ObjectSet()
-        self._transform_dirty = set()
-        self._children_transform_dirty = {}
+        self._scenes = WeakSet()
+        self._transform_dirty = WeakSet()
+        self._children_transform_dirty = WeakDict(weak_ref_keys=True, weak_ref_values=False)
         self._should_update_yaw_pitch_roll = True
 
         self._propagation_props = {}
@@ -222,9 +224,13 @@ class SceneNode:
         return id(self)
 
     @checktype
-    def __getitem__(self, name:str):
-        if name not in self._children:
-            self.add_child(SceneNode(name))
+    def __getitem__(self, name:(str,int)):
+        if isinstance(name, str):
+            if name not in self._children:
+                self.add_child(SceneNode(name))
+        else:
+            while name >= len(self._children):
+                self.add_child(SceneNode())
 
         return self._children[name]
 
@@ -425,7 +431,7 @@ class SceneNode:
 
     def _update_scenes(self):
         old_scenes = self._scenes
-        self._scenes = set()
+        self._scenes = WeakSet()
         for parent in self.parents:
             self._scenes.update(parent._scenes)
 

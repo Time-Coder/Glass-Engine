@@ -3,7 +3,7 @@ from ..Frame import Frame
 
 from glass.utils import checktype, cat
 from glass import FBO, ShaderProgram, sampler2D, GLConfig
-from glass.ObjectSet import ObjectSet
+from glass.WeakSet import WeakSet
 
 from OpenGL import GL
 import os
@@ -15,8 +15,8 @@ class SingleShaderFilter(Filter):
 
     __template_content = ""
 
-    _unknown_filters = ObjectSet()
-    _dynamic_filters = ObjectSet()
+    _unknown_filters = WeakSet()
+    _dynamic_filters = WeakSet()
 
     @checktype
     def __init__(self, shader_path:str=None):
