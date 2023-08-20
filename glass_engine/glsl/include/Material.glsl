@@ -99,18 +99,20 @@ InternalMaterial fetch_internal_material(vec4 frag_color, Material material, vec
     }
 
     // 环境光颜色
-    bool should_change_ambient = true;
-    bool ambient_is_black = false;
+    bool ambient_is_black = true;
     internal_material.ambient = material.ambient;
     if (length(internal_material.ambient) < 1E-3)
     {
-        should_change_ambient = true;
         ambient_is_black = true;
     }
     if (material.use_ambient_map)
     {
         internal_material.ambient = texture(material.ambient_map, tex_coord).rgb;
-        should_change_ambient = false;
+        ambient_is_black = false;
+    }
+    if (material.use_diffuse_map && !material.use_ambient_map)
+    {
+        ambient_is_black = true;
     }
 
     // 本体颜色 base_color
@@ -139,11 +141,6 @@ InternalMaterial fetch_internal_material(vec4 frag_color, Material material, vec
     if (ambient_is_black)
     {
         internal_material.ambient = 0.1 * internal_material.diffuse.rgb;
-    }
-    if (should_change_ambient)
-    {
-        float intensity = dot(vec3(0.299, 0.587, 0.114), internal_material.ambient);
-        internal_material.ambient = intensity * internal_material.diffuse.rgb;
     }
 
     // 镜面高光颜色

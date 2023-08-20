@@ -545,7 +545,7 @@ class CommonRenderer(Renderer):
             if self.env_bake_times(instance) >= max_bake_times:
                 continue
 
-            view_center = mesh_center + instance.abs_position
+            view_center = mesh_center + instance["col3"].xyz
             instance.visible = 0
             env_map_fbo = self.env_map_fbo(instance)
             env_transparent_meshes = {}

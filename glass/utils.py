@@ -518,3 +518,43 @@ def vec4_to_quat(v:glm.vec4):
 @checktype
 def quat_to_vec4(q:glm.quat):
     return glm.vec4(q[0], q[1], q[2], q[3])
+
+@checktype
+def quat_to_mat4(q:glm.quat):
+    w = q.w
+    x = q.x
+    y = q.y
+    z = q.z
+
+    return glm.mat4(1-2*(y**2 + z**2), 2*(x*y + w*z), 2*(x*z - w*y), 0,
+                    2*(x*y - w*z), 1-2*(x**2 + z**2), 2*(y*z + w*x), 0,
+                    2*(x*z + w*y), 2*(y*z - w*x), 1-2*(x**2 + y**2), 0,
+                    0, 0, 0, 1)
+
+@checktype
+def quat_to_mat3(q:glm.quat):
+    w = q.w
+    x = q.x
+    y = q.y
+    z = q.z
+
+    return glm.mat3(1-2*(y**2 + z**2), 2*(x*y + w*z), 2*(x*z - w*y),
+                    2*(x*y - w*z), 1-2*(x**2 + z**2), 2*(y*z + w*x),
+                    2*(x*z + w*y), 2*(y*z - w*x), 1-2*(x**2 + y**2))
+
+def scale_to_mat4(s:glm.vec3):
+    return glm.mat4(s.x, 0  , 0  , 0,
+                    0  , s.y, 0  , 0,
+                    0  , 0  , s.z, 0,
+                    0  , 0  , 0  , 1)
+
+def scale_to_mat3(s:glm.vec3):
+    return glm.mat3(s.x, 0  , 0  ,
+                    0  , s.y, 0  ,
+                    0  , 0  , s.z)
+
+def translate_to_mat4(t:glm.vec3):
+    return glm.mat4(1  , 0  , 0  , 0,
+                    0  , 1  , 0  , 0,
+                    0  , 0  , 1  , 0,
+                    t.x, t.y, t.z, 1)

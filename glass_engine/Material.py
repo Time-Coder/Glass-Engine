@@ -4,6 +4,7 @@ from glass import sampler2D
 import glm
 from enum import Enum
 import numpy as np
+from functools import wraps
 
 class Material():
 
@@ -59,7 +60,7 @@ class Material():
         self.__reflection = glm.vec4(0, 0, 0, 0)
         self.__refraction = glm.vec4(0, 0, 0, 0)
         self.__refractive_index = 0
-        self.__opacity = 0
+        self._opacity = 0
         self.__height_scale = 0.05
         self.__env_mix_diffuse = True
         self.__albedo = glm.vec3(0.5, 0.5, 0.5)
@@ -75,7 +76,7 @@ class Material():
         self.__emission_map = None
         self.__normal_map = None
         self.__height_map = None
-        self.__opacity_map = None
+        self._opacity_map = None
         self.__ambient_occlusion_map = None
         self.__reflection_map = None
         self.__refraction_map = None
@@ -86,7 +87,7 @@ class Material():
 
         self.__shading_model = Material.ShadingModel.PhongBlinn
 
-        self.__opacity_user_set = False
+        self._opacity_user_set = False
         self.__reflection_user_set = False
         self.__refraction_user_set = False
         self.__refractive_index_user_set = False
@@ -98,12 +99,44 @@ class Material():
 
         self._parent_meshes = set()
 
+    @staticmethod
+    def param_setter(func):
+        @wraps(func)
+        def wrapper(*args, **kwargs):
+            self = args[0]
+            value = args[1]
+
+            if not self._opacity_user_set:
+                if self._opacity != 1:
+                    self._opacity = 1
+                    self._test_transparent()
+
+            equal = False
+            try:
+                lvalue = getattr(self, func.__name__)
+                if type(lvalue) != type(value):
+                    equal = False
+                else:
+                    equal = bool(getattr(self, func.__name__) == value)
+            except:
+                equal = False
+
+            if equal:
+                return
+
+            safe_func = checktype(func)
+            return_value = safe_func(*args, **kwargs)
+
+            return return_value
+
+        return wrapper
+
     @property
     def recv_shadows(self):
         return self.__recv_shadows
     
     @recv_shadows.setter
-    @checktype
+    @param_setter
     def recv_shadows(self, flag:bool):
         self.__recv_shadows = flag
 
@@ -112,7 +145,7 @@ class Material():
         return self.__cast_shadows
     
     @cast_shadows.setter
-    @checktype
+    @param_setter
     def cast_shadows(self, flag:bool):
         self.__cast_shadows = flag
 
@@ -148,7 +181,7 @@ class Material():
         return self.__auto_update_env_map
     
     @auto_update_env_map.setter
-    @checktype
+    @param_setter
     def auto_update_env_map(self, flag:bool):
         self.__auto_update_env_map = flag
     
@@ -163,7 +196,7 @@ class Material():
         return self.__dynamic_env_mapping
     
     @dynamic_env_mapping.setter
-    @checktype
+    @param_setter
     def dynamic_env_mapping(self, flag:bool):
         self.__dynamic_env_mapping = flag
 
@@ -172,7 +205,7 @@ class Material():
         return self.__env_max_bake_times
     
     @env_max_bake_times.setter
-    @checktype
+    @param_setter
     def env_max_bake_times(self, times:int):
         self.__env_max_bake_times = times
 
@@ -181,7 +214,7 @@ class Material():
         return self.__shading_model
     
     @shading_model.setter
-    @checktype
+    @param_setter
     def shading_model(self, shading_model:ShadingModel):
         self.__shading_model = shading_model
 
@@ -190,67 +223,59 @@ class Material():
         return self.__ambient
     
     @ambient.setter
-    @checktype
+    @param_setter
     def ambient(self, ambient:(glm.vec3,float)):
         if isinstance(ambient, glm.vec3):
             self.__ambient = ambient
         elif isinstance(ambient, (float,int)):
             self.__ambient = glm.vec3(ambient, ambient, ambient)
 
-        if not self.__opacity_user_set:
-            self.__opacity = 1
-
     @property
     def diffuse(self):
         return self.__diffuse
     
     @diffuse.setter
-    @checktype
+    @param_setter
     def diffuse(self, diffuse:(glm.vec3,float)):
         if isinstance(diffuse, glm.vec3):
             self.__diffuse = diffuse
         elif isinstance(diffuse, (float,int)):
             self.__diffuse = glm.vec3(diffuse, diffuse, diffuse)
 
-        if not self.__opacity_user_set:
-            self.__opacity = 1
-
     @property
     def specular(self):
         return self.__specular
     
     @specular.setter
-    @checktype
+    @param_setter
     def specular(self, specular:(glm.vec3,float)):
         if isinstance(specular, glm.vec3):
             self.__specular = specular
         elif isinstance(specular, (float,int)):
             self.__specular = glm.vec3(specular, specular, specular)
 
-        if not self.__opacity_user_set:
-            self.__opacity = 1
-
     @property
     def shininess(self):
         return self.__shininess
     
     @shininess.setter
-    @checktype
+    @param_setter
     def shininess(self, shininess:float):
         self.__shininess = shininess
 
-        if not self.__opacity_user_set:
-            self.__opacity = 1
+    @property
+    def opacity_user_set(self):
+        return self._opacity_user_set
 
     @property
     def opacity(self):
-        return self.__opacity
+        return self._opacity
     
     @opacity.setter
-    @checktype
+    @param_setter
     def opacity(self, opacity:float):
-        self.__opacity = opacity
-        self.__opacity_user_set = True
+        self._opacity = opacity
+        self._opacity_user_set = True
 
         self._test_transparent()
 
@@ -259,19 +284,16 @@ class Material():
         return self.__emission
     
     @emission.setter
-    @checktype
+    @param_setter
     def emission(self, emission:glm.vec3):
         self.__emission = emission
-
-        if not self.__opacity_user_set:
-            self.__opacity = 1
 
     @property
     def env_mix_diffuse(self):
         return self.__env_mix_diffuse
     
     @env_mix_diffuse.setter
-    @checktype
+    @param_setter
     def env_mix_diffuse(self, flag:bool):
         self.__env_mix_diffuse = flag
 
@@ -280,7 +302,7 @@ class Material():
         return self.__reflection
     
     @reflection.setter
-    @checktype
+    @param_setter
     def reflection(self, reflection:(glm.vec4,glm.vec3,float)):
         if isinstance(reflection, glm.vec3):
             reflection = glm.vec4(reflection, 1)
@@ -295,7 +317,7 @@ class Material():
         return self.__refraction
     
     @refraction.setter
-    @checktype
+    @param_setter
     def refraction(self, refraction:(glm.vec4,glm.vec3,float)):
         if isinstance(refraction, glm.vec3):
             refraction = glm.vec4(refraction, 1)
@@ -317,7 +339,7 @@ class Material():
         return self.__refractive_index
     
     @refractive_index.setter
-    @checktype
+    @param_setter
     def refractive_index(self, refractive_index:float):
         self.__refractive_index = refractive_index
 
@@ -334,55 +356,43 @@ class Material():
         return self.__height_scale
     
     @height_scale.setter
-    @checktype
+    @param_setter
     def height_scale(self, distance:float):
         self.__height_scale = distance
-
-        if not self.__opacity_user_set:
-            self.__opacity = 1
 
     @property
     def albedo(self):
         return self.__albedo
     
     @albedo.setter
-    @checktype
+    @param_setter
     def albedo(self, albedo:glm.vec3):
         self.__albedo = albedo
-
-        if not self.__opacity_user_set:
-            self.__opacity = 1
 
     @property
     def roughness(self):
         return self.__roughness
     
     @roughness.setter
-    @checktype
+    @param_setter
     def roughness(self, roughness:float):
         self.__roughness = roughness
-
-        if not self.__opacity_user_set:
-            self.__opacity = 1
 
     @property
     def metallic(self):
         return self.__metallic
     
     @metallic.setter
-    @checktype
+    @param_setter
     def metallic(self, metallic:float):
         self.__metallic = metallic
-
-        if not self.__opacity_user_set:
-            self.__opacity = 1
 
     @property
     def ambient_map(self):
         return self.__ambient_map
     
     @ambient_map.setter
-    @checktype
+    @param_setter
     def ambient_map(self, ambient_map:(sampler2D,str)):
         if isinstance(ambient_map, sampler2D) or ambient_map is None:
             self.__ambient_map = ambient_map
@@ -392,15 +402,12 @@ class Material():
             else:
                 self.__ambient_map.image = ambient_map
 
-        if not self.__opacity_user_set:
-            self.__opacity = 1
-
     @property
     def diffuse_map(self):
         return self.__diffuse_map
     
     @diffuse_map.setter
-    @checktype
+    @param_setter
     def diffuse_map(self, diffuse_map:(sampler2D,str,np.ndarray)):
         if isinstance(diffuse_map, sampler2D) or diffuse_map is None:
             self.__diffuse_map = diffuse_map
@@ -410,9 +417,6 @@ class Material():
             else:
                 self.__diffuse_map.image = diffuse_map
 
-        if not self.__opacity_user_set:
-            self.__opacity = 1
-
         self._test_transparent()
 
     @property
@@ -420,7 +424,7 @@ class Material():
         return self.__specular_map
     
     @specular_map.setter
-    @checktype
+    @param_setter
     def specular_map(self, specular_map:(sampler2D,str,np.ndarray)):
         if isinstance(specular_map, sampler2D) or specular_map is None:
             self.__specular_map = specular_map
@@ -430,15 +434,12 @@ class Material():
             else:
                 self.__specular_map.image = specular_map
 
-        if not self.__opacity_user_set:
-            self.__opacity = 1
-
     @property
     def shininess_map(self):
         return self.__shininess_map
     
     @shininess_map.setter
-    @checktype
+    @param_setter
     def shininess_map(self, shininess_map:(sampler2D,str,np.ndarray)):
         if isinstance(shininess_map, sampler2D) or shininess_map is None:
             self.__shininess_map = shininess_map
@@ -448,15 +449,12 @@ class Material():
             else:
                 self.__shininess_map.image = shininess_map
 
-        if not self.__opacity_user_set:
-            self.__opacity = 1
-
     @property
     def emission_map(self):
         return self.__emission_map
     
     @emission_map.setter
-    @checktype
+    @param_setter
     def emission_map(self, emission_map:(sampler2D,str,np.ndarray)):
         if isinstance(emission_map, sampler2D) or emission_map is None:
             self.__emission_map = emission_map
@@ -466,15 +464,12 @@ class Material():
             else:
                 self.__emission_map.image = emission_map
 
-        if not self.__opacity_user_set:
-            self.__opacity = 1
-
     @property
     def normal_map(self):
         return self.__normal_map
 
     @normal_map.setter
-    @checktype
+    @param_setter
     def normal_map(self, normal_map:(sampler2D,str,np.ndarray)):
         if isinstance(normal_map, sampler2D) or normal_map is None:
             self.__normal_map = normal_map
@@ -484,15 +479,12 @@ class Material():
             else:
                 self.__normal_map.image = normal_map
 
-        if not self.__opacity_user_set:
-            self.__opacity = 1
-
     @property
     def height_map(self):
         return self.__height_map
     
     @height_map.setter
-    @checktype
+    @param_setter
     def height_map(self, height_map:(sampler2D,str,np.ndarray)):
         if isinstance(height_map, sampler2D) or height_map is None:
             self.__height_map = height_map
@@ -502,25 +494,22 @@ class Material():
             else:
                 self.__height_map.image = height_map
 
-        if not self.__opacity_user_set:
-            self.__opacity = 1
-
     @property
     def opacity_map(self):
-        return self.__opacity_map
+        return self._opacity_map
     
     @opacity_map.setter
-    @checktype
+    @param_setter
     def opacity_map(self, opacity_map:(sampler2D,str,np.ndarray)):
         if isinstance(opacity_map, sampler2D) or opacity_map is None:
-            self.__opacity_map = opacity_map
+            self._opacity_map = opacity_map
         elif isinstance(opacity_map, (str,np.ndarray)):
-            if self.__opacity_map is None:
-                self.__opacity_map = sampler2D(opacity_map)
+            if self._opacity_map is None:
+                self._opacity_map = sampler2D(opacity_map)
             else:
-                self.__opacity_map.image = opacity_map
+                self._opacity_map.image = opacity_map
 
-        self.__opacity_user_set = True
+        self._opacity_user_set = True
         self._test_transparent()
 
     @property
@@ -528,7 +517,7 @@ class Material():
         return self.__ambient_occlusion_map
     
     @ambient_occlusion_map.setter
-    @checktype
+    @param_setter
     def ambient_occlusion_map(self, ambient_occlusion_map:(sampler2D,str,np.ndarray)):
         if isinstance(ambient_occlusion_map, sampler2D) or ambient_occlusion_map is None:
             self.__ambient_occlusion_map = ambient_occlusion_map
@@ -538,15 +527,12 @@ class Material():
             else:
                 self.__ambient_occlusion_map.image = ambient_occlusion_map
 
-        if not self.__opacity_user_set:
-            self.__opacity = 1
-
     @property
     def reflection_map(self):
         return self.__reflection_map
     
     @reflection_map.setter
-    @checktype
+    @param_setter
     def reflection_map(self, reflection_map:(sampler2D,str,np.ndarray)):
         if isinstance(reflection_map, sampler2D) or reflection_map is None:
             self.__reflection_map = reflection_map
@@ -563,7 +549,7 @@ class Material():
         return self.__refraction_map
     
     @refraction_map.setter
-    @checktype
+    @param_setter
     def refraction_map(self, refraction_map:(sampler2D,str,np.ndarray)):
         if isinstance(refraction_map, sampler2D) or refraction_map is None:
             self.__refraction_map = refraction_map
@@ -586,7 +572,7 @@ class Material():
         return self.__refractive_index_map
     
     @refractive_index_map.setter
-    @checktype
+    @param_setter
     def refractive_index_map(self, refractive_index_map:(sampler2D,str,np.ndarray)):
         if isinstance(refractive_index_map, sampler2D) or refractive_index_map is None:
             self.__refractive_index_map = refractive_index_map
@@ -609,7 +595,7 @@ class Material():
         return self.__albedo_map
     
     @albedo_map.setter
-    @checktype
+    @param_setter
     def albedo_map(self, albedo_map:(sampler2D,str,np.ndarray)):
         if isinstance(albedo_map, sampler2D) or albedo_map is None:
             self.__albedo_map = albedo_map
@@ -619,15 +605,12 @@ class Material():
             else:
                 self.__albedo_map.image = albedo_map
 
-        if not self.__opacity_user_set:
-            self.__opacity = 1
-
     @property
     def metallic_map(self):
         return self.__metallic_map
     
     @metallic_map.setter
-    @checktype
+    @param_setter
     def metallic_map(self, metallic_map:(sampler2D,str,np.ndarray)):
         if isinstance(metallic_map, sampler2D) or metallic_map is None:
             self.__metallic_map = metallic_map
@@ -637,15 +620,12 @@ class Material():
             else:
                 self.__metallic_map.image = metallic_map
 
-        if not self.__opacity_user_set:
-            self.__opacity = 1
-
     @property
     def roughness_map(self):
         return self.__roughness_map
     
     @roughness_map.setter
-    @checktype
+    @param_setter
     def roughness_map(self, roughness_map:(sampler2D,str,np.ndarray)):
         if isinstance(roughness_map, sampler2D) or roughness_map is None:
             self.__roughness_map = roughness_map
@@ -654,9 +634,6 @@ class Material():
                 self.__roughness_map = sampler2D(roughness_map)
             else:
                 self.__roughness_map.image = roughness_map
-
-        if not self.__opacity_user_set:
-            self.__opacity = 1
 
     @property
     def use_ambient_map(self):
@@ -688,7 +665,7 @@ class Material():
 
     @property
     def use_opacity_map(self):
-        return (self.__opacity_map is not None)
+        return (self._opacity_map is not None)
 
     @property
     def use_ambient_occlusion_map(self):

@@ -7,7 +7,7 @@ from .Transform import Transform
 from .SkyBox import SkyBox
 from .SkyDome import SkyDome
 
-from glass.utils import checktype, vec4_to_quat, quat_to_vec4
+from glass.utils import checktype, quat_to_mat4, scale_to_mat4, translate_to_mat4, quat_to_mat3, scale_to_mat3
 from glass import Instances, samplerCube
 
 import glm
@@ -89,7 +89,8 @@ class Scene:
         if scene_node is None:
             scene_node = self._root
 
-        if self not in scene_node._transform_dirty and self not in scene_node._children_transform_dirty:
+        if self not in scene_node._transform_dirty and \
+           self not in scene_node._children_transform_dirty:
             return
         
         if self in scene_node._transform_dirty:
@@ -100,18 +101,19 @@ class Scene:
                 self.__clear_dirty(child)
             del scene_node._children_transform_dirty[self]
     
-    def __trav(self, scene_node:SceneNode, current_instance:Transform, current_path:str):
-        if self not in self._root._transform_dirty and self not in self._root._children_transform_dirty:
+    def __trav(self, scene_node:SceneNode,
+               current_quat:glm.quat,
+               current_mat:glm.mat4,
+               current_path:str):
+        
+        if self not in self._root._transform_dirty and \
+           self not in self._root._children_transform_dirty:
             return
 
-        new_instance = Transform()
-
-        quat = vec4_to_quat(current_instance.abs_orientation)
-        new_instance.abs_position = quat * scene_node.position + current_instance.abs_position
-        quat = quat * scene_node.orientation
-        new_instance.abs_orientation = quat_to_vec4(quat)
-        new_instance.abs_scale = current_instance.abs_scale * scene_node.scale
-
+        new_quat = current_quat * scene_node.orientation
+        new_mat = current_mat * translate_to_mat4(scene_node.position) * \
+                                quat_to_mat4(scene_node.orientation) * \
+                                scale_to_mat4(scene_node.scale)
         new_path = current_path + "/" + scene_node.name
 
         if self in scene_node._transform_dirty:
@@ -120,10 +122,13 @@ class Scene:
                 if mesh not in self._all_meshes:
                     self._all_meshes[mesh] = {}
 
-                if new_path in self._all_meshes[mesh]:
-                    self._all_meshes[mesh][new_path].update(new_instance)
-                else:
-                    self._all_meshes[mesh][new_path] = new_instance
+                if new_path not in self._all_meshes[mesh]:
+                    self._all_meshes[mesh][new_path] = Transform()
+
+                self._all_meshes[mesh][new_path]["col0"] = glm.vec4(new_mat[0])
+                self._all_meshes[mesh][new_path]["col1"] = glm.vec4(new_mat[1])
+                self._all_meshes[mesh][new_path]["col2"] = glm.vec4(new_mat[2])
+                self._all_meshes[mesh][new_path]["col3"] = glm.vec4(new_mat[3])
                 self.__anything_changed = True
             elif isinstance(scene_node, SpotLight):
                 spot_light = None
@@ -134,8 +139,8 @@ class Scene:
                     spot_light = self._spot_lights[new_path]
                     spot_light.update(scene_node)
 
-                spot_light.abs_position = new_instance.abs_position
-                spot_light.direction = quat * glm.vec3(0, 1, 0)
+                spot_light.abs_position = new_mat[3].xyz
+                spot_light.direction = new_quat * glm.vec3(0, 1, 0)
                 self._spot_lights.dirty = True
 
                 self.__anything_changed = True
@@ -149,7 +154,7 @@ class Scene:
                     point_light = self._point_lights[new_path]
                     point_light.update(scene_node)
 
-                point_light.abs_position = new_instance.abs_position
+                point_light.abs_position = new_mat[3].xyz
                 self._point_lights.dirty = True
 
                 self.__anything_changed = True
@@ -163,8 +168,8 @@ class Scene:
                     dir_light = self._dir_lights[new_path]
                     dir_light.update(scene_node)
 
-                dir_light.direction = quat * dir_light.direction
-                dir_light.abs_orientation = quat
+                dir_light.direction = new_quat * glm.vec3(0, 1, 0)
+                dir_light.abs_orientation = new_quat
                 self._dir_lights.dirty = True
 
                 self.__anything_changed = True
@@ -172,13 +177,14 @@ class Scene:
 
         if self in scene_node._children_transform_dirty:
             for child in scene_node._children_transform_dirty[self]:
-                self.__trav(child, new_instance, new_path)
+                self.__trav(child, new_quat, new_mat, new_path)
 
     def __collect_render_infos(self):
-        if self not in self._root._transform_dirty and self not in self._root._children_transform_dirty:
+        if self not in self._root._transform_dirty and \
+           self not in self._root._children_transform_dirty:
             return
         
-        self.__trav(self._root, Transform(), "")
+        self.__trav(self._root, glm.quat(), glm.mat4(), "")
         if self.__anything_changed:
             self.__update_env_maps()
             self.__update_depth_maps()

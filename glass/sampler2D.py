@@ -16,7 +16,7 @@ from .ImageLoader import ImageLoader
 from .Indices import Indices
 from .Vertices import Vertices, Vertex
 from .GLConfig import GLConfig
-from .ObjectSet import ObjectSet
+from .WeakSet import WeakSet
 
 class sampler2D(FBOAttachment):
 
@@ -26,8 +26,8 @@ class sampler2D(FBOAttachment):
     _default_filter_mipmap = GL.GL_LINEAR
 
     _sampler2D_map = {}
-    _unknown_shadertoy_samplers = ObjectSet()
-    _dynamic_shadertoy_samplers = ObjectSet()
+    _unknown_shadertoy_samplers = WeakSet()
+    _dynamic_shadertoy_samplers = WeakSet()
     __shadertoy_template_content = ""
 
     _basic_info = \

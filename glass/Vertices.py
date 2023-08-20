@@ -23,17 +23,13 @@ class Vertex(dict):
         '__weakref__', '__getattr__', '__setattr__', '__deepcopy__', '__setstate__',
         'clear', 'copy', 'fromkeys', 'get', 'items', 'keys',
         'pop', 'popitem', 'setdefault', 'update', 'values',
-        '_array_index_map', '_add_array_index', "_user_attrs", "user_data"
+        '_array_index_map', '_add_array_index', "user_data"
     }
 
     def __init__(self, **kwargs):
         self._array_index_map = {}
-        self._user_attrs = {}    
+        self.user_data = {}
         dict.__init__(self, **kwargs)
-
-    @property
-    def user_data(self):
-        return self._user_attrs
 
     def _add_array_index(self, array, index):
         id_array = id(array)

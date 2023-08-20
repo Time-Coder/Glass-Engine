@@ -58,7 +58,7 @@ float SSM(DirLight light, Camera camera, vec3 frag_pos, vec3 frag_normal)
     return visibility;
 }
 
-float _get_PCF_value(DirLight light, Camera camera, int level, vec3 frag_pos, vec3 frag_normal, float PCF_width, inout int rand_seed)
+float _get_PCF_value(DirLight light, Camera camera, int level, vec3 frag_pos, vec3 frag_normal, float PCF_width, out int total_count, inout int rand_seed)
 {
     float depth_length = 0;
     vec4 light_NDC = world_to_lightNDC(light, camera, level, frag_pos, depth_length);
@@ -80,19 +80,28 @@ float _get_PCF_value(DirLight light, Camera camera, int level, vec3 frag_pos, ve
     float dt = dst.t;
 
     int not_occ_count = 0;
-    int total_count = 0;
+    total_count = 0;
     for (int i = 0; i < 16; i++)
     {
         vec2 rand_result = rand2(frag_pos, rand_seed);
         float s = depth_map_tex_coord.s + rand_result.s*(PCF_width-1) * ds;
         float t = depth_map_tex_coord.t + rand_result.t*(PCF_width-1) * dt;
+        if (s < 0 || s > 1 || t < 0 || t > 1)
+        {
+            continue;
+        }
 
         float sample_depth = texture2DArray(sampler2DArray(light.depth_map_handle), vec3(s, t, level)).r;
         not_occ_count += (sample_depth > self_depth ? 1 : 0);
         total_count += 1;
     }
 
-    float visibility = 1.0*not_occ_count/total_count;
+    float visibility = 1;
+    if (total_count > 0)
+    {
+        visibility = 1.0*not_occ_count/total_count;
+    }
+
     return visibility;
 }
 
@@ -103,11 +112,21 @@ float PCF(DirLight light, Camera camera, vec3 frag_pos, vec3 frag_normal)
     float level_rear = level - leveli;
 
     int rand_seed = 0;
-    float visibility = _get_PCF_value(light, camera, leveli, frag_pos, frag_normal, 7, rand_seed);
+    int total_count = 0;
+    float visibility = _get_PCF_value(light, camera, leveli, frag_pos, frag_normal, 7, total_count, rand_seed);
     if (leveli < camera.CSM_levels)
     {
-        float visibility2 = _get_PCF_value(light, camera, leveli+1, frag_pos, frag_normal, 7, rand_seed);
-        visibility = mix(visibility, visibility2, level_rear);
+        int total_count2 = 0;
+        float visibility2 = _get_PCF_value(light, camera, leveli+1, frag_pos, frag_normal, 7, total_count2, rand_seed);
+        float weight1 = total_count*(1-level_rear);
+        float weight2 = total_count2*level_rear;
+        float weight_sum = weight1 + weight2;
+        if (weight_sum > 1E-6)
+        {
+            weight1 /= weight_sum;
+            weight2 /= weight_sum;
+            visibility = weight1*visibility + weight2*visibility2;
+        }
     }
     
     return visibility;

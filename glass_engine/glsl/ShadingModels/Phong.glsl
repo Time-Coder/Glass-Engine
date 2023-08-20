@@ -12,7 +12,11 @@ float Phong_specular(vec3 to_light, vec3 to_camera, vec3 normal, float shininess
 {
     vec3 reflect_dir = reflect(-to_light, normal);
     float cos_out = max(dot(reflect_dir, to_camera), 0.0);
-    return pow(cos_out, shininess*128);
+    if(shininess < 1)
+    {
+        shininess *= 128;
+    }
+    return pow(cos_out, shininess);
 }
 
 vec3 Phong_lighting(
