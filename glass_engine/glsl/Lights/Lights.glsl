@@ -84,7 +84,7 @@ float SHADOW_VISIBILITY(Camera camera, vec3 frag_pos, vec3 frag_normal)
 
 vec3 GET_AMBIENT_DIFFUSE_FACTOR(bool recv_shadows, Camera camera, vec3 frag_pos, vec3 frag_normal)
 {
-    vec3 factor = vec3(0.1);
+    vec3 factor = vec3(0.2);
 
     // 点光源
     for(int i = 0; i < n_point_lights; i++)
@@ -104,7 +104,7 @@ vec3 GET_AMBIENT_DIFFUSE_FACTOR(bool recv_shadows, Camera camera, vec3 frag_pos,
         factor += ambient_diffuse_factor(spot_lights[i], recv_shadows, frag_pos, frag_normal);
     }
 
-    return factor;
+    return soft_min(2*factor, vec3(1,1,1), 0.1);
 }
 
 vec3 GET_SPECULAR(InternalMaterial internal_material, Camera camera, vec3 view_dir, vec3 frag_pos, vec3 frag_normal)
