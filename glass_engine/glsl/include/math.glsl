@@ -181,64 +181,49 @@ float max4(vec4 v)
     return max(max(max(v.x, v.y), v.z), v.w);
 }
 
-float soft_abs(float x, float t)
+float soft_abs(float value, float t)
 {
-    float result = abs(x);
-    result = (result<t) ? 0.5*(x*x/t + t) : result;
+    float abs_value = abs(value);
+    return (abs_value < t) ? 0.5*(value*value/t + t) : abs_value;
+}
+
+vec2 soft_abs(vec2 value, float t)
+{
+    vec2 abs_value = abs(value);
+
+    vec2 result;
+    result.x = (abs_value.x < t) ? 0.5*(value.x*value.x/t + t) : abs_value.x;
+    result.y = (abs_value.y < t) ? 0.5*(value.y*value.y/t + t) : abs_value.y;
     return result;
 }
 
-float soft_abs(float x)
+vec3 soft_abs(vec3 value, float t)
 {
-    float t = 0.1;
-    float result = abs(x);
-    result = (result<t) ? 0.5*(x*x/t + t) : result;
+    vec3 abs_value = abs(value);
+    
+    vec3 result;
+    result.x = (abs_value.x < t) ? 0.5*(value.x*value.x/t + t) : abs_value.x;
+    result.y = (abs_value.y < t) ? 0.5*(value.y*value.y/t + t) : abs_value.y;
+    result.z = (abs_value.z < t) ? 0.5*(value.z*value.z/t + t) : abs_value.z;
     return result;
 }
 
-float soft_sign(float x, float t)
+vec4 soft_abs(vec4 value, float t)
 {
-    return x / soft_abs(x, t);
+    vec4 abs_value = abs(value);
+    
+    vec4 result;
+    result.x = (abs_value.x < t) ? 0.5*(value.x*value.x/t + t) : abs_value.x;
+    result.y = (abs_value.y < t) ? 0.5*(value.y*value.y/t + t) : abs_value.y;
+    result.z = (abs_value.z < t) ? 0.5*(value.z*value.z/t + t) : abs_value.z;
+    result.w = (abs_value.w < t) ? 0.5*(value.w*value.w/t + t) : abs_value.w;
+    return result;
 }
 
-float soft_sign(float x)
-{
-    float t = 0.1;
-    return x / soft_abs(x, t);
-}
-
-float soft_step(float x, float t)
-{
-    return 0.5*(soft_sign(x, t)+1.0);
-}
-
-float soft_step(float x)
-{
-    float t = 0.1;
-    return 0.5*(soft_sign(x, t)+1.0);
-}
-
-float soft_max(float x, float y, float t)
-{
-    return 0.5 * (x + y + soft_abs(x - y, t));
-}
-
-float soft_max(float x, float y)
-{
-    float t = 0.1;
-    return 0.5 * (x + y + soft_abs(x - y, t));
-}
-
-float soft_min(float x, float y, float t)
-{
-    return 0.5 * (x + y - soft_abs(x - y, t));
-}
-
-float soft_min(float x, float y)
-{
-    float t = 0.1;
-    return 0.5 * (x + y - soft_abs(x - y, t));
-}
+#define soft_sign(x, t) (x / soft_abs(x, t))
+#define soft_step(x, t) (0.5*(soft_sign(x, t) + 1.0))
+#define soft_max(x, y, t) (0.5 * (x + y + soft_abs(x - y, t)))
+#define soft_min(x, y, t) (0.5 * (x + y - soft_abs(x - y, t)))
 
 float soft_floor(float x, float t)
 {

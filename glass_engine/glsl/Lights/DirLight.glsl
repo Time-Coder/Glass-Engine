@@ -34,7 +34,7 @@ vec3 ambient_diffuse_factor(
     vec3 frag_pos, vec3 frag_normal)
 {
     vec3 to_light = -normalize(light.direction);
-    vec3 diffuse_factor = Lambert_diffuse(to_light, frag_normal) + 0.1*light.ambient;
+    vec3 diffuse_factor = Lambert_diffuse(to_light, frag_normal) + 0.2*light.ambient;
     float shadow_visibility = 1;
     if (light.generate_shadows && recv_shadows &&
         (light.depth_map_handle.x > 0 || light.depth_map_handle.y > 0))
