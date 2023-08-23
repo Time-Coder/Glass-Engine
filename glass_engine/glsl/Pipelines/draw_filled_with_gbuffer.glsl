@@ -5,10 +5,10 @@ vec4 draw_filled_with_gbuffer(Camera camera,
     vec4 view_pos_and_alpha,
     vec4 view_normal_and_emission_r,
     vec4 ambient_or_arm_and_emission_g,
-    vec4 diffuse_or_albedo_and_emission_b,
+    vec4 diffuse_or_base_color_and_emission_b,
     vec4 specular_or_prelight_and_shininess,
-    vec4 reflection, vec4 refraction, float SSAO_factor,
-    uvec4 mix_uint
+    vec4 reflection, vec4 env_center_and_refractive_index, float SSAO_factor,
+    uvec3 mix_uint
 )
 {
     vec3 view_pos = view_pos_and_alpha.xyz;
@@ -25,18 +25,18 @@ vec4 draw_filled_with_gbuffer(Camera camera,
         // return vec4(0, 0, 0, 0);
     }
 
-    float refractive_index = mix_uint.x * 255;
-    uvec2 env_map_handle = mix_uint.yz;
-    uint shading_model = (mix_uint.w >> 2);
-    bool recv_shadows = bool((mix_uint.w >> 1) & 0x1);
-    bool is_sphere = bool(mix_uint.w & 0x1);
+    float refractive_index = env_center_and_refractive_index.a;
+    vec3 env_center = env_center_and_refractive_index.rgb;
+    uvec2 env_map_handle = mix_uint.xy;
+    uint shading_model = uint((mix_uint.z >> 2) & 0xF);
+    bool recv_shadows = bool((mix_uint.z >> 1) & 0x1);
+    bool is_sphere = bool(mix_uint.z & 0x1);
 
     InternalMaterial internal_material;
     internal_material.shading_model = shading_model;
-    internal_material.emission = vec3(view_normal_and_emission_r.a, ambient_or_arm_and_emission_g.a, diffuse_or_albedo_and_emission_b.a);
+    internal_material.emission = vec3(view_normal_and_emission_r.a, ambient_or_arm_and_emission_g.a, diffuse_or_base_color_and_emission_b.a);
     internal_material.opacity = view_pos_and_alpha.a;
     internal_material.reflection = reflection;
-    internal_material.refraction = refraction;
     internal_material.refractive_index = refractive_index;
     internal_material.recv_shadows = recv_shadows;
 
@@ -46,12 +46,12 @@ vec4 draw_filled_with_gbuffer(Camera camera,
         internal_material.ambient_occlusion = ambient_or_arm_and_emission_g.r;
         internal_material.roughness = ambient_or_arm_and_emission_g.g;
         internal_material.metallic = ambient_or_arm_and_emission_g.b;
-        internal_material.albedo = diffuse_or_albedo_and_emission_b.rgb;
+        internal_material.base_color = diffuse_or_base_color_and_emission_b.rgb;
     }
     else
     {
         internal_material.ambient = ambient_or_arm_and_emission_g.rgb;
-        internal_material.diffuse = diffuse_or_albedo_and_emission_b.rgb;
+        internal_material.diffuse = diffuse_or_base_color_and_emission_b.rgb;
         internal_material.specular = specular_or_prelight_and_shininess.rgb;
         internal_material.shininess = specular_or_prelight_and_shininess.a;
     }
@@ -62,15 +62,46 @@ vec4 draw_filled_with_gbuffer(Camera camera,
         discard;
     }
 
+    if (internal_material.shading_model == 9)
+    {
+        return vec4(internal_material.emission, internal_material.opacity);
+    }
+
     vec3 frag_pos = view_to_world(camera, view_pos);
     vec3 frag_normal = view_dir_to_world(camera, view_normal);
 
-    vec3 out_color3 = vec3(0, 0, 0);
-    if (shading_model == 9) // Unlit
+    // 环境映射
+    vec3 view_dir = normalize(frag_pos - camera.abs_position);
+    vec4 env_color = vec4(0, 0, 0, 0);
+    bool use_env_map = (env_map_handle != 0);
+    if (is_sphere)
     {
-        out_color3 = vec3(0, 0, 0);
+        env_color = sphere_reflect_refract_color(
+            internal_material, camera,
+            env_center, view_dir, frag_pos, frag_normal,
+            use_skybox_map, skybox_map,
+            use_skydome_map, skydome_map,
+            use_env_map, sampler2D(env_map_handle)
+        );
     }
-    else if (shading_model == 1 || shading_model == 2) // Flat
+    else
+    {
+        env_color = reflect_refract_color(
+            internal_material, camera,
+            env_center, view_dir, frag_pos, frag_normal, 
+            use_skybox_map, skybox_map,
+            use_skydome_map, skydome_map,
+            use_env_map, sampler2D(env_map_handle)
+        );
+    }
+
+    if (env_color.a > 1-1E-6)
+    {
+        return vec4(env_color.rgb+internal_material.emission, internal_material.opacity);
+    }
+
+    vec3 out_color3 = vec3(0, 0, 0);
+    if (shading_model == 1 || shading_model == 2) // Flat
     {
         float shadow_visibility = 1;
         if (internal_material.recv_shadows)
@@ -84,46 +115,14 @@ vec4 draw_filled_with_gbuffer(Camera camera,
         out_color3 = FRAG_LIGHTING(internal_material, camera, camera.abs_position, frag_pos, frag_normal);
     }
 
-    if (shading_model != 9) // Unlit
-    {
-        // SSAO
-        out_color3 *= (1 - SSAO_factor);
+    // SSAO
+    out_color3 *= (1 - SSAO_factor);
 
-        // AO map
-        out_color3 *= internal_material.ambient_occlusion;
-    }
+    // AO map
+    out_color3 *= internal_material.ambient_occlusion;
 
     // 自发光
     out_color3 += internal_material.emission;
-
-    // 环境映射
-    vec3 view_dir = normalize(frag_pos - camera.abs_position);
-    vec4 env_color = vec4(0, 0, 0, 0);
-    bool use_env_map = (env_map_handle != 0);
-    if (is_sphere)
-    {
-        env_color = sphere_reflect_refract_color(
-            internal_material.reflection,
-            internal_material.refraction,
-            internal_material.refractive_index,
-            view_dir, frag_normal, 
-            use_skybox_map, skybox_map,
-            use_skydome_map, skydome_map,
-            use_env_map, sampler2D(env_map_handle)
-        );
-    }
-    else
-    {
-        env_color = reflect_refract_color(
-            internal_material.reflection,
-            internal_material.refraction,
-            internal_material.refractive_index,
-            view_dir, frag_normal, 
-            use_skybox_map, skybox_map,
-            use_skydome_map, skydome_map,
-            use_env_map, sampler2D(env_map_handle)
-        );
-    }
     out_color3 = mix(out_color3, env_color.rgb, env_color.a);
 
     return vec4(out_color3, internal_material.opacity);

@@ -10,7 +10,23 @@ def fzero(f, interval):
     lower = interval[0]
     upper = interval[1]
     f_lower = f(lower)
-    f_upper = f(upper)
+    
+    f_upper = None
+    if math.isinf(upper):
+        d = 1
+        upper = lower + d
+        f_upper = f(upper)
+        times = 0
+        while np.sign(f_lower) == np.sign(f_upper):
+            d *= 2
+            upper = lower + d
+            f_upper = f(upper)
+            times += 1
+            if times > 20:
+                return None
+    else:
+        f_upper = f(upper)
+    
     if np.sign(f_lower) == np.sign(f_upper):
         return None
     

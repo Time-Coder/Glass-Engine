@@ -5,6 +5,7 @@
 
 in GeometryOut
 {
+    mat4 affine_transform;
     vec3 view_pos;
     mat3 view_TBN;
     vec3 tex_coord;
@@ -42,6 +43,7 @@ uniform Camera camera;
 uniform bool is_opaque_pass;
 uniform bool is_filled;
 uniform bool is_sphere;
+uniform vec3 mesh_center;
 
 // 环境映射
 uniform bool use_skybox_map;

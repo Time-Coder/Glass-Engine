@@ -277,187 +277,283 @@ class SSUBO(BO):
 		self.bind()
 		GL.glBindBufferRange(self.__class__._basic_info["target_type"], 0, self._id, start, nbytes)
 
-	def _set_bool(self, offset:int, value):
-		self.bufferSubData(offset, 4, np.array([int(value)], dtype=np.int32))
+	def _set_bool(self, offset:int, value:bool):
+		if not isinstance(value, int):
+			value = int(value)
 
-	def _set_int(self, offset:int, value):
+		self.bufferSubData(offset, 4, np.array([value], dtype=np.int32))
+
+	def _set_int(self, offset:int, value:int):
 		if isinstance(value, Enum):
 			value = int(value.value)
 
-		self.bufferSubData(offset, 4, np.array([int(value)], dtype=np.int32))
+		if not isinstance(value, int):
+			value = int(value)
 
-	def _set_uint(self, offset:int, value):
+		self.bufferSubData(offset, 4, np.array([value], dtype=np.int32))
+
+	def _set_uint(self, offset:int, value:int):
 		if isinstance(value, Enum):
 			value = int(value.value)
 
-		self.bufferSubData(offset, 4, np.array([int(value)], dtype=np.uint32))
+		if not isinstance(value, int):
+			value = int(value)
 
-	def _set_uint64_t(self, offset:int, value):
-		self.bufferSubData(offset, 8, np.array([int(value)], dtype=np.uint64))
+		self.bufferSubData(offset, 4, np.array([value], dtype=np.uint32))
 
-	def _set_float(self, offset:int, value):
-		self.bufferSubData(offset, 4, np.array([float(value)], dtype=np.float32))
+	def _set_uint64_t(self, offset:int, value:int):
+		if not isinstance(value, int):
+			value = int(value)
 
-	def _set_double(self, offset:int, value):
-		self.bufferSubData(offset, 8, np.array([float(value)], dtype=np.float64))
+		self.bufferSubData(offset, 8, np.array([value], dtype=np.uint64))
+
+	def _set_float(self, offset:int, value:float):
+		if not isinstance(value, float):
+			value = float(value)
+
+		self.bufferSubData(offset, 4, np.array([value], dtype=np.float32))
+
+	def _set_double(self, offset:int, value:float):
+		if not isinstance(value, float):
+			value = float(value)
+
+		self.bufferSubData(offset, 8, np.array([value], dtype=np.float64))
 	
-	@checktype
 	def _set_bvec2(self, offset:int, value:glm.bvec2):
+		if not isinstance(value, glm.bvec2):
+			value = glm.bvec2(value)
+
 		self.bufferSubData(offset, sizeof(value), np.array(value, dtype=np.int32))
 	
-	@checktype
 	def _set_bvec3(self, offset:int, value:glm.bvec3):
+		if not isinstance(value, glm.bvec3):
+			value = glm.bvec3(value)
+
 		self.bufferSubData(offset, sizeof(value), np.array(value, dtype=np.int32))
 	
-	@checktype
 	def _set_bvec4(self, offset:int, value:glm.bvec4):
+		if not isinstance(value, glm.bvec4):
+			value = glm.bvec4(value)
+
 		self.bufferSubData(offset, sizeof(value), np.array(value, dtype=np.int32))
 	
-	@checktype
 	def _set_ivec2(self, offset:int, value:glm.ivec2):
+		if not isinstance(value, glm.ivec2):
+			value = glm.ivec2(value)
+
 		self.bufferSubData(offset, sizeof(value), np.array(value, dtype=np.int32))
 	
-	@checktype
 	def _set_ivec3(self, offset:int, value:glm.ivec3):
+		if not isinstance(value, glm.ivec3):
+			value = glm.ivec3(value)
+
 		self.bufferSubData(offset, sizeof(value), np.array(value, dtype=np.int32))
 	
-	@checktype
 	def _set_ivec4(self, offset:int, value:glm.ivec4):
+		if not isinstance(value, glm.ivec4):
+			value = glm.ivec4(value)
+
 		self.bufferSubData(offset, sizeof(value), np.array(value, dtype=np.int32))
 	
-	@checktype
 	def _set_uvec2(self, offset:int, value:(glm.uvec2,int)):
 		if isinstance(value, glm.uvec2):
 			self.bufferSubData(offset, sizeof(value), np.array(value, dtype=np.uint32))
 		else:
+			if not isinstance(value, int):
+				value = int(value)
+
 			self.bufferSubData(offset, 8, np.array([value], dtype=np.uint64))
 	
-	@checktype
 	def _set_uvec3(self, offset:int, value:glm.uvec3):
+		if not isinstance(value, glm.uvec3):
+			value = glm.uvec3(value)
+
 		self.bufferSubData(offset, sizeof(value), np.array(value, dtype=np.uint32))
 	
-	@checktype
 	def _set_uvec4(self, offset:int, value:glm.uvec4):
+		if not isinstance(value, glm.uvec4):
+			value = glm.uvec4(value)
+
 		self.bufferSubData(offset, sizeof(value), np.array(value, dtype=np.uint32))
 	
-	@checktype
 	def _set_vec2(self, offset:int, value:glm.vec2):
+		if not isinstance(value, glm.vec2):
+			value = glm.vec2(value)
+
 		self.bufferSubData(offset, sizeof(value), np.array(value, dtype=np.float32))
 
-	@checktype
 	def _set_vec3(self, offset:int, value:glm.vec3):
+		if not isinstance(value, glm.vec3):
+			value = glm.vec3(value)
+
 		self.bufferSubData(offset, sizeof(value), np.array(value, dtype=np.float32))
 	
-	@checktype
 	def _set_vec4(self, offset:int, value:glm.vec4):
+		if not isinstance(value, glm.vec4):
+			value = glm.vec4(value)
+
 		self.bufferSubData(offset, sizeof(value), np.array(value, dtype=np.float32))
 
-	@checktype
 	def _set_dvec2(self, offset:int, value:glm.dvec2):
+		if not isinstance(value, glm.dvec2):
+			value = glm.dvec2(value)
+
 		self.bufferSubData(offset, sizeof(value), np.array(value, dtype=np.float64))
 
-	@checktype
 	def _set_dvec3(self, offset:int, value:glm.dvec3):
+		if not isinstance(value, glm.dvec3):
+			value = glm.dvec3(value)
+
 		self.bufferSubData(offset, sizeof(value), np.array(value, dtype=np.float64))
 	
-	@checktype
 	def _set_dvec4(self, offset:int, value:glm.dvec4):
+		if not isinstance(value, glm.dvec4):
+			value = glm.dvec4(value)
+
 		self.bufferSubData(offset, sizeof(value), np.array(value, dtype=np.float64))
 	
-	@checktype
-	def _set_mat2(self, offset:int, value:glm.mat2x2):
+	def _set_mat2(self, offset:int, value:glm.mat2):
+		if not isinstance(value, glm.mat2):
+			value = glm.mat2(value)
+
 		self.bufferSubData(offset, sizeof(value), np.array(value, dtype=np.float32))
 	
-	@checktype
 	def _set_mat3x2(self, offset:int, value:glm.mat3x2):
+		if not isinstance(value, glm.mat3x2):
+			value = glm.mat3x2(value)
+
 		self.bufferSubData(offset, sizeof(value), np.array(value, dtype=np.float32))
 
-	@checktype
 	def _set_mat4x2(self, offset:int, value:glm.mat4x2):
+		if not isinstance(value, glm.mat4x2):
+			value = glm.mat4x2(value)
+
 		self.bufferSubData(offset, sizeof(value), np.array(value, dtype=np.float32))
 
-	@checktype
 	def _set_mat2x3(self, offset:int, value:glm.mat2x3):
+		if not isinstance(value, glm.mat2x3):
+			value = glm.mat2x3(value)
+
 		self.bufferSubData(offset, sizeof(value), np.array(value, dtype=np.float32))
 	
-	@checktype
 	def _set_mat3(self, offset:int, value:glm.mat3x3):
+		if not isinstance(value, glm.mat3x3):
+			value = glm.mat3x3(value)
+
 		self.bufferSubData(offset, sizeof(value), np.array(value, dtype=np.float32))
 	
-	@checktype
 	def _set_mat4x3(self, offset:int, value:glm.mat4x3):
+		if not isinstance(value, glm.mat4x3):
+			value = glm.mat4x3(value)
+
 		self.bufferSubData(offset, sizeof(value), np.array(value, dtype=np.float32))
 	
-	@checktype
 	def _set_mat2x4(self, offset:int, value:glm.mat2x4):
+		if not isinstance(value, glm.mat2x4):
+			value = glm.mat2x4(value)
+
 		self.bufferSubData(offset, sizeof(value), np.array(value, dtype=np.float32))
 	
-	@checktype
 	def _set_mat3x4(self, offset:int, value:glm.mat3x4):
+		if not isinstance(value, glm.mat3x4):
+			value = glm.mat3x4(value)
+
 		self.bufferSubData(offset, sizeof(value), np.array(value, dtype=np.float32))
 	
-	@checktype
 	def _set_mat4(self, offset:int, value:glm.mat4x4):
+		if not isinstance(value, glm.mat4x4):
+			value = glm.mat4x4(value)
+
 		self.bufferSubData(offset, sizeof(value), np.array(value, dtype=np.float32))
 
-	@checktype
 	def _set_mat2x2(self, offset:int, value:glm.mat2x2):
+		if not isinstance(value, glm.mat2x2):
+			value = glm.mat2x2(value)
+
 		self.bufferSubData(offset, sizeof(value), np.array(value, dtype=np.float32))
 
-	@checktype
 	def _set_mat3x3(self, offset:int, value:glm.mat3x3):
+		if not isinstance(value, glm.mat3x3):
+			value = glm.mat3x3(value)
+
 		self.bufferSubData(offset, sizeof(value), np.array(value, dtype=np.float32))
 
-	@checktype
 	def _set_mat4x4(self, offset:int, value:glm.mat4x4):
+		if not isinstance(value, glm.mat4x4):
+			value = glm.mat4x4(value)
+
 		self.bufferSubData(offset, sizeof(value), np.array(value, dtype=np.float32))
 
-	@checktype
 	def _set_dmat2(self, offset:int, value:glm.mat2x2):
+		if not isinstance(value, glm.mat2x2):
+			value = glm.mat2x2(value)
+
 		self.bufferSubData(offset, sizeof(value), np.array(value, dtype=np.float64))
 	
-	@checktype
 	def _set_dmat3x2(self, offset:int, value:glm.mat3x2):
+		if not isinstance(value, glm.mat3x2):
+			value = glm.mat3x2(value)
+
 		self.bufferSubData(offset, sizeof(value), np.array(value, dtype=np.float64))
 
-	@checktype
 	def _set_dmat4x2(self, offset:int, value:glm.mat4x2):
+		if not isinstance(value, glm.mat4x2):
+			value = glm.mat4x2(value)
+
 		self.bufferSubData(offset, sizeof(value), np.array(value, dtype=np.float64))
 
-	@checktype
 	def _set_dmat2x3(self, offset:int, value:glm.mat2x3):
+		if not isinstance(value, glm.mat2x3):
+			value = glm.mat2x3(value)
+
 		self.bufferSubData(offset, sizeof(value), np.array(value, dtype=np.float64))
 	
-	@checktype
 	def _set_dmat3(self, offset:int, value:glm.mat3x3):
+		if not isinstance(value, glm.mat3x3):
+			value = glm.mat3x3(value)
+
 		self.bufferSubData(offset, sizeof(value), np.array(value, dtype=np.float64))
 	
-	@checktype
 	def _set_dmat4x3(self, offset:int, value:glm.mat4x3):
+		if not isinstance(value, glm.mat4x3):
+			value = glm.mat4x3(value)
+
 		self.bufferSubData(offset, sizeof(value), np.array(value, dtype=np.float64))
 	
-	@checktype
 	def _set_dmat2x4(self, offset:int, value:glm.mat2x4):
+		if not isinstance(value, glm.mat2x4):
+			value = glm.mat2x4(value)
+
 		self.bufferSubData(offset, sizeof(value), np.array(value, dtype=np.float64))
 	
-	@checktype
 	def _set_dmat3x4(self, offset:int, value:glm.mat3x4):
+		if not isinstance(value, glm.mat3x4):
+			value = glm.mat3x4(value)
+
 		self.bufferSubData(offset, sizeof(value), np.array(value, dtype=np.float64))
 	
-	@checktype
 	def _set_dmat4(self, offset:int, value:glm.mat4x4):
+		if not isinstance(value, glm.mat4x4):
+			value = glm.mat4x4(value)
+
 		self.bufferSubData(offset, sizeof(value), np.array(value, dtype=np.float64))
 
-	@checktype
 	def _set_dmat2x2(self, offset:int, value:glm.dmat2x2):
+		if not isinstance(value, glm.dmat2x2):
+			value = glm.dmat2x2(value)
+
 		self.bufferSubData(offset, sizeof(value), np.array(value, dtype=np.float64))
 
-	@checktype
 	def _set_dmat3x3(self, offset:int, value:glm.dmat3x3):
+		if not isinstance(value, glm.dmat3x3):
+			value = glm.dmat3x3(value)
+
 		self.bufferSubData(offset, sizeof(value), np.array(value, dtype=np.float64))
 
-	@checktype
 	def _set_dmat4x4(self, offset:int, value:glm.dmat4x4):
+		if not isinstance(value, glm.dmat4x4):
+			value = glm.dmat4x4(value)
+
 		self.bufferSubData(offset, sizeof(value), np.array(value, dtype=np.float64))
 
 	@checktype

@@ -136,6 +136,49 @@ vec4 textureSphere(sampler2D image, vec3 sphecial_tex_coord)
 
     return textureLod(image, tex_coord, texture_lod);
 }
+
+vec4 textureLodBias(sampler2D image, vec2 tex_coord, float lod_bias)
+{
+    float texture_lod = textureQueryLod(image, tex_coord).x;
+
+    float max_lod = float(textureQueryLevels(image));
+    texture_lod = max(lod_bias*max_lod, texture_lod);
+
+    return textureLod(image, tex_coord, texture_lod);
+}
+
+vec4 textureLodBias(samplerCube image, vec3 sampling_dir, float lod_bias)
+{
+    float texture_lod = textureQueryLod(image, sampling_dir).x;
+
+    float max_lod = float(textureQueryLevels(image));
+    texture_lod = max(lod_bias*max_lod, texture_lod);
+
+    return textureLod(image, sampling_dir, texture_lod);
+}
+
+vec4 textureSphereLodBias(sampler2D image, vec3 sphecial_tex_coord, float lod_bias)
+{
+    float len = length(sphecial_tex_coord);
+    if (len < 1E-6)
+    {
+        return vec4(0, 0, 0, 0);
+    }
+    sphecial_tex_coord /= len;
+
+    vec2 tex_coord;
+    tex_coord.x = 0.5*(atan(sphecial_tex_coord.x, sphecial_tex_coord.y)/PI + 1);
+    tex_coord.y = asin(sphecial_tex_coord.z) / PI + 0.5;
+
+    float cos_phi = length(sphecial_tex_coord.xy);
+    float lod_factor = 1 - 0.99*pow(1-cos_phi, 20);
+    float texture_lod = lod_factor * textureQueryLodSeamless(image, tex_coord).x;
+
+    float max_lod = float(textureQueryLevels(image));
+    texture_lod = max(lod_bias*max_lod, texture_lod);
+
+    return textureLod(image, tex_coord, texture_lod);
+}
 #endif
 
 #endif

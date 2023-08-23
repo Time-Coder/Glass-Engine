@@ -19,10 +19,10 @@ out vec4 out_color;
 uniform sampler2D view_pos_and_alpha_map;
 uniform sampler2D view_normal_and_emission_r_map;
 uniform sampler2D ambient_or_arm_and_emission_g_map;
-uniform sampler2D diffuse_or_albedo_and_emission_b_map;
+uniform sampler2D diffuse_or_base_color_and_emission_b_map;
 uniform sampler2D specular_or_prelight_and_shininess_map;
 uniform sampler2D reflection_map;
-uniform sampler2D refraction_map;
+uniform sampler2D env_center_and_refractive_index_map;
 uniform usampler2D mix_uint_map;
 uniform sampler2D SSAO_map;
 uniform sampler2D skydome_map;
@@ -39,11 +39,11 @@ void main()
     vec4 view_pos_and_alpha = texture(view_pos_and_alpha_map, fs_in.tex_coord);
     vec4 view_normal_and_emission_r = texture(view_normal_and_emission_r_map, fs_in.tex_coord);
     vec4 ambient_or_arm_and_emission_g = texture(ambient_or_arm_and_emission_g_map, fs_in.tex_coord);
-    vec4 diffuse_or_albedo_and_emission_b = texture(diffuse_or_albedo_and_emission_b_map, fs_in.tex_coord);
+    vec4 diffuse_or_base_color_and_emission_b = texture(diffuse_or_base_color_and_emission_b_map, fs_in.tex_coord);
     vec4 specular_or_prelight_and_shininess = texture(specular_or_prelight_and_shininess_map, fs_in.tex_coord);
-    uvec4 mix_uint = texture(mix_uint_map, fs_in.tex_coord);
+    uvec3 mix_uint = texture(mix_uint_map, fs_in.tex_coord).rgb;
     vec4 reflection = texture(reflection_map, fs_in.tex_coord);
-    vec4 refraction = texture(refraction_map, fs_in.tex_coord);
+    vec4 env_center_and_refractive_index = texture(env_center_and_refractive_index_map, fs_in.tex_coord);
     float SSAO_factor = texture(SSAO_map, fs_in.tex_coord).r;
 
     out_color = draw_filled_with_gbuffer(
@@ -51,9 +51,9 @@ void main()
         view_pos_and_alpha,
         view_normal_and_emission_r,
         ambient_or_arm_and_emission_g,
-        diffuse_or_albedo_and_emission_b,
+        diffuse_or_base_color_and_emission_b,
         specular_or_prelight_and_shininess,
-        reflection, refraction, SSAO_factor,
+        reflection, env_center_and_refractive_index, SSAO_factor,
         mix_uint
     );
 }

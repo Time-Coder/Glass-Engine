@@ -108,8 +108,9 @@ class Model(SceneNode):
             specular = glm.vec3(assimp_material.specular.r, assimp_material.specular.g, assimp_material.specular.b)
             emission = glm.vec3(assimp_material.emission.r, assimp_material.emission.g, assimp_material.emission.b)
             reflection = glm.vec4(assimp_material.reflection.r, assimp_material.reflection.g, assimp_material.reflection.b, assimp_material.reflection.a)
-            albedo = glm.vec3(assimp_material.albedo.r, assimp_material.albedo.g, assimp_material.albedo.b)
+            base_color = glm.vec3(assimp_material.base_color.r, assimp_material.base_color.g, assimp_material.base_color.b)
             shininess = assimp_material.shininess
+            shininess_strength = assimp_material.shininess_strength
             opacity = assimp_material.opacity
             refractive_index = assimp_material.refractive_index
             roughness = assimp_material.roughness
@@ -130,14 +131,17 @@ class Model(SceneNode):
             if glm.length(reflection) > 0:
                 material.reflection = reflection
 
-            if glm.length(albedo) > 0:
-                material.albedo = albedo
+            if glm.length(base_color) > 0:
+                material.base_color = base_color
 
             if refractive_index > 0:
                 material.refractive_index = refractive_index
 
             if shininess > 0:
                 material.shininess = shininess
+
+            if shininess_strength > 0:
+                material.shininess_strength = shininess_strength
 
             material.shading_model = Material.ShadingModel(assimp_material.shading_model.value)
             material.roughness = roughness
@@ -148,7 +152,7 @@ class Model(SceneNode):
                 "ambient_map", "diffuse_map", "specular_map",
                 "shininess_map", "emission_map", "height_map",
                 "normal_map", "opacity_map", "ambient_occlusion_map",
-                "reflection_map", "albedo_map", "roughness_map", "metallic_map"
+                "reflection_map", "base_color_map", "roughness_map", "metallic_map"
             ]
             for texture_map in texture_maps:
                 texture_map_list = getattr(assimp_material, texture_map)

@@ -14,7 +14,7 @@ class usampler2D(sampler2D):
     _default_filter_mipmap = None
 
     @checktype
-    def __init__(self, image:(str,np.ndarray)=None, width:int=None, height:int=None, internal_format:GLInfo.uimage_internal_formats=None):
+    def __init__(self, image:(str,np.ndarray)=None, width:int=None, height:int=None, internal_format:GLInfo.usampler_internal_formats=None):
         if internal_format is None:
             internal_format = GL.GL_RGBA32UI
 
@@ -26,7 +26,7 @@ class usampler2D(sampler2D):
 
     @internal_format.setter
     @sampler2D.param_setter
-    def internal_format(self, internal_format:GLInfo.uimage_internal_formats):
+    def internal_format(self, internal_format:GLInfo.usampler_internal_formats):
         self._set_internal_format(internal_format)
 
     @property

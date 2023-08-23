@@ -5,9 +5,9 @@
 
 float NormalDistributionFunction(vec3 halfway_vec, vec3 normal, float roughness)
 {
+    roughness = mix(0.02, 1.0, roughness);
     float roughness4 = pow(roughness, 4);
-    float D = roughness4 / pow(pow(dot(normal, halfway_vec), 2) * (roughness4-1) + 1, 2);
-    return D;
+    return roughness4 / pow(1 - (1 - roughness4)*pow(dot(normal, halfway_vec), 2), 2);
 }
 
 float GeometryFunction(float cos_theta_in, float cos_theta_out, float roughness)
@@ -17,9 +17,9 @@ float GeometryFunction(float cos_theta_in, float cos_theta_out, float roughness)
     return G;
 }
 
-vec3 FresnelEquation(float cos_theta_out, vec3 albedo, float metallic)
+vec3 FresnelEquation(float cos_theta_out, vec3 base_color, float metallic)
 {
-    vec3 F0 = mix(vec3(0.04), albedo, metallic);
+    vec3 F0 = mix(vec3(0.04), base_color, metallic);
     vec3 F = F0 + (1 - F0) * pow(1 - cos_theta_out, 5);
     return F;
 }
@@ -31,9 +31,9 @@ vec3 CookTorrance_lighting(vec3 to_light, vec3 to_camera, vec3 normal, InternalM
     vec3 halfway_vec = normalize(to_light + to_camera);
     float D = NormalDistributionFunction(halfway_vec, normal, material.roughness);
     float G = GeometryFunction(cos_theta_in, cos_theta_out, material.roughness);
-    vec3 F = FresnelEquation(cos_theta_out, material.albedo, material.metallic);
+    vec3 F = FresnelEquation(cos_theta_out, material.base_color, material.metallic);
     vec3 kd = (1 - F)*(1 - material.metallic);
-    vec3 Lo = (kd * material.albedo + D*G*F / (4*cos_theta_in*cos_theta_out + 0.001))*cos_theta_in;
+    vec3 Lo = kd * material.base_color * cos_theta_in + D*G*F / (4*cos_theta_out + 0.001);
     Lo /= (Lo + vec3(1.0));
     return pow(Lo, vec3(1.0/2.2));
 }

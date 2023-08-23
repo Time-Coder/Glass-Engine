@@ -3,37 +3,39 @@
 
 #include "sampling.glsl"
 #include "FresnelRefract.glsl"
+#include "Lights.glsl"
 
 vec3 fetch_env_color(
-    vec3 out_dir,
+    vec3 out_dir, float roughness,
     bool use_skybox_map, samplerCube skybox_map,
     bool use_skydome_map, sampler2D skydome_map,
     bool use_env_map, sampler2D env_map
 )
 {
     vec4 env_color = vec4(0, 0, 0, 0);
+
     if (use_env_map)
     {
-        env_color = textureSphere(env_map, out_dir);
+        env_color = textureSphereLodBias(env_map, out_dir, roughness);
     }
     
     vec3 sampling_dir = quat_apply(quat(cos45, sin45, 0, 0), out_dir);
     if (use_skybox_map)
     {
-        vec3 skybox_color = texture(skybox_map, sampling_dir).rgb;
+        vec3 skybox_color = textureLodBias(skybox_map, sampling_dir, roughness).rgb;
         env_color.rgb = mix(skybox_color, env_color.rgb, env_color.a);
     }
     else if (use_skydome_map)
     {
-        vec3 skydome_color = textureSphere(skydome_map, out_dir).rgb;
+        vec3 skydome_color = textureSphereLodBias(skydome_map, out_dir, roughness).rgb;
         env_color.rgb = mix(skydome_color, env_color.rgb, env_color.a);
     }
     return env_color.rgb;
 }
 
 vec4 sphere_reflect_refract_color(
-    vec4 reflection, vec4 refraction, float refractive_index,
-    vec3 view_dir, vec3 normal,
+    InternalMaterial material, Camera camera,
+    vec3 env_center, vec3 view_dir, vec3 frag_pos, vec3 frag_normal,
     bool use_skybox_map, samplerCube skybox_map,
     bool use_skydome_map, sampler2D skydome_map,
     bool use_env_map, sampler2D env_map)
@@ -42,16 +44,24 @@ vec4 sphere_reflect_refract_color(
     {
         return vec4(0, 0, 0, 0);
     }
-    float cos_theta_in = dot(-view_dir, normal);
 
-    bool use_reflection = (reflection.a > 0);
-    bool use_refraction = (refraction.a > 0 && refractive_index > 0);
+    vec4 reflection = material.reflection;
+    float refractive_index = material.refractive_index;
+    float shininess = material.shininess;
+    if (shininess < 1)
+    {
+        shininess = 1;
+    }
+
+    bool use_reflection = (reflection.a > 1E-6);
+    bool use_refraction = (refractive_index > 1E-6);
     if (!use_reflection && !use_refraction)
     {
         return vec4(0, 0, 0, 0);
     }
-    
+
     float reflection_factor = 1;
+    float cos_theta_in = dot(-view_dir, frag_normal);
     if (use_refraction)
     {
         reflection_factor = fresnel_equation(1, refractive_index, cos_theta_in);
@@ -62,22 +72,25 @@ vec4 sphere_reflect_refract_color(
     }
 
     // 反射
+    float sphere_radius = length(frag_pos - env_center);
     vec3 reflection_color = vec3(0, 0, 0);
     vec3 refraction_color = vec3(0, 0, 0);
-    vec3 axis = cross(normal, view_dir);
+    vec3 axis = cross(frag_normal, view_dir);
     int times = 3;
     if (gl_FrontFacing)
     {
         // 反射
-        vec3 reflect_out_dir = normalize(reflect(view_dir, normal));
+        vec3 reflect_out_dir = normalize(reflect(view_dir, frag_normal));
         if (use_reflection)
         {
             reflection_color = reflection_factor * fetch_env_color(
-                reflect_out_dir,
+                reflect_out_dir, material.roughness,
                 use_skybox_map, skybox_map,
                 use_skydome_map, skydome_map,
                 use_env_map, env_map
             );
+            vec3 specular_color = GET_SPECULAR(material, camera, reflect_out_dir, frag_pos, frag_normal);
+            reflection_color += reflection_factor*specular_color;
         }
 
         // 折射
@@ -96,17 +109,23 @@ vec4 sphere_reflect_refract_color(
                 float refraction_factor = pow(1 - reflection_factor, 2);
                 quat rotate_quat = quat(sin_theta_o, axis.x, axis.y, axis.z);
                 vec3 refract_out_dir = quat_apply(rotate_quat, reflect_out_dir);
+                frag_normal = quat_apply(rotate_quat, frag_normal);
+                frag_pos = env_center + sphere_radius * frag_normal;
                 for (int i = 0; i < times; i++)
                 {
                     refraction_color += refraction_factor * fetch_env_color(
-                        refract_out_dir,
+                        refract_out_dir, material.roughness,
                         use_skybox_map, skybox_map,
                         use_skydome_map, skydome_map,
                         use_env_map, env_map
                     );
+                    vec3 specular_color = GET_SPECULAR(material, camera, refract_out_dir, frag_pos, frag_normal);
+                    refraction_color += refraction_factor*specular_color;
 
                     refraction_factor *= reflection_factor;
                     refract_out_dir = quat_apply(rotate_quat, refract_out_dir);
+                    frag_normal = quat_apply(rotate_quat, frag_normal);
+                    frag_pos = env_center + sphere_radius * frag_normal;
                 }
             }
         }
@@ -126,34 +145,41 @@ vec4 sphere_reflect_refract_color(
             float refraction_factor = 1 - reflection_factor;
             
             quat rotate_quat = quat(sin_theta_o, axis.x, axis.y, axis.z);
-            vec3 refract_out_dir = normalize(refract(view_dir, normal, refractive_index));
+            vec3 refract_out_dir = normalize(refract(view_dir, frag_normal, refractive_index));
+            frag_normal = quat_apply(rotate_quat, frag_normal);
             for (int i = 0; i < times; i++)
             {
                 refraction_color += refraction_factor * fetch_env_color(
-                    refract_out_dir,
+                    refract_out_dir, material.roughness,
                     use_skybox_map, skybox_map,
                     use_skydome_map, skydome_map,
                     use_env_map, env_map
                 );
+                vec3 specular_color = GET_SPECULAR(material, camera, refract_out_dir, frag_pos, frag_normal);
+                refraction_color += refraction_factor*specular_color;
 
                 refraction_factor *= reflection_factor;
                 refract_out_dir = quat_apply(rotate_quat, refract_out_dir);
+                frag_normal = quat_apply(rotate_quat, frag_normal);
             }
         }
     }
 
     vec4 env_color;
-    env_color.rgb = 
-        reflection.rgb*reflection.a * reflection_color +
-        refraction.rgb*refraction.a * refraction_color;
-    env_color.a = 1 - (1-reflection.a)*(1-refraction.a);
+    env_color.rgb = reflection.rgb * (reflection_color + refraction_color);
+    env_color.a = reflection.a;
+    if (material.roughness > 1E-6)
+    {
+        vec3 ambient_diffuse_factor = GET_AMBIENT_DIFFUSE_FACTOR(material.recv_shadows, camera, frag_pos, frag_normal);
+        env_color.rgb *= mix(vec3(1), ambient_diffuse_factor, material.roughness);
+    }
     
     return env_color;
 }
 
 vec4 reflect_refract_color(
-    vec4 reflection, vec4 refraction, float refractive_index,
-    vec3 view_dir, vec3 normal,
+    InternalMaterial material, Camera camera,
+    vec3 env_center, vec3 view_dir, vec3 frag_pos, vec3 frag_normal,
     bool use_skybox_map, samplerCube skybox_map,
     bool use_skydome_map, sampler2D skydome_map,
     bool use_env_map, sampler2D env_map)
@@ -162,17 +188,24 @@ vec4 reflect_refract_color(
     {
         return vec4(0, 0, 0, 0);
     }
-    float cos_theta_in = dot(-view_dir, normal);
 
+    vec4 reflection = material.reflection;
+    float refractive_index = material.refractive_index;
+    float shininess = material.shininess;
+    if (shininess < 1)
+    {
+        shininess = 1;
+    }
 
-    bool use_reflection = (reflection.a > 0);
-    bool use_refraction = (refraction.a > 0 && refractive_index > 0);
+    bool use_reflection = (reflection.a > 1E-6);
+    bool use_refraction = (refractive_index > 1E-6);
     if (!use_reflection && !use_refraction)
     {
         return vec4(0, 0, 0, 0);
     }
 
     float reflection_factor = 1;
+    float cos_theta_in = dot(-view_dir, frag_normal);
     if (use_refraction)
     {
         if(gl_FrontFacing)
@@ -193,13 +226,15 @@ vec4 reflect_refract_color(
     vec3 reflection_color = vec3(0, 0, 0);
     if (use_reflection)
     {
-        vec3 reflect_out_dir = normalize(reflect(view_dir, normal));
+        vec3 reflect_out_dir = normalize(reflect(view_dir, frag_normal));
         reflection_color = reflection_factor * fetch_env_color(
-            reflect_out_dir,
+            reflect_out_dir, material.roughness,
             use_skybox_map, skybox_map,
             use_skydome_map, skydome_map,
             use_env_map, env_map
         );
+        vec3 specular_color = GET_SPECULAR(material, camera, reflect_out_dir, frag_pos, frag_normal);
+        reflection_color += reflection_factor * specular_color;
     }
 
     // 折射
@@ -211,20 +246,25 @@ vec4 reflect_refract_color(
             refractive_index = 1.0/refractive_index;
         }
         
-        vec3 refract_out_dir = normalize(refract(view_dir, normal, refractive_index));
+        vec3 refract_out_dir = normalize(refract(view_dir, frag_normal, refractive_index));
         refraction_color = (1-reflection_factor)*fetch_env_color(
-            refract_out_dir,
+            refract_out_dir, material.roughness,
             use_skybox_map, skybox_map,
             use_skydome_map, skydome_map,
             use_env_map, env_map
         );
+        vec3 specular_color = GET_SPECULAR(material, camera, refract_out_dir, frag_pos, frag_normal);
+        refraction_color += (1 - reflection_factor) * specular_color;
     }
 
     vec4 env_color;
-    env_color.rgb = 
-        reflection.rgb*reflection.a * reflection_color +
-        refraction.rgb*refraction.a * refraction_color;
-    env_color.a = 1 - (1-reflection.a)*(1-refraction.a);
+    env_color.rgb = reflection.rgb * (reflection_color + refraction_color);
+    env_color.a = reflection.a;
+    if (material.roughness > 1E-6)
+    {
+        vec3 ambient_diffuse_factor = GET_AMBIENT_DIFFUSE_FACTOR(material.recv_shadows, camera, frag_pos, frag_normal);
+        env_color.rgb *= mix(vec3(1), ambient_diffuse_factor, material.roughness);
+    }
     
     return env_color;
 }

@@ -61,8 +61,8 @@ class SpotLight(PointLight):
 class FlatSpotLight:
 
     def __init__(self, spot_light:SpotLight):
-        self.abs_position = glm.vec3(0, 0, 0)
-        self.direction = glm.vec3(0, 1, 0)
+        self.abs_position = glm.dvec3(0, 0, 0)
+        self.direction = glm.dvec3(0, 1, 0)
         self.depth_fbo = None
         self.depth_map_handle = 0
         self.need_update_depth_map = True

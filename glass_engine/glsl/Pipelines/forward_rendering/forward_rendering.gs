@@ -8,6 +8,7 @@ layout (triangle_strip, max_vertices = 3) out;
 
 in VertexOut
 {
+    mat4 affine_transform;
     mat3 view_TBN;
     vec3 tex_coord;
     vec4 color;
@@ -18,6 +19,7 @@ in VertexOut
 
 out GeometryOut
 {
+    mat4 affine_transform;
     vec3 view_pos;
     mat3 view_TBN;
     vec3 tex_coord;
@@ -107,6 +109,7 @@ void main()
 
     for (int i = 0; i < 3; i++)
     {
+        gs_out.affine_transform = gs_in[i].affine_transform;
         gs_out.view_pos = gl_in[i].gl_Position.xyz + explode_distance * face_view_normal;
         mat3 backup_TBN = mat3(face_view_tangent, face_view_bitangent, face_view_normal);
         if (material.shading_model == 1) // Flat

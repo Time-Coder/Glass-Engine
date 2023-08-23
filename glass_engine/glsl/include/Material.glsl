@@ -23,12 +23,12 @@ struct Material
 	vec3 specular;
 	vec3 emission;
 	vec4 reflection;
-	vec4 refraction;
 	float shininess;
+    float shininess_strength;
 	float opacity;
 	float height_scale;
 	float refractive_index;
-	vec3 albedo;
+	vec3 base_color;
 	float metallic;
 	float roughness;
 
@@ -42,9 +42,8 @@ struct Material
 	bool use_opacity_map;
 	bool use_ambient_occlusion_map;
 	bool use_reflection_map;
-	bool use_refraction_map;
 	bool use_refractive_index_map;
-	bool use_albedo_map;
+	bool use_base_color_map;
 	bool use_metallic_map;
 	bool use_roughness_map;
     bool env_mix_diffuse;
@@ -59,9 +58,8 @@ struct Material
 	sampler2D opacity_map;
 	sampler2D ambient_occlusion_map;
 	sampler2D reflection_map;
-	sampler2D refraction_map;
 	sampler2D refractive_index_map;
-	sampler2D albedo_map;
+	sampler2D base_color_map;
 	sampler2D metallic_map;
 	sampler2D roughness_map;
 };
@@ -74,9 +72,8 @@ struct InternalMaterial
 	vec3 diffuse;
 	vec3 specular;
 	vec3 emission;
-	vec3 albedo;
+	vec3 base_color;
 	vec4 reflection;
-	vec4 refraction;
 	float refractive_index;
 	float shininess;
 	float opacity;
@@ -99,56 +96,50 @@ InternalMaterial fetch_internal_material(vec4 frag_color, Material material, vec
     }
 
     // 环境光颜色
-    bool ambient_is_black = true;
-    internal_material.ambient = material.ambient;
-    if (length(internal_material.ambient) < 1E-3)
-    {
-        ambient_is_black = true;
-    }
+    vec3 material_ambient = material.ambient;
     if (material.use_ambient_map)
     {
-        internal_material.ambient = texture(material.ambient_map, tex_coord).rgb;
-        ambient_is_black = false;
+        material_ambient = texture(material.ambient_map, tex_coord).rgb;
     }
-    if (material.use_diffuse_map && !material.use_ambient_map)
+    else if (material.use_diffuse_map)
     {
-        ambient_is_black = true;
+        material_ambient = 0.1 * texture(material.diffuse_map, tex_coord).rgb;
     }
-
-    // 本体颜色 base_color
-    vec3 base_color = frag_color.rgb;
+    else if (material.use_base_color_map)
+    {
+        material_ambient = 0.1 * texture(material.base_color_map, tex_coord).rgb;
+    }
+    else if (length(material_ambient) < 1E-6)
+    {
+        material_ambient = 0.1 * material.diffuse;
+    }
+    internal_material.ambient = mix(0.1*frag_color.rgb, material_ambient, material_opacity);
 
     // 漫反射颜色
+    vec3 material_diffuse = material.diffuse;
+    internal_material.opacity = 1 - (1-frag_color.a)*(1-material_opacity);
     if (material.use_diffuse_map)
     {
-        vec4 diffuse_color = texture(material.diffuse_map, tex_coord);
-        internal_material.diffuse = diffuse_color.rgb;
-        internal_material.opacity = 1 - (1-frag_color.a)*(1-diffuse_color.a*material_opacity);
+        vec4 material_diffuse4 = texture(material.diffuse_map, tex_coord);
+        material_diffuse = material_diffuse4.rgb;
+        internal_material.opacity = 1 - (1-frag_color.a)*(1-material_diffuse4.a*material_opacity);
     }
-    else if (material.use_albedo_map)
+    else if (material.use_base_color_map)
     {
-        vec4 diffuse_color = texture(material.albedo_map, tex_coord);
-        internal_material.diffuse = diffuse_color.rgb;
-        internal_material.opacity = 1 - (1-frag_color.a)*(1-diffuse_color.a*material_opacity);
+        vec4 material_diffuse4 = texture(material.base_color_map, tex_coord);
+        material_diffuse = material_diffuse4.rgb;
+        internal_material.opacity = 1 - (1-frag_color.a)*(1-material_diffuse4.a*material_opacity);
     }
-    else
-    {
-        internal_material.diffuse = material.diffuse;
-        internal_material.opacity = 1 - (1-frag_color.a)*(1-material_opacity);
-    }
-    internal_material.diffuse = mix(base_color, internal_material.diffuse, material_opacity);
-    
-    if (ambient_is_black)
-    {
-        internal_material.ambient = 0.1 * internal_material.diffuse.rgb;
-    }
+    internal_material.diffuse = mix(frag_color.rgb, material_diffuse, material_opacity);
 
     // 镜面高光颜色
-    internal_material.specular = material.specular;
+    vec3 material_specular = material.specular;
     if (material.use_specular_map)
     {
-        internal_material.specular = texture(material.specular_map, tex_coord).rgb;
+        material_specular = texture(material.specular_map, tex_coord).rgb;
     }
+    material_specular *= material.shininess_strength;
+    internal_material.specular = mix(vec3(1,1,1), material_specular, material_opacity);
 
     // 闪耀度
     internal_material.shininess = material.shininess;
@@ -158,10 +149,23 @@ InternalMaterial fetch_internal_material(vec4 frag_color, Material material, vec
     }
 
     // 自发光颜色
-    internal_material.emission = material.emission;
+    vec3 material_emission = material.emission;
+    if (material.shading_model == 9)
+    {
+        internal_material.opacity = 1 - (1-frag_color.a)*(1-material_opacity);
+    }
     if (material.use_emission_map)
     {
-        internal_material.emission = texture(material.emission_map, tex_coord).rgb;
+        vec4 material_emission4 = texture(material.emission_map, tex_coord);
+        material_emission = material_emission4.rgb;
+        if (material.shading_model == 9)
+        {
+            internal_material.opacity = 1 - (1-frag_color.a)*(1-material_emission4.a*material_opacity);
+        }
+    }
+    if (material.shading_model != 9)
+    {
+        internal_material.emission = mix(vec3(0,0,0), material_emission, material_opacity);
     }
 
     // 反射
@@ -172,19 +176,9 @@ InternalMaterial fetch_internal_material(vec4 frag_color, Material material, vec
     }
     if (material.env_mix_diffuse)
     {
-        internal_material.reflection.rgb *= internal_material.diffuse;
+        internal_material.reflection.rgb = sqrt(internal_material.reflection.rgb * internal_material.diffuse);
     }
-
-    // 折射
-    internal_material.refraction = material.refraction;
-    if (material.use_refraction_map)
-    {
-        internal_material.refraction = texture(material.refraction_map, tex_coord);
-    }
-    if (material.env_mix_diffuse)
-    {
-        internal_material.refraction.rgb *= internal_material.diffuse;
-    }
+    internal_material.reflection.a *= material_opacity;
 
     // 折射率
     internal_material.refractive_index = material.refractive_index;
@@ -192,48 +186,45 @@ InternalMaterial fetch_internal_material(vec4 frag_color, Material material, vec
     {
         internal_material.refractive_index = texture(material.refractive_index_map, tex_coord).r;
     }
-
-    if (internal_material.shading_model == 11 || internal_material.shading_model == 8)
+    
+    // 金属度
+    internal_material.metallic = material.metallic;
+    if (material.use_metallic_map)
     {
-        // 金属度
-        internal_material.metallic = material.metallic;
-        if (material.use_metallic_map)
-        {
-            internal_material.metallic = texture(material.metallic_map, tex_coord).r;
-        }
-
-        // 粗糙度
-        internal_material.roughness = material.roughness;
-        if (material.use_roughness_map)
-        {
-            internal_material.roughness = texture(material.roughness_map, tex_coord).r;
-        }
-
-        // 基础颜色
-        internal_material.albedo = material.albedo;
-        if (length(internal_material.albedo) == 0)
-        {
-            internal_material.albedo = internal_material.diffuse;
-        }
-
-        if (material.use_albedo_map)
-        {
-            internal_material.albedo = texture(material.albedo_map, tex_coord).rgb;
-        }
-        else if (material.use_diffuse_map)
-        {
-            internal_material.albedo = texture(material.diffuse_map, tex_coord).rgb;
-        }
-
-        internal_material.albedo = pow(internal_material.albedo, vec3(2.2));
+        internal_material.metallic = texture(material.metallic_map, tex_coord).r;
     }
+
+    // 粗糙度
+    internal_material.roughness = material.roughness;
+    if (material.use_roughness_map)
+    {
+        internal_material.roughness = texture(material.roughness_map, tex_coord).r;
+    }
+
+    // 基础颜色
+    vec3 material_base_color = material.base_color;
+    if (length(material_base_color) < 1E-6)
+    {
+        material_base_color = internal_material.diffuse;
+    }
+    if (material.use_base_color_map)
+    {
+        material_base_color = texture(material.base_color_map, tex_coord).rgb;
+    }
+    else if (material.use_diffuse_map)
+    {
+        material_base_color = texture(material.diffuse_map, tex_coord).rgb;
+    }
+    internal_material.base_color = mix(frag_color.rgb, material_base_color, material_opacity);
+    internal_material.base_color = pow(internal_material.base_color, vec3(2.2));
 
     // 环境光遮蔽
-    internal_material.ambient_occlusion = 1;
+    float material_ao = 1;
     if (material.use_ambient_occlusion_map)
     {
-        internal_material.ambient_occlusion = texture(material.ambient_occlusion_map, tex_coord).r;
+        material_ao = texture(material.ambient_occlusion_map, tex_coord).r;
     }
+    internal_material.ambient_occlusion = mix(1, material_ao, material_opacity);
 
     return internal_material;
 }

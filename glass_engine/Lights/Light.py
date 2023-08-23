@@ -7,11 +7,11 @@ class Light(SceneNode):
 
     def __init__(self, name:str=""):
         SceneNode.__init__(self, name)
-        self._color = SceneNode.vec3(1, 1, 1, callback=self._update_color)
+        self._color = SceneNode.dvec3(1, 1, 1, callback=self._update_color)
         self._brightness = 1.0
-        self._ambient = SceneNode.vec3(1, 1, 1, callback=self._update_ambient)
-        self._diffuse = SceneNode.vec3(1, 1, 1, callback=self._update_diffuse)
-        self._specular = SceneNode.vec3(1, 1, 1, callback=self._update_specular)
+        self._ambient = SceneNode.dvec3(1, 1, 1, callback=self._update_ambient)
+        self._diffuse = SceneNode.dvec3(1, 1, 1, callback=self._update_diffuse)
+        self._specular = SceneNode.dvec3(1, 1, 1, callback=self._update_specular)
         self._generate_shadows = True
         self._flats = set()
 

@@ -31,6 +31,59 @@ struct PointLight
 
 #include "PointLight_shadow_mapping.glsl"
 
+vec3 ambient_diffuse_factor(
+    PointLight light, bool recv_shadows,
+    vec3 frag_pos, vec3 frag_normal)
+{
+    // 基础向量
+    vec3 to_light = light.abs_position - frag_pos;
+    float d2 = dot(to_light, to_light);
+    if (d2 > light.coverage*light.coverage)
+    {
+        return vec3(0, 0, 0);
+    }
+    float d = sqrt(d2);
+    to_light = to_light / d;
+
+    vec3 diffuse_factor = Lambert_diffuse(to_light, frag_normal) + 0.1 * light.ambient;
+    float attenuation = 1.0 / (1 + light.K1 * d +  light.K2 * d2);
+    float shadow_visibility = 1;
+    if (light.generate_shadows && recv_shadows &&
+        (light.depth_map_handle.x > 0 || light.depth_map_handle.y > 0))
+    {
+        shadow_visibility = PCF(light, frag_pos, frag_normal);
+    }
+
+    return shadow_visibility * diffuse_factor * light.brightness * light.color * attenuation;
+}
+
+vec3 PhongBlinn_specular(
+    PointLight light, InternalMaterial material, Camera CSM_camera,
+    vec3 view_dir, vec3 frag_pos, vec3 frag_normal)
+{
+    // 基础向量
+    vec3 to_light = light.abs_position - frag_pos;
+    float d2 = dot(to_light, to_light);
+    if (d2 > light.coverage*light.coverage)
+    {
+        return vec3(0, 0, 0);
+    }
+    float d = sqrt(d2);
+    to_light = to_light / d;
+    vec3 to_camera = normalize(reflect(-view_dir, frag_normal));
+    
+    float specular_factor = PhongBlinn_specular(to_light, to_camera, frag_normal, material.shininess);
+    float attenuation = 1.0 / (1 + light.K1 * d +  light.K2 * d2);
+    float shadow_visibility = 1;
+    if (light.generate_shadows && material.recv_shadows &&
+        (light.depth_map_handle.x > 0 || light.depth_map_handle.y > 0))
+    {
+        shadow_visibility = PCF(light, frag_pos, frag_normal);
+    }
+
+    return shadow_visibility * specular_factor * light.brightness * light.color * attenuation;
+}
+
 vec3 PhongBlinn_lighting(
     PointLight light, InternalMaterial material,
     vec3 camera_pos, vec3 frag_pos, vec3 frag_normal)
@@ -76,6 +129,32 @@ vec3 PhongBlinn_lighting(
     vec3 camera_pos, vec3 frag_pos, vec3 frag_normal)
 {
     return PhongBlinn_lighting(light, material, camera_pos, frag_pos, frag_normal);
+}
+
+vec3 Phong_specular(
+    PointLight light, InternalMaterial material, Camera CSM_camera,
+    vec3 view_dir, vec3 frag_pos, vec3 frag_normal)
+{
+    vec3 to_light = light.abs_position - frag_pos;
+    float d2 = dot(to_light, to_light);
+    if (d2 > light.coverage*light.coverage)
+    {
+        return vec3(0, 0, 0);
+    }
+    float d = sqrt(d2);
+    to_light = to_light / d;
+    vec3 to_camera = normalize(reflect(-view_dir, frag_normal));
+
+    float specular_factor = Phong_specular(to_light, to_camera, frag_normal, material.shininess);
+    float attenuation = 1.0 / (1 + light.K1 * d +  light.K2 * d2);
+    float shadow_visibility = 1;
+    if (light.generate_shadows && material.recv_shadows &&
+        (light.depth_map_handle.x > 0 || light.depth_map_handle.y > 0))
+    {
+        shadow_visibility = PCF(light, frag_pos, frag_normal);
+    }
+
+    return shadow_visibility * specular_factor * light.brightness * light.color * attenuation;
 }
 
 vec3 Phong_lighting(
