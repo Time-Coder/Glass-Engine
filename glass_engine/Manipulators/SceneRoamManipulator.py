@@ -92,8 +92,8 @@ class SceneRoamManipulator(Manipulator):
             dy = d.y/100
 
             yaw = self._left_press_yaw/180*math.pi
-            horizontal_orientation = glm.quat(math.cos(yaw/2), 0, 0, math.sin(yaw/2))
-            self.camera.position = self._left_press_camera_pos + horizontal_orientation*glm.vec3(-dx, dy, 0)
+            horizontal_orientation = glm.dquat(math.cos(yaw/2), 0, 0, math.sin(yaw/2))
+            self.camera.position = self._left_press_camera_pos + horizontal_orientation*glm.dvec3(-dx, dy, 0)
             return True
         
         return False

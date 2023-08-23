@@ -18,8 +18,9 @@ float SSM(SpotLight light, vec3 frag_pos, vec3 frag_normal)
         return 1;
     }
     
-    float beta = acos(dot(frag_normal, -depth_map_tex_coord));
-    float bias = 0.005 * self_depth * tan(beta);
+    ivec2 tex_size = textureSize(samplerCube(light.depth_map_handle), 0);
+    float beta = acos(max(0, dot(frag_normal, -depth_map_tex_coord)));
+    float bias = self_depth/max(tex_size.x, tex_size.y) * min(10, tan(beta));
     self_depth -= bias;
 
     depth_map_tex_coord = quat_apply(quat(cos45, sin45, 0, 0), depth_map_tex_coord);
@@ -47,13 +48,12 @@ float PCF(SpotLight light, vec3 frag_pos, vec3 frag_normal)
         return 1;
     }
 
-    float beta = acos(dot(frag_normal, -depth_map_tex_coord));
-    float bias = 0.005 * self_depth * tan(beta);
+    float max_angle_shift = atan(0.05/self_depth);
+    float beta = acos(max(0, dot(frag_normal, -depth_map_tex_coord)));
+    float bias = 0.05 * min(10, tan(beta));
     self_depth -= bias;
 
-    float max_angle_shift = atan(0.05/self_depth);
-    int n_samples = 16;
-
+    int n_samples = 10;
     int rand_seed = 0;
     int not_occ_count = 0;
     int total_count = 0;
