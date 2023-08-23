@@ -11,8 +11,8 @@ class DirLight(Light):
 class FlatDirLight:
 
     def __init__(self, dir_light:DirLight):
-        self.direction = glm.vec3(0, 1, 0)
-        self.abs_orientation = glm.quat(1, 0, 0, 0)
+        self.direction = glm.dvec3(0, 1, 0)
+        self.abs_orientation = glm.dquat(1, 0, 0, 0)
         self.max_back_offset = 0
         self.depth_fbo = None
         self.depth_map_handle = 0

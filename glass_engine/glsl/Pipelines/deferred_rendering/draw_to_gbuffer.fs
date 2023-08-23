@@ -1,8 +1,8 @@
 #version 460 core
 
-
 in GeometryOut
 {
+    mat4 affine_transform;
     vec3 view_pos;
     mat3 view_TBN;
     vec3 tex_coord;
@@ -27,11 +27,11 @@ layout(location=1) out vec4 view_normal_and_emission_r;
 
 // 光照信息
 layout(location=2) out vec4 ambient_or_arm_and_emission_g;
-layout(location=3) out vec4 diffuse_or_albedo_and_emission_b;
+layout(location=3) out vec4 diffuse_or_base_color_and_emission_b;
 layout(location=4) out vec4 specular_or_prelight_and_shininess;
 layout(location=5) out vec4 reflection;
-layout(location=6) out vec4 refraction;
-layout(location=7) out uvec4 mix_uint;
+layout(location=6) out vec4 env_center_and_refractive_index;
+layout(location=7) out uvec3 mix_uint;
 
 #include "../../include/Material.glsl"
 #include "../../include/parallax_mapping.glsl"
@@ -40,6 +40,7 @@ layout(location=7) out uvec4 mix_uint;
 uniform Material material;
 uniform Material back_material;
 uniform bool is_sphere;
+uniform vec3 mesh_center;
 
 #include "../draw_filled_to_gbuffer.glsl"
 

@@ -23,6 +23,20 @@ buffer SpotLights
     SpotLight spot_lights[];
 };
 
+#define GET_ONE_LIGHT_SPECULAR(light, internal_material, camera, view_dir, frag_pos, frag_normal) \
+(\
+    internal_material.shading_model == 3 ? \
+        Phong_specular(\
+            light, internal_material, camera,\
+            view_dir, frag_pos, frag_normal\
+        ) : (\
+    internal_material.shading_model == 4 ? \
+        PhongBlinn_specular(\
+            light, internal_material, camera,\
+            view_dir, frag_pos, frag_normal\
+        ) : vec3(0))\
+)
+
 #define FRAG_LIGHTING_ONE(light, internal_material, camera_pos, CSM_camera, frag_pos, frag_normal) \
 (\
     internal_material.shading_model == 3 ? \
@@ -65,7 +79,66 @@ float SHADOW_VISIBILITY(Camera camera, vec3 frag_pos, vec3 frag_normal)
         visibility *= PCF(spot_lights[i], frag_pos, frag_normal);
     }
 
-    return visibility;
+    return max(visibility, 0.1);
+}
+
+vec3 GET_AMBIENT_DIFFUSE_FACTOR(bool recv_shadows, Camera camera, vec3 frag_pos, vec3 frag_normal)
+{
+    vec3 factor = vec3(0.1);
+
+    // 点光源
+    for(int i = 0; i < n_point_lights; i++)
+    {
+        factor += ambient_diffuse_factor(point_lights[i], recv_shadows, frag_pos, frag_normal);
+    }
+
+    // 平行光
+    for(int i = 0; i < n_dir_lights; i++)
+    {
+        factor += ambient_diffuse_factor(dir_lights[i], recv_shadows, camera, frag_pos, frag_normal);
+    }
+
+    // 聚光
+    for(int i = 0; i < n_spot_lights; i++)
+    {
+        factor += ambient_diffuse_factor(spot_lights[i], recv_shadows, frag_pos, frag_normal);
+    }
+
+    return factor;
+}
+
+vec3 GET_SPECULAR(InternalMaterial internal_material, Camera camera, vec3 view_dir, vec3 frag_pos, vec3 frag_normal)
+{
+    vec3 specular_color = vec3(0);
+
+    // 点光源
+    for(int i = 0; i < n_point_lights; i++)
+    {
+        specular_color += GET_ONE_LIGHT_SPECULAR(
+            point_lights[i], internal_material, camera,
+            view_dir, frag_pos, frag_normal
+        );
+    }
+
+    // 平行光
+    for(int i = 0; i < n_dir_lights; i++)
+    {
+        specular_color += GET_ONE_LIGHT_SPECULAR(
+            dir_lights[i], internal_material, camera,
+            view_dir, frag_pos, frag_normal
+        );
+    }
+
+    // 聚光
+    for(int i = 0; i < n_spot_lights; i++)
+    {
+        specular_color += GET_ONE_LIGHT_SPECULAR(
+            spot_lights[i], internal_material, camera,
+            view_dir, frag_pos, frag_normal
+        );
+    }
+
+    return 3*specular_color;
 }
 
 vec3 FRAG_LIGHTING(InternalMaterial internal_material, Camera CSM_camera, vec3 camera_pos, vec3 frag_pos, vec3 frag_normal)

@@ -5,6 +5,7 @@
 
 in GeometryOut
 {
+    mat4 affine_transform;
     vec3 view_pos;
     mat3 view_TBN;
     vec3 tex_coord;
@@ -37,6 +38,7 @@ layout(location=2) out float reveal;
 #include "../../include/env_mapping.glsl"
 
 uniform vec3 view_center;
+uniform vec3 mesh_center;
 uniform Material material;
 uniform Material back_material;
 uniform sampler2D SSAO_map;
@@ -63,8 +65,6 @@ void main()
 
     if (is_filled)
     {
-        // Camera camera = cube_cameras[gl_Layer];
-        // camera.abs_position = view_center;
         Camera camera = cube_camera(gl_Layer, view_center);
         out_color = draw_filled(camera, CSM_camera);
     }

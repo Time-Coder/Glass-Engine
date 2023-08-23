@@ -8,7 +8,7 @@ import OpenGL.GL.ARB.bindless_texture as bt
 class isampler2DMS(sampler2DMS):
 
     @checktype
-    def __init__(self, width:int=0, height:int=0, samples:int=4, internal_format:GLInfo.iimage_internal_formats=None):
+    def __init__(self, width:int=0, height:int=0, samples:int=4, internal_format:GLInfo.isampler_internal_formats=None):
         if internal_format is None:
             internal_format = GL.GL_RGBA32I
 
@@ -20,7 +20,7 @@ class isampler2DMS(sampler2DMS):
 
     @internal_format.setter
     @checktype
-    def internal_format(self, format:GLInfo.iimage_internal_formats):
+    def internal_format(self, format:GLInfo.isampler_internal_formats):
         if self._internal_format != format:
             self._internal_format = format
             self._param_changed = True

@@ -5,19 +5,22 @@
 layout (location = 0) in vec3 position;
 
 // instance
-layout (location = 1) in vec4 col0;
-layout (location = 2) in vec4 col1;
-layout (location = 3) in vec4 col2;
-layout (location = 4) in vec4 col3;
-layout (location = 5) in int visible;
+layout (location = 1) in dvec4 affine_transform_row0;
+layout (location = 2) in dvec4 affine_transform_row1;
+layout (location = 3) in dvec4 affine_transform_row2;
+layout (location = 4) in int visible;
 
 out flat int vertex_visible;
 
-#include "../../include/Transform.glsl"
+#include "../../include/transform.glsl"
 
 void main()
 {
-    mat4 transform = mat4(col0, col1, col2, col3);
+    dmat4 dtransform = dmat4(affine_transform_row0,
+                             affine_transform_row1,
+                             affine_transform_row2,
+                             dvec4(0, 0, 0, 1));
+    mat4 transform = transpose(mat4(dtransform));
     
     vec3 world_pos = transform_apply(transform, position);
     gl_Position = vec4(world_pos, 1);

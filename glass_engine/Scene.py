@@ -3,11 +3,11 @@ from .Mesh import Mesh
 from .Lights.PointLight import PointLights, PointLight, FlatPointLight
 from .Lights.DirLight import DirLights, DirLight, FlatDirLight
 from .Lights.SpotLight import SpotLights, SpotLight, FlatSpotLight
-from .Transform import Transform
+from .AffineTransform import AffineTransform
 from .SkyBox import SkyBox
 from .SkyDome import SkyDome
 
-from glass.utils import checktype, quat_to_mat4, scale_to_mat4, translate_to_mat4, quat_to_mat3, scale_to_mat3
+from glass.utils import checktype, dquat_to_dmat4, scale_to_dmat4, translate_to_dmat4, dquat_to_dmat3, scale_to_dmat3
 from glass import Instances, samplerCube
 
 import glm
@@ -102,8 +102,8 @@ class Scene:
             del scene_node._children_transform_dirty[self]
     
     def __trav(self, scene_node:SceneNode,
-               current_quat:glm.quat,
-               current_mat:glm.mat4,
+               current_quat:glm.dquat,
+               current_mat:glm.dmat4,
                current_path:str):
         
         if self not in self._root._transform_dirty and \
@@ -111,9 +111,9 @@ class Scene:
             return
 
         new_quat = current_quat * scene_node.orientation
-        new_mat = current_mat * translate_to_mat4(scene_node.position) * \
-                                quat_to_mat4(scene_node.orientation) * \
-                                scale_to_mat4(scene_node.scale)
+        new_mat = current_mat * translate_to_dmat4(scene_node.position) * \
+                                dquat_to_dmat4(scene_node.orientation) * \
+                                scale_to_dmat4(scene_node.scale)
         new_path = current_path + "/" + scene_node.name
 
         if self in scene_node._transform_dirty:
@@ -123,12 +123,11 @@ class Scene:
                     self._all_meshes[mesh] = {}
 
                 if new_path not in self._all_meshes[mesh]:
-                    self._all_meshes[mesh][new_path] = Transform()
+                    self._all_meshes[mesh][new_path] = AffineTransform()
 
-                self._all_meshes[mesh][new_path]["col0"] = glm.vec4(new_mat[0])
-                self._all_meshes[mesh][new_path]["col1"] = glm.vec4(new_mat[1])
-                self._all_meshes[mesh][new_path]["col2"] = glm.vec4(new_mat[2])
-                self._all_meshes[mesh][new_path]["col3"] = glm.vec4(new_mat[3])
+                self._all_meshes[mesh][new_path]["affine_transform_row0"] = glm.dvec4(new_mat[0][0], new_mat[1][0], new_mat[2][0], new_mat[3][0])
+                self._all_meshes[mesh][new_path]["affine_transform_row1"] = glm.dvec4(new_mat[0][1], new_mat[1][1], new_mat[2][1], new_mat[3][1])
+                self._all_meshes[mesh][new_path]["affine_transform_row2"] = glm.dvec4(new_mat[0][2], new_mat[1][2], new_mat[2][2], new_mat[3][2])
                 self.__anything_changed = True
             elif isinstance(scene_node, SpotLight):
                 spot_light = None
@@ -140,7 +139,7 @@ class Scene:
                     spot_light.update(scene_node)
 
                 spot_light.abs_position = new_mat[3].xyz
-                spot_light.direction = new_quat * glm.vec3(0, 1, 0)
+                spot_light.direction = new_quat * glm.dvec3(0, 1, 0)
                 self._spot_lights.dirty = True
 
                 self.__anything_changed = True
@@ -168,7 +167,7 @@ class Scene:
                     dir_light = self._dir_lights[new_path]
                     dir_light.update(scene_node)
 
-                dir_light.direction = new_quat * glm.vec3(0, 1, 0)
+                dir_light.direction = new_quat * glm.dvec3(0, 1, 0)
                 dir_light.abs_orientation = new_quat
                 self._dir_lights.dirty = True
 
@@ -184,7 +183,7 @@ class Scene:
            self not in self._root._children_transform_dirty:
             return
         
-        self.__trav(self._root, glm.quat(), glm.mat4(), "")
+        self.__trav(self._root, glm.dquat(), glm.dmat4(), "")
         if self.__anything_changed:
             self.__update_env_maps()
             self.__update_depth_maps()

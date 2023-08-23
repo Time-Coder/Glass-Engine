@@ -6,7 +6,7 @@ from enum import Enum
 import numpy as np
 from functools import wraps
 
-class Material():
+class Material:
 
     class ShadingModel(Enum):
         Flat = 0x1
@@ -52,20 +52,21 @@ class Material():
             self.ch_name = ch_name
 
     def __init__(self):
-        self.__ambient = glm.vec3(0.1, 0.1, 0.1)
-        self.__diffuse = glm.vec3(0.5, 0.5, 0.5)
-        self.__specular = glm.vec3(0.3, 0.3, 0.3)
-        self.__shininess = 0.6
+        self.__ambient = 0.1 * glm.vec3(0.396, 0.74151, 0.69102)
+        self.__diffuse = glm.vec3(0.396, 0.74151, 0.69102)
+        self.__specular = glm.vec3(1)
+        self.__shininess = 0.6*128
+        self.__shininess_strength = 1
+
         self.__emission = glm.vec3(0, 0, 0)
         self.__reflection = glm.vec4(0, 0, 0, 0)
-        self.__refraction = glm.vec4(0, 0, 0, 0)
         self.__refractive_index = 0
         self._opacity = 0
         self.__height_scale = 0.05
         self.__env_mix_diffuse = True
-        self.__albedo = glm.vec3(0.5, 0.5, 0.5)
+        self.__base_color = glm.vec3(0.5, 0.5, 0.5)
         self.__metallic = 0.5
-        self.__roughness = 0.5
+        self.__roughness = 0
         self.__recv_shadows = True
         self.__cast_shadows = True
 
@@ -79,9 +80,8 @@ class Material():
         self._opacity_map = None
         self.__ambient_occlusion_map = None
         self.__reflection_map = None
-        self.__refraction_map = None
         self.__refractive_index_map = None
-        self.__albedo_map = None
+        self.__base_color_map = None
         self.__metallic_map = None
         self.__roughness_map = None
 
@@ -89,7 +89,6 @@ class Material():
 
         self._opacity_user_set = False
         self.__reflection_user_set = False
-        self.__refraction_user_set = False
         self.__refractive_index_user_set = False
         self.__env_max_bake_times = 2
         self.__dynamic_env_mapping = False
@@ -169,11 +168,6 @@ class Material():
             has_reflection = True
 
         if has_reflection:
-            return True
-
-        if self.__refraction_map is None:
-            return (glm.length(self.__refraction) > 0)
-        else:
             return True
     
     @property
@@ -264,6 +258,15 @@ class Material():
         self.__shininess = shininess
 
     @property
+    def shininess_strength(self):
+        return self.__shininess_strength
+    
+    @shininess_strength.setter
+    @param_setter
+    def shininess_strength(self, shininess_strength:float):
+        self.__shininess_strength = shininess_strength
+
+    @property
     def opacity_user_set(self):
         return self._opacity_user_set
 
@@ -313,28 +316,6 @@ class Material():
         self.__reflection_user_set = True
 
     @property
-    def refraction(self):
-        return self.__refraction
-    
-    @refraction.setter
-    @param_setter
-    def refraction(self, refraction:(glm.vec4,glm.vec3,float)):
-        if isinstance(refraction, glm.vec3):
-            refraction = glm.vec4(refraction, 1)
-        if isinstance(refraction, (float,int)):
-            refraction = glm.vec4(1, 1, 1, refraction)
-
-        self.__refraction = refraction
-
-        if not self.__reflection_user_set:
-            self.__reflection = self.__refraction
-
-        if not self.__refractive_index_user_set:
-            self.__refractive_index = 1.5
-
-        self.__refraction_user_set = True
-
-    @property
     def refractive_index(self):
         return self.__refractive_index
     
@@ -345,9 +326,6 @@ class Material():
 
         if not self.__reflection_user_set:
             self.__reflection = glm.vec4(1, 1, 1, 1)
-
-        if not self.__refraction_user_set:
-            self.__refraction = glm.vec4(1, 1, 1, 1)
 
         self.__refractive_index_user_set = True
 
@@ -361,13 +339,13 @@ class Material():
         self.__height_scale = distance
 
     @property
-    def albedo(self):
-        return self.__albedo
+    def base_color(self):
+        return self.__base_color
     
-    @albedo.setter
+    @base_color.setter
     @param_setter
-    def albedo(self, albedo:glm.vec3):
-        self.__albedo = albedo
+    def base_color(self, base_color:glm.vec3):
+        self.__base_color = base_color
 
     @property
     def roughness(self):
@@ -545,29 +523,6 @@ class Material():
         self.__reflection_user_set = True
 
     @property
-    def refraction_map(self):
-        return self.__refraction_map
-    
-    @refraction_map.setter
-    @param_setter
-    def refraction_map(self, refraction_map:(sampler2D,str,np.ndarray)):
-        if isinstance(refraction_map, sampler2D) or refraction_map is None:
-            self.__refraction_map = refraction_map
-        elif isinstance(refraction_map, (str,np.ndarray)):
-            if self.__refraction_map is None:
-                self.__refraction_map = sampler2D(refraction_map)
-            else:
-                self.__refraction_map.image = refraction_map
-
-        if not self.__reflection_user_set:
-            self.__reflection = glm.vec4(1, 1, 1, 1)
-
-        if not self.__refractive_index_user_set:
-            self.__refractive_index = 1.5
-
-        self.__refraction_user_set = True
-
-    @property
     def refractive_index_map(self):
         return self.__refractive_index_map
     
@@ -585,25 +540,20 @@ class Material():
         if not self.__reflection_user_set:
             self.__reflection = glm.vec4(1, 1, 1, 1)
 
-        if not self.__refraction_user_set:
-            self.__refraction = glm.vec4(1, 1, 1, 1)
-
-        self.__refractive_index_user_set = True
-
     @property
-    def albedo_map(self):
-        return self.__albedo_map
+    def base_color_map(self):
+        return self.__base_color_map
     
-    @albedo_map.setter
+    @base_color_map.setter
     @param_setter
-    def albedo_map(self, albedo_map:(sampler2D,str,np.ndarray)):
-        if isinstance(albedo_map, sampler2D) or albedo_map is None:
-            self.__albedo_map = albedo_map
-        elif isinstance(albedo_map, (str,np.ndarray)):
-            if self.__albedo_map is None:
-                self.__albedo_map = sampler2D(albedo_map)
+    def base_color_map(self, base_color_map:(sampler2D,str,np.ndarray)):
+        if isinstance(base_color_map, sampler2D) or base_color_map is None:
+            self.__base_color_map = base_color_map
+        elif isinstance(base_color_map, (str,np.ndarray)):
+            if self.__base_color_map is None:
+                self.__base_color_map = sampler2D(base_color_map)
             else:
-                self.__albedo_map.image = albedo_map
+                self.__base_color_map.image = base_color_map
 
     @property
     def metallic_map(self):
@@ -676,16 +626,12 @@ class Material():
         return (self.__reflection_map is not None)
 
     @property
-    def use_refraction_map(self):
-        return (self.__refraction_map is not None)
-
-    @property
     def use_refractive_index_map(self):
         return (self.__refractive_index_map is not None)
     
     @property
-    def use_albedo_map(self):
-        return (self.__albedo_map is not None)
+    def use_base_color_map(self):
+        return (self.__base_color_map is not None)
     
     @property
     def use_metallic_map(self):
@@ -701,122 +647,122 @@ class Material():
             self.ambient = glm.vec3(0.0215, 0.1745, 0.0215)
             self.diffuse = glm.vec3(0.07568, 0.61424, 0.07568)
             self.specular = glm.vec3(0.633, 0.727811, 0.633)
-            self.shininess = 0.6
+            self.shininess = 0.6*128
         elif type == Material.Type.Jade:
             self.ambient = glm.vec3(0.135, 0.2225, 0.1575)
             self.diffuse = glm.vec3(0.54, 0.89, 0.63)
             self.specular = glm.vec3(0.316228, 0.316228, 0.316228)
-            self.shininess = 0.1
+            self.shininess = 0.1*128
         elif type == Material.Type.Obsidian:
             self.ambient = glm.vec3(0.05375, 0.05, 0.06625)
             self.diffuse = glm.vec3(0.18275, 0.17, 0.22525)
             self.specular = glm.vec3(0.332741, 0.328634, 0.346435)
-            self.shininess = 0.3
+            self.shininess = 0.3*128
         elif type == Material.Type.Pearl:
             self.ambient = glm.vec3(0.25, 0.20725, 0.20725)
             self.diffuse = glm.vec3(1, 0.829, 0.829)
             self.specular = glm.vec3(0.296648, 0.296648, 0.296648)
-            self.shininess = 0.088
+            self.shininess = 0.088*128
         elif type == Material.Type.Ruby:
             self.ambient = glm.vec3(0.1745, 0.01175, 0.01175)
             self.diffuse = glm.vec3(0.61424, 0.04136, 0.04136)
             self.specular = glm.vec3(0.727811, 0.626959, 0.626959)
-            self.shininess = 0.6
+            self.shininess = 0.6*128
         elif type == Material.Type.Turquoise:
             self.ambient = glm.vec3(0.1, 0.18725, 0.1745)
             self.diffuse = glm.vec3(0.396, 0.74151, 0.69102)
             self.specular = glm.vec3(0.297254, 0.30829, 0.306678)
-            self.shininess = 0.1
+            self.shininess = 0.1*128
         elif type == Material.Type.Brass:
             self.ambient = glm.vec3(0.329412, 0.223529, 0.027451)
             self.diffuse = glm.vec3(0.780392, 0.568627, 0.113725)
             self.specular = glm.vec3(0.992157, 0.941176, 0.807843)
-            self.shininess = 0.21794872
+            self.shininess = 0.21794872*128
         elif type == Material.Type.Bronze:
             self.ambient = glm.vec3(0.2125, 0.1275, 0.054)
             self.diffuse = glm.vec3(0.714, 0.4284, 0.18144)
             self.specular = glm.vec3(0.393548, 0.271906, 0.166721)
-            self.shininess = 0.2
+            self.shininess = 0.2*128
         elif type == Material.Type.Chrome:
             self.ambient = glm.vec3(0.25, 0.25, 0.25)
             self.diffuse = glm.vec3(0.4, 0.4, 0.4)
             self.specular = glm.vec3(0.774597, 0.774597, 0.774597)
-            self.shininess = 0.6
+            self.shininess = 0.6*128
         elif type == Material.Type.Copper:
             self.ambient = glm.vec3(0.19125, 0.0735, 0.0225)
             self.diffuse = glm.vec3(0.7038, 0.27048, 0.0828)
             self.specular = glm.vec3(0.256777, 0.137622, 0.086014)
-            self.shininess = 0.1
+            self.shininess = 0.1*128
         elif type == Material.Type.Gold:
             self.ambient = glm.vec3(0.24725, 0.1995, 0.0745)
             self.diffuse = glm.vec3(0.75164, 0.60648, 0.22648)
             self.specular = glm.vec3(0.628281, 0.555802, 0.366065)
-            self.shininess = 0.4
+            self.shininess = 0.4*128
         elif type == Material.Type.Silver:
             self.ambient = glm.vec3(0.19225, 0.19225, 0.19225)
             self.diffuse = glm.vec3(0.50754, 0.50754, 0.50754)
             self.specular = glm.vec3(0.508273, 0.508273, 0.508273)
-            self.shininess = 0.4
+            self.shininess = 0.4*128
         elif type == Material.Type.BlackPlastic:
             self.ambient = glm.vec3(0.0, 0.0, 0.0)
             self.diffuse = glm.vec3(0.01, 0.01, 0.01)
             self.specular = glm.vec3(0.50, 0.50, 0.50)
-            self.shininess = 0.25
+            self.shininess = 0.25*128
         elif type == Material.Type.CyanPlastic:
             self.ambient = glm.vec3(0.0, 0.1, 0.06)
             self.diffuse = glm.vec3(0.0, 0.50980392, 0.50980392)
             self.specular = glm.vec3(0.50196078, 0.50196078, 0.50196078)
-            self.shininess = 0.25
+            self.shininess = 0.25*128
         elif type == Material.Type.GreenPlastic:
             self.ambient = glm.vec3(0.0, 0.0, 0.0)
             self.diffuse = glm.vec3(0.1, 0.35, 0.1)
             self.specular = glm.vec3(0.45, 0.55, 0.45)
-            self.shininess = 0.25
+            self.shininess = 0.25*128
         elif type == Material.Type.RedPlastic:
             self.ambient = glm.vec3(0.0, 0.0, 0.0)
             self.diffuse = glm.vec3(0.5, 0.0, 0.0)
             self.specular = glm.vec3(0.7, 0.6, 0.6)
-            self.shininess = 0.25
+            self.shininess = 0.25*128
         elif type == Material.Type.WhitePlastic:
             self.ambient = glm.vec3(0.0, 0.0, 0.0)
             self.diffuse = glm.vec3(0.55, 0.55, 0.55)
             self.specular = glm.vec3(0.70, 0.70, 0.70)
-            self.shininess = 0.25
+            self.shininess = 0.25*128
         elif type == Material.Type.YellowPlastic:
             self.ambient = glm.vec3(0.0, 0.0, 0.0)
             self.diffuse = glm.vec3(0.5, 0.5, 0.0)
             self.specular = glm.vec3(0.60, 0.60, 0.50)
-            self.shininess = 0.25
+            self.shininess = 0.25*128
         elif type == Material.Type.BlackRubber:
             self.ambient = glm.vec3(0.02, 0.02, 0.02)
             self.diffuse = glm.vec3(0.01, 0.01, 0.01)
             self.specular = glm.vec3(0.4, 0.4, 0.4)
-            self.shininess = 0.078125
+            self.shininess = 0.078125*128
         elif type == Material.Type.CyanRubber:
             self.ambient = glm.vec3(0.0, 0.05, 0.05)
             self.diffuse = glm.vec3(0.4, 0.5, 0.5)
             self.specular = glm.vec3(0.04, 0.7, 0.7)
-            self.shininess = 0.078125
+            self.shininess = 0.078125*128
         elif type == Material.Type.GreenRubber:
             self.ambient = glm.vec3(0.0, 0.05, 0.0)
             self.diffuse = glm.vec3(0.4, 0.5, 0.4)
             self.specular = glm.vec3(0.04, 0.7, 0.04)
-            self.shininess = 0.078125
+            self.shininess = 0.078125*128
         elif type == Material.Type.RedRubber:
             self.ambient = glm.vec3(0.05, 0.0, 0.0)
             self.diffuse = glm.vec3(0.5, 0.4, 0.4)
             self.specular = glm.vec3(0.7, 0.04, 0.04)
-            self.shininess = 0.078125
+            self.shininess = 0.078125*128
         elif type == Material.Type.WhiteRubber:
             self.ambient = glm.vec3(0.05, 0.05, 0.05)
             self.diffuse = glm.vec3(0.5, 0.5, 0.5)
             self.specular = glm.vec3(0.7, 0.7, 0.7)
-            self.shininess = 0.078125
+            self.shininess = 0.078125*128
         elif type == Material.Type.YellowRubber:
             self.ambient = glm.vec3(0.05, 0.05, 0.0)
             self.diffuse = glm.vec3(0.5, 0.5, 0.4)
             self.specular = glm.vec3(0.7, 0.7, 0.04)
-            self.shininess = 0.078125
+            self.shininess = 0.078125*128
 
     @staticmethod
     @checktype

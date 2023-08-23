@@ -544,8 +544,9 @@ class CommonRenderer(Renderer):
 
             if self.env_bake_times(instance) >= max_bake_times:
                 continue
+            
+            view_center = instance.apply(mesh_center)
 
-            view_center = mesh_center + instance["col3"].xyz
             instance.visible = 0
             env_map_fbo = self.env_map_fbo(instance)
             env_transparent_meshes = {}
@@ -563,18 +564,13 @@ class CommonRenderer(Renderer):
                     self.gen_env_map_program["SSAO_map"] = None
                     for other_mesh, other_instances in self.scene.all_meshes.items():
                         if other_mesh.has_opaque:
-                            # old_recv_shadows = other_mesh.material.recv_shadows
-                            # old_back_recv_shadows = other_mesh._back_material.recv_shadows
-                            # other_mesh.material.recv_shadows = False 
-                            # other_mesh._back_material.recv_shadows = False
                             self.gen_env_map_program["explode_distance"] = other_mesh.explode_distance
                             self.gen_env_map_program["material"] = other_mesh.material
                             self.gen_env_map_program["back_material"] = other_mesh._back_material
                             self.gen_env_map_program["is_filled"] = other_mesh.is_filled
                             self.gen_env_map_program["is_sphere"] = other_mesh.is_sphere
+                            self.gen_env_map_program["mesh_center"] = other_mesh.center
                             other_mesh.draw(self.gen_env_map_program, other_instances)
-                            # other_mesh.material.recv_shadows = old_recv_shadows
-                            # other_mesh._back_material.recv_shadows = old_back_recv_shadows
                         
                         if other_mesh.has_transparent:
                             env_transparent_meshes[other_mesh] = other_instances
@@ -604,18 +600,12 @@ class CommonRenderer(Renderer):
                         self.gen_env_map_program["skydome_map"] = self.scene.skydome.skydome_map
                         self.gen_env_map_program["SSAO_map"] = None
                         for other_mesh, other_instances in env_transparent_meshes.items():
-                            # old_recv_shadows = other_mesh.material.recv_shadows
-                            # old_back_recv_shadows = other_mesh._back_material.recv_shadows
-                            # other_mesh.material.recv_shadows = False 
-                            # other_mesh._back_material.recv_shadows = False
                             self.gen_env_map_program["explode_distance"] = other_mesh.explode_distance
                             self.gen_env_map_program["material"] = other_mesh.material
                             self.gen_env_map_program["back_material"] = other_mesh._back_material
                             self.gen_env_map_program["is_filled"] = other_mesh.is_filled
                             self.gen_env_map_program["is_sphere"] = other_mesh.is_sphere
                             other_mesh.draw(self.gen_env_map_program, other_instances)
-                            # other_mesh.material.recv_shadows = old_recv_shadows
-                            # other_mesh._back_material.recv_shadows = old_back_recv_shadows
 
                     # 取出 OIT 信息
                     accum_map = env_map_fbo.color_attachment(1)
@@ -658,6 +648,7 @@ class CommonRenderer(Renderer):
         self.forward_program["explode_distance"] = mesh.explode_distance
         self.forward_program["is_filled"] = mesh.is_filled
         self.forward_program["is_sphere"] = mesh.is_sphere
+        self.forward_program["mesh_center"] = mesh.center
         mesh.draw(self.forward_program, instances)
 
     def draw_tangent(self, mesh, instances):

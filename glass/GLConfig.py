@@ -151,6 +151,7 @@ class _MetaGLConfig(type):
     __max_uniform_buffer_bindings = None
     __max_shader_storage_buffer_bindings = None
     __max_color_attachments = None
+    __max_draw_buffers = None
     __screen_size = glm.ivec2()
     __buffered_current_context = None
     __gl_version = None
@@ -477,6 +478,16 @@ class _MetaGLConfig(type):
                 return 8
             
         return _MetaGLConfig.__max_color_attachments
+    
+    @property
+    def max_draw_buffers(cls):
+        if _MetaGLConfig.__max_draw_buffers is None:
+            try:
+                _MetaGLConfig.__max_draw_buffers = GL.glGetIntegerv(GL.GL_MAX_DRAW_BUFFERS)
+            except:
+                return 8
+            
+        return _MetaGLConfig.__max_draw_buffers
     
     @property
     def max_texture_units(cls):

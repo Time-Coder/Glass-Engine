@@ -5,6 +5,7 @@ layout(location=1) out vec3 view_normal;
 
 in GeometryOut
 {
+    mat4 affine_transform;
     vec3 view_pos;
     mat3 view_TBN;
     vec3 tex_coord;

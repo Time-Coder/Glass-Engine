@@ -8,6 +8,7 @@ layout (triangle_strip, max_vertices=3) out;
 
 in VertexOut
 {
+    mat4 affine_transform;
     mat3 world_TBN;
     vec3 tex_coord;
     vec4 color;
@@ -18,6 +19,7 @@ in VertexOut
 
 out GeometryOut
 {
+    mat4 affine_transform;
     vec3 view_pos;
     mat3 view_TBN;
     vec3 tex_coord;
@@ -37,6 +39,7 @@ out PreShadingColors
 out vec4 NDC;
 out flat uvec2 env_map_handle;
 
+#include "../../include/transform.glsl"
 #include "../../include/Camera.glsl"
 #include "../../include/Material.glsl"
 #include "../../Lights/Lights.glsl"
@@ -108,6 +111,7 @@ void main()
     vec3 face_view_normal = world_dir_to_view(camera, face_world_normal);
     for (int i = 0; i < 3; i++)
     {
+        gs_out.affine_transform = gs_in[i].affine_transform;
         gs_out.view_pos = world_to_view(camera, gl_in[i].gl_Position.xyz) + explode_distance * face_view_normal;
         mat3 backup_TBN = mat3(face_world_tangent, face_world_bitangent, face_world_normal);
         if (material.shading_model == 1) // Flat
@@ -158,8 +162,7 @@ void main()
             }
         }
         
-        NDC = view_to_NDC(camera, gs_out.view_pos);
-        gl_Position = NDC;
+        gl_Position = view_to_NDC(camera, gs_out.view_pos);
         
         EmitVertex();
     }

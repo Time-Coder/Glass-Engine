@@ -1,6 +1,8 @@
 #ifndef _DRAW_FILLED_TO_GBUFFER_GLSL__
 #define _DRAW_FILLED_TO_GBUFFER_GLSL__
 
+#include "../include/transform.glsl"
+
 void draw_filled_to_gbuffer()
 {
     mat3 view_TBN = fs_in.view_TBN;
@@ -49,15 +51,15 @@ void draw_filled_to_gbuffer()
         ambient_or_arm_and_emission_g.r = internal_material.ambient_occlusion;
         ambient_or_arm_and_emission_g.g = internal_material.roughness;
         ambient_or_arm_and_emission_g.b = internal_material.metallic;
-        diffuse_or_albedo_and_emission_b.rgb = internal_material.albedo;
+        diffuse_or_base_color_and_emission_b.rgb = internal_material.base_color;
     }
     else
     {
         ambient_or_arm_and_emission_g.rgb = internal_material.ambient;
-        diffuse_or_albedo_and_emission_b.rgb = internal_material.diffuse;
+        diffuse_or_base_color_and_emission_b.rgb = internal_material.diffuse;
     }
     ambient_or_arm_and_emission_g.a = internal_material.emission.g;
-    diffuse_or_albedo_and_emission_b.a = internal_material.emission.b;
+    diffuse_or_base_color_and_emission_b.a = internal_material.emission.b;
 
     if (internal_material.shading_model == 1) // Flat
     {
@@ -73,13 +75,14 @@ void draw_filled_to_gbuffer()
     }
     specular_or_prelight_and_shininess.a = internal_material.shininess;
 
-    reflection = internal_material.reflection;    
-    refraction = internal_material.refraction;
+    reflection = internal_material.reflection;
+    vec3 env_center = transform_apply(fs_in.affine_transform, mesh_center);
+    env_center_and_refractive_index.rgb = env_center;
+    env_center_and_refractive_index.a = internal_material.refractive_index;
 
-    mix_uint.x = uint(255*internal_material.refractive_index);
-    mix_uint.y = env_map_handle.x;
-    mix_uint.z = env_map_handle.y;
-    mix_uint.w = uint(
+    mix_uint.x = env_map_handle.x;
+    mix_uint.y = env_map_handle.y;
+    mix_uint.z = uint(
         (internal_material.shading_model << 2) |
         (uint(internal_material.recv_shadows) << 1) |
         uint(is_sphere));

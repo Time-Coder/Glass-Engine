@@ -1,6 +1,8 @@
 #ifndef _DRAW_FILLED_GLSL__
 #define _DRAW_FILLED_GLSL__
 
+#include "../include/transform.glsl"
+
 #define CURRENT_COLOR (gl_FrontFacing ? fs_in.color : fs_in.back_color)
 #define CURRENT_MATERIAL (gl_FrontFacing ? material : back_material)
 #define CURRENT_GOURAUD_COLOR (gl_FrontFacing ? pre_shading_colors.Gouraud_color : pre_shading_colors.Gouraud_back_color)
@@ -36,7 +38,7 @@ vec4 draw_filled(Camera camera, Camera CSM_camera)
     );
 
     // 透明度过低丢弃
-    if (internal_material.shading_model != 9 && internal_material.opacity < 1E-6)
+    if (internal_material.opacity < 1E-6)
     {
         discard;
     }
@@ -56,16 +58,47 @@ vec4 draw_filled(Camera camera, Camera CSM_camera)
         }
     }
 
+    if (internal_material.shading_model == 9)
+    {
+        return vec4(internal_material.emission, internal_material.opacity);
+    }
+
     vec3 frag_pos = view_to_world(camera, view_pos);
     vec3 frag_normal = view_dir_to_world(camera, view_normal);
     uint shading_model = internal_material.shading_model;
 
-    vec3 out_color3 = vec3(0, 0, 0);
-    if (shading_model == 9) // Unlit
+    // 环境映射
+    vec3 env_center = transform_apply(fs_in.affine_transform, mesh_center);
+    vec3 view_dir = normalize(frag_pos - camera.abs_position);
+    vec4 env_color = vec4(0, 0, 0, 0);
+    bool use_env_map = (env_map_handle.x > 0 || env_map_handle.y > 0);
+    if (is_sphere)
     {
-        out_color3 = vec3(0, 0, 0);
+        env_color = sphere_reflect_refract_color(
+            internal_material, camera,
+            env_center, view_dir, frag_pos, frag_normal,
+            use_skybox_map, skybox_map,
+            use_skydome_map, skydome_map,
+            use_env_map, sampler2D(env_map_handle)
+        );
     }
-    else if (shading_model == 1 || shading_model == 2) // Flat
+    else
+    {
+        env_color = reflect_refract_color(
+            internal_material, camera,
+            env_center, view_dir, frag_pos, frag_normal,
+            use_skybox_map, skybox_map,
+            use_skydome_map, skydome_map,
+            use_env_map, sampler2D(env_map_handle)
+        );
+    }
+    if (env_color.a >= 1-1E-6)
+    {
+        return vec4(env_color.rgb+internal_material.emission, internal_material.opacity);
+    }
+
+    vec3 out_color3;
+    if (shading_model == 1 || shading_model == 2) // Flat
     {
         float shadow_visibility = 1;
         if (internal_material.recv_shadows)
@@ -75,60 +108,28 @@ vec4 draw_filled(Camera camera, Camera CSM_camera)
         
         if (shading_model == 1)
         {
-            out_color3 = max(shadow_visibility, 0.1) * CURRENT_FLAT_COLOR;
+            out_color3 = shadow_visibility * CURRENT_FLAT_COLOR;
         }
         else if (shading_model == 2)
         {
-            out_color3 = max(shadow_visibility, 0.1) * CURRENT_GOURAUD_COLOR;
+            out_color3 = shadow_visibility * CURRENT_GOURAUD_COLOR;
         }
     }
     else // Phong, PhongBlinn, CookTorrance(PBR)
     {
         out_color3 = FRAG_LIGHTING(internal_material, CSM_camera, camera.abs_position, frag_pos, frag_normal);
     }
+    
+    // SSAO
+    vec2 screen_tex_coord = (NDC.xy / NDC.w + 1)/2;
+    float ssao_factor = texture(SSAO_map, screen_tex_coord).r;
+    out_color3 *= (1-ssao_factor);
 
-    if (shading_model != 9)
-    {
-        // SSAO
-        vec2 screen_tex_coord = (NDC.xy / NDC.w + 1)/2;
-        float ssao_factor = texture(SSAO_map, screen_tex_coord).r;
-        out_color3 *= (1-ssao_factor);
-
-        // AO map
-        out_color3 *= internal_material.ambient_occlusion;
-    }
+    // AO map
+    out_color3 *= internal_material.ambient_occlusion;
 
     // 自发光
     out_color3 += internal_material.emission;
-
-    // 环境映射
-    vec3 view_dir = normalize(frag_pos - camera.abs_position);
-    vec4 env_color = vec4(0, 0, 0, 0);
-    bool use_env_map = (env_map_handle.x > 0 || env_map_handle.y > 0);
-    if (is_sphere)
-    {
-        env_color = sphere_reflect_refract_color(
-            internal_material.reflection,
-            internal_material.refraction,
-            internal_material.refractive_index,
-            view_dir, frag_normal, 
-            use_skybox_map, skybox_map,
-            use_skydome_map, skydome_map,
-            use_env_map, sampler2D(env_map_handle)
-        );
-    }
-    else
-    {
-        env_color = reflect_refract_color(
-            internal_material.reflection,
-            internal_material.refraction,
-            internal_material.refractive_index,
-            view_dir, frag_normal, 
-            use_skybox_map, skybox_map,
-            use_skydome_map, skydome_map,
-            use_env_map, sampler2D(env_map_handle)
-        );
-    }
     out_color3 = mix(out_color3, env_color.rgb, env_color.a);
 
     // 最终颜色
