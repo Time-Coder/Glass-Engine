@@ -47,8 +47,8 @@ float SSM(DirLight light, Camera camera, vec3 frag_pos, vec3 frag_normal)
 
     BoundingSphere bounding_sphere = Frustum_bounding_sphere(camera, level);
     ivec2 tex_size = textureSize(sampler2DArray(light.depth_map_handle), 0).xy;
-    float beta = max(0, acos(dot(frag_normal, -light.direction)));
-    float bias = 17 * bounding_sphere.radius / max(tex_size.x, tex_size.y) * tan(beta);
+    float beta = acos(max(0, dot(frag_normal, -light.direction)));
+    float bias = 2 * bounding_sphere.radius / max(tex_size.x, tex_size.y) * min(10, tan(beta));
     bias /= depth_length;
     self_depth -= bias;
 
@@ -66,8 +66,8 @@ float _get_PCF_value(DirLight light, Camera camera, int level, vec3 frag_pos, ve
 
     BoundingSphere bounding_sphere = Frustum_bounding_sphere(camera, level);
     ivec2 tex_size = textureSize(sampler2DArray(light.depth_map_handle), 0).xy;
-    float beta = max(0, acos(dot(frag_normal, -light.direction)));
-    float bias = 17 * bounding_sphere.radius / max(tex_size.x, tex_size.y) * tan(beta);
+    float beta = acos(max(0, dot(frag_normal, -light.direction)));
+    float bias = (1+ceil(0.5*PCF_width)) * 2 * bounding_sphere.radius / max(tex_size.x, tex_size.y) * min(tan(beta), 10);
     bias /= depth_length;
     self_depth -= bias;
 
@@ -78,14 +78,15 @@ float _get_PCF_value(DirLight light, Camera camera, int level, vec3 frag_pos, ve
     vec2 dst = 1.0 / tex_size;
     float ds = dst.s;
     float dt = dst.t;
+    int n_samples = 10;
 
     int not_occ_count = 0;
     total_count = 0;
-    for (int i = 0; i < 16; i++)
+    for (int i = 0; i < n_samples; i++)
     {
-        vec2 rand_result = rand2(frag_pos, rand_seed);
-        float s = depth_map_tex_coord.s + rand_result.s*(PCF_width-1) * ds;
-        float t = depth_map_tex_coord.t + rand_result.t*(PCF_width-1) * dt;
+        vec2 rand_result = rand2(frag_pos, rand_seed)-0.5;
+        float s = depth_map_tex_coord.s + rand_result.s * PCF_width * ds;
+        float t = depth_map_tex_coord.t + rand_result.t * PCF_width * dt;
         if (s < 0 || s > 1 || t < 0 || t > 1)
         {
             continue;

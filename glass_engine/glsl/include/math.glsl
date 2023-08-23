@@ -158,6 +158,19 @@ vec4 rand4(inout int seed)
     return result;
 }
 
+vec2 Hammersley(vec3 focus_point, uint i, uint N, inout int seed)
+{
+    uint rand_value = uint(1024*rand(focus_point, seed));
+    uint bits = (i+rand_value << 16u) | (i+rand_value >> 16u);
+    bits = ((bits & 0x55555555u) << 1u) | ((bits & 0xAAAAAAAAu) >> 1u);
+    bits = ((bits & 0x33333333u) << 2u) | ((bits & 0xCCCCCCCCu) >> 2u);
+    bits = ((bits & 0x0F0F0F0Fu) << 4u) | ((bits & 0xF0F0F0F0u) >> 4u);
+    bits = ((bits & 0x00FF00FFu) << 8u) | ((bits & 0xFF00FF00u) >> 8u);
+    float y = float(bits) * 2.3283064365386963e-10;
+
+    return vec2(float(i)/float(N), y);
+} 
+
 float max3(vec3 v)
 {
     return max(max(v.x, v.y), v.z);

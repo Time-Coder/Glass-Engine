@@ -53,6 +53,7 @@ vec4 sphere_reflect_refract_color(
         shininess = 1;
     }
 
+    bool recv_shadows = material.recv_shadows;
     bool use_reflection = (reflection.a > 1E-6);
     bool use_refraction = (refractive_index > 1E-6);
     if (!use_reflection && !use_refraction)
@@ -119,6 +120,10 @@ vec4 sphere_reflect_refract_color(
                         use_skydome_map, skydome_map,
                         use_env_map, env_map
                     );
+                    if (i >= 1)
+                    {
+                        material.recv_shadows = false;
+                    }
                     vec3 specular_color = GET_SPECULAR(material, camera, refract_out_dir, frag_pos, frag_normal);
                     refraction_color += refraction_factor*specular_color;
 
@@ -155,6 +160,10 @@ vec4 sphere_reflect_refract_color(
                     use_skydome_map, skydome_map,
                     use_env_map, env_map
                 );
+                if (i >= 1)
+                {
+                    material.recv_shadows = false;
+                }
                 vec3 specular_color = GET_SPECULAR(material, camera, refract_out_dir, frag_pos, frag_normal);
                 refraction_color += refraction_factor*specular_color;
 
@@ -170,7 +179,7 @@ vec4 sphere_reflect_refract_color(
     env_color.a = reflection.a;
     if (material.roughness > 1E-6)
     {
-        vec3 ambient_diffuse_factor = GET_AMBIENT_DIFFUSE_FACTOR(material.recv_shadows, camera, frag_pos, frag_normal);
+        vec3 ambient_diffuse_factor = GET_AMBIENT_DIFFUSE_FACTOR(recv_shadows, camera, frag_pos, frag_normal);
         env_color.rgb *= mix(vec3(1), ambient_diffuse_factor, material.roughness);
     }
     
@@ -197,6 +206,7 @@ vec4 reflect_refract_color(
         shininess = 1;
     }
 
+    bool recv_shadows = material.recv_shadows;
     bool use_reflection = (reflection.a > 1E-6);
     bool use_refraction = (refractive_index > 1E-6);
     if (!use_reflection && !use_refraction)
@@ -262,7 +272,7 @@ vec4 reflect_refract_color(
     env_color.a = reflection.a;
     if (material.roughness > 1E-6)
     {
-        vec3 ambient_diffuse_factor = GET_AMBIENT_DIFFUSE_FACTOR(material.recv_shadows, camera, frag_pos, frag_normal);
+        vec3 ambient_diffuse_factor = GET_AMBIENT_DIFFUSE_FACTOR(recv_shadows, camera, frag_pos, frag_normal);
         env_color.rgb *= mix(vec3(1), ambient_diffuse_factor, material.roughness);
     }
     
