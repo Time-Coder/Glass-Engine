@@ -101,16 +101,11 @@ vec4 draw_filled_with_gbuffer(Camera camera,
     }
 
     vec3 out_color3 = vec3(0, 0, 0);
-    if (shading_model == 1 || shading_model == 2) // Flat
+    if (shading_model == 1 || shading_model == 2) // pre lighting
     {
-        float shadow_visibility = 1;
-        if (internal_material.recv_shadows)
-        {
-            shadow_visibility = SHADOW_VISIBILITY(camera, frag_pos, frag_normal);
-        }
-        out_color3 = max(shadow_visibility, 0.1) * specular_or_prelight_and_shininess.rgb;
+        out_color3 = specular_or_prelight_and_shininess.rgb;
     }
-    else // Phong, PhongBlinn, CookTorrance
+    else // frag lighting
     {
         out_color3 = FRAG_LIGHTING(internal_material, camera, camera.abs_position, frag_pos, frag_normal);
     }

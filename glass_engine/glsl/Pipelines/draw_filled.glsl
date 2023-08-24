@@ -98,24 +98,15 @@ vec4 draw_filled(Camera camera, Camera CSM_camera)
     }
 
     vec3 out_color3;
-    if (shading_model == 1 || shading_model == 2) // Flat
+    if (shading_model == 1) // Flat
     {
-        float shadow_visibility = 1;
-        if (internal_material.recv_shadows)
-        {
-            shadow_visibility = SHADOW_VISIBILITY(CSM_camera, frag_pos, frag_normal);
-        }
-        
-        if (shading_model == 1)
-        {
-            out_color3 = shadow_visibility * CURRENT_FLAT_COLOR;
-        }
-        else if (shading_model == 2)
-        {
-            out_color3 = shadow_visibility * CURRENT_GOURAUD_COLOR;
-        }
+        out_color3 = CURRENT_FLAT_COLOR;
     }
-    else // Phong, PhongBlinn, CookTorrance(PBR)
+    else if (shading_model == 2) // Gourand
+    {
+        out_color3 = CURRENT_GOURAUD_COLOR;
+    }
+    else // frag lighting
     {
         out_color3 = FRAG_LIGHTING(internal_material, CSM_camera, camera.abs_position, frag_pos, frag_normal);
     }

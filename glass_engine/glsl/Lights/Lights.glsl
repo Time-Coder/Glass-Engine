@@ -49,38 +49,33 @@ buffer SpotLights
             light, internal_material,\
             camera_pos, CSM_camera, frag_pos, frag_normal\
         ) : (\
+    internal_material.shading_model == 5 ? \
+        Toon_lighting(\
+            light, internal_material,\
+            camera_pos, CSM_camera, frag_pos, frag_normal\
+        ) : (\
+    internal_material.shading_model == 6 ? \
+        OrenNayar_lighting(\
+            light, internal_material,\
+            camera_pos, CSM_camera, frag_pos, frag_normal\
+        ) : (\
+    internal_material.shading_model == 7 ? \
+        Minnaert_lighting(\
+            light, internal_material,\
+            camera_pos, CSM_camera, frag_pos, frag_normal\
+        ) : (\
+    internal_material.shading_model == 10 ? \
+        Fresnel_lighting(\
+            light, internal_material,\
+            camera_pos, CSM_camera, frag_pos, frag_normal\
+        ) : (\
     (internal_material.shading_model == 8 || internal_material.shading_model == 11) ? \
         CookTorrance_lighting(\
             light, internal_material,\
             camera_pos, CSM_camera, frag_pos, frag_normal\
         ) : vec3(0, 0, 0)\
-    ))\
+    ))))))\
 )
-
-float SHADOW_VISIBILITY(Camera camera, vec3 frag_pos, vec3 frag_normal)
-{
-    float visibility = 1;
-
-    // 点光源
-    for(int i = 0; i < n_point_lights; i++)
-    {
-        visibility *= PCF(point_lights[i], frag_pos, frag_normal);
-    }
-
-    // 平行光
-    for(int i = 0; i < n_dir_lights; i++)
-    {
-        visibility *= PCF(dir_lights[i], camera, frag_pos, frag_normal);
-    }
-
-    // 聚光
-    for(int i = 0; i < n_spot_lights; i++)
-    {
-        visibility *= PCF(spot_lights[i], frag_pos, frag_normal);
-    }
-
-    return max(visibility, 0.1);
-}
 
 vec3 GET_AMBIENT_DIFFUSE_FACTOR(bool recv_shadows, Camera camera, vec3 frag_pos, vec3 frag_normal)
 {

@@ -24,7 +24,8 @@ class FlatDirLight:
         self.ambient = dir_light._ambient.flat
         self.diffuse = dir_light._diffuse.flat
         self.specular = dir_light._specular.flat
-        self.generate_shadows = dir_light.generate_shadows
+        self.generate_shadows = dir_light._generate_shadows
+        self.rim_power = dir_light._rim_power
         self._source_id = id(dir_light)
         dir_light._flats.add(self)
 

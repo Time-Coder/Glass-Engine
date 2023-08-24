@@ -17,7 +17,9 @@ vec3 Phong_lighting(
 {
     vec3 diffuse_color = material.diffuse * Lambert_diffuse(to_light, normal);
     vec3 specular_color = material.specular * Phong_specular(to_light, to_camera, normal, material.shininess);
-    return material.ambient + diffuse_color + specular_color;
+    vec3 rim_color = material.diffuse * rim(to_light, to_camera, normal, material.light_rim_power, material.rim_power);
+    
+    return material.ambient + diffuse_color + specular_color + rim_color;
 }
 
 #endif

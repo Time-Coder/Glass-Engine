@@ -50,7 +50,7 @@ vec3 wavelength_to_color(float wavelength)
     return color.rgb * color.a;
 }
 
-float fresnel_equation(float n1, float n2, float cos_theta_i)
+float fresnel_reflect_ratio(float n1, float n2, float cos_theta_i)
 {
     float sin_theta_i2 = 1 - cos_theta_i*cos_theta_i;
     float sin_theta_o2 = (n1*n1/(n2*n2))*sin_theta_i2;

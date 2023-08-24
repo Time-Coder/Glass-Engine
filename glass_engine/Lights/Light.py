@@ -13,6 +13,7 @@ class Light(SceneNode):
         self._diffuse = SceneNode.dvec3(1, 1, 1, callback=self._update_diffuse)
         self._specular = SceneNode.dvec3(1, 1, 1, callback=self._update_specular)
         self._generate_shadows = True
+        self._rim_power = 0.2
         self._flats = set()
 
     def _set_transform_dirty(self, scenes):
@@ -100,6 +101,22 @@ class Light(SceneNode):
     def generate_shadows(self, flag:bool):
         self._generate_shadows = flag
         self._update_generate_shadows()
+
+    @property
+    def rim_power(self):
+        return self._rim_power
+    
+    @rim_power.setter
+    @checktype
+    def rim_power(self, rim_power:float):
+        if self._rim_power == rim_power:
+            return
+
+        self._rim_power = rim_power
+        for flat in self._flats:
+            flat.rim_power = rim_power
+
+        self._update_scene_lights()
 
     def _update_scene_lights(self):
         for scene in self.scenes:

@@ -136,7 +136,8 @@ class FlatPointLight:
         self.K1 = point_light._K1
         self.K2 = point_light._K2
         self.coverage = point_light._coverage
-        self.generate_shadows = point_light.generate_shadows
+        self.generate_shadows = point_light._generate_shadows
+        self.rim_power = point_light._rim_power
         self._source_id = id(point_light)
         point_light._flats.add(self)
 
