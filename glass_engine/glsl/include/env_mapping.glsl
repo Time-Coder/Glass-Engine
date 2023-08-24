@@ -66,7 +66,7 @@ vec4 sphere_reflect_refract_color(
     float cos_theta_in = dot(-view_dir, frag_normal);
     if (use_refraction)
     {
-        reflection_factor = fresnel_equation(1, refractive_index, cos_theta_in);
+        reflection_factor = fresnel_reflect_ratio(1, refractive_index, cos_theta_in);
     }
     if(reflection_factor > 1-1E-6)
     {
@@ -221,11 +221,11 @@ vec4 reflect_refract_color(
     {
         if(gl_FrontFacing)
         {
-            reflection_factor = fresnel_equation(1, refractive_index, cos_theta_in);
+            reflection_factor = fresnel_reflect_ratio(1, refractive_index, cos_theta_in);
         }
         else
         {
-            reflection_factor = fresnel_equation(refractive_index, 1, cos_theta_in);
+            reflection_factor = fresnel_reflect_ratio(refractive_index, 1, cos_theta_in);
         }
     }
     if(reflection_factor > 1-1E-6)

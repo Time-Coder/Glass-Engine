@@ -13,9 +13,9 @@ class Material:
         Gouraud = 0x2
         Phong = 0x3
         PhongBlinn = 0x4
-        Toon = 0x5 # undefined
-        OrenNayar = 0x6 # undefined
-        Minnaert = 0x7 # undefined
+        Toon = 0x5
+        OrenNayar = 0x6
+        Minnaert = 0x7
         CookTorrance = 0x8
         NoShading = 0x9
         Unlit = 0x9
@@ -57,7 +57,6 @@ class Material:
         self.__specular = glm.vec3(1)
         self.__shininess = 0.6*128
         self.__shininess_strength = 1
-
         self.__emission = glm.vec3(0, 0, 0)
         self.__reflection = glm.vec4(0, 0, 0, 0)
         self.__refractive_index = 0
@@ -69,6 +68,11 @@ class Material:
         self.__roughness = 0
         self.__recv_shadows = True
         self.__cast_shadows = True
+        self.__Toon_diffuse_bands = 2
+        self.__Toon_specular_bands = 2
+        self.__Toon_diffuse_softness = 0.05
+        self.__Toon_specular_softness = 0.02
+        self.__rim_power = 0.2
 
         self.__ambient_map = None
         self.__diffuse_map = None
@@ -129,6 +133,51 @@ class Material:
             return return_value
 
         return wrapper
+
+    @property
+    def Toon_diffuse_bands(self)->int:
+        return self.__Toon_diffuse_bands
+    
+    @Toon_diffuse_bands.setter
+    @param_setter
+    def Toon_diffuse_bands(self, bands:int):
+        self.__Toon_diffuse_bands = bands
+
+    @property
+    def Toon_specular_bands(self)->int:
+        return self.__Toon_specular_bands
+    
+    @Toon_specular_bands.setter
+    @param_setter
+    def Toon_specular_bands(self, bands:int):
+        self.__Toon_specular_bands = bands
+
+    @property
+    def Toon_diffuse_softness(self)->float:
+        return self.__Toon_diffuse_softness
+    
+    @Toon_diffuse_softness.setter
+    @param_setter
+    def Toon_diffuse_softness(self, softness:float):
+        self.__Toon_diffuse_softness = softness
+
+    @property
+    def Toon_specular_softness(self)->float:
+        return self.__Toon_specular_softness
+    
+    @Toon_specular_softness.setter
+    @param_setter
+    def Toon_specular_softness(self, softness:float):
+        self.__Toon_specular_softness = softness
+
+    @property
+    def rim_power(self)->float:
+        return self.__rim_power
+    
+    @rim_power.setter
+    @param_setter
+    def rim_power(self, p:float):
+        self.__rim_power = p
 
     @property
     def recv_shadows(self):
@@ -219,10 +268,13 @@ class Material:
     @ambient.setter
     @param_setter
     def ambient(self, ambient:(glm.vec3,float)):
-        if isinstance(ambient, glm.vec3):
-            self.__ambient = ambient
-        elif isinstance(ambient, (float,int)):
-            self.__ambient = glm.vec3(ambient, ambient, ambient)
+        if not isinstance(ambient, glm.vec3):
+            ambient = glm.vec3(ambient)
+            
+        if glm.length(ambient) < 1E-6:
+            ambient = glm.vec3(0.00001)
+
+        self.__ambient = ambient
 
     @property
     def diffuse(self):

@@ -31,6 +31,11 @@ struct Material
 	vec3 base_color;
 	float metallic;
 	float roughness;
+    int Toon_diffuse_bands;
+    int Toon_specular_bands;
+    float Toon_diffuse_softness;
+    float Toon_specular_softness;
+    float rim_power;
 
 	bool use_ambient_map;
 	bool use_diffuse_map;
@@ -80,13 +85,24 @@ struct InternalMaterial
 	float roughness;
 	float metallic;
     float ambient_occlusion;
+    int Toon_diffuse_bands;
+    int Toon_specular_bands;
+    float Toon_diffuse_softness;
+    float Toon_specular_softness;
+    float rim_power;
+    float light_rim_power;
 };
 
 InternalMaterial fetch_internal_material(vec4 frag_color, Material material, vec2 tex_coord)
 {
-    InternalMaterial internal_material; // 实际使用的材质
+    InternalMaterial internal_material;
     internal_material.shading_model = material.shading_model;
     internal_material.recv_shadows = material.recv_shadows;
+    internal_material.Toon_diffuse_bands = material.Toon_diffuse_bands;
+    internal_material.Toon_specular_bands = material.Toon_specular_bands;
+    internal_material.Toon_diffuse_softness = material.Toon_diffuse_softness;
+    internal_material.Toon_specular_softness = material.Toon_specular_softness;
+    internal_material.rim_power = material.rim_power;
 
     // 材质不透明度
     float material_opacity = material.opacity;

@@ -181,49 +181,43 @@ float max4(vec4 v)
     return max(max(max(v.x, v.y), v.z), v.w);
 }
 
-float soft_abs(float value, float t)
+float soft_abs(float value, float softness)
 {
     float abs_value = abs(value);
-    return (abs_value < t) ? 0.5*(value*value/t + t) : abs_value;
+    return ((abs_value < softness) ? 0.5*(value*value/softness + softness) : abs_value);
 }
 
-vec2 soft_abs(vec2 value, float t)
+vec2 soft_abs(vec2 value, float softness)
 {
-    vec2 abs_value = abs(value);
-
     vec2 result;
-    result.x = (abs_value.x < t) ? 0.5*(value.x*value.x/t + t) : abs_value.x;
-    result.y = (abs_value.y < t) ? 0.5*(value.y*value.y/t + t) : abs_value.y;
+    result.x = soft_abs(value.x, softness);
+    result.y = soft_abs(value.y, softness);
     return result;
 }
 
-vec3 soft_abs(vec3 value, float t)
+vec3 soft_abs(vec3 value, float softness)
 {
-    vec3 abs_value = abs(value);
-    
     vec3 result;
-    result.x = (abs_value.x < t) ? 0.5*(value.x*value.x/t + t) : abs_value.x;
-    result.y = (abs_value.y < t) ? 0.5*(value.y*value.y/t + t) : abs_value.y;
-    result.z = (abs_value.z < t) ? 0.5*(value.z*value.z/t + t) : abs_value.z;
+    result.x = soft_abs(value.x, softness);
+    result.y = soft_abs(value.y, softness);
+    result.z = soft_abs(value.z, softness);
     return result;
 }
 
-vec4 soft_abs(vec4 value, float t)
+vec4 soft_abs(vec4 value, float softness)
 {
-    vec4 abs_value = abs(value);
-    
     vec4 result;
-    result.x = (abs_value.x < t) ? 0.5*(value.x*value.x/t + t) : abs_value.x;
-    result.y = (abs_value.y < t) ? 0.5*(value.y*value.y/t + t) : abs_value.y;
-    result.z = (abs_value.z < t) ? 0.5*(value.z*value.z/t + t) : abs_value.z;
-    result.w = (abs_value.w < t) ? 0.5*(value.w*value.w/t + t) : abs_value.w;
+    result.x = soft_abs(value.x, softness);
+    result.y = soft_abs(value.y, softness);
+    result.z = soft_abs(value.z, softness);
+    result.w = soft_abs(value.w, softness);
     return result;
 }
 
-#define soft_sign(x, t) (x / soft_abs(x, t))
-#define soft_step(x, t) (0.5*(soft_sign(x, t) + 1.0))
-#define soft_max(x, y, t) (0.5 * (x + y + soft_abs(x - y, t)))
-#define soft_min(x, y, t) (0.5 * (x + y - soft_abs(x - y, t)))
+#define soft_sign(value, softness) ((value) / soft_abs((value), (softness)))
+#define soft_step(value, softness) (0.5*(soft_sign((value), (softness)) + 1.0))
+#define soft_max(value1, value2, softness) (0.5 * ((value1) + (value2) + soft_abs((value1) - (value2), (softness))))
+#define soft_min(value1, value2, softness) (0.5 * ((value1) + (value2) - soft_abs((value1) - (value2), (softness))))
 
 float soft_floor(float x, float t)
 {
@@ -241,6 +235,33 @@ float soft_floor(float x, float t)
     {
         return floor_x;
     }
+}
+
+vec2 soft_floor(vec2 value, float softness)
+{
+    vec2 result;
+    result.x = soft_floor(value.x, softness);
+    result.y = soft_floor(value.y, softness);
+    return result;
+}
+
+vec3 soft_floor(vec3 value, float softness)
+{
+    vec3 result;
+    result.x = soft_floor(value.x, softness);
+    result.y = soft_floor(value.y, softness);
+    result.z = soft_floor(value.z, softness);
+    return result;
+}
+
+vec4 soft_floor(vec4 value, float softness)
+{
+    vec4 result;
+    result.x = soft_floor(value.x, softness);
+    result.y = soft_floor(value.y, softness);
+    result.z = soft_floor(value.z, softness);
+    result.w = soft_floor(value.w, softness);
+    return result;
 }
 
 float luminance(vec3 color)

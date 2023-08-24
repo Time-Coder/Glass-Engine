@@ -73,7 +73,9 @@ class BaseShader(GLObject):
 			raise FileNotFoundError(file_name)
 		
 		file_name = os.path.abspath(file_name).replace("\\", "/")
+		rel_name = relative_path(file_name)
 		if file_name in cls._shader_map:
+			print(f"using existing shader: {rel_name}")
 			return cls._shader_map[file_name]
 		else:
 			shader = cls()
@@ -113,6 +115,7 @@ class BaseShader(GLObject):
 			if self._id == 0:
 				raise MemoryError("Failed to create Shader!")
 		
+		print(f"compiling {self.file_name}")
 		GL.glShaderSource(self._id, self._code)
 		GL.glCompileShader(self._id)
 
@@ -216,6 +219,7 @@ class BaseShader(GLObject):
 		self._meta_file_name = cache_folder + "/" + base_name + "_" + md5s(abs_name) + ".meta"
 
 		if self._test_should_recompile():
+			print(f"precompiling {used_name}")
 			self._code = cat(file_name)
 			self.related_files = [abs_name]
 			self.add_include_path(".")
@@ -248,7 +252,8 @@ class BaseShader(GLObject):
 
 			if self._type == GL.GL_COMPUTE_SHADER:
 				self.work_group_size = ShaderParser.find_work_group_size(self._clean_code)
-
+		else:
+			print(f"using precompiled cache: {used_name}")
 		self._compiled_but_not_applied = True
 
 	def add_include_path(self, include_path):
@@ -352,7 +357,7 @@ class BaseShader(GLObject):
 			while True:
 				pos_include_start = self._code.find("#include", pos_include_start)
 				if pos_include_start == -1:
-					return list(included_files)
+					return included_files
 
 				if pos_include_start in self._comments_set:
 					pos_include_start += len_include
@@ -399,6 +404,7 @@ class BaseShader(GLObject):
 
 				self._code = self._code[:pos_include_start] + include_content + self._code[pos_include_end:]
 				if include_content:
+					print(f"expanding include: {used_name}")
 					include_line_num = ShaderParser.line_of(self._code, pos_include_start)
 					include_lines = ShaderParser.lines(include_content)
 					include_line_end = include_line_num + include_lines
@@ -423,7 +429,7 @@ class BaseShader(GLObject):
 				line_num = ShaderParser.line_of(self._code, pos_filename_start)
 				raise CompileError("\n" + self._line_message_map[line_num].format(message_type="error") + f'File "{include_filename}" not exists.')
 
-		return list(included_files)
+		return included_files
 
 	def _format_error_warning(self, message):
 		def _replace_message(match):

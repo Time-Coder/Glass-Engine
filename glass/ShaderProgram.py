@@ -102,6 +102,8 @@ class ShaderProgram(GPUProgram):
             GL.glAttachShader(self._id, self.tess_eval_shader._id)
         GL.glAttachShader(self._id, self.fragment_shader._id)
 
+        related_files = "\n  " + "\n  ".join(self._get_compiled_files())
+        print(f"linking: {related_files}")
         GL.glProgramParameteri(self._id, GL.GL_PROGRAM_BINARY_RETRIEVABLE_HINT, GL.GL_TRUE)
         GL.glLinkProgram(self._id)
         
@@ -112,14 +114,12 @@ class ShaderProgram(GPUProgram):
 
         error_messages, warning_messages = self._format_error_warning(message)
         if warning_messages:
-            warning_message = "Warning when linking following files:\n  " + \
-                                "\n  ".join(self._get_compiled_files()) + "\n" + \
-                                "\n".join(warning_messages)
+            warning_message = f"Warning when linking following files:{related_files}\n" + \
+                              "\n".join(warning_messages)
             warnings.warn(warning_message, category=LinkWarning)
 
         if error_messages:
-            error_message = "Error when linking following files:\n  " + \
-                            "\n  ".join(self._get_compiled_files()) + "\n" + \
+            error_message = f"Error when linking following files:{related_files}\n" + \
                             "\n".join(error_messages)
             raise LinkError(error_message)
         
@@ -154,6 +154,7 @@ class ShaderProgram(GPUProgram):
         meta_info["shader_storage_block_map"] = self._shader_storage_block_map
         meta_info["include_paths"] = self._include_paths
         save_var(meta_info, self._meta_file_name)
+        print("done")
 
     def _apply(self):
         if not self._linked_but_not_applied:
@@ -171,8 +172,11 @@ class ShaderProgram(GPUProgram):
             binary_data = in_file.read(binary_length)
             in_file.close()
 
+            related_files = "\n  " + "\n  ".join(self._get_compiled_files())
+            print(f"using linked cache of: {related_files}")
             GL.glProgramBinary(self._id, binary_format, binary_data, binary_length)
             status = GL.glGetProgramiv(self._id, GL.GL_LINK_STATUS)
+            print("done")
             if GL.GL_TRUE != status:
                 self._reapply()
         else:

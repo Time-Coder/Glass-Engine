@@ -81,6 +81,7 @@ class FlatSpotLight:
         self.coverage = spot_light._coverage
         self.aggregate_coeff = spot_light.aggregate_coeff
         self.generate_shadows = spot_light.generate_shadows
+        self.rim_power = spot_light._rim_power
         self._source_id = id(spot_light)
         spot_light._flats.add(self)
 
