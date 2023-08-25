@@ -4,6 +4,7 @@ from glass import sampler2D
 import glm
 from enum import Enum
 import numpy as np
+import math
 from functools import wraps
 
 class Material:
@@ -19,7 +20,7 @@ class Material:
         CookTorrance = 0x8
         NoShading = 0x9
         Unlit = 0x9
-        Fresnel = 0xa # undefined
+        Fresnel = 0xa
         PBR = 0xb
 
     class Type(Enum):
@@ -54,7 +55,7 @@ class Material:
     def __init__(self):
         self.__ambient = 0.1 * glm.vec3(0.396, 0.74151, 0.69102)
         self.__diffuse = glm.vec3(0.396, 0.74151, 0.69102)
-        self.__specular = glm.vec3(1)
+        self.__specular = glm.vec3(0.3)
         self.__shininess = 0.6*128
         self.__shininess_strength = 1
         self.__emission = glm.vec3(0, 0, 0)
@@ -73,11 +74,13 @@ class Material:
         self.__Toon_diffuse_softness = 0.05
         self.__Toon_specular_softness = 0.02
         self.__rim_power = 0.2
+        self.__fog = True
 
         self.__ambient_map = None
         self.__diffuse_map = None
         self.__specular_map = None
         self.__shininess_map = None
+        self.__glossiness_map = None
         self.__emission_map = None
         self.__normal_map = None
         self.__height_map = None
@@ -93,7 +96,6 @@ class Material:
 
         self._opacity_user_set = False
         self.__reflection_user_set = False
-        self.__refractive_index_user_set = False
         self.__env_max_bake_times = 2
         self.__dynamic_env_mapping = False
         self.__auto_update_env_map = False
@@ -133,6 +135,15 @@ class Material:
             return return_value
 
         return wrapper
+
+    @property
+    def fog(self)->bool:
+        return self.__fog
+    
+    @fog.setter
+    @checktype
+    def fog(self, fog:bool):
+        self.__fog = fog
 
     @property
     def Toon_diffuse_bands(self)->int:
@@ -270,7 +281,7 @@ class Material:
     def ambient(self, ambient:(glm.vec3,float)):
         if not isinstance(ambient, glm.vec3):
             ambient = glm.vec3(ambient)
-            
+
         if glm.length(ambient) < 1E-6:
             ambient = glm.vec3(0.00001)
 
@@ -299,6 +310,15 @@ class Material:
             self.__specular = specular
         elif isinstance(specular, (float,int)):
             self.__specular = glm.vec3(specular, specular, specular)
+
+    @property
+    def glossiness(self):
+        return math.sqrt(self.__shininess)
+    
+    @glossiness.setter
+    @param_setter
+    def glossiness(self, glossiness:float):
+        self.__shininess = glossiness * glossiness
 
     @property
     def shininess(self):
@@ -378,8 +398,6 @@ class Material:
 
         if not self.__reflection_user_set:
             self.__reflection = glm.vec4(1, 1, 1, 1)
-
-        self.__refractive_index_user_set = True
 
     @property
     def height_scale(self):
@@ -478,6 +496,21 @@ class Material:
                 self.__shininess_map = sampler2D(shininess_map)
             else:
                 self.__shininess_map.image = shininess_map
+
+    @property
+    def glossiness_map(self):
+        return self.__glossiness_map
+    
+    @glossiness_map.setter
+    @param_setter
+    def glossiness_map(self, glossiness_map:(sampler2D,str,np.ndarray)):
+        if isinstance(glossiness_map, sampler2D) or glossiness_map is None:
+            self.__glossiness_map = glossiness_map
+        elif isinstance(glossiness_map, (str,np.ndarray)):
+            if self.__glossiness_map is None:
+                self.__glossiness_map = sampler2D(glossiness_map)
+            else:
+                self.__glossiness_map.image = glossiness_map
 
     @property
     def emission_map(self):
@@ -652,6 +685,10 @@ class Material:
     @property
     def use_shininess_map(self):
         return (self.__shininess_map is not None)
+    
+    @property
+    def use_glossiness_map(self):
+        return (self.__glossiness_map is not None)
 
     @property
     def use_emission_map(self):

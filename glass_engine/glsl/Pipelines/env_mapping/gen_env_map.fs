@@ -36,6 +36,7 @@ layout(location=2) out float reveal;
 #include "../../include/math.glsl"
 #include "../../include/OIT.glsl"
 #include "../../include/env_mapping.glsl"
+#include "../../include/fog.glsl"
 
 uniform vec3 view_center;
 uniform vec3 mesh_center;
@@ -46,6 +47,7 @@ uniform bool is_opaque_pass;
 uniform bool is_filled;
 uniform bool is_sphere;
 uniform Camera CSM_camera;
+uniform Fog fog;
 
 // 环境映射
 uniform bool use_skybox_map;

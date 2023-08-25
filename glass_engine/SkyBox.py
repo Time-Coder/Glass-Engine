@@ -133,4 +133,5 @@ class SkyBox(Mesh):
     def draw(self, camera:Camera):
         self.program["camera"] = camera
         self.program["skybox_map"] = self.skybox_map
+        self.program["fog"] = camera.scene.fog
         Mesh.draw(self, self.program)

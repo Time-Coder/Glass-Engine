@@ -1,22 +1,21 @@
 #ifndef _MATERIAL_GLSL__
 #define _MATERIAL_GLSL__
 
+#define SHADING_MODEL_FLAT 1
+#define SHADING_MODEL_GOURAUD 2
+#define SHADING_MODEL_PHONG 3
+#define SHADING_MODEL_PHONG_BLINN 4
+#define SHADING_MODEL_TOON 5
+#define SHADING_MODEL_OREN_NAYAR 6
+#define SHADING_MODEL_MINNAERT 7
+#define SHADING_MODEL_COOK_TORRANCE 8
+#define SHADING_MODEL_UNLIT 9
+#define SHADING_MODEL_FRESNEL 10
+#define SHADING_MODEL_PBR 11
+
 struct Material
 {
 	uint shading_model;
-	// Flat = 0x1
-    // Gouraud = 0x2
-    // Phong = 0x3
-    // PhongBlinn = 0x4
-    // Toon = 0x5
-    // OrenNayar = 0x6
-    // Minnaert = 0x7
-    // CookTorrance = 0x8
-    // NoShading = 0x9
-    // Unlit = 0x9
-    // Fresnel = 0xa
-    // PBR = 0xb
-
     bool recv_shadows;
 	vec3 ambient;
 	vec3 diffuse;
@@ -36,12 +35,14 @@ struct Material
     float Toon_diffuse_softness;
     float Toon_specular_softness;
     float rim_power;
+    bool fog;
 
 	bool use_ambient_map;
 	bool use_diffuse_map;
 	bool use_specular_map;
 	bool use_emission_map;
 	bool use_shininess_map;
+	bool use_glossiness_map;
 	bool use_normal_map;
 	bool use_height_map;
 	bool use_opacity_map;
@@ -58,6 +59,7 @@ struct Material
 	sampler2D specular_map;
 	sampler2D emission_map;
 	sampler2D shininess_map;
+	sampler2D glossiness_map;
 	sampler2D normal_map;
 	sampler2D height_map;
 	sampler2D opacity_map;
@@ -91,6 +93,7 @@ struct InternalMaterial
     float Toon_specular_softness;
     float rim_power;
     float light_rim_power;
+    bool fog;
 };
 
 InternalMaterial fetch_internal_material(vec4 frag_color, Material material, vec2 tex_coord)
@@ -103,6 +106,7 @@ InternalMaterial fetch_internal_material(vec4 frag_color, Material material, vec
     internal_material.Toon_diffuse_softness = material.Toon_diffuse_softness;
     internal_material.Toon_specular_softness = material.Toon_specular_softness;
     internal_material.rim_power = material.rim_power;
+    internal_material.fog = material.fog;
 
     // 材质不透明度
     float material_opacity = material.opacity;
@@ -155,13 +159,18 @@ InternalMaterial fetch_internal_material(vec4 frag_color, Material material, vec
         material_specular = texture(material.specular_map, tex_coord).rgb;
     }
     material_specular *= material.shininess_strength;
-    internal_material.specular = mix(vec3(1,1,1), material_specular, material_opacity);
+    internal_material.specular = mix(vec3(0.3), material_specular, material_opacity);
 
     // 闪耀度
     internal_material.shininess = material.shininess;
     if (material.use_shininess_map)
     {
         internal_material.shininess = texture(material.shininess_map, tex_coord).r;
+    }
+    else if (material.use_glossiness_map)
+    {
+        float glossiness = texture(material.glossiness_map, tex_coord).r;
+        internal_material.shininess = glossiness * glossiness;
     }
 
     // 自发光颜色

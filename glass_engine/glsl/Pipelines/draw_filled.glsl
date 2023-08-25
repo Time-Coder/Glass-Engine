@@ -58,7 +58,7 @@ vec4 draw_filled(Camera camera, Camera CSM_camera)
         }
     }
 
-    if (internal_material.shading_model == 9)
+    if (internal_material.shading_model == SHADING_MODEL_UNLIT)
     {
         return vec4(internal_material.emission, internal_material.opacity);
     }
@@ -98,15 +98,15 @@ vec4 draw_filled(Camera camera, Camera CSM_camera)
     }
 
     vec3 out_color3;
-    if (shading_model == 1) // Flat
+    if (shading_model == SHADING_MODEL_FLAT)
     {
         out_color3 = CURRENT_FLAT_COLOR;
     }
-    else if (shading_model == 2) // Gourand
+    else if (shading_model == SHADING_MODEL_GOURAUD)
     {
         out_color3 = CURRENT_GOURAUD_COLOR;
     }
-    else // frag lighting
+    else
     {
         out_color3 = FRAG_LIGHTING(internal_material, CSM_camera, camera.abs_position, frag_pos, frag_normal);
     }
@@ -122,6 +122,12 @@ vec4 draw_filled(Camera camera, Camera CSM_camera)
     // 自发光
     out_color3 += internal_material.emission;
     out_color3 = mix(out_color3, env_color.rgb, env_color.a);
+
+    // 雾
+    if (internal_material.fog)
+    {
+        out_color3 = fog_apply(fog, out_color3, camera.abs_position, frag_pos);
+    }
 
     // 最终颜色
     return vec4(out_color3, internal_material.opacity);
