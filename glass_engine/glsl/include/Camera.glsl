@@ -3,6 +3,9 @@
 
 #include "math.glsl"
 
+#define CAMERA_PROJECTION_PERSPECTIVE 0
+#define CAMERA_PROJECTION_ORTHOGRAPHIC 1
+
 struct Camera
 {
 	// 内参数
@@ -14,7 +17,7 @@ struct Camera
 	bool auto_focus;
 	vec2 focus_tex_coord;
 	float focus_change_speed;
-	uint projection_mode; // 0: 透视投影, 1: 正射投影
+	uint projection_mode;
 
 	// 透视投影专有
 	float tan_half_fov;
@@ -74,7 +77,7 @@ vec4 view_to_NDC(Camera camera, vec3 view_coord, uint projection_mode)
 	// 标准设备坐标
 	vec4 NDC_coord;
 	float clip = camera.far - camera.near;
-	if(projection_mode == 0) // 透视投影
+	if(projection_mode == CAMERA_PROJECTION_PERSPECTIVE) // 透视投影
 	{
 		NDC_coord.x = view_coord.x / (camera.aspect * camera.tan_half_fov);
 		NDC_coord.y = view_coord.z / camera.tan_half_fov;
@@ -201,7 +204,7 @@ Camera cube_camera(int face_id, vec3 center_pos, float near, float far)
 	camera.tan_half_fov = 1;
 	camera.sin_half_fov = sin45;
 	camera.aspect = 1;
-	camera.projection_mode = 0;
+	camera.projection_mode = CAMERA_PROJECTION_PERSPECTIVE;
 	switch(face_id)
 	{
 	case 0: camera.abs_orientation = quat(cos45, 0, 0, -sin45); break; // right

@@ -1,4 +1,5 @@
 from .Manipulator import Manipulator
+
 from glass.RenderHint import RenderHint
 from glass.utils import checktype
 
@@ -148,10 +149,16 @@ class ModelViewManipulator(Manipulator):
             return False
         
         n = angle.y/120
-        if n > 0:
-            self.__distance *= 0.8
+        if self.camera.projection_mode.value == 0:
+            if n > 0:
+                self.__distance *= 0.8
+            else:
+                self.__distance *= 1.2
         else:
-            self.__distance *= 1.2
+            if n > 0:
+                self.camera.height *= 0.8
+            else:
+                self.camera.height *= 1.2
 
         self.__update_camera()
         return True
