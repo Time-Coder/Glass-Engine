@@ -116,7 +116,7 @@ class Icosahedron(Mesh):
                 tex_coord = 2*radius*(tex_coord - glm.vec3(0.5, 0.5, 0))*Icosahedron.edge_length/math.sqrt(3) + glm.vec3(0.5, 0.5, 0)
             
             vertices[i] = Vertex(
-                position = radius * quat * fix_vert.position,
+                position = radius * (quat * fix_vert.position),
                 normal = quat * fix_vert.normal,
                 tex_coord = tex_coord
             )
