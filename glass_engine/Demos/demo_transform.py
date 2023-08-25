@@ -5,8 +5,10 @@ from PyQt6.QtWidgets import QApplication, QDialog, QHBoxLayout, QVBoxLayout, QWi
 from PyQt6.QtCore import Qt, pyqtSignal
 from qt_material import apply_stylesheet
 
-from glass_engine import *
-from glass_engine.Geometries import *
+from ..Camera import Camera
+from ..Model import Model
+from ..BasicScene import ModelView
+from ..Geometries.CoordSys import CoordSys
 
 class ParamControlLine(QWidget):
 
@@ -128,6 +130,7 @@ class MainWindow(QDialog):
     def __init__(self, parent:QWidget=None):
         QDialog.__init__(self, parent=parent)
         self.setWindowFlags(Qt.WindowType.WindowMinMaxButtonsHint | Qt.WindowType.WindowCloseButtonHint)
+        self.setWindowTitle('glass_engine 空间变换概念演示')
 
         vlayout = QVBoxLayout()
 
@@ -139,7 +142,7 @@ class MainWindow(QDialog):
         dir_light.generate_shadows = False
 
         self_path = os.path.dirname(os.path.abspath(__file__))
-        self.model = Model(self_path + "/assert/models/jet/11805_airplane_v2_L2.obj")
+        self.model = Model(self_path + "/assets/models/jet/11805_airplane_v2_L2.obj")
         self.model["root"].scale = 1/500
         self.model["root"][0]["airplane_body"].material.ambient = 0.1
         self.model["root"][0]["airplane_body"].material.ambient_map = None
@@ -154,7 +157,7 @@ class MainWindow(QDialog):
         self.scene.add(self.model)
         self.scene.add(coord_sys)
 
-        self.scene.skydome = self_path + "/assert/skydomes/industrial_sunset_puresky_4k.exr"
+        self.scene.skydome = self_path + "/assets/skydomes/industrial_sunset_puresky_4k.exr"
         
         vlayout.addWidget(self.camera.screen)
 
@@ -173,7 +176,8 @@ class MainWindow(QDialog):
         self.control_panel.scale_x_line.value_changed.connect(self.scale_x_changed)
         self.control_panel.scale_y_line.value_changed.connect(self.scale_y_changed)
         self.control_panel.scale_z_line.value_changed.connect(self.scale_z_changed)
-
+        self.camera.screen.setFocus()
+        
     def position_x_changed(self, value):
         self.model.position.x = value
         self.camera.screen.update()
@@ -210,10 +214,11 @@ class MainWindow(QDialog):
         self.model.scale.z = value
         self.camera.screen.update()
 
-app = QApplication(sys.argv)
-apply_stylesheet(app, theme='dark_amber.xml')
+def demo_transform():
+    app = QApplication(sys.argv)
+    apply_stylesheet(app, theme='dark_amber.xml')
 
-main_window = MainWindow()
-main_window.show()
+    main_window = MainWindow()
+    main_window.show()
 
-app.exec()
+    app.exec()

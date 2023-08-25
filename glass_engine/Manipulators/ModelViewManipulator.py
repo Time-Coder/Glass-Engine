@@ -78,8 +78,8 @@ class ModelViewManipulator(Manipulator):
         self.camera.position.z = self.__distance*math.sin(elevation)
 
         if glm.length(self.__offset) > 1E-6:
-            right = glm.vec3(math.cos(azimuth), math.sin(azimuth), 0)
-            forward = glm.vec3(-math.sin(elevation) * math.sin(azimuth), math.sin(elevation) * math.cos(azimuth), math.cos(elevation))
+            right = glm.dvec3(math.cos(azimuth), math.sin(azimuth), 0)
+            forward = glm.dvec3(-math.sin(elevation) * math.sin(azimuth), math.sin(elevation) * math.cos(azimuth), math.cos(elevation))
             self.camera.position += (self.__offset.x * right + self.__offset.y * forward)
 
         self.camera.pitch = -self.__elevation_deg
