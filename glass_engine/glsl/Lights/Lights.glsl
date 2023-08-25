@@ -25,12 +25,12 @@ buffer SpotLights
 
 #define GET_ONE_LIGHT_SPECULAR(light, internal_material, camera, view_dir, frag_pos, frag_normal) \
 (\
-    internal_material.shading_model == 3 ? \
+    internal_material.shading_model == SHADING_MODEL_PHONG ? \
         Phong_specular(\
             light, internal_material, camera,\
             view_dir, frag_pos, frag_normal\
         ) : (\
-    internal_material.shading_model == 4 ? \
+    internal_material.shading_model == SHADING_MODEL_PHONG_BLINN ? \
         PhongBlinn_specular(\
             light, internal_material, camera,\
             view_dir, frag_pos, frag_normal\
@@ -39,37 +39,38 @@ buffer SpotLights
 
 #define FRAG_LIGHTING_ONE(light, internal_material, camera_pos, CSM_camera, frag_pos, frag_normal) \
 (\
-    internal_material.shading_model == 3 ? \
+    internal_material.shading_model == SHADING_MODEL_PHONG ? \
         Phong_lighting(\
             light, internal_material,\
             camera_pos, CSM_camera, frag_pos, frag_normal\
         ) : (\
-    internal_material.shading_model == 4 ? \
+    internal_material.shading_model == SHADING_MODEL_PHONG_BLINN ? \
         PhongBlinn_lighting(\
             light, internal_material,\
             camera_pos, CSM_camera, frag_pos, frag_normal\
         ) : (\
-    internal_material.shading_model == 5 ? \
+    internal_material.shading_model == SHADING_MODEL_TOON ? \
         Toon_lighting(\
             light, internal_material,\
             camera_pos, CSM_camera, frag_pos, frag_normal\
         ) : (\
-    internal_material.shading_model == 6 ? \
+    internal_material.shading_model == SHADING_MODEL_OREN_NAYAR ? \
         OrenNayar_lighting(\
             light, internal_material,\
             camera_pos, CSM_camera, frag_pos, frag_normal\
         ) : (\
-    internal_material.shading_model == 7 ? \
+    internal_material.shading_model == SHADING_MODEL_MINNAERT ? \
         Minnaert_lighting(\
             light, internal_material,\
             camera_pos, CSM_camera, frag_pos, frag_normal\
         ) : (\
-    internal_material.shading_model == 10 ? \
+    internal_material.shading_model == SHADING_MODEL_FRESNEL ? \
         Fresnel_lighting(\
             light, internal_material,\
             camera_pos, CSM_camera, frag_pos, frag_normal\
         ) : (\
-    (internal_material.shading_model == 8 || internal_material.shading_model == 11) ? \
+    (internal_material.shading_model == SHADING_MODEL_COOK_TORRANCE || \
+     internal_material.shading_model == SHADING_MODEL_PBR) ? \
         CookTorrance_lighting(\
             light, internal_material,\
             camera_pos, CSM_camera, frag_pos, frag_normal\

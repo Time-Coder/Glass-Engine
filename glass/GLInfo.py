@@ -368,6 +368,7 @@ class GLInfo:
 	[
 		GL.GL_DEPTH_STENCIL, GL.GL_DEPTH24_STENCIL8, GL.GL_DEPTH32F_STENCIL8
 	]
+	fog_modes = [GL.GL_LINEAR, GL.GL_EXP, GL.GL_EXP2]
 
 	dtypes = \
 	[

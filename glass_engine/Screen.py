@@ -174,6 +174,7 @@ class Screen(QOpenGLWidget):
         self._is_gl_init = False
         self._before_filter_image = None
         self._video_writers = []
+        self._background_color = glm.vec4(0, 0, 0, 0)
         
         self._camera_id = id(camera)
 
@@ -182,6 +183,18 @@ class Screen(QOpenGLWidget):
         
         self.__render_hint = RenderHint()
         self._listen_cursor_timer = self.startTimer(10)
+
+    @property
+    def background_color(self):
+        return self._background_color
+        
+    @background_color.setter
+    @checktype
+    def background_color(self, color:(glm.vec4,glm.vec3)):
+        if isinstance(color, glm.vec3):
+            color = glm.vec4(color, 1)
+
+        self._background_color = color
 
     def update(self):
         self._before_filter_image = None
@@ -290,8 +303,10 @@ class Screen(QOpenGLWidget):
     def _draw_to_before_filter_image(self, should_update_scene):
         if self._before_filter_image is None or should_update_scene:
             with self._before_filter_fbo:
-                with self.renderer.render_hint:
-                    should_update_scene = self.renderer.render() or should_update_scene
+                clear_color = self.camera.scene.fog.apply(self.background_color, glm.vec3(0,0,0), glm.vec3(0,self.camera.far,0))
+                with GLConfig.LocalConfig(clear_color=clear_color):
+                    with self.renderer.render_hint:
+                        should_update_scene = self.renderer.render() or should_update_scene
 
             self._before_filter_image = self._before_filter_fbo.resolved.color_attachment(0)
             self.renderer.filters.screen_update_time = time.time()
@@ -316,8 +331,10 @@ class Screen(QOpenGLWidget):
             should_update_scene = self._draw_to_before_filter_image(should_update_scene)
             should_update_filter = self.renderer.filters.draw(self._before_filter_image)
         else:
-            with self.renderer.render_hint:
-                should_update_scene = self.renderer.render() or should_update_scene
+            clear_color = self.camera.scene.fog.apply(self.background_color, glm.vec3(0,0,0), glm.vec3(0,self.camera.far,0))
+            with GLConfig.LocalConfig(clear_color=clear_color):
+                with self.renderer.render_hint:
+                    should_update_scene = self.renderer.render() or should_update_scene
 
         self.__calc_fps()
         self.frame_ended.emit()
@@ -557,8 +574,10 @@ class Screen(QOpenGLWidget):
     def capture(self, save_path:str=None, viewport:tuple=None)->np.ndarray:
         self.makeCurrent()
         with self._before_filter_fbo:
-            with self.renderer.render_hint:
-                self.renderer.render()
+            clear_color = self.camera.scene.fog.apply(self.background_color, glm.vec3(0,0,0), glm.vec3(0,self.camera.far,0))
+            with GLConfig.LocalConfig(clear_color=clear_color):
+                with self.renderer.render_hint:
+                    self.renderer.render()
 
         image = None
         if self.renderer.filters.has_valid:

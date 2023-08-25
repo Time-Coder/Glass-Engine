@@ -34,7 +34,8 @@ void draw_filled_to_gbuffer()
         frag_tex_coord
     );
 
-    if (internal_material.shading_model != 9 && internal_material.opacity < 1-1E-6)
+    if (internal_material.shading_model != SHADING_MODEL_UNLIT && \
+        internal_material.opacity < 1-1E-6)
     {
         discard;
     }
@@ -46,7 +47,8 @@ void draw_filled_to_gbuffer()
     view_normal_and_emission_r.a = internal_material.emission.r;
 
     // 输出光照信息
-    if (internal_material.shading_model == 8 || internal_material.shading_model == 11)
+    if (internal_material.shading_model == SHADING_MODEL_COOK_TORRANCE || \
+        internal_material.shading_model == SHADING_MODEL_PBR)
     {
         ambient_or_arm_and_emission_g.r = internal_material.ambient_occlusion;
         ambient_or_arm_and_emission_g.g = internal_material.roughness;
@@ -61,11 +63,11 @@ void draw_filled_to_gbuffer()
     ambient_or_arm_and_emission_g.a = internal_material.emission.g;
     diffuse_or_base_color_and_emission_b.a = internal_material.emission.b;
 
-    if (internal_material.shading_model == 1) // Flat
+    if (internal_material.shading_model == SHADING_MODEL_FLAT)
     {
         specular_or_prelight_and_shininess.rgb = (gl_FrontFacing ? pre_shading_colors.Flat_color : pre_shading_colors.Flat_back_color);
     }
-    else if(internal_material.shading_model == 2) // Gouraud
+    else if(internal_material.shading_model == SHADING_MODEL_GOURAND)
     {
         specular_or_prelight_and_shininess.rgb = (gl_FrontFacing ? pre_shading_colors.Gouraud_color : pre_shading_colors.Gouraud_back_color);
     }
@@ -83,7 +85,8 @@ void draw_filled_to_gbuffer()
     mix_uint.x = env_map_handle.x;
     mix_uint.y = env_map_handle.y;
     mix_uint.z = uint(
-        (internal_material.shading_model << 2) |
+        (internal_material.shading_model << 3) |
+        (uint(internal_material.fog) << 2) |
         (uint(internal_material.recv_shadows) << 1) |
         uint(is_sphere));
 }

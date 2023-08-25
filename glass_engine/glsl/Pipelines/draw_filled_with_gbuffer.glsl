@@ -28,11 +28,13 @@ vec4 draw_filled_with_gbuffer(Camera camera,
     float refractive_index = env_center_and_refractive_index.a;
     vec3 env_center = env_center_and_refractive_index.rgb;
     uvec2 env_map_handle = mix_uint.xy;
-    uint shading_model = uint((mix_uint.z >> 2) & 0xF);
+    uint shading_model = uint((mix_uint.z >> 3) & 0xF);
+    bool use_fog = bool((mix_uint.z >> 2) & 0x1);
     bool recv_shadows = bool((mix_uint.z >> 1) & 0x1);
     bool is_sphere = bool(mix_uint.z & 0x1);
 
     InternalMaterial internal_material;
+    internal_material.fog = use_fog;
     internal_material.shading_model = shading_model;
     internal_material.emission = vec3(view_normal_and_emission_r.a, ambient_or_arm_and_emission_g.a, diffuse_or_base_color_and_emission_b.a);
     internal_material.opacity = view_pos_and_alpha.a;
@@ -119,6 +121,12 @@ vec4 draw_filled_with_gbuffer(Camera camera,
     // 自发光
     out_color3 += internal_material.emission;
     out_color3 = mix(out_color3, env_color.rgb, env_color.a);
+
+    // 雾
+    if (use_fog)
+    {
+        out_color3 = fog_apply(fog, out_color3, camera.abs_position, frag_pos);
+    }
 
     return vec4(out_color3, internal_material.opacity);
 }

@@ -34,6 +34,7 @@ class ForwardRenderer(CommonRenderer):
                 self.forward_program["skybox_map"] = self.scene.skybox.skybox_map
                 self.forward_program["use_skydome_map"] = self.scene.skydome.is_completed
                 self.forward_program["skydome_map"] = self.scene.skydome.skydome_map
+                self.forward_program["fog"] = self.scene.fog
                 for mesh, instances in self.scene.all_meshes.items():
                     if mesh.has_opaque:
                         self.forward_draw_mesh(mesh, instances)

@@ -126,10 +126,11 @@ class SkyDome(Mesh):
             self.__program = ShaderProgram()
             self.__program.compile(os.path.dirname(os.path.abspath(__file__)) + "/glsl/Pipelines/skydome/skydome.vs")
             self.__program.compile(os.path.dirname(os.path.abspath(__file__)) + "/glsl/Pipelines/skydome/skydome.fs")
-            self.__program["skydome_map"].bind(self.skydome_map)
 
         return self.__program
     
     def draw(self, camera:Camera):
         self.program["camera"] = camera
+        self.program["skydome_map"] = self.skydome_map
+        self.program["fog"] = camera.scene.fog
         Mesh.draw(self, self.program)

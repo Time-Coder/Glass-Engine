@@ -6,6 +6,7 @@ from .Lights.SpotLight import SpotLights, SpotLight, FlatSpotLight
 from .AffineTransform import AffineTransform
 from .SkyBox import SkyBox
 from .SkyDome import SkyDome
+from .Fog import Fog
 
 from glass.utils import checktype, dquat_to_dmat4, scale_to_dmat4, translate_to_dmat4, dquat_to_dmat3, scale_to_dmat3
 from glass import Instances, samplerCube
@@ -23,6 +24,7 @@ class Scene:
         self._backup_meshes = {}
         self._last_generated_meshes = set()
 
+        self._fog = Fog()
         self._skybox = SkyBox()
         self._skydome = SkyDome()
         self._point_lights = PointLights()
@@ -55,6 +57,10 @@ class Scene:
     @checktype
     def skydome(self, image:(str,np.ndarray)):
         self._skydome.skydome_map = image
+
+    @property
+    def fog(self):
+        return self._fog
 
     def __update_env_maps(self, scene_node:SceneNode=None):
         if scene_node is None:

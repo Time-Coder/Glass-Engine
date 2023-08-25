@@ -35,6 +35,7 @@ layout(location=2) out float reveal;
 #include "../../include/env_mapping.glsl"
 #include "../../include/math.glsl"
 #include "../../include/OIT.glsl"
+#include "../../include/fog.glsl"
 
 uniform Material material;
 uniform Material back_material;
@@ -44,6 +45,7 @@ uniform bool is_opaque_pass;
 uniform bool is_filled;
 uniform bool is_sphere;
 uniform vec3 mesh_center;
+uniform Fog fog;
 
 // 环境映射
 uniform bool use_skybox_map;

@@ -15,6 +15,7 @@ out vec4 out_color;
 #include "../../include/parallax_mapping.glsl"
 #include "../../include/math.glsl"
 #include "../../include/env_mapping.glsl"
+#include "../../include/fog.glsl"
 
 uniform sampler2D view_pos_and_alpha_map;
 uniform sampler2D view_normal_and_emission_r_map;
@@ -27,6 +28,7 @@ uniform usampler2D mix_uint_map;
 uniform sampler2D SSAO_map;
 uniform sampler2D skydome_map;
 uniform samplerCube skybox_map;
+uniform Fog fog;
 
 uniform Camera camera;
 uniform bool use_skybox_map;

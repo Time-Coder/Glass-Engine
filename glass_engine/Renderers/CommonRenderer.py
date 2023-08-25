@@ -45,22 +45,6 @@ class CommonRenderer(Renderer):
         self.filters["FXAA"].enabled = False
 
     @property
-    def background_color(self):
-        result = self.render_hint.clear_color
-        if result == RenderHint.inherit:
-            return GLConfig.clear_color
-        else:
-            return result
-        
-    @background_color.setter
-    @checktype
-    def background_color(self, color:(glm.vec4,glm.vec3)):
-        if isinstance(color, glm.vec3):
-            color = glm.vec4(color, 1)
-
-        self.render_hint.clear_color = color
-
-    @property
     def bloom(self):
         return self.filters["bloom"].enabled
     
@@ -561,6 +545,7 @@ class CommonRenderer(Renderer):
                     self.gen_env_map_program["skybox_map"] = self.scene.skybox.skybox_map
                     self.gen_env_map_program["use_skydome_map"] = self.scene.skydome.is_completed
                     self.gen_env_map_program["skydome_map"] = self.scene.skydome.skydome_map
+                    self.gen_env_map_program["fog"] = self.scene.fog
                     self.gen_env_map_program["SSAO_map"] = None
                     for other_mesh, other_instances in self.scene.all_meshes.items():
                         if other_mesh.has_opaque:
@@ -712,6 +697,7 @@ class CommonRenderer(Renderer):
                 self.forward_program["skybox_map"] = self.scene.skybox.skybox_map
                 self.forward_program["use_skydome_map"] = self.scene.skydome.is_completed
                 self.forward_program["skydome_map"] = self.scene.skydome.skydome_map
+                self.forward_program["fog"] = self.scene.fog
                 for mesh, instances in self._transparent_meshes.items():
                     self.forward_draw_mesh(mesh, instances)
 

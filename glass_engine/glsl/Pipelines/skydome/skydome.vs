@@ -4,7 +4,7 @@ layout (location = 0) in vec3 position;
 layout (location = 1) in vec2 tex_coord;
 
 out vec2 frag_tex_coord;
-out vec3 frag_pos;
+out vec3 world_coord;
 
 #include "../../include/Camera.glsl"
 
@@ -15,5 +15,7 @@ void main()
     frag_tex_coord = tex_coord;
     
     vec4 pos = Camera_project_skydome(camera, position);
+    world_coord = camera.far*position;
+
     gl_Position = pos.xyww;
 }
