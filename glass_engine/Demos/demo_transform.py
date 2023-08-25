@@ -134,6 +134,7 @@ class MainWindow(QDialog):
         self.scene, self.camera, dir_light = ModelView()
         self.camera.screen.manipulator.elevation = 30
         self.camera.screen.manipulator.distance = 5
+        self.camera.projection_mode = Camera.ProjectionMode.Orthographic
 
         dir_light.generate_shadows = False
 
