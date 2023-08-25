@@ -1,5 +1,4 @@
 import os
-import sys
 
 from OpenGL import GL
 import re
@@ -7,6 +6,7 @@ import copy
 import warnings
 
 from .utils import delete, md5s, modify_time, load_var, save_var, cat, relative_path
+from .GlassConfig import GlassConfig
 from .GLObject import GLObject
 from .ShaderParser import ShaderParser
 from .GPUProgram import CompileError, CompileWarning
@@ -34,7 +34,7 @@ class BaseShader(GLObject):
 		self._comments_set = set()
 		self._line_message_map = {}
 		self._file_name = ""
-		self._include_paths = []
+		self._include_paths = [""]
 		self._predefines = {}
 		self._compiled_but_not_applied = False
 		self._should_recompile = True
@@ -75,7 +75,8 @@ class BaseShader(GLObject):
 		file_name = os.path.abspath(file_name).replace("\\", "/")
 		rel_name = relative_path(file_name)
 		if file_name in cls._shader_map:
-			print(f"using existing shader: {rel_name}")
+			if GlassConfig.print:
+				print(f"using existing shader: {rel_name}")
 			return cls._shader_map[file_name]
 		else:
 			shader = cls()
@@ -114,8 +115,9 @@ class BaseShader(GLObject):
 			self._id = GL.glCreateShader(self._type)
 			if self._id == 0:
 				raise MemoryError("Failed to create Shader!")
-		
-		print(f"compiling {self.file_name}")
+			
+		if GlassConfig.print:
+			print(f"compiling {self.file_name}")
 		GL.glShaderSource(self._id, self._code)
 		GL.glCompileShader(self._id)
 
@@ -125,7 +127,7 @@ class BaseShader(GLObject):
 			message = str(message_bytes, encoding="utf-8")
 
 		error_messages, warning_messages = self._format_error_warning(message)
-		if warning_messages:
+		if warning_messages and GlassConfig.warning:
 			warning_message = f"\nWarning when compiling: {self._file_name}:\n" + "\n".join(warning_messages)
 			warnings.warn(warning_message, category=CompileWarning)
 
@@ -210,16 +212,11 @@ class BaseShader(GLObject):
 		used_name = rel_name if len(rel_name) < len(abs_name) else abs_name
 		self._file_name = used_name
 		base_name = os.path.basename(abs_name)
-
-		file_dir = os.path.dirname(os.path.abspath(sys.argv[0]))
-		cache_folder = file_dir + "/__glcache__"
-		if not os.path.isdir(cache_folder):
-			os.makedirs(cache_folder)
-
-		self._meta_file_name = cache_folder + "/" + base_name + "_" + md5s(abs_name) + ".meta"
+		self._meta_file_name = GlassConfig.cache_folder + "/" + base_name + "_" + md5s(abs_name) + ".meta"
 
 		if self._test_should_recompile():
-			print(f"precompiling {used_name}")
+			if GlassConfig.print:
+				print(f"precompiling {used_name}")
 			self._code = cat(file_name)
 			self.related_files = [abs_name]
 			self.add_include_path(".")
@@ -252,8 +249,9 @@ class BaseShader(GLObject):
 
 			if self._type == GL.GL_COMPUTE_SHADER:
 				self.work_group_size = ShaderParser.find_work_group_size(self._clean_code)
-		else:
+		elif GlassConfig.print:
 			print(f"using precompiled cache: {used_name}")
+
 		self._compiled_but_not_applied = True
 
 	def add_include_path(self, include_path):
@@ -386,10 +384,13 @@ class BaseShader(GLObject):
 			found = False
 
 			for include_path in self._include_paths:
-				if not os.path.isdir(include_path):
+				if include_path and not os.path.isdir(include_path):
 					continue
 
-				full_name = include_path + "/" + include_filename
+				full_name = include_filename
+				if include_path:
+					full_name = include_path + "/" + include_filename
+
 				if not os.path.isfile(full_name):
 					continue
 
@@ -404,7 +405,8 @@ class BaseShader(GLObject):
 
 				self._code = self._code[:pos_include_start] + include_content + self._code[pos_include_end:]
 				if include_content:
-					print(f"expanding include: {used_name}")
+					if GlassConfig.print:
+						print(f"expanding include: {used_name}")
 					include_line_num = ShaderParser.line_of(self._code, pos_include_start)
 					include_lines = ShaderParser.lines(include_content)
 					include_line_end = include_line_num + include_lines

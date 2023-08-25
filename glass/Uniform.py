@@ -18,7 +18,7 @@ from .usampler2DMS import usampler2DMS
 from .samplerCube import samplerCube
 from .sampler2DArray import sampler2DArray
 from .ACBO import ACBO
-from .GLConfig import GLConfig
+from .GlassConfig import GlassConfig
 from .utils import subscript
 
 class Uniform:
@@ -212,7 +212,7 @@ class Uniform:
 
     def __setitem__(self, name:str, value):
         program = self.program
-        if GLConfig.debug and name not in program._uniform_map:
+        if GlassConfig.debug and name not in program._uniform_map:
             error_message = "uniform variable '" + name + "' is not defined in following files:\n"
             all_files = program._get_compiled_files()
             error_message += "\n".join(all_files)
@@ -632,7 +632,7 @@ class Uniform:
         memory_qualifiers = program._uniform_map[self._current_atom_name]["memory_qualifiers"]
         internal_format = program._uniform_map[self._current_atom_name]["internal_format"]
         if value is not None:
-            if GLConfig.debug and internal_format != value.internal_format:
+            if GlassConfig.debug and internal_format != value.internal_format:
                 raise ValueError(f"uniform image2D {self._current_atom_name} need format {internal_format}, {value.internal_format} were given")
 
             access = GL.GL_READ_WRITE

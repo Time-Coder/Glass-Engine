@@ -1,8 +1,8 @@
 from .Filters import Filter
 from ..Frame import Frame
 
-from glass.utils import checktype, cat
-from glass import FBO, ShaderProgram, sampler2D, GLConfig
+from glass.utils import checktype, cat, md5s, relative_path, modify_time
+from glass import FBO, ShaderProgram, sampler2D, GLConfig, GlassConfig
 from glass.WeakSet import WeakSet
 
 from OpenGL import GL
@@ -14,6 +14,7 @@ from datetime import datetime
 class SingleShaderFilter(Filter):
 
     __template_content = ""
+    __template_filename = os.path.dirname(os.path.abspath(__file__)) + "/../glsl/Filters/single_shader_filter_template.glsl"
 
     _unknown_filters = WeakSet()
     _dynamic_filters = WeakSet()
@@ -59,19 +60,16 @@ class SingleShaderFilter(Filter):
         if not os.path.isfile(shader_path):
             raise FileNotFoundError(shader_path)
 
+        shader_path = os.path.abspath(shader_path).replace("\\", "/")
         if shader_path == self._shader_path:
             return
-
-        folder_path = os.path.dirname(os.path.abspath(shader_path))
-        dest_folder = folder_path + "/temp_shaders"
-        if not os.path.isdir(dest_folder):
-            os.makedirs(dest_folder)
         
         file_base_name = os.path.basename(shader_path)
-        dest_file_name = dest_folder + "/temp_" + file_base_name
-        out_file = open(dest_file_name, "w")
-        out_file.write(SingleShaderFilter.__template(file_base_name))
-        out_file.close()
+        dest_file_name = GlassConfig.cache_folder + "/" + file_base_name + "_" + md5s(shader_path) + ".glsl"
+        if modify_time(SingleShaderFilter.__template_filename) > modify_time(dest_file_name):
+            out_file = open(dest_file_name, "w")
+            out_file.write(SingleShaderFilter.__template(shader_path))
+            out_file.close()
 
         self.program = ShaderProgram()
         self.program.compile(Frame.draw_frame_vs)
@@ -150,9 +148,8 @@ class SingleShaderFilter(Filter):
 
     @staticmethod
     def __template(file_name):
-        if SingleShaderFilter.__template_content:
-            return SingleShaderFilter.__template_content.replace("{file_name}", file_name)
+        if not SingleShaderFilter.__template_content:
+            SingleShaderFilter.__template_content = cat(SingleShaderFilter.__template_filename)
         
-        current_file_path = os.path.dirname(os.path.abspath(__file__))
-        SingleShaderFilter.__template_content = cat(current_file_path + "/../glsl/Filters/single_shader_filter_template.glsl")
-        return SingleShaderFilter.__template_content.replace("{file_name}", file_name)
+        rel_path = relative_path(file_name, GlassConfig.cache_folder)
+        return SingleShaderFilter.__template_content.replace("{file_name}", rel_path)

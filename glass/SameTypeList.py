@@ -3,7 +3,7 @@ import numpy as np
 
 from .utils import capacity_of
 from .helper import nitems
-from .GLConfig import GLConfig
+from .GlassConfig import GlassConfig
 from .GLInfo import GLInfo
 
 class SameTypeList:
@@ -130,7 +130,7 @@ class SameTypeList:
         self._change_to_list()
         self._check_in_items()
 
-        if GLConfig.debug:
+        if GlassConfig.debug:
             self._check_type(value)
 
         self._list.append(value)
@@ -144,7 +144,7 @@ class SameTypeList:
         self._change_to_list()
         self._check_in_items()
 
-        if GLConfig.debug:
+        if GlassConfig.debug:
             for value in _list:
                 self._check_type(value)
 
@@ -159,7 +159,7 @@ class SameTypeList:
         self._change_to_list()
         self._check_in_items()
 
-        if GLConfig.debug:
+        if GlassConfig.debug:
             self._check_type(value)
 
         self._list.insert(index, value)
@@ -240,7 +240,7 @@ class SameTypeList:
             if self.const_get(index) == value:
                 return False
 
-        if GLConfig.debug:
+        if GlassConfig.debug:
             if isinstance(index, slice) and type(value) != type(self._list[0]) and type(value) != self._dtype:
                 for subvalue in value:
                     self._check_type(subvalue)

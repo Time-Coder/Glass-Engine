@@ -1,16 +1,14 @@
 from .Renderer import Renderer
 from ..Filters import GaussFilter, KernelFilter, BloomFilter, DOFFilter, HDRFilter, FXAAFilter
 from ..Frame import Frame
-from glass import RenderHint
 
 from glass import \
-    ShaderProgram, GLConfig, FBO, RBO, sampler2D, sampler2DMS, samplerCube, sampler2DArray
+    ShaderProgram, GLConfig, FBO, RBO, sampler2D, sampler2DMS, samplerCube, sampler2DArray, GlassConfig
 from glass.utils import checktype, cat, modify_time
 
 from OpenGL import GL
 import glm
 import os
-import sys
 import numpy as np
 
 class CommonRenderer(Renderer):
@@ -185,12 +183,8 @@ class CommonRenderer(Renderer):
     
     @property
     def dir_light_depth_geo_shader_path(self):
-        cache_folder = os.path.dirname(os.path.abspath(sys.argv[0])) + "/__glcache__"
-        if not os.path.isdir(cache_folder):
-            os.makedirs(cache_folder)
-
         self_folder = os.path.dirname(os.path.abspath(__file__))
-        target_filename = cache_folder + f"/DirLight_depth{self.camera.CSM_levels}.gs"
+        target_filename = GlassConfig.cache_folder + f"/DirLight_depth{self.camera.CSM_levels}.gs"
         template_filename = self_folder + "/../glsl/Pipelines/DirLight_depth/DirLight_depth.gs"
         if not os.path.isfile(target_filename) or modify_time(template_filename) > modify_time(target_filename):
             if CommonRenderer.__dir_light_depth_geo_shader_template is None:

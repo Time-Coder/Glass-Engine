@@ -3,7 +3,7 @@ import numpy as np
 
 from .GLInfo import GLInfo
 from .GLObject import GLObject
-from .GLConfig import GLConfig
+from .GlassConfig import GlassConfig
 
 class BO(GLObject):
 
@@ -17,7 +17,7 @@ class BO(GLObject):
 		self._nbytes = 0
 
 	def bufferData(self, value_array, draw_type:GLInfo.draw_types=GL.GL_STATIC_DRAW):
-		if GLConfig.debug and self.__class__.__name__ in ["FBO", "RBO"]:
+		if GlassConfig.debug and self.__class__.__name__ in ["FBO", "RBO"]:
 			raise AttributeError("'" + self.__class__.__name__ + "' object has no attribute 'bufferData'")
 
 		array_bytes = 0
@@ -38,7 +38,7 @@ class BO(GLObject):
 		self._draw_type = draw_type
 
 	def malloc(self, nbytes, draw_type:GLInfo.draw_types=GL.GL_STATIC_DRAW):
-		if GLConfig.debug:
+		if GlassConfig.debug:
 			if self.__class__.__name__ in ["FBO", "RBO"]:
 				raise AttributeError("'" + self.__class__.__name__ + "' object has no attribute 'malloc'")
 
@@ -48,7 +48,7 @@ class BO(GLObject):
 		self._draw_type = draw_type
 
 	def memmove(self, old_start:int, nbytes:int, new_start:int):
-		if GLConfig.debug:
+		if GlassConfig.debug:
 			if old_start < 0:
 				raise ValueError("source start position should be positive, " + str(old_start) + " is passed")
 			elif old_start >= self.nbytes:
@@ -96,7 +96,7 @@ class BO(GLObject):
 		temp_bo_id = 0
 
 	def bufferSubData(self, start:int, nbytes:int, value_array):
-		if GLConfig.debug:
+		if GlassConfig.debug:
 			if self.__class__.__name__ in ["FBO", "RBO"]:
 				raise AttributeError("'" + self.__class__.__name__ + "' object has no attribute 'bufferSubData'")
 
@@ -114,7 +114,7 @@ class BO(GLObject):
 			array_nbytes = value_array.nbytes
 			value_array = value_array.tobytes()
 
-		if GLConfig.debug:
+		if GlassConfig.debug:
 			if start < 0:
 				raise ValueError("Memory start position should be positive, " + str(start) + " is passed")
 			
@@ -137,7 +137,7 @@ class BO(GLObject):
 		GL.glBufferSubData(self.__class__._basic_info["target_type"], start, nbytes, value_array)
 
 	def copy_to(self, src_start:int, nbytes:int, dest_bo, dest_start:int):
-		if GLConfig.debug:
+		if GlassConfig.debug:
 			if self.__class__.__name__ in ["FBO", "RBO"]:
 				raise AttributeError("'" + self.__class__.__name__ + "' object has no attribute 'copy_to'")
 
@@ -194,7 +194,7 @@ class BO(GLObject):
 
 	@property
 	def nbytes(self):
-		if GLConfig.debug:
+		if GlassConfig.debug:
 			if self.__class__.__name__ in ["FBO", "RBO"]:
 				raise AttributeError("'" + self.__class__.__name__ + "' object has no attribute 'nbytes'")
 
@@ -206,7 +206,7 @@ class BO(GLObject):
 
 	@property
 	def draw_type(self):
-		if GLConfig.debug:
+		if GlassConfig.debug:
 			if self.__class__.__name__ in ["FBO", "RBO"]:
 				raise AttributeError("'" + self.__class__.__name__ + "' object has no attribute 'draw_type'")
 			

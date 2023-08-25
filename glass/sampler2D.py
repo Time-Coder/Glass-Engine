@@ -10,12 +10,13 @@ from datetime import datetime
 
 from .FBOAttachment import FBOAttachment
 from .GLInfo import GLInfo
-from .utils import checktype, cat
+from .utils import checktype, cat, modify_time, md5s, relative_path
 from .helper import get_external_format, width_adapt, get_dtype, get_channels
 from .ImageLoader import ImageLoader
 from .Indices import Indices
 from .Vertices import Vertices, Vertex
 from .GLConfig import GLConfig
+from .GlassConfig import GlassConfig
 from .WeakSet import WeakSet
 
 class sampler2D(FBOAttachment):
@@ -29,6 +30,7 @@ class sampler2D(FBOAttachment):
     _unknown_shadertoy_samplers = WeakSet()
     _dynamic_shadertoy_samplers = WeakSet()
     __shadertoy_template_content = ""
+    __shadertoy_template_filename = os.path.dirname(os.path.abspath(__file__)) + "/glsl/shadertoy_template.glsl"
 
     _basic_info = \
     {
@@ -504,16 +506,10 @@ class sampler2D(FBOAttachment):
         
         shader_path = os.path.abspath(shader_path).replace("\\", "/")
         base_name = os.path.basename(shader_path)
-
-        folder_path = os.path.dirname(shader_path)
-        dest_folder_path = folder_path + "/temp_shaders"
-        if not os.path.isdir(dest_folder_path):
-            os.makedirs(dest_folder_path)
-
-        out_file_name = dest_folder_path + "/temp_" + base_name
-        if not os.path.isfile(out_file_name):
+        out_file_name = GlassConfig.cache_folder + "/" + base_name + "_" + md5s(shader_path) + ".glsl"
+        if modify_time(sampler2D.__shadertoy_template_filename) > modify_time(out_file_name):
             out_file = open(out_file_name, "w")
-            out_file.write(sampler2D.__shadertoy_template(base_name))
+            out_file.write(sampler2D.__shadertoy_template(shader_path))
             out_file.close()
 
         program = ShaderProgram()
@@ -527,12 +523,11 @@ class sampler2D(FBOAttachment):
 
     @staticmethod
     def __shadertoy_template(file_name):
-        if sampler2D.__shadertoy_template_content:
-            return sampler2D.__shadertoy_template_content.replace("{file_name}", file_name)
+        if not sampler2D.__shadertoy_template_content:
+            sampler2D.__shadertoy_template_content = cat(sampler2D.__shadertoy_template_filename)
         
-        current_file_path = os.path.dirname(os.path.abspath(__file__))
-        sampler2D.__shadertoy_template_content = cat(current_file_path + "/glsl/shadertoy_template.glsl")
-        return sampler2D.__shadertoy_template_content.replace("{file_name}", file_name)
+        rel_path = relative_path(file_name, GlassConfig.cache_folder)
+        return sampler2D.__shadertoy_template_content.replace("{file_name}", rel_path)
 
     def __remove_from_unknown(self):
         if self not in sampler2D._unknown_shadertoy_samplers:

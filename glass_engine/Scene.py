@@ -8,7 +8,7 @@ from .SkyBox import SkyBox
 from .SkyDome import SkyDome
 from .Fog import Fog
 
-from glass.utils import checktype, dquat_to_dmat4, scale_to_dmat4, translate_to_dmat4, dquat_to_dmat3, scale_to_dmat3
+from glass.utils import checktype, dquat_to_dmat4, scale_to_dmat4, translate_to_dmat4
 from glass import Instances, samplerCube
 
 import glm

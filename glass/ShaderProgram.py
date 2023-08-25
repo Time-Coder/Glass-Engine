@@ -4,7 +4,6 @@ from OpenGL import GL
 import pathlib
 import warnings
 import struct
-import sys
 import copy
 
 from .Uniform import Uniform
@@ -13,9 +12,10 @@ from .Shaders import VertexShader, FragmentShader, GeometryShader, TessControlSh
 from .Vertices import Vertices
 from .Indices import Indices
 from .Instances import Instances
-from .utils import checktype, di, subscript, md5s, modify_time, save_var, load_var
+from .utils import checktype, subscript, md5s, modify_time, save_var, load_var
 from .GLInfo import GLInfo
 from .GLConfig import GLConfig
+from .GlassConfig import GlassConfig
 from .TextureUnits import TextureUnits
 from .ImageUnits import ImageUnits
 
@@ -103,7 +103,9 @@ class ShaderProgram(GPUProgram):
         GL.glAttachShader(self._id, self.fragment_shader._id)
 
         related_files = "\n  " + "\n  ".join(self._get_compiled_files())
-        print(f"linking: {related_files}")
+        if GlassConfig.print:
+            print(f"linking: {related_files}")
+
         GL.glProgramParameteri(self._id, GL.GL_PROGRAM_BINARY_RETRIEVABLE_HINT, GL.GL_TRUE)
         GL.glLinkProgram(self._id)
         
@@ -113,7 +115,7 @@ class ShaderProgram(GPUProgram):
             message = str(message_bytes, encoding="utf-8")
 
         error_messages, warning_messages = self._format_error_warning(message)
-        if warning_messages:
+        if warning_messages and GlassConfig.warning:
             warning_message = f"Warning when linking following files:{related_files}\n" + \
                               "\n".join(warning_messages)
             warnings.warn(warning_message, category=LinkWarning)
@@ -154,7 +156,9 @@ class ShaderProgram(GPUProgram):
         meta_info["shader_storage_block_map"] = self._shader_storage_block_map
         meta_info["include_paths"] = self._include_paths
         save_var(meta_info, self._meta_file_name)
-        print("done")
+
+        if GlassConfig.print:
+            print("done")
 
     def _apply(self):
         if not self._linked_but_not_applied:
@@ -173,10 +177,13 @@ class ShaderProgram(GPUProgram):
             in_file.close()
 
             related_files = "\n  " + "\n  ".join(self._get_compiled_files())
-            print(f"using linked cache of: {related_files}")
+            if GlassConfig.print:
+                print(f"using linked cache of: {related_files}")
             GL.glProgramBinary(self._id, binary_format, binary_data, binary_length)
             status = GL.glGetProgramiv(self._id, GL.GL_LINK_STATUS)
-            print("done")
+            if GlassConfig.print:
+                print("done")
+
             if GL.GL_TRUE != status:
                 self._reapply()
         else:
@@ -221,12 +228,7 @@ class ShaderProgram(GPUProgram):
         if self.fragment_shader._meta_mtime > max_compiled_time:
             max_compiled_time = self.fragment_shader._meta_mtime
 
-        file_dir = os.path.dirname(os.path.abspath(sys.argv[0]))
-        cache_folder = file_dir + "/__glcache__"
-        if not os.path.isdir(cache_folder):
-            os.makedirs(cache_folder)
-
-        base = cache_folder + "/" + binary_name + "_" + md5s(abs_file_names)
+        base = GlassConfig.cache_folder + "/" + binary_name + "_" + md5s(abs_file_names)
         self._binary_file_name = base + ".bin"
         self._meta_file_name = base + ".meta"
 
@@ -283,7 +285,7 @@ class ShaderProgram(GPUProgram):
 
     def __check_vertices(self, vertices, start_index, total):
         len_vertices = len(vertices)
-        if not GLConfig.debug:
+        if not GlassConfig.debug:
             if vertices is not None and total is None:
                 total = len_vertices - start_index
             return total
@@ -308,7 +310,7 @@ class ShaderProgram(GPUProgram):
     
     def __check_indices(self, indices, total):
         three_len_indices = 3 * len(indices)
-        if not GLConfig.debug:
+        if not GlassConfig.debug:
             if indices is not None and total is None:
                 total = three_len_indices
             return total
@@ -419,7 +421,7 @@ class ShaderProgram(GPUProgram):
                 GL.glBindImageTexture(texture_unit, texture_id, 0, False, 0, access, internal_format)
                 ImageUnits[texture_unit] = (target_type, texture_id)
 
-        if self._uniform_not_set_warning and GLConfig.debug:
+        if self._uniform_not_set_warning and GlassConfig.debug:
             not_set_uniforms = []
             for name, uniform_info in self._uniform_map.items():
                 if name not in self._uniform._atom_value_map and \
@@ -439,10 +441,11 @@ class ShaderProgram(GPUProgram):
                     warning_message += "following uniform variables are not set but used:\n"
                     warning_message += "\n".join(not_set_uniforms)
                     
-                warnings.warn(warning_message, category=RuntimeWarning)
+                if GlassConfig.warning:
+                    warnings.warn(warning_message, category=RuntimeWarning)
 
     def __preprocess_before_draw(self, vertices, indices, instances, start_index, total, times, is_patch):
-        if GLConfig.debug:
+        if GlassConfig.debug:
             if is_patch:
                 if not self.tess_ctrl_shader.is_compiled:
                     raise RuntimeError("only shader program that with a tessilation shader can use draw_patches")

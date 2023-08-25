@@ -175,7 +175,7 @@ InternalMaterial fetch_internal_material(vec4 frag_color, Material material, vec
 
     // 自发光颜色
     vec3 material_emission = material.emission;
-    if (material.shading_model == 9)
+    if (material.shading_model == SHADING_MODEL_UNLIT)
     {
         internal_material.opacity = 1 - (1-frag_color.a)*(1-material_opacity);
     }
@@ -183,15 +183,12 @@ InternalMaterial fetch_internal_material(vec4 frag_color, Material material, vec
     {
         vec4 material_emission4 = texture(material.emission_map, tex_coord);
         material_emission = material_emission4.rgb;
-        if (material.shading_model == 9)
+        if (material.shading_model == SHADING_MODEL_UNLIT)
         {
             internal_material.opacity = 1 - (1-frag_color.a)*(1-material_emission4.a*material_opacity);
         }
     }
-    if (material.shading_model != 9)
-    {
-        internal_material.emission = mix(vec3(0,0,0), material_emission, material_opacity);
-    }
+    internal_material.emission = mix(vec3(0,0,0), material_emission, material_opacity);
 
     // 反射
     internal_material.reflection = material.reflection;
