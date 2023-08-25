@@ -6,6 +6,7 @@ from glass.utils import checktype
 from OpenGL import GL
 import math
 import glm
+import datetime
 
 class ModelViewManipulator(Manipulator):
 
@@ -175,5 +176,9 @@ class ModelViewManipulator(Manipulator):
             elif polygon_mode == GL.GL_POINT:
                 self.camera.screen.renderer.render_hint.polygon_mode = GL.GL_FILL
             return True
+        elif key == Manipulator.Key.Key_P:
+            now = datetime.datetime.now()
+            file_name = "capture_" + now.strftime("%Y-%m-%d_%H-%M-%S") + ".png"
+            self.camera.screen.capture(file_name)
 
         return False

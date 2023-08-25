@@ -186,7 +186,7 @@ class Dodecahedron(Mesh):
                 tex_coord = radius*(tex_coord - glm.vec3(0.5, 0.5, 0))*Dodecahedron.edge_length/sin_pi_5 + glm.vec3(0.5, 0.5, 0)
             
             vertices[i] = Vertex(
-                position = radius * quat * fix_vert.position,
+                position = radius * (quat * fix_vert.position),
                 normal = quat * fix_vert.normal,
                 tex_coord = tex_coord
             )
