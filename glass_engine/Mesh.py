@@ -13,7 +13,6 @@ import inspect
 import types
 from enum import Enum
 import copy
-import pickle
 
 class Mesh(SceneNode):
 

@@ -5,6 +5,7 @@ from ctypes import c_int, pointer
 
 from .GLObject import GLObject
 from .GLInfo import GLInfo
+from .GlassConfig import GlassConfig
 from .GLConfig import GLConfig
 from .Uniform import Uniform
 from .UniformBlock import UniformBlock
@@ -331,7 +332,7 @@ class GPUProgram(GLObject):
 
 			return var_atoms
 
-		if GLConfig.debug and var_type not in self._structs_info:
+		if GlassConfig.debug and var_type not in self._structs_info:
 			raise TypeError("type " + var_type + " is not defined in shader program")
 
 		var_atoms = []

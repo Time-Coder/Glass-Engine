@@ -12,7 +12,7 @@ import subprocess
 import sys
 from _ctypes import PyObj_FromPtr
 
-from .GLConfig import GLConfig
+from .GlassConfig import GlassConfig
 
 profiler = cProfile.Profile()
 
@@ -46,12 +46,12 @@ def same_type(var1, var2):
     return (isinstance(var1, type(var2)) and isinstance(var2, type(var1)))
 
 def checktype(func):
-    if not GLConfig.debug:
+    if not GlassConfig.debug:
         return func
     
     @wraps(func)
     def wrapper(*args, **kwargs):
-        if not GLConfig.debug:
+        if not GlassConfig.debug:
             return func(*args, **kwargs)
 
         func_args = func.__code__.co_varnames[:func.__code__.co_argcount]
@@ -280,9 +280,9 @@ def modify_time(file_name):
     
     return os.path.getmtime(file_name)
 
-def relative_path(file_name):
+def relative_path(file_name, start_path="."):
     try:
-        return os.path.relpath(file_name).replace("\\", "/")
+        return os.path.relpath(file_name, start_path).replace("\\", "/")
     except:
         return os.path.abspath(file_name).replace("\\", "/")
 

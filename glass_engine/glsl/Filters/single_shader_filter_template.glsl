@@ -14,7 +14,7 @@ uniform int iFrame; // shader playback frame
 uniform vec4 iDate; // (year, month, day, time in seconds)
 uniform sampler2D screen_image;
 
-#include "../{file_name}"
+#include "{file_name}"
 
 void main()
 { 

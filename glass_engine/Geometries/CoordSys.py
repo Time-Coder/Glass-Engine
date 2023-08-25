@@ -1,7 +1,6 @@
 from .Cylinder import Cylinder
 from .Cone import Cone
 from ..SceneNode import SceneNode
-from ..Material import Material
 
 import glm
 

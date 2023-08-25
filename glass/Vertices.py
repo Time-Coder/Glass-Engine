@@ -4,6 +4,7 @@ import glm
 import numpy as np
 
 from .GLConfig import GLConfig
+from .GlassConfig import GlassConfig
 from .VAO import VAO
 from .utils import checktype, di
 from .AttrList import AttrList
@@ -149,7 +150,7 @@ class Vertices:
         for key, attr_list in self._attr_list_map.items():
             if key in program._attributes_info:
                 feed_type = attr_list.dtype
-                if GLConfig.debug:
+                if GlassConfig.debug:
                     need_type = program._attributes_info[key]["python_type"]
                     if feed_type != need_type:
                         error_message = f"vertex attribute '{key}' need type {need_type}, {feed_type} value were given"

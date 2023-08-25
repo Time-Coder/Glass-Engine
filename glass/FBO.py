@@ -4,6 +4,7 @@ from OpenGL import GL
 from .FBOAttachment import FBOAttachment
 from .GLInfo import GLInfo
 from .GLConfig import GLConfig
+from .GlassConfig import GlassConfig
 from .BO import BO
 from .samplerCube import samplerCube
 from .sampler2DArray import sampler2DArray
@@ -89,7 +90,7 @@ class FBO(BO):
 		elif not isinstance(attachment, FBOAttachment):
 			raise TypeError(f"only instance of FBOAttachment can be attached. {type(attachment)} value was given.")
 		
-		if GLConfig.debug:
+		if GlassConfig.debug:
 			if self._samples is not None and \
 			attachment_type not in (sampler2DMS, isampler2DMS, usampler2DMS, RBO) and \
 			not isinstance(attachment, (sampler2DMS, isampler2DMS, usampler2DMS, RBO)):
@@ -124,7 +125,7 @@ class FBO(BO):
 			if internal_format is None:
 				internal_format = attachment.internal_format
 
-		if GLConfig.debug:
+		if GlassConfig.debug:
 			if attach_point == GL.GL_DEPTH_ATTACHMENT:
 				if internal_format not in GLInfo.depth_internal_formats:
 					raise ValueError(f"depth attachment internal format should be in {GLInfo.depth_internal_formats}, {internal_format} was given.")
@@ -301,7 +302,7 @@ class FBO(BO):
 				GL.glDrawBuffer(GL.GL_NONE)
 				GL.glReadBuffer(GL.GL_NONE)
 
-			if GLConfig.debug:
+			if GlassConfig.debug:
 				self.check_status()
 
 			self._attachments_attached = True

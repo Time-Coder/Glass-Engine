@@ -2,8 +2,6 @@ import glm
 import math
 import copy
 import numpy as np
-from cacheout import Cache
-from glass.utils import profiler
 from functools import cache
 
 def fzero(f, interval):

@@ -1,9 +1,9 @@
 from glass import Vertex, Vertices, Indices, ShaderProgram, sampler2D, GLConfig, sampler2DArray
 from glass.utils import modify_time, cat
+from glass.GlassConfig import GlassConfig
 
 import glm
 import os
-import sys
 from OpenGL import GL
 
 def _init_Frame(cls):
@@ -51,13 +51,9 @@ class Frame:
 
     @staticmethod
     def draw_frame_array_gs(layers):
-        cache_folder = os.path.dirname(os.path.abspath(sys.argv[0])) + "/__glcache__"
-        if not os.path.isdir(cache_folder):
-            os.makedirs(cache_folder)
-
         self_folder = os.path.dirname(os.path.abspath(__file__))
 
-        target_filename = cache_folder + f"/draw_frame_array{layers}.gs"
+        target_filename = GlassConfig.cache_folder + f"/draw_frame_array{layers}.gs"
         template_filename = self_folder + "/glsl/Pipelines/draw_frame_array.gs"
         if modify_time(template_filename) > modify_time(target_filename):
             if Frame.__array_geo_shader_template_content is None:

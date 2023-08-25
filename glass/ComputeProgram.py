@@ -4,6 +4,7 @@ import warnings
 from .GPUProgram import GPUProgram, LinkError, LinkWarning
 from .Shaders import ComputeShader
 from .GLConfig import GLConfig
+from .GlassConfig import GlassConfig
 
 class ComputeProgram(GPUProgram):
 	def __init__(self):
@@ -62,14 +63,14 @@ class ComputeProgram(GPUProgram):
 		GL.glAttachShader(self._id, self.compute_shader._id)
 		GL.glLinkProgram(self._id)
 
-		if GLConfig.debug:
+		if GlassConfig.debug:
 			message_bytes = GL.glGetProgramInfoLog(self._id)
 			message = message_bytes
 			if isinstance(message_bytes, bytes):
 				message = str(message_bytes, encoding="utf-8")
 
 			error_messages, warning_messages = self._format_error_warning(message)
-			if warning_messages:
+			if warning_messages and GlassConfig.warning:
 				warnings.warn("\n" + "\n".join(warning_messages), category=LinkWarning)
 
 			if error_messages:

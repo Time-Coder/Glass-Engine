@@ -2,7 +2,7 @@ from .Scene import Scene
 from .Camera import Camera
 from .Geometries.Floor import Floor
 from .Lights.DirLight import DirLight
-from .Manipulators import *
+from .Manipulators import ModelViewManipulator
 
 def SceneRoam(add_floor=True):
     scene = Scene()

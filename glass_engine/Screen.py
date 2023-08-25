@@ -6,7 +6,7 @@ from glass import GLConfig, FBO, RBO, sampler2DMS, sampler2D, RenderHint, SSBO, 
 from glass.utils import checktype, extname, di
 
 from PyQt6.QtOpenGLWidgets import QOpenGLWidget
-from PyQt6.QtGui import QMouseEvent, QKeyEvent, QCursor, QWheelEvent, QSurfaceFormat, QPainter, QPen, QColor
+from PyQt6.QtGui import QMouseEvent, QKeyEvent, QCursor, QWheelEvent, QSurfaceFormat
 from PyQt6.QtCore import Qt, QPointF, QPoint, QTimerEvent, pyqtSignal, QSize
 from PyQt6.QtWidgets import QApplication
 

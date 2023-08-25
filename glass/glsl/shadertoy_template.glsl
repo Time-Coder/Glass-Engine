@@ -1,10 +1,6 @@
 #version 460 core
 
-in TexCoord
-{
-    vec2 tex_coord;
-} fs_in;
-
+in vec2 tex_coord;
 out vec4 out_color;
 
 uniform vec3 iResolution; // viewport resolution (in pixels)
@@ -19,10 +15,10 @@ uniform sampler2D iChannel0, iChannel1, iChannel2, iChannel3; // input channel. 
 uniform vec4 iDate; // (year, month, day, time in seconds)
 uniform float iSampleRate; // sound sample rate (i.e., 44100)
 
-#include "../{file_name}"
+#include "{file_name}"
 
 void main()
 {
-    vec2 frag_coord = fs_in.tex_coord * iResolution.xy;
+    vec2 frag_coord = tex_coord * iResolution.xy;
     mainImage(out_color, frag_coord);
 }
