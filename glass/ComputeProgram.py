@@ -7,14 +7,15 @@ from .GLConfig import GLConfig
 from .GlassConfig import GlassConfig
 
 class ComputeProgram(GPUProgram):
-	def __init__(self):
+
+	def __init__(self)->None:
 		GPUProgram.__init__(self)
 		self.compute_shader = ComputeShader()
-		self._work_group_size = None
-		self._should_join = False
+		self._work_group_size:tuple[int]|None = None
+		self._should_join:bool = False
 
 	@staticmethod
-	def _check_work_group_size(work_group_size):
+	def _check_work_group_size(work_group_size:tuple[int])->None:
 		max_work_group_size = GLConfig.max_compute_work_group_size
 		if work_group_size[0] > max_work_group_size[0]:
 			raise ValueError("x-dimension work group size should not be greater than " + str(max_work_group_size[0]) + ", " + str(work_group_size[0]) + " were given")
@@ -29,7 +30,7 @@ class ComputeProgram(GPUProgram):
 			raise ValueError("work group invocation should not be greater than " + str(max_work_group_invocations) + ", " + str(work_group_invocations) + " were given")
 
 	@staticmethod
-	def _check_work_group_count(work_group_count):
+	def _check_work_group_count(work_group_count:tuple[int])->None:
 		max_work_group_count = GLConfig.max_compute_work_group_count
 		if work_group_count[0] > max_work_group_count[0]:
 			raise ValueError("x-dimension work group size should not be greater than " + str(max_work_group_count[0]) + ", " + str(work_group_count[0]) + " were given")
@@ -38,7 +39,7 @@ class ComputeProgram(GPUProgram):
 		if work_group_count[2] > max_work_group_count[2]:
 			raise ValueError("z-dimension work group size should not be greater than " + str(max_work_group_count[2]) + ", " + str(work_group_count[2]) + " were given")
 
-	def compile(self, file_name):
+	def compile(self, file_name:str)->None:
 		self.compute_shader = ComputeShader.load(file_name)
 
 		self._work_group_size = self.compute_shader.work_group_side
@@ -51,7 +52,7 @@ class ComputeProgram(GPUProgram):
 
 		self._is_linked = False
 
-	def _apply(self):
+	def _apply(self)->None:
 		if not self._linked_but_not_applied:
 			return
 		
@@ -82,7 +83,7 @@ class ComputeProgram(GPUProgram):
 
 		self._linked_but_not_applied = True
 
-	def _link(self):
+	def _link(self)->None:
 		if self._is_linked:
 			return
 
@@ -98,24 +99,24 @@ class ComputeProgram(GPUProgram):
 		if GL.glCreateProgram:
 			self._apply()
 
-	def start_computing(self, x_work_group_count:int, y_work_group_count:int=1, z_work_group_count:int=1):
+	def start_computing(self, x_work_group_count:int, y_work_group_count:int=1, z_work_group_count:int=1)->None:
 		ComputeProgram._check_work_group_count((x_work_group_count, y_work_group_count, z_work_group_count))
 		self.use()
 		GL.glDispatchCompute(x_work_group_count, y_work_group_count, z_work_group_count)
 		self._should_join = True
 
-	def join(self, barrier_type=GL.GL_ALL_BARRIER_BITS):
+	def join(self, barrier_type=GL.GL_ALL_BARRIER_BITS)->None:
 		if self._should_join:
 			GL.glMemoryBarrier(barrier_type)
 			self._should_join = False
 
-	def compute(self, x_work_group_count:int, y_work_group_count:int=1, z_work_group_count:int=1, barrier=GL.GL_ALL_BARRIER_BITS):
+	def compute(self, x_work_group_count:int, y_work_group_count:int=1, z_work_group_count:int=1, barrier=GL.GL_ALL_BARRIER_BITS)->None:
 		self.start_computing(x_work_group_count, y_work_group_count, z_work_group_count)
 		self.join(barrier)
 
 	@property
-	def work_group_size(self):
+	def work_group_size(self)->tuple[int]:
 		return self._work_group_size
 
-	def _get_compiled_files(self):
+	def _get_compiled_files(self)->list[str]:
 		return [self.compute_shader._file_name]

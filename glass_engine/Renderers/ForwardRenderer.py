@@ -2,7 +2,7 @@ from .CommonRenderer import CommonRenderer
 
 from ..Frame import Frame
 
-from glass import ShaderProgram, GLConfig, sampler2D, FBO, RBO, sampler2DMS
+from glass import ShaderProgram, GLConfig, sampler2D, FBO, RBO, sampler2DMS, GLInfo
 # from glass.utils import profiler
 
 from OpenGL import GL
@@ -21,26 +21,24 @@ class ForwardRenderer(CommonRenderer):
             screen.samples = 4
 
     def draw_opaque(self):
-        self._transparent_meshes.clear()
+        if not self._opaque_meshes and \
+           not self._opaque_lines and \
+           not self._opaque_points:
+            return
+
         with GLConfig.LocalConfig(depth_test=True, blend=False):
             with self.OIT_fbo:
                 GLConfig.clear_buffers()
 
-                # 绘制实体
-                self.forward_program["camera"] = self.camera
-                self.forward_program["is_opaque_pass"] = True
-                self.forward_program["SSAO_map"] = self._SSAO_map
-                self.forward_program["use_skybox_map"] = self.scene.skybox.is_completed
-                self.forward_program["skybox_map"] = self.scene.skybox.skybox_map
-                self.forward_program["use_skydome_map"] = self.scene.skydome.is_completed
-                self.forward_program["skydome_map"] = self.scene.skydome.skydome_map
-                self.forward_program["fog"] = self.scene.fog
-                for mesh, instances in self.scene.all_meshes.items():
-                    if mesh.has_opaque:
+                if self._opaque_meshes:
+                    self.prepare_forward_draw_mesh(True)
+                    for mesh, instances in self._opaque_meshes:
                         self.forward_draw_mesh(mesh, instances)
 
-                    if mesh.has_transparent:
-                        self._transparent_meshes[mesh] = instances
+                if self._opaque_points:
+                    self.prepare_forward_draw_points(True)
+                    for mesh, instances in self._opaque_points:
+                        self.forward_draw_points(mesh, instances)
 
                 # 绘制天空盒
                 if self.scene.skybox.is_completed:
@@ -105,7 +103,6 @@ class ForwardRenderer(CommonRenderer):
                         if not mesh.is_filled:
                             continue
 
-                        self.draw_to_ssao_gbuffer_program["is_filled"] = True
                         self.draw_to_ssao_gbuffer_program["material"] = mesh.material
                         self.draw_to_ssao_gbuffer_program["back_material"] = mesh._back_material
                         self.draw_to_ssao_gbuffer_program["explode_distance"] = mesh.explode_distance
@@ -132,6 +129,7 @@ class ForwardRenderer(CommonRenderer):
     def render(self):
         # profiler.enable()
         self._should_update = False
+        self.classify_meshes()
         self.update_dir_lights_depth()
         self.update_point_lights_depth()
         self.update_spot_lights_depth()

@@ -11,6 +11,7 @@ class SphericalHarmonics(SphericalFSurf):
 
     @checktype
     def __init__(self, n:int, m:int, surf_type=Mesh.SurfType.Smooth,
+                 lon_range=np.linspace(0, 2*np.pi, 100), lat_range=np.linspace(-np.pi/2, np.pi/2, 100),
                  color_map:ColorMap=None, back_color_map:ColorMap=None,
                  color:(glm.vec3,glm.vec4)=None, back_color:(glm.vec3,glm.vec4)=None,
                  name:str=""):
@@ -27,6 +28,7 @@ class SphericalHarmonics(SphericalFSurf):
                 return np.abs(SH_value.real)
 
         SphericalFSurf.__init__(self, SH, surf_type=surf_type,
+                      lon_range=lon_range, lat_range=lat_range,
                       color_map=color_map, back_color_map=back_color_map,
                       color=color, back_color=back_color,
                       name=name)

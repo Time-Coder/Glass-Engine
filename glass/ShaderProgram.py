@@ -68,6 +68,8 @@ class ShaderProgram(GPUProgram):
         elif shader_type == GL.GL_GEOMETRY_SHADER:
             shader = GeometryShader.load(file_name, include_paths=self._include_paths)
             self.geometry_shader = shader
+            if shader.geometry_in in GLInfo.primitive_type_map:
+                self._acceptable_primitives = GLInfo.primitive_type_map[shader.geometry_in]
         elif shader_type == GL.GL_TESS_CONTROL_SHADER:
             shader = TessControlShader.load(file_name, include_paths=self._include_paths)
             self.tess_ctrl_shader = shader
@@ -145,6 +147,7 @@ class ShaderProgram(GPUProgram):
 
         meta_info = {}
         meta_info["attributes_info"] = self._attributes_info
+        meta_info["acceptable_primitives"] = self._acceptable_primitives
         meta_info["uniforms_info"] = self._uniforms_info
         meta_info["uniform_blocks_info"] = self._uniform_blocks_info
         meta_info["shader_storage_blocks_info"] = self._shader_storage_blocks_info
@@ -240,6 +243,7 @@ class ShaderProgram(GPUProgram):
            max_compiled_time < meta_mtime:
             meta_info = load_var(self._meta_file_name)
             self._attributes_info = meta_info["attributes_info"]
+            self._acceptable_primitives= meta_info["acceptable_primitives"]
             self._uniforms_info = meta_info["uniforms_info"]
             self._uniform_blocks_info = meta_info["uniform_blocks_info"]
             self._shader_storage_blocks_info = meta_info["shader_storage_blocks_info"]
@@ -444,7 +448,7 @@ class ShaderProgram(GPUProgram):
                 if GlassConfig.warning:
                     warnings.warn(warning_message, category=RuntimeWarning)
 
-    def __preprocess_before_draw(self, vertices, indices, instances, start_index, total, times, is_patch):
+    def __preprocess_before_draw(self, primitive, vertices, indices, instances, start_index, total, times, is_patch):
         if GlassConfig.debug:
             if is_patch:
                 if not self.tess_ctrl_shader.is_compiled:
@@ -456,13 +460,18 @@ class ShaderProgram(GPUProgram):
                 if self.tess_ctrl_shader.is_compiled:
                     raise RuntimeError("shader program with a tessilation shader can only use draw_patches")
         
+            if primitive is not None and \
+               self._acceptable_primitives and \
+               primitive not in self._acceptable_primitives:
+                raise RuntimeError(f"geometry shader {self.geometry_shader.file_name}\nonly accept: {self._acceptable_primitives}, but {primitive.__repr__()} was given")
+
         if indices is None:
             total = self.__check_vertices(vertices, start_index, total)
         else:
             total = self.__check_indices(indices, total)
 
         if times is None and instances is not None:
-            times = int(len(instances) / instances.divisor)
+            times = len(instances) // instances.divisor
 
         self.use()
         self.__update_uniforms()
@@ -499,7 +508,7 @@ class ShaderProgram(GPUProgram):
           start_index:int=0, total:int=None, times:int=None):
 
         total, times = self.__preprocess_before_draw(
-            vertices, indices, instances,
+            None, vertices, indices, instances,
             start_index, total, times, True)
         
         if (total is not None and total <= 0) or \
@@ -524,11 +533,11 @@ class ShaderProgram(GPUProgram):
 
     def draw_triangles(self,
             vertices:Vertices=None, indices:Indices=None, instances:Instances=None,
-            element_type:GLInfo.triangle_types=GL.GL_TRIANGLES,
+            primitive:GLInfo.triangle_types=GL.GL_TRIANGLES,
             start_index:int=0, total:int=None, times:int=None):
 
         total, times = self.__preprocess_before_draw(
-            vertices, indices, instances,
+            primitive, vertices, indices, instances,
             start_index, total, times, False)
         
         if (total is not None and total <= 0) or \
@@ -538,21 +547,21 @@ class ShaderProgram(GPUProgram):
         self.use()
         if indices is not None:
             if times is None:
-                GL.glDrawElements(element_type, total, GL.GL_UNSIGNED_INT, None)
+                GL.glDrawElements(primitive, total, GL.GL_UNSIGNED_INT, None)
             else:
-                GL.glDrawElementsInstanced(element_type, total, GL.GL_UNSIGNED_INT, None, times)
+                GL.glDrawElementsInstanced(primitive, total, GL.GL_UNSIGNED_INT, None, times)
         else:
             if times is None:
-                GL.glDrawArrays(element_type, start_index, total)
+                GL.glDrawArrays(primitive, start_index, total)
             else:
-                GL.glDrawArraysInstanced(element_type, start_index, total, times)
+                GL.glDrawArraysInstanced(primitive, start_index, total, times)
 
     def draw_points(self,
         vertices:Vertices=None, instances:Instances=None,
         start_index:int=0, total:int=None, times:int=None):
 
         total, times = self.__preprocess_before_draw(
-            vertices, None, instances,
+            GL.GL_POINTS, vertices, None, instances,
             start_index, total, times, False)
         
         if (total is not None and total <= 0) or \
@@ -569,11 +578,11 @@ class ShaderProgram(GPUProgram):
 
     def draw_lines(self,
         vertices:Vertices=None, indices:Indices=None, instances:Instances=None,
-        element_type:GLInfo.line_types=GL.GL_LINE_STRIP,
+        primitive:GLInfo.line_types=GL.GL_LINE_STRIP,
         start_index:int=0, total:int=None, times:int=None):
 
         total, times = self.__preprocess_before_draw(
-            vertices, indices, instances,
+            primitive, vertices, indices, instances,
             start_index, total, times, False)
         
         if (total is not None and total <= 0) or \
@@ -583,14 +592,14 @@ class ShaderProgram(GPUProgram):
         self.use()
         if indices is not None:
             if times is None:
-                GL.glDrawElements(element_type, total, GL.GL_UNSIGNED_INT, None)
+                GL.glDrawElements(primitive, total, GL.GL_UNSIGNED_INT, None)
             else:
-                GL.glDrawElementsInstanced(element_type, total, GL.GL_UNSIGNED_INT, None, times)
+                GL.glDrawElementsInstanced(primitive, total, GL.GL_UNSIGNED_INT, None, times)
         else:
             if times is None:
-                GL.glDrawArrays(element_type, start_index, total)
+                GL.glDrawArrays(primitive, start_index, total)
             else:
-                GL.glDrawArraysInstanced(element_type, start_index, total, times)
+                GL.glDrawArraysInstanced(primitive, start_index, total, times)
 
     def _get_compiled_files(self):
         result = []

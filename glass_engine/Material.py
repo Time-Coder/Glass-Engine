@@ -268,7 +268,6 @@ class Material:
         return self.__shading_model
     
     @shading_model.setter
-    @param_setter
     def shading_model(self, shading_model:ShadingModel):
         self.__shading_model = shading_model
 

@@ -27,8 +27,7 @@ class sampler2D(FBOAttachment):
     _default_filter_mipmap = GL.GL_LINEAR
 
     _sampler2D_map = {}
-    _unknown_shadertoy_samplers = WeakSet()
-    _dynamic_shadertoy_samplers = WeakSet()
+    _should_update = False
     __shadertoy_template_content = ""
     __shadertoy_template_filename = os.path.dirname(os.path.abspath(__file__)) + "/glsl/shadertoy_template.glsl"
 
@@ -117,30 +116,15 @@ class sampler2D(FBOAttachment):
         return result
 
     def __del__(self):
-        if self in sampler2D._dynamic_shadertoy_samplers:
-            sampler2D._dynamic_shadertoy_samplers.remove(self)
-
-        if self in sampler2D._unknown_shadertoy_samplers:
-            sampler2D._unknown_shadertoy_samplers.remove(self)
-
         if self._handle != 0:
             # bt.glMakeTextureHandleNonResidentARB(self._handle)
             self._handle = 0
 
         FBOAttachment.__del__(self)
 
-    @staticmethod
-    def should_update()->bool:
-        return bool(sampler2D._dynamic_shadertoy_samplers)
-
     @property
-    def is_shadertoy(self):
-        return (self in sampler2D._unknown_shadertoy_samplers or \
-                self in sampler2D._dynamic_shadertoy_samplers)
-    
-    @property
-    def is_dynamic_shadertoy(self):
-        return (self in sampler2D._dynamic_shadertoy_samplers)
+    def is_shadertoy(self)->bool:
+        return bool(self._shadertoy_path)
 
     @classmethod
     def load(cls, file_name:str, internal_format:GLInfo.internal_formats=None):
@@ -441,11 +425,6 @@ class sampler2D(FBOAttachment):
             channels = self._image.shape[2] if len(self._image.shape) > 2 else 1
             self._internal_format = GLInfo.internal_formats_map[self._image.dtype][channels]
             self._image_changed = True
-            if self in sampler2D._unknown_shadertoy_samplers:
-                sampler2D._unknown_shadertoy_samplers.remove(self)
-
-            if self in sampler2D._dynamic_shadertoy_samplers:
-                sampler2D._dynamic_shadertoy_samplers.remove(self)
         else:
             self.__init_shadertoy(image)
 
@@ -495,11 +474,6 @@ class sampler2D(FBOAttachment):
         if self._height == 0:
             self._height = 800
 
-        if self in sampler2D._dynamic_shadertoy_samplers:
-            sampler2D._dynamic_shadertoy_samplers.remove(self)
-
-        sampler2D._unknown_shadertoy_samplers.add(self)
-
         self._shadertoy_path = shader_path
         if not os.path.isfile(shader_path):
             raise FileNotFoundError(shader_path)
@@ -529,21 +503,6 @@ class sampler2D(FBOAttachment):
         rel_path = relative_path(file_name, GlassConfig.cache_folder)
         return sampler2D.__shadertoy_template_content.replace("{file_name}", rel_path)
 
-    def __remove_from_unknown(self):
-        if self not in sampler2D._unknown_shadertoy_samplers:
-            return
-        
-        is_dynamic = (self._shadertoy_program["iTime"].location != -1 or \
-                    self._shadertoy_program["iTimeDelta"].location != -1 or \
-                    self._shadertoy_program["iFrameRate"].location != -1 or \
-                    self._shadertoy_program["iFrame"].location != -1 or \
-                    self._shadertoy_program["iChannelTime"].location != -1 or \
-                    self._shadertoy_program["iDate"].location != -1)
-        if is_dynamic:
-            sampler2D._dynamic_shadertoy_samplers.add(self)
-
-        sampler2D._unknown_shadertoy_samplers.remove(self)
-
     @property
     def _frame_vertices(self):
         if self.__frame_vertices is None:
@@ -567,7 +526,14 @@ class sampler2D(FBOAttachment):
     def __update_shadertoy(self):
         self._should_update_shadertoy = False
 
-        self.__remove_from_unknown()
+        is_dynamic = (self._shadertoy_program["iTime"].location != -1 or \
+                      self._shadertoy_program["iTimeDelta"].location != -1 or \
+                      self._shadertoy_program["iFrameRate"].location != -1 or \
+                      self._shadertoy_program["iFrame"].location != -1 or \
+                      self._shadertoy_program["iChannelTime"].location != -1 or \
+                      self._shadertoy_program["iDate"].location != -1)
+        if is_dynamic:
+            sampler2D._should_update = True
 
         current_time = time.time()
         now = datetime.now()

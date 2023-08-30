@@ -3,6 +3,7 @@
 
 #include "Material.glsl"
 #include "math.glsl"
+#include "ShadingInfo.glsl"
 
 void parallax_mapping(sampler2D height_map, float height_scale, mat3 view_TBN, inout vec3 view_pos, inout vec2 frag_tex_coord)
 {
@@ -82,9 +83,15 @@ void parallax_mapping(sampler2D height_map, float height_scale, mat3 view_TBN, i
     view_pos = view_pos + middle_d*view_dir;
 }
 
-void change_geometry(Material material, inout vec3 view_pos, inout vec3 view_normal,
-                     inout vec2 frag_tex_coord, mat3 view_TBN)
+void change_geometry(Material material, vec2 tex_coord, inout mat3 view_TBN, inout vec3 view_pos)
 {
+    // 正反面法向量翻转
+    view_TBN[2] = normalize(view_TBN[2]);
+    if (!gl_FrontFacing)
+    {
+        view_TBN[2] = -view_TBN[2];
+    }
+
     if (hasnan(view_TBN))
     {
         return;
@@ -95,27 +102,24 @@ void change_geometry(Material material, inout vec3 view_pos, inout vec3 view_nor
     {
         parallax_mapping(
             material.height_map, material.height_scale, view_TBN,
-            view_pos, frag_tex_coord);
+            view_pos, tex_coord);
     }
 
     // 法向量贴图
     if (material.use_normal_map)
     {
-        vec3 normal_in_tbn = 2*texture(material.normal_map, frag_tex_coord).rgb-1;
+        vec3 normal_in_tbn = 2*texture(material.normal_map, tex_coord).rgb-1;
         float len_normal = length(normal_in_tbn);
         if (len_normal < 1E-6) normal_in_tbn = vec3(0, 0, 0);
         else normal_in_tbn /= len_normal;
         
-        vec3 view_tangent = view_TBN[0];
-        view_tangent = material.height_scale/0.05 * view_tangent/dot(view_tangent, view_tangent);
+        view_TBN[0] = material.height_scale/0.05 * view_TBN[0]/dot(view_TBN[0], view_TBN[0]);
+        view_TBN[1] = material.height_scale/0.05 * view_TBN[1]/dot(view_TBN[1], view_TBN[1]);
+        view_TBN[2] = view_TBN * normal_in_tbn;
 
-        vec3 view_bitangent = view_TBN[1];
-        view_bitangent = material.height_scale/0.05 * view_bitangent/dot(view_bitangent, view_bitangent);
-
-        view_normal = mat3(view_tangent, view_bitangent, view_normal) * normal_in_tbn;
-        len_normal = length(view_normal);
-        if (len_normal < 1E-6) view_normal = vec3(0, 0, 0);
-        else view_normal /= len_normal;
+        len_normal = length(view_TBN[2]);
+        if (len_normal < 1E-6) view_TBN[2] = vec3(0, 0, 0);
+        else view_TBN[2] /= len_normal;
     }
 }
 

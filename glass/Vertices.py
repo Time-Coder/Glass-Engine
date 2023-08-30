@@ -138,79 +138,56 @@ class Vertices:
     def draw_type(self, value:GLInfo.draw_types):
         self._draw_type = value
 
-    def _first_apply(self, program, instances):
+    def _first_apply(self, program, instances)->bool:
         current_context = GLConfig.buffered_current_context
         if (current_context, program, instances) in self._program_vao_map or not self:
             return False
 
         vao = VAO()
         self._program_vao_map[current_context, program, instances] = vao
-        self._apply_increment(instances)
-        
-        for key, attr_list in self._attr_list_map.items():
-            if key in program._attributes_info:
-                feed_type = attr_list.dtype
-                if GlassConfig.debug:
-                    need_type = program._attributes_info[key]["python_type"]
-                    if feed_type != need_type:
-                        error_message = f"vertex attribute '{key}' need type {need_type}, {feed_type} value were given"
-                        raise TypeError(error_message)
-                
-                location = program._attributes_info[key]["location"]
-                vao[location].interp(attr_list.vbo, feed_type, attr_list.stride, 0)
+        return self._apply_increment(instances)
 
-        if instances is not None:
-            for key, attr_list in instances._attr_list_map.items():
-                if key in program._attributes_info:
-                    feed_type = attr_list.dtype
-                    need_type = program._attributes_info[key]["python_type"]
-                    if feed_type != need_type:
-                        if feed_type in GLInfo.primary_types and need_type in GLInfo.primary_types:
-                            attr_list.dtype = need_type
-                            feed_type = need_type
-                        elif feed_type == int and need_type == glm.uvec2:
-                            attr_list.dtype = np.uint64
-                            feed_type = glm.uvec2
-                        elif feed_type in (np.uint64, dtype_uint64) and need_type == glm.uvec2:
-                            feed_type = glm.uvec2
-                        else:
-                            error_message = f"vertex attribute '{key}' need type {need_type}, {feed_type} value were given"
-                            raise TypeError(error_message)
-                    
-                    location = program._attributes_info[key]["location"]
-                    vao[location].interp(attr_list.vbo, feed_type, attr_list.stride, 0)
-                    vao[location].divisor = instances.divisor
-
-        return True
-
-    def _apply_increment(self, instances):
-        for key, attr_list in self._attr_list_map.items():
-            attr_list._apply()
-            if not attr_list.is_new_vbo:
+    def _update_VAOs(self, key, attr_list, divisor=None):
+        for (context, program, insts), vao in self.vao_map.items():
+            if key not in program._attributes_info:
                 continue
 
-            for (context, program, insts), vao in self.vao_map.items():
-                if key not in program._attributes_info:
-                    continue
+            location = program._attributes_info[key]["location"]
+            if location in vao and not attr_list.is_new_vbo:
+                continue
 
-                location = program._attributes_info[key]["location"]
-                vao[location].interp(attr_list.vbo, attr_list.dtype, attr_list.stride, 0)
+            feed_type = attr_list.dtype
+            need_type = program._attributes_info[key]["python_type"]
+            if feed_type != need_type:
+                if feed_type in GLInfo.primary_types and need_type in GLInfo.primary_types:
+                    attr_list.dtype = need_type
+                    feed_type = need_type
+                elif feed_type == int and need_type == glm.uvec2:
+                    attr_list.dtype = np.uint64
+                    feed_type = glm.uvec2
+                elif feed_type in (np.uint64, dtype_uint64) and need_type == glm.uvec2:
+                    feed_type = glm.uvec2
+                else:
+                    error_message = f"vertex attribute '{key}' need type {need_type}, {feed_type} value were given"
+                    raise TypeError(error_message)
+            
+            vao[location].interp(attr_list.vbo, feed_type, attr_list.stride, 0)
+            if divisor is not None:
+                vao[location].divisor = divisor
+
+    def _apply_increment(self, instances)->bool:
+        for key, attr_list in self._attr_list_map.items():
+            attr_list._apply()
+            self._update_VAOs(key, attr_list)
 
         if instances is None:
-            return
+            return True
         
         for key, attr_list in instances._attr_list_map.items():
             attr_list._apply()
-            if not attr_list.is_new_vbo:
-                continue
+            self._update_VAOs(key, attr_list, instances.divisor)
 
-            for (context, program, insts), vao in self.vao_map.items():
-                if key not in program._attributes_info:
-                    continue
-
-                location = program._attributes_info[key]["location"]
-                vao[location].interp(attr_list.vbo, attr_list.dtype, attr_list.stride, 0)
-                vao[location].divisor = instances.divisor
+        return True
 
     def _apply(self, program, instances):
         success = False
@@ -218,8 +195,7 @@ class Vertices:
         if (current_context, program, instances) not in self._program_vao_map:
             success = self._first_apply(program, instances)
         else:
-            self._apply_increment(instances)
-            success = True
+            success = self._apply_increment(instances)
 
         if success:
             self._program_vao_map[current_context, program, instances].bind()

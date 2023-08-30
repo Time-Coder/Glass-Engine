@@ -23,104 +23,49 @@ buffer SpotLights
     SpotLight spot_lights[];
 };
 
-#define GET_ONE_LIGHT_SPECULAR(light, internal_material, camera, view_dir, frag_pos, frag_normal) \
-(\
-    internal_material.shading_model == SHADING_MODEL_PHONG ? \
-        Phong_specular(\
-            light, internal_material, camera,\
-            view_dir, frag_pos, frag_normal\
-        ) : (\
-    internal_material.shading_model == SHADING_MODEL_PHONG_BLINN ? \
-        PhongBlinn_specular(\
-            light, internal_material, camera,\
-            view_dir, frag_pos, frag_normal\
-        ) : vec3(0))\
-)
-
-#define FRAG_LIGHTING_ONE(light, internal_material, camera_pos, CSM_camera, frag_pos, frag_normal) \
-(\
-    internal_material.shading_model == SHADING_MODEL_PHONG ? \
-        Phong_lighting(\
-            light, internal_material,\
-            camera_pos, CSM_camera, frag_pos, frag_normal\
-        ) : (\
-    internal_material.shading_model == SHADING_MODEL_PHONG_BLINN ? \
-        PhongBlinn_lighting(\
-            light, internal_material,\
-            camera_pos, CSM_camera, frag_pos, frag_normal\
-        ) : (\
-    internal_material.shading_model == SHADING_MODEL_TOON ? \
-        Toon_lighting(\
-            light, internal_material,\
-            camera_pos, CSM_camera, frag_pos, frag_normal\
-        ) : (\
-    internal_material.shading_model == SHADING_MODEL_OREN_NAYAR ? \
-        OrenNayar_lighting(\
-            light, internal_material,\
-            camera_pos, CSM_camera, frag_pos, frag_normal\
-        ) : (\
-    internal_material.shading_model == SHADING_MODEL_MINNAERT ? \
-        Minnaert_lighting(\
-            light, internal_material,\
-            camera_pos, CSM_camera, frag_pos, frag_normal\
-        ) : (\
-    internal_material.shading_model == SHADING_MODEL_FRESNEL ? \
-        Fresnel_lighting(\
-            light, internal_material,\
-            camera_pos, CSM_camera, frag_pos, frag_normal\
-        ) : (\
-    (internal_material.shading_model == SHADING_MODEL_COOK_TORRANCE || \
-     internal_material.shading_model == SHADING_MODEL_PBR) ? \
-        CookTorrance_lighting(\
-            light, internal_material,\
-            camera_pos, CSM_camera, frag_pos, frag_normal\
-        ) : vec3(0, 0, 0)\
-    ))))))\
-)
-
-vec3 GET_AMBIENT_DIFFUSE_FACTOR(bool recv_shadows, Camera camera, vec3 frag_pos, vec3 frag_normal)
+vec3 get_ambient_diffuse(bool recv_shadows, Camera CSM_camera, vec3 frag_pos, vec3 frag_normal)
 {
     vec3 factor = vec3(0.2);
 
     // 点光源
     for(int i = 0; i < n_point_lights; i++)
     {
-        factor += ambient_diffuse_factor(point_lights[i], recv_shadows, frag_pos, frag_normal);
+        factor += get_ambient_diffuse(point_lights[i], recv_shadows, frag_pos, frag_normal);
     }
 
     // 平行光
     for(int i = 0; i < n_dir_lights; i++)
     {
-        factor += ambient_diffuse_factor(dir_lights[i], recv_shadows, camera, frag_pos, frag_normal);
+        factor += get_ambient_diffuse(dir_lights[i], recv_shadows, CSM_camera, frag_pos, frag_normal);
     }
 
     // 聚光
     for(int i = 0; i < n_spot_lights; i++)
     {
-        factor += ambient_diffuse_factor(spot_lights[i], recv_shadows, frag_pos, frag_normal);
+        factor += get_ambient_diffuse(spot_lights[i], recv_shadows, frag_pos, frag_normal);
     }
 
     return soft_min(2*factor, vec3(1,1,1), 0.1);
 }
 
-vec3 GET_SPECULAR(InternalMaterial internal_material, Camera camera, vec3 view_dir, vec3 frag_pos, vec3 frag_normal)
+vec3 get_specular(InternalMaterial internal_material, Camera CSM_camera, vec3 view_dir, vec3 frag_pos, vec3 frag_normal)
 {
     vec3 specular_color = vec3(0);
-
-    // 点光源
-    for(int i = 0; i < n_point_lights; i++)
-    {
-        specular_color += GET_ONE_LIGHT_SPECULAR(
-            point_lights[i], internal_material, camera,
-            view_dir, frag_pos, frag_normal
-        );
-    }
 
     // 平行光
     for(int i = 0; i < n_dir_lights; i++)
     {
-        specular_color += GET_ONE_LIGHT_SPECULAR(
-            dir_lights[i], internal_material, camera,
+        specular_color += get_specular(
+            dir_lights[i], internal_material, CSM_camera,
+            view_dir, frag_pos, frag_normal
+        );
+    }
+
+    // 点光源
+    for(int i = 0; i < n_point_lights; i++)
+    {
+        specular_color += get_specular(
+            point_lights[i], internal_material,
             view_dir, frag_pos, frag_normal
         );
     }
@@ -128,8 +73,8 @@ vec3 GET_SPECULAR(InternalMaterial internal_material, Camera camera, vec3 view_d
     // 聚光
     for(int i = 0; i < n_spot_lights; i++)
     {
-        specular_color += GET_ONE_LIGHT_SPECULAR(
-            spot_lights[i], internal_material, camera,
+        specular_color += get_specular(
+            spot_lights[i], internal_material,
             view_dir, frag_pos, frag_normal
         );
     }
@@ -137,24 +82,24 @@ vec3 GET_SPECULAR(InternalMaterial internal_material, Camera camera, vec3 view_d
     return 3*specular_color;
 }
 
-vec3 FRAG_LIGHTING(InternalMaterial internal_material, Camera CSM_camera, vec3 camera_pos, vec3 frag_pos, vec3 frag_normal)
+vec3 lighting(InternalMaterial internal_material, Camera CSM_camera, vec3 camera_pos, vec3 frag_pos, vec3 frag_normal)
 {
     vec3 out_color3 = internal_material.ambient;
-
-    // 点光源
-    for(int i = 0; i < n_point_lights; i++)
-    {
-        out_color3 += FRAG_LIGHTING_ONE(
-            point_lights[i], internal_material, CSM_camera,
-            camera_pos, frag_pos, frag_normal
-        );
-    }
 
     // 平行光
     for(int i = 0; i < n_dir_lights; i++)
     {
-        out_color3 += FRAG_LIGHTING_ONE(
+        out_color3 += lighting(
             dir_lights[i], internal_material, CSM_camera,
+            camera_pos, frag_pos, frag_normal
+        );
+    }
+
+    // 点光源
+    for(int i = 0; i < n_point_lights; i++)
+    {
+        out_color3 += lighting(
+            point_lights[i], internal_material,
             camera_pos, frag_pos, frag_normal
         );
     }
@@ -162,45 +107,13 @@ vec3 FRAG_LIGHTING(InternalMaterial internal_material, Camera CSM_camera, vec3 c
     // 聚光
     for(int i = 0; i < n_spot_lights; i++)
     {
-        out_color3 += FRAG_LIGHTING_ONE(
-            spot_lights[i], internal_material, CSM_camera,
+        out_color3 += lighting(
+            spot_lights[i], internal_material,
             camera_pos, frag_pos, frag_normal
         );
     }
 
     return out_color3;
-}
-
-#undef FRAG_LIGHTING_ONE
-
-#define FLAT_LIGHTING(out_color3, internal_material, CSM_camera, camera_pos, face_pos, face_normal) \
-out_color3 = internal_material.ambient;\
-for(int j = 0; j < n_point_lights; j++)\
-{\
-    out_color3 += Flat_lighting(point_lights[j], internal_material, CSM_camera, camera_pos, face_pos, face_normal);\
-}\
-for(int j = 0; j < n_dir_lights; j++)\
-{\
-    out_color3 += Flat_lighting(dir_lights[j], internal_material, CSM_camera, camera_pos, face_pos, face_normal);\
-}\
-for(int j = 0; j < n_spot_lights; j++)\
-{\
-    out_color3 += Flat_lighting(spot_lights[j], internal_material, CSM_camera, camera_pos, face_pos, face_normal);\
-}
-
-#define GOURAUD_LIGHTING(out_color3, internal_material, CSM_camera, camera_pos, vertex_pos, vertex_normal) \
-out_color3 = internal_material.ambient;\
-for(int j = 0; j < n_point_lights; j++)\
-{\
-    out_color3 += Gouraud_lighting(point_lights[j], internal_material, CSM_camera, camera_pos, vertex_pos, vertex_normal);\
-}\
-for(int j = 0; j < n_dir_lights; j++)\
-{\
-    out_color3 += Gouraud_lighting(dir_lights[j], internal_material, CSM_camera, camera_pos, vertex_pos, vertex_normal);\
-}\
-for(int j = 0; j < n_spot_lights; j++)\
-{\
-    out_color3 += Gouraud_lighting(spot_lights[j], internal_material, CSM_camera, camera_pos, vertex_pos, vertex_normal);\
 }
 
 #endif

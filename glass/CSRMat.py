@@ -1,5 +1,6 @@
 class CSRMat:
-    def __init__(self, rows, cols=None, eye=False):
+
+    def __init__(self, rows:int, cols:int|None=None, eye:bool=False)->None:
         if cols is None:
             cols = rows
 
@@ -20,7 +21,7 @@ class CSRMat:
             self.row_indices = []
             self.data = []
 
-    def __getitem__(self, ij):
+    def __getitem__(self, ij:tuple[int])->object:
         i, j = ij
         
         start_index = self.indptr[i]
@@ -32,7 +33,7 @@ class CSRMat:
         except:
             return 0
         
-    def __setitem__(self, ij, value):
+    def __setitem__(self, ij:tuple[int], value:object)->None:
         if value == 0:
             self.__delitem__(ij)
             return
@@ -52,7 +53,7 @@ class CSRMat:
             for k in range(i+1, len(self.indptr)):
                 self.indptr[k] += 1
 
-    def __delitem__(self, ij):
+    def __delitem__(self, ij:tuple[int])->None:
         i, j = ij
 
         if i < 0 or i >= self.rows:
@@ -75,14 +76,14 @@ class CSRMat:
             pass
 
     @property
-    def rows(self):
+    def rows(self)->int:
         return self.indptr.__len__() - 1
     
     @property
-    def cols(self):
+    def cols(self)->int:
         return self._cols
     
-    def __repr__(self):
+    def __repr__(self)->str:
         result = ''
         rows = self.rows
         cols = self.cols
@@ -95,15 +96,15 @@ class CSRMat:
                 result += "\n"
         return result
     
-    def insert_row(self, i, n=1):
-        for k in range(n):
+    def insert_row(self, i:int, n:int=1)->None:
+        for _ in range(n):
             self.indptr.insert(i, self.indptr[i])
 
-    def append_row(self, n=1):
-        for k in range(n):
+    def append_row(self, n:int=1)->None:
+        for _ in range(n):
             self.indptr.insert(self.rows, self.indptr[self.rows])
 
-    def reset_row(self, row_start, row_end=None):
+    def reset_row(self, row_start:int, row_end:int|None=None)->None:
         if row_end is None:
             row_end = row_start + 1
 
@@ -119,7 +120,7 @@ class CSRMat:
         for it in range(row_end, len(self.indptr)):
             self.indptr[it] -= delta
 
-    def remove_row(self, row_start, row_end=None):
+    def remove_row(self, row_start:int, row_end:int|None=None)->None:
         if row_end is None:
             row_end = row_start + 1
 

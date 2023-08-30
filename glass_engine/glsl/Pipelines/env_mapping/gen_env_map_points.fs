@@ -10,12 +10,10 @@ in GeometryOut
     mat3 view_TBN;
     vec3 tex_coord;
     vec4 color;
-    vec4 back_color;
     flat bool visible;
 } fs_in;
 
 in vec3 preshading_color;
-in vec3 preshading_back_color;
 in flat uvec2 env_map_handle;
 in vec4 NDC;
 
@@ -32,10 +30,8 @@ layout(location=2) out float reveal;
 uniform vec3 view_center;
 uniform vec3 mesh_center;
 uniform Material material;
-uniform Material back_material;
 uniform sampler2D SSAO_map;
 uniform bool is_opaque_pass;
-uniform bool is_sphere;
 uniform Camera CSM_camera;
 uniform Fog fog;
 uniform bool use_skybox_map;
@@ -52,9 +48,9 @@ void main()
 
     Camera camera = cube_camera(gl_Layer, view_center);
     ShadingInfo shading_info = ShadingInfo(
-        (gl_FrontFacing ? fs_in.color : fs_in.back_color),
-        (gl_FrontFacing ? preshading_color : preshading_back_color),
-        (gl_FrontFacing ? material : back_material),
+        fs_in.color,
+        preshading_color,
+        material,
         
         use_skybox_map,
         skybox_map,
@@ -64,7 +60,7 @@ void main()
         sampler2D(env_map_handle),
         SSAO_map,
         is_opaque_pass,
-        is_sphere,
+        false,
 
         fog,
         fs_in.view_TBN,

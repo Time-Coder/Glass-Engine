@@ -33,9 +33,11 @@ class Scene:
 
         self.__anything_changed = False
 
-    @checktype
-    def add(self, object:SceneNode):
-        self._root.add_child(object)
+    def add(self, scene_node:SceneNode)->None:
+        self._root.add_child(scene_node)
+
+    def remove(self, scene_node:SceneNode)->None:
+        self._root.remove_child(scene_node)
 
     @property
     def root(self):

@@ -3,12 +3,12 @@ from .Renderers.Renderer import Renderer
 from .Frame import Frame
 
 from glass import GLConfig, FBO, RBO, sampler2DMS, sampler2D, RenderHint, SSBO, UBO
-from glass.utils import checktype, extname, di
+from glass.utils import extname, di
 
 from PyQt6.QtOpenGLWidgets import QOpenGLWidget
-from PyQt6.QtGui import QMouseEvent, QKeyEvent, QCursor, QWheelEvent, QSurfaceFormat
+from PyQt6.QtGui import QMouseEvent, QKeyEvent, QCursor, QWheelEvent, QSurfaceFormat, QCloseEvent
 from PyQt6.QtCore import Qt, QPointF, QPoint, QTimerEvent, pyqtSignal, QSize
-from PyQt6.QtWidgets import QApplication
+from PyQt6.QtWidgets import QApplication, QWidget
 
 import queue
 import time
@@ -23,13 +23,12 @@ import math
 
 class SlideAverageFilter:
 
-    @checktype
-    def __init__(self, window_width:int=10):
+    def __init__(self, window_width:int=10)->None:
         self._current_sum = 0
         self._window_width = window_width
         self._data_list = []
 
-    def __call__(self, new_value):
+    def __call__(self, new_value:float|int)->float:
         if len(self._data_list) >= self._window_width:
             old_value = self._data_list.pop(0)
             self._current_sum -= old_value
@@ -40,15 +39,14 @@ class SlideAverageFilter:
         return self._current_sum / len(self._data_list)
     
     @property
-    def window_width(self):
+    def window_width(self)->int:
         return self._window_width
     
     @window_width.setter
-    @checktype
-    def window_width(self, window_width:int):
+    def window_width(self, window_width:int)->None:
         self._window_width = window_width
 
-def convert_to_image(data, viewport):
+def convert_to_image(data:np.ndarray, viewport:tuple[int])->np.ndarray:
     if viewport[0] != 0 or \
        viewport[1] != 0 or \
        viewport[2] != data.shape[1] or \
@@ -80,8 +78,8 @@ def convert_to_image(data, viewport):
     return image
 
 class VideoWriter:
-    def __init__(self, screen_video_writers, file_name:str, fourcc, viewport:tuple, fps:float):
-        self._screen_video_writers = screen_video_writers
+    def __init__(self, screen, file_name:str, fourcc:list[str], viewport:tuple[int], fps:float|int)->None:
+        self._screen_id = id(screen)
 
         self._cv_video_writer = cv2.VideoWriter(file_name, fourcc, fps, (viewport[2], viewport[3]))
         self._viewport = viewport
@@ -93,15 +91,15 @@ class VideoWriter:
         self._writing_thread = threading.Thread(target=self._writing_loop, daemon=True)
         self._writing_thread.start()
 
-    def __del__(self):
+    def __del__(self)->None:
         self.stop()
 
-    def stop(self):
+    def stop(self)->None:
         if math.isinf(self._stop_time):
             self._stop_time = time.time()
             self._frame_queue.put(None)
 
-    def _writing_loop(self):
+    def _writing_loop(self)->None:
         t = self._start_time
         while t < self._stop_time:
             frame = self._frame_queue.get()
@@ -127,7 +125,8 @@ class VideoWriter:
 
         self._cv_video_writer.release()
         try:
-            self._screen_video_writers.remove(self)
+            screen = di(self._screen_id)
+            screen._screen_video_writers.remove(self)
         except:
             pass
 
@@ -154,7 +153,7 @@ class Screen(QOpenGLWidget):
         instance = QOpenGLWidget.__new__(cls, *args, **kwargs)
         return instance
 
-    def __init__(self, camera, parent=None):
+    def __init__(self, camera, parent:QWidget|None=None)->None:
         QOpenGLWidget.__init__(self, parent)
 
         self.setFocusPolicy(Qt.FocusPolicy.StrongFocus)
@@ -185,25 +184,24 @@ class Screen(QOpenGLWidget):
         self._listen_cursor_timer = self.startTimer(10)
 
     @property
-    def background_color(self):
+    def background_color(self)->glm.vec4:
         return self._background_color
         
     @background_color.setter
-    @checktype
-    def background_color(self, color:(glm.vec4,glm.vec3)):
+    def background_color(self, color:glm.vec4|glm.vec3)->None:
         if isinstance(color, glm.vec3):
             color = glm.vec4(color, 1)
 
         self._background_color = color
 
-    def update(self):
+    def update(self)->None:
         self._before_filter_image = None
         QOpenGLWidget.update(self)
 
-    def _update(self):
+    def _update(self)->None:
         QOpenGLWidget.update(self)
 
-    def sizeHint(self):
+    def sizeHint(self)->QSize:
         return QSize(800, 600)
 
     @property
@@ -211,11 +209,11 @@ class Screen(QOpenGLWidget):
         return di(self._camera_id)
 
     @property
-    def samples(self):
+    def samples(self)->int:
         return self._samples
     
     @samples.setter
-    def samples(self, samples:int):
+    def samples(self, samples:int)->None:
         surface_format = QSurfaceFormat()
         surface_format.setSamples(samples)
         self.setFormat(surface_format)
@@ -224,11 +222,11 @@ class Screen(QOpenGLWidget):
             self._samples_set_by_user = True
 
     @property
-    def renderer(self):
+    def renderer(self)->Renderer:
         return self._renderer
     
     @renderer.setter
-    def renderer(self, renderer:Renderer):
+    def renderer(self, renderer:Renderer)->None:
         if self._renderer is renderer:
             return
         
@@ -247,7 +245,7 @@ class Screen(QOpenGLWidget):
             self.update()
 
     @property
-    def manipulator(self):
+    def manipulator(self)->Manipulator:
         return self._manipulator
     
     @manipulator.setter
@@ -270,18 +268,17 @@ class Screen(QOpenGLWidget):
             self.update()
 
     @property
-    def render_hint(self):
+    def render_hint(self)->RenderHint:
         return self.__render_hint
     
     @render_hint.setter
-    @checktype
-    def render_hint(self, hint:RenderHint):
+    def render_hint(self, hint:RenderHint)->None:
         if hint is None:
             hint = RenderHint()
 
         self.__render_hint = hint
 
-    def initializeGL(self):
+    def initializeGL(self)->None:
         self.makeCurrent()
 
         if self.camera.scene is None:
@@ -289,18 +286,18 @@ class Screen(QOpenGLWidget):
 
         self._is_gl_init = True
 
-    def makeCurrent(self):
+    def makeCurrent(self)->None:
         QOpenGLWidget.makeCurrent(self)
 
         GLConfig.buffered_current_context = GLConfig.current_context
         SSBO.makeCurrent()
         UBO.makeCurrent()
 
-    def resizeGL(self, width, height):
+    def resizeGL(self, width:int, height:int)->None:
         QOpenGLWidget.resizeGL(self, width, height)
         self._before_filter_image = None
 
-    def _draw_to_before_filter_image(self, should_update_scene):
+    def _draw_to_before_filter_image(self, should_update_scene:bool)->bool:
         if self._before_filter_image is None or should_update_scene:
             with self._before_filter_fbo:
                 clear_color = self.camera.scene.fog.apply(self.background_color, glm.vec3(0,0,0), glm.vec3(0,self.camera.far,0))
@@ -313,7 +310,9 @@ class Screen(QOpenGLWidget):
 
         return should_update_scene
 
-    def paintGL(self):
+    def paintGL(self)->None:
+        sampler2D._should_update = False
+
         self.makeCurrent()
         self.frame_started.emit()
 
@@ -339,14 +338,14 @@ class Screen(QOpenGLWidget):
         self.__calc_fps()
         self.frame_ended.emit()
 
-        if should_update_scene or should_update_filter:
+        if should_update_scene or should_update_filter or sampler2D._should_update:
             if should_update_scene:
                 self._before_filter_image = None
                 
             self._update()
 
     @property
-    def _before_filter_fbo(self):
+    def _before_filter_fbo(self)->FBO:
         screen_size = GLConfig.screen_size
         if self.samples > 1:
             if self.__before_filter_fbo_ms is not None:
@@ -366,7 +365,7 @@ class Screen(QOpenGLWidget):
             return self.__before_filter_fbo
         
     @staticmethod
-    def __mouse_parameters(mouse_event:QMouseEvent):
+    def __mouse_parameters(mouse_event:QMouseEvent)->tuple[Manipulator.MouseButton, glm.vec2, glm.vec2]:
         button = Manipulator.MouseButton(mouse_event.button().value)
         screen_pos = mouse_event.position()
         screen_pos = glm.vec2(screen_pos.x(), screen_pos.y())
@@ -375,7 +374,7 @@ class Screen(QOpenGLWidget):
         return button, screen_pos, global_pos
     
     @staticmethod
-    def __wheel_parameters(wheel_event:QWheelEvent):
+    def __wheel_parameters(wheel_event:QWheelEvent)->tuple[glm.vec2, glm.vec2, glm.vec2]:
         angle = glm.vec2(wheel_event.angleDelta().x(), wheel_event.angleDelta().y())
         screen_pos = wheel_event.position()
         screen_pos = glm.vec2(screen_pos.x(), screen_pos.y())
@@ -397,7 +396,7 @@ class Screen(QOpenGLWidget):
         if should_update:
             self.update()
 
-    def mouseReleaseEvent(self, mouse_event: QMouseEvent)->None:
+    def mouseReleaseEvent(self, mouse_event:QMouseEvent)->None:
         button, screen_pos, global_pos = Screen.__mouse_parameters(mouse_event)
 
         self.makeCurrent()
@@ -495,7 +494,7 @@ class Screen(QOpenGLWidget):
         if should_update:
             self.update()
     
-    def __calc_fps(self):
+    def __calc_fps(self)->None:
         current_time = time.time()
         dt = current_time - self._last_frame_time
         self._last_frame_time = current_time
@@ -503,7 +502,7 @@ class Screen(QOpenGLWidget):
             self._fps = 1 / dt
             self._smooth_fps = self._fps_filter(self._fps)
 
-    def hide_cursor(self):
+    def hide_cursor(self)->None:
         if self._is_cursor_hiden:
             return
         
@@ -512,14 +511,14 @@ class Screen(QOpenGLWidget):
         self.setCursor(Qt.CursorShape.BlankCursor)
         return self._hide_cursor_global_posF
 
-    def show_cursor(self):
+    def show_cursor(self)->None:
         if not self._is_cursor_hiden:
             return
         
         self._is_cursor_hiden = False
         self.unsetCursor()
 
-    def show(self):
+    def show(self)->None:
         QOpenGLWidget.show(self)
         if Screen.__app is not None and \
            not Screen.__has_exec:
@@ -527,18 +526,18 @@ class Screen(QOpenGLWidget):
             Screen.__has_exec = True
 
     @property
-    def is_cursor_hiden(self):
+    def is_cursor_hiden(self)->bool:
         return self._is_cursor_hiden
 
     @property
-    def fps(self):
+    def fps(self)->float:
         return self._fps
     
     @property
-    def smooth_fps(self):
+    def smooth_fps(self)->float:
         return self._smooth_fps
 
-    def timerEvent(self, timer_event: QTimerEvent)->None:
+    def timerEvent(self, timer_event:QTimerEvent)->None:
         if timer_event.timerId() == self._listen_cursor_timer:
             cursor_global_pos = QCursor.pos()
             last_global_pos = self._last_cursor_global_pos
@@ -546,7 +545,7 @@ class Screen(QOpenGLWidget):
 
             cursor_global_posF = QPointF(cursor_global_pos)
 
-            should_update = sampler2D.should_update()
+            should_update = False
             if self._pressed_keys:
                 should_update = self.__keyRepeateEvent(self._pressed_keys) or should_update
 
@@ -570,8 +569,7 @@ class Screen(QOpenGLWidget):
             if should_update:
                 self.update()
 
-    @checktype
-    def capture(self, save_path:str=None, viewport:tuple=None)->np.ndarray:
+    def capture(self, save_path:str|None=None, viewport:tuple[int]|None=None)->np.ndarray:
         self.makeCurrent()
         with self._before_filter_fbo:
             clear_color = self.camera.scene.fog.apply(self.background_color, glm.vec3(0,0,0), glm.vec3(0,self.camera.far,0))
@@ -601,7 +599,7 @@ class Screen(QOpenGLWidget):
 
         return image
 
-    def capture_video(self, save_path:str, viewport:tuple=None, fps:float=None)->VideoWriter:
+    def capture_video(self, save_path:str, viewport:tuple[int]|None=None, fps:float|int|None=None)->VideoWriter:
         ext_name = extname(save_path)
         if ext_name not in ["mp4", "avi"]:
             raise ValueError(f"not supported video type: .{ext_name}, only support .mp4 and .avi")
@@ -628,7 +626,7 @@ class Screen(QOpenGLWidget):
 
         return video_writer
 
-    def closeEvent(self, close_event)->None:
+    def closeEvent(self, close_event:QCloseEvent)->None:
         while self._video_writers:
             video_writer = self._video_writers.pop()
             video_writer.stop()

@@ -4,15 +4,7 @@
 #include "../include/Material.glsl"
 #include "../include/math.glsl"
 #include "../include/Camera.glsl"
-#include "../ShadingModels/Phong.glsl"
-#include "../ShadingModels/PhongBlinn.glsl"
-#include "../ShadingModels/Gouraud.glsl"
-#include "../ShadingModels/Flat.glsl"
-#include "../ShadingModels/CookTorrance.glsl"
-#include "../ShadingModels/Minnaert.glsl"
-#include "../ShadingModels/OrenNayar.glsl"
-#include "../ShadingModels/Toon.glsl"
-#include "../ShadingModels/Fresnel.glsl"
+#include "../ShadingModels/lighting.glsl"
 
 struct DirLight
 {
@@ -34,42 +26,31 @@ struct DirLight
 
 #include "DirLight_shadow_mapping.glsl"
 
-#define CREATE_LIGHTING_MODEL(Name) \
-vec3 Name##_lighting(\
-    DirLight light, InternalMaterial material, Camera CSM_camera,\
-    vec3 camera_pos, vec3 frag_pos, vec3 frag_normal)\
-{\
-    vec3 to_light = -normalize(light.direction);\
-    vec3 to_camera = normalize(camera_pos - frag_pos);\
-\
-    material.ambient = light.ambient * material.ambient;\
-    material.diffuse = light.diffuse * material.diffuse;\
-    material.specular = light.specular * material.specular;\
-    material.light_rim_power = light.rim_power;\
-\
-    if (light.generate_shadows && material.recv_shadows &&\
-        (light.depth_map_handle.x > 0 || light.depth_map_handle.y > 0))\
-    {\
-        float shadow_visibility = PCF(light, CSM_camera, frag_pos, frag_normal);\
-        material.diffuse *= shadow_visibility;\
-        material.specular *= shadow_visibility;\
-    }\
-\
-    vec3 lighting_color = Name##_lighting(to_light, to_camera, frag_normal, material);\
-    return light.brightness * light.color * lighting_color;\
+vec3 lighting(
+    DirLight light, InternalMaterial material, Camera CSM_camera,
+    vec3 camera_pos, vec3 frag_pos, vec3 frag_normal)
+{
+    vec3 to_light = -normalize(light.direction);
+    vec3 to_camera = normalize(camera_pos - frag_pos);
+
+    material.ambient = light.ambient * material.ambient;
+    material.diffuse = light.diffuse * material.diffuse;
+    material.specular = light.specular * material.specular;
+    material.light_rim_power = light.rim_power;
+
+    if (light.generate_shadows && material.recv_shadows &&
+        (light.depth_map_handle.x > 0 || light.depth_map_handle.y > 0))
+    {
+        float shadow_visibility = PCF(light, CSM_camera, frag_pos, frag_normal);
+        material.diffuse *= shadow_visibility;
+        material.specular *= shadow_visibility;
+    }
+
+    vec3 lighting_color = lighting(to_light, to_camera, frag_normal, material);
+    return light.brightness * light.color * lighting_color;
 }
 
-CREATE_LIGHTING_MODEL(Flat)
-CREATE_LIGHTING_MODEL(Gouraud)
-CREATE_LIGHTING_MODEL(Phong)
-CREATE_LIGHTING_MODEL(PhongBlinn)
-CREATE_LIGHTING_MODEL(Toon)
-CREATE_LIGHTING_MODEL(Minnaert)
-CREATE_LIGHTING_MODEL(OrenNayar)
-CREATE_LIGHTING_MODEL(Fresnel)
-#undef CREATE_LIGHTING_MODEL
-
-vec3 ambient_diffuse_factor(
+vec3 get_ambient_diffuse(
     DirLight light, bool recv_shadows, Camera CSM_camera,
     vec3 frag_pos, vec3 frag_normal)
 {
@@ -85,13 +66,23 @@ vec3 ambient_diffuse_factor(
     return shadow_visibility * factor * light.brightness * light.color;
 }
 
-vec3 PhongBlinn_specular(
+vec3 get_specular(
     DirLight light, InternalMaterial material, Camera CSM_camera,
     vec3 view_dir, vec3 frag_pos, vec3 frag_normal)
 {
     vec3 to_light = -normalize(light.direction);
     vec3 to_camera = normalize(reflect(-view_dir, frag_normal));
-    float specular_factor = PhongBlinn_specular(to_light, to_camera, frag_normal, material.shininess);
+
+    float specular_factor = 0;
+    if (material.shading_model == SHADING_MODEL_PHONG)
+    {
+        specular_factor = Phong_specular(to_light, to_camera, frag_normal, material.shininess);
+    }
+    else if (material.shading_model == SHADING_MODEL_PHONG_BLINN)
+    {
+        specular_factor = PhongBlinn_specular(to_light, to_camera, frag_normal, material.shininess);
+    }
+
     float shadow_visibility = 1;
     if (light.generate_shadows && material.recv_shadows &&
         (light.depth_map_handle.x > 0 || light.depth_map_handle.y > 0))
@@ -100,46 +91,6 @@ vec3 PhongBlinn_specular(
     }
     
     return shadow_visibility * specular_factor * light.brightness * light.color * light.specular;
-}
-
-vec3 Phong_specular(
-    DirLight light, InternalMaterial material, Camera CSM_camera,
-    vec3 view_dir, vec3 frag_pos, vec3 frag_normal)
-{
-    vec3 to_light = -normalize(light.direction);
-    vec3 to_camera = normalize(reflect(-view_dir, frag_normal));
-    float specular_factor = Phong_specular(to_light, to_camera, frag_normal, material.shininess);
-    float shadow_visibility = 1;
-    if (light.generate_shadows && material.recv_shadows &&
-        (light.depth_map_handle.x > 0 || light.depth_map_handle.y > 0))
-    {
-        shadow_visibility = PCF(light, CSM_camera, frag_pos, frag_normal);
-    }
-
-    return shadow_visibility * specular_factor * light.brightness * light.color * light.specular;
-}
-
-vec3 CookTorrance_lighting(
-    DirLight light, InternalMaterial material, Camera CSM_camera,
-    vec3 camera_pos, vec3 frag_pos, vec3 frag_normal)
-{
-    // 基础向量
-    vec3 to_light = -normalize(light.direction);
-    vec3 to_camera = normalize(camera_pos - frag_pos);
-
-    // 光照颜色
-    vec3 lighting_color = CookTorrance_lighting(to_light, to_camera, frag_normal, material);
-
-    // 最终颜色
-    vec3 final_color = light.brightness * light.color * lighting_color;
-    
-    if (light.generate_shadows && material.recv_shadows && (light.depth_map_handle.x > 0 || light.depth_map_handle.y > 0))
-    {
-        float shadow_visibility = PCF(light, CSM_camera, frag_pos, frag_normal);
-        final_color *= max(shadow_visibility, 0.1);
-    }
-    
-    return final_color;
 }
 
 #endif

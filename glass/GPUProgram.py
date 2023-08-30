@@ -70,6 +70,7 @@ class GPUProgram(GLObject):
 		GLObject.__init__(self)
 
 		self._attributes_info = {}
+		self._acceptable_primitives = []
 		self._uniforms_info = {}
 		self._uniform_blocks_info = {}
 		self._shader_storage_blocks_info = {}
