@@ -10,52 +10,46 @@ in TexCoord
 
 out vec4 out_color;
 
-#include "../../include/Material.glsl"
-#include "../../Lights/Lights.glsl"
-#include "../../include/parallax_mapping.glsl"
-#include "../../include/math.glsl"
-#include "../../include/env_mapping.glsl"
-#include "../../include/fog.glsl"
+#include "../../include/shading_all.glsl"
+#include "read_from_gbuffer.glsl"
 
 uniform sampler2D view_pos_and_alpha_map;
 uniform sampler2D view_normal_and_emission_r_map;
-uniform sampler2D ambient_or_arm_and_emission_g_map;
+uniform sampler2D ambient_and_emission_g_map;
 uniform sampler2D diffuse_or_base_color_and_emission_b_map;
-uniform sampler2D specular_or_prelight_and_shininess_map;
+uniform sampler2D specular_or_preshading_and_shininess_map;
 uniform sampler2D reflection_map;
-uniform sampler2D env_center_and_refractive_index_map;
-uniform usampler2D mix_uint_map;
+uniform sampler2D env_center_and_mixed_value_map;
+uniform usampler2D mixed_uint_map;
+
+uniform Camera camera;
+uniform bool use_skybox_map;
+uniform bool use_skydome_map;
 uniform sampler2D SSAO_map;
 uniform sampler2D skydome_map;
 uniform samplerCube skybox_map;
 uniform Fog fog;
 
-uniform Camera camera;
-uniform bool use_skybox_map;
-uniform bool use_skydome_map;
-
-#include "../draw_filled_with_gbuffer.glsl"
-
 void main()
 {
-    vec4 view_pos_and_alpha = texture(view_pos_and_alpha_map, fs_in.tex_coord);
-    vec4 view_normal_and_emission_r = texture(view_normal_and_emission_r_map, fs_in.tex_coord);
-    vec4 ambient_or_arm_and_emission_g = texture(ambient_or_arm_and_emission_g_map, fs_in.tex_coord);
-    vec4 diffuse_or_base_color_and_emission_b = texture(diffuse_or_base_color_and_emission_b_map, fs_in.tex_coord);
-    vec4 specular_or_prelight_and_shininess = texture(specular_or_prelight_and_shininess_map, fs_in.tex_coord);
-    uvec3 mix_uint = texture(mix_uint_map, fs_in.tex_coord).rgb;
-    vec4 reflection = texture(reflection_map, fs_in.tex_coord);
-    vec4 env_center_and_refractive_index = texture(env_center_and_refractive_index_map, fs_in.tex_coord);
-    float SSAO_factor = texture(SSAO_map, fs_in.tex_coord).r;
-
-    out_color = draw_filled_with_gbuffer(
+    PostShadingInfo shading_info = read_from_gbuffer(
         camera,
-        view_pos_and_alpha,
-        view_normal_and_emission_r,
-        ambient_or_arm_and_emission_g,
-        diffuse_or_base_color_and_emission_b,
-        specular_or_prelight_and_shininess,
-        reflection, env_center_and_refractive_index, SSAO_factor,
-        mix_uint
+        view_pos_and_alpha_map,
+        view_normal_and_emission_r_map,
+        ambient_and_emission_g_map,
+        diffuse_or_base_color_and_emission_b_map,
+        specular_or_preshading_and_shininess_map,
+        reflection_map,
+        env_center_and_mixed_value_map,
+        mixed_uint_map,
+        fs_in.tex_coord
     );
+
+    shading_info.use_skybox_map = use_skybox_map;
+    shading_info.skybox_map = skybox_map;
+    shading_info.use_skydome_map = use_skydome_map;
+    shading_info.skydome_map = skydome_map;
+    shading_info.SSAO_map = SSAO_map;
+    shading_info.fog = fog;
+    out_color = post_shading_all(camera, camera, shading_info);
 }

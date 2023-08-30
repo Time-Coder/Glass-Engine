@@ -35,14 +35,31 @@ class DeferredRenderer(CommonRenderer):
         if "draw_to_gbuffer" in self.programs:
             return self.programs["draw_to_gbuffer"]
         
+        self_folder = os.path.dirname(os.path.abspath(__file__))
         program = ShaderProgram()
-        program.compile(os.path.dirname(os.path.abspath(__file__)) + "/../glsl/Pipelines/forward_rendering/forward_rendering.vs")
-        program.compile(os.path.dirname(os.path.abspath(__file__)) + "/../glsl/Pipelines/forward_rendering/forward_rendering.gs")
-        program.compile(os.path.dirname(os.path.abspath(__file__)) + "/../glsl/Pipelines/deferred_rendering/draw_to_gbuffer.fs")
+        program.compile(self_folder + "/../glsl/Pipelines/forward_rendering/forward_rendering.vs")
+        program.compile(self_folder + "/../glsl/Pipelines/forward_rendering/forward_rendering.gs")
+        program.compile(self_folder + "/../glsl/Pipelines/deferred_rendering/draw_to_gbuffer.fs")
         program["PointLights"].bind(self.scene.point_lights)
         program["DirLights"].bind(self.scene.dir_lights)
         program["SpotLights"].bind(self.scene.spot_lights)
         self.programs["draw_to_gbuffer"] = program
+
+        return program
+    
+    @property
+    def draw_points_to_gbuffer_program(self):
+        if "draw_points_to_gbuffer" in self.programs:
+            return self.programs["draw_points_to_gbuffer"]
+        
+        self_folder = os.path.dirname(os.path.abspath(__file__))
+        program = ShaderProgram()
+        program.compile(self_folder + "/../glsl/Pipelines/forward_rendering/forward_draw_points.vs")
+        program.compile(self_folder + "/../glsl/Pipelines/deferred_rendering/draw_points_to_gbuffer.fs")
+        program["PointLights"].bind(self.scene.point_lights)
+        program["DirLights"].bind(self.scene.dir_lights)
+        program["SpotLights"].bind(self.scene.spot_lights)
+        self.programs["draw_points_to_gbuffer"] = program
 
         return program
     
@@ -73,12 +90,12 @@ class DeferredRenderer(CommonRenderer):
                 fbo = FBO(screen_size.x, screen_size.y, samples)
                 fbo.attach(0, sampler2DMS, GL.GL_RGBA32F) # view_pos_and_alpha
                 fbo.attach(1, sampler2DMS, GL.GL_RGBA32F) # view_normal_and_emission_r
-                fbo.attach(2, sampler2DMS, GL.GL_RGBA32F) # ambient_or_arm_and_emission_g
+                fbo.attach(2, sampler2DMS, GL.GL_RGBA32F) # ambient_and_emission_g
                 fbo.attach(3, sampler2DMS, GL.GL_RGBA32F) # diffuse_or_base_color_and_emission_b
-                fbo.attach(4, sampler2DMS, GL.GL_RGBA32F) # specular_or_prelight_and_shininess
+                fbo.attach(4, sampler2DMS, GL.GL_RGBA32F) # specular_or_preshading_and_shininess
                 fbo.attach(5, sampler2DMS, GL.GL_RGBA32F) # reflection
-                fbo.attach(6, sampler2DMS, GL.GL_RGBA32F) # env_center_and_refractive_index
-                fbo.attach(7, usampler2DMS, GL.GL_RGB32UI) # mix_uint
+                fbo.attach(6, sampler2DMS, GL.GL_RGBA32F) # env_center_and_mixed_value
+                fbo.attach(7, usampler2DMS, GL.GL_RGBA32UI) # mixed_uint
                 fbo.attach(GL.GL_DEPTH_ATTACHMENT, RBO)
                 fbo.auto_clear = False
                 self.fbos["gbuffer_ms"] = fbo
@@ -91,16 +108,19 @@ class DeferredRenderer(CommonRenderer):
                 fbo = FBO(screen_size.x, screen_size.y)
                 fbo.attach(0, sampler2D, GL.GL_RGBA32F) # view_pos_and_alpha
                 fbo.attach(1, sampler2D, GL.GL_RGBA32F) # view_normal_and_emission_r
-                fbo.attach(2, sampler2D, GL.GL_RGBA32F) # ambient_or_arm_and_emission_g
+                fbo.attach(2, sampler2D, GL.GL_RGBA32F) # ambient_and_emission_g
                 fbo.attach(3, sampler2D, GL.GL_RGBA32F) # diffuse_or_base_color_and_emission_b
-                fbo.attach(4, sampler2D, GL.GL_RGBA32F) # specular_or_prelight_and_shininess
+                fbo.attach(4, sampler2D, GL.GL_RGBA32F) # specular_or_preshading_and_shininess
                 fbo.attach(5, sampler2D, GL.GL_RGBA32F) # reflection
-                fbo.attach(6, sampler2D, GL.GL_RGBA32F) # env_center_and_refractive_index
-                fbo.attach(7, usampler2D, GL.GL_RGB32UI) # mix_uint
+                fbo.attach(6, sampler2D, GL.GL_RGBA32F) # env_center_and_mixed_value
+                fbo.attach(7, usampler2D, GL.GL_RGBA32UI) # mixed_uint
                 fbo.attach(GL.GL_DEPTH_ATTACHMENT, RBO)
                 fbo.auto_clear = False
                 self.fbos["gbuffer"] = fbo
             return fbo
+
+    def prepare_draw_to_gbuffer(self):
+        self.draw_to_gbuffer_program["camera"] = self.camera
 
     def draw_to_gbuffer(self, mesh, instances):
         if mesh.material.need_env_map or mesh._back_material.need_env_map:
@@ -109,41 +129,50 @@ class DeferredRenderer(CommonRenderer):
         self.draw_to_gbuffer_program["material"] = mesh.material
         self.draw_to_gbuffer_program["back_material"] = mesh._back_material
         self.draw_to_gbuffer_program["explode_distance"] = mesh.explode_distance
-        self.draw_to_gbuffer_program["explode_distance"] = mesh.explode_distance
-        self.draw_to_gbuffer_program["is_filled"] = mesh.is_filled
         self.draw_to_gbuffer_program["is_sphere"] = mesh.is_sphere
         self.draw_to_gbuffer_program["mesh_center"] = mesh.center
         mesh.draw(self.draw_to_gbuffer_program, instances)
 
+    def prepare_draw_points_to_gbuffer(self):
+        self.draw_points_to_gbuffer_program["camera"] = self.camera
+
+    def draw_points_to_gbuffer(self, mesh, instances):
+        if mesh.material.need_env_map:
+            self.gen_env_map(mesh, instances)
+
+        self.draw_points_to_gbuffer_program["material"] = mesh.material
+        self.draw_points_to_gbuffer_program["mesh_center"] = mesh.center
+        mesh.draw(self.draw_points_to_gbuffer_program, instances)
+
     def draw_opaque(self):
-        self._transparent_meshes.clear()
-        none_filled_meshes = {}
+        if not self._opaque_meshes and \
+           not self._opaque_lines and \
+           not self._opaque_points:
+            return
+        
         with GLConfig.LocalConfig(clear_color=glm.vec4(0,0,0,0)):
             with self.gbuffer:
                 GLConfig.clear_buffers()
-                self.draw_to_gbuffer_program["camera"] = self.camera
-                self.draw_to_gbuffer_program["use_skydome_map"] = self.scene.skydome.is_completed
-                self.draw_to_gbuffer_program["skydome_map"] = self.scene.skydome.skydome_map
-                for mesh, instances in self.scene.all_meshes.items():
-                    if mesh.is_filled:
-                        if mesh.has_opaque:
-                            self.draw_to_gbuffer(mesh, instances)
-                    else:
-                        none_filled_meshes[mesh] = instances
 
-                    if mesh.has_transparent:
-                        self._transparent_meshes[mesh] = instances
+                if self._opaque_meshes:
+                    self.prepare_draw_to_gbuffer()
+                    for mesh, instances in self._opaque_meshes:
+                        self.draw_to_gbuffer(mesh, instances)
+
+                if self._opaque_points:
+                    self.prepare_draw_points_to_gbuffer()
+                    for mesh, instances in self._opaque_points:
+                        self.draw_points_to_gbuffer(mesh, instances)
 
         resolved = self.gbuffer.resolved
-
         view_pos_and_alpha_map = resolved.color_attachment(0)
         view_normal_and_emission_r_map = resolved.color_attachment(1)
-        ambient_or_arm_and_emission_g_map = resolved.color_attachment(2)
+        ambient_and_emission_g_map = resolved.color_attachment(2)
         diffuse_or_base_color_and_emission_b_map = resolved.color_attachment(3)
-        specular_or_prelight_and_shininess_map = resolved.color_attachment(4)
+        specular_or_preshading_and_shininess_map = resolved.color_attachment(4)
         reflection_map = resolved.color_attachment(5)
-        env_center_and_refractive_index_map = resolved.color_attachment(6)
-        mix_uint_map = resolved.color_attachment(7)
+        env_center_and_mixed_value_map = resolved.color_attachment(6)
+        mixed_uint_map = resolved.color_attachment(7)
 
         if self.DOF:
             self.filters["DOF"].view_pos_map = view_pos_and_alpha_map
@@ -155,12 +184,12 @@ class DeferredRenderer(CommonRenderer):
             self.deferred_render_program["camera"] = self.camera
             self.deferred_render_program["view_pos_and_alpha_map"] = view_pos_and_alpha_map
             self.deferred_render_program["view_normal_and_emission_r_map"] = view_normal_and_emission_r_map
-            self.deferred_render_program["ambient_or_arm_and_emission_g_map"] = ambient_or_arm_and_emission_g_map
+            self.deferred_render_program["ambient_and_emission_g_map"] = ambient_and_emission_g_map
             self.deferred_render_program["diffuse_or_base_color_and_emission_b_map"] = diffuse_or_base_color_and_emission_b_map
-            self.deferred_render_program["specular_or_prelight_and_shininess_map"] = specular_or_prelight_and_shininess_map
+            self.deferred_render_program["specular_or_preshading_and_shininess_map"] = specular_or_preshading_and_shininess_map
             self.deferred_render_program["reflection_map"] = reflection_map
-            self.deferred_render_program["env_center_and_refractive_index_map"] = env_center_and_refractive_index_map
-            self.deferred_render_program["mix_uint_map"] = mix_uint_map
+            self.deferred_render_program["env_center_and_mixed_value_map"] = env_center_and_mixed_value_map
+            self.deferred_render_program["mixed_uint_map"] = mixed_uint_map
             self.deferred_render_program["SSAO_map"] = self._SSAO_map
             self.deferred_render_program["skydome_map"] = self.scene.skydome.skydome_map
             self.deferred_render_program["skybox_map"] = self.scene.skybox.skybox_map
@@ -170,20 +199,6 @@ class DeferredRenderer(CommonRenderer):
             self.deferred_render_program.draw_triangles(Frame.vertices, Frame.indices)
 
         self.gbuffer.draw_to_active(GL.GL_DEPTH_ATTACHMENT)
-        
-        # points and lines
-        if none_filled_meshes:
-            self.forward_program["is_opaque_pass"] = True
-            self.forward_program["camera"] = self.camera
-            self.forward_program["SSAO_map"] = self._SSAO_map
-            self.forward_program["use_skybox_map"] = self.scene.skybox.is_completed
-            self.forward_program["skybox_map"] = self.scene.skybox.skybox_map
-            self.forward_program["use_skydome_map"] = self.scene.skydome.is_completed
-            self.forward_program["skydome_map"] = self.scene.skydome.skydome_map
-            self.forward_program["fog"] = self.scene.fog
-            for mesh, instances in none_filled_meshes.items():
-                if mesh.has_opaque:
-                    self.forward_draw_mesh(mesh, instances)
 
         # draw skybox
         if self.scene.skybox.is_completed:
@@ -193,16 +208,9 @@ class DeferredRenderer(CommonRenderer):
         elif self.scene.skydome.is_completed:
             self.scene.skydome.draw(self.camera)
         
-        if self._transparent_meshes:
-            if none_filled_meshes:
-                with self.gbuffer:
-                    self.draw_to_gbuffer_program["camera"] = self.camera
-                    self.draw_to_gbuffer_program["use_skydome_map"] = self.scene.skydome.is_completed
-                    self.draw_to_gbuffer_program["skydome_map"] = self.scene.skydome.skydome_map
-                    for mesh, instances in none_filled_meshes.items():
-                        if not mesh.is_filled:
-                            self.draw_to_gbuffer(mesh, instances)
-
+        if self._transparent_meshes or \
+           self._transparent_lines or \
+           self._transparent_points:
             self.gbuffer.draw_to(self.OIT_fbo, GL.GL_DEPTH_ATTACHMENT)
 
     def generate_SSAO(self, view_pos_alpha_map, view_normal_map):
@@ -224,6 +232,7 @@ class DeferredRenderer(CommonRenderer):
 
     def render(self):
         self._should_update = False
+        self.classify_meshes()
         self.update_dir_lights_depth()
         self.update_point_lights_depth()
         self.update_spot_lights_depth()

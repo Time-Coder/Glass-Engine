@@ -75,6 +75,7 @@ struct InternalMaterial
 {
 	uint shading_model;
     bool recv_shadows;
+    vec3 preshading_color;
 	vec3 ambient;
 	vec3 diffuse;
 	vec3 specular;
@@ -87,8 +88,8 @@ struct InternalMaterial
 	float roughness;
 	float metallic;
     float ambient_occlusion;
-    int Toon_diffuse_bands;
-    int Toon_specular_bands;
+    uint Toon_diffuse_bands;
+    uint Toon_specular_bands;
     float Toon_diffuse_softness;
     float Toon_specular_softness;
     float rim_power;
@@ -188,7 +189,14 @@ InternalMaterial fetch_internal_material(vec4 frag_color, Material material, vec
             internal_material.opacity = 1 - (1-frag_color.a)*(1-material_emission4.a*material_opacity);
         }
     }
-    internal_material.emission = mix(vec3(0,0,0), material_emission, material_opacity);
+    if (material.shading_model != SHADING_MODEL_UNLIT)
+    {
+        internal_material.emission = mix(vec3(0,0,0), material_emission, material_opacity);
+    }
+    else
+    {
+        internal_material.emission = mix(frag_color.rgb, material_emission, material_opacity);
+    }
 
     // 反射
     internal_material.reflection = material.reflection;

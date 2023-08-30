@@ -109,6 +109,26 @@ class ShaderParser:
 		return re.sub(r"\\[ \t]*\n", "", result)
 
 	@staticmethod
+	def find_geometry_in(content):
+		geometry_in = []
+		regx = r"^\s*layout\s*\((?P<layout_qualifiers>[^\n]*?)\)\s*in\s*;"
+		def append_geometry_in(match):
+			layout_qualifiers = match.group("layout_qualifiers")
+			args, kwargs = ShaderParser.get_layout_qualifiers(layout_qualifiers)
+			acceptable_geometry_ins = ["points", "lines", "lines_adjacency", "triangles", "triangles_adjacency"]
+			for arg in args:
+				if arg in acceptable_geometry_ins:
+					geometry_in.append(arg)
+					return
+
+		re.sub(regx, append_geometry_in, content, flags=re.M)
+		
+		if geometry_in:
+			return geometry_in[0]
+		else:
+			return ""
+		
+	@staticmethod
 	def find_attributes(content):
 		attributes_info = {}
 		def append_attribute(match):

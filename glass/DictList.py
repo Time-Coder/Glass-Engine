@@ -2,35 +2,35 @@ from .WeakList import WeakList
 
 class ExtendableList:
 
-    def __init__(self, weak_ref:bool=True):
+    def __init__(self, weak_ref:bool=True)->None:
         if weak_ref:
             self._list = WeakList()
         else:
             self._list = []
 
-    def __setitem__(self, index, value):
+    def __setitem__(self, index:int|slice, value:object)->None:
         len_self = len(self)
         if isinstance(index, int) and index >= len_self:
             self._list.extend([None]*(index-len_self+1))
 
         self._list[index] = value
 
-    def __getitem__(self, index):
+    def __getitem__(self, index:int|slice)->object:
         return self._list[index]
             
-    def __delitem__(self, index):
+    def __delitem__(self, index:int|slice)->None:
         del self._list[index]
         
-    def __contains__(self, value):
+    def __contains__(self, value:object)->bool:
         return value in self._list
         
-    def __len__(self):
+    def __len__(self)->int:
         return self._list.__len__()
     
-    def __bool__(self):
+    def __bool__(self)->bool:
         return bool(self._list)
     
-    def __iter__(self):
+    def __iter__(self)->type(iter([])):
         return self._list.__iter__()
     
     def append(self, value):

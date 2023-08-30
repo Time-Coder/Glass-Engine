@@ -28,14 +28,8 @@ out GeometryOut
     flat bool visible;
 } gs_out;
 
-out PreShadingColors
-{
-    vec3 Gouraud_color;
-    vec3 Gouraud_back_color;
-    flat vec3 Flat_color;
-    flat vec3 Flat_back_color;
-} pre_shading_colors;
-
+out vec3 preshading_color;
+out vec3 preshading_back_color;
 out flat uvec2 env_map_handle;
 out vec4 NDC;
 
@@ -48,9 +42,6 @@ uniform float explode_distance;
 uniform Camera camera;
 uniform Material material;
 uniform Material back_material;
-uniform bool is_filled;
-uniform bool use_skydome_map;
-uniform sampler2D skydome_map;
 
 mat3 choose_good_TBN(int index, mat3 backup_TBN)
 {
@@ -127,37 +118,38 @@ void main()
         gs_out.visible = gs_in[i].visible;
 
         env_map_handle = gs_in[i].env_map_handle;
-
-        pre_shading_colors.Gouraud_color = vec3(0, 0, 0);
-        pre_shading_colors.Gouraud_back_color = vec3(0, 0, 0);
-        pre_shading_colors.Flat_color = vec3(0, 0, 0);
-        pre_shading_colors.Flat_back_color = vec3(0, 0, 0);
+        preshading_color = vec3(0, 0, 0);
+        preshading_back_color = vec3(0, 0, 0);
 
         // pre lighting
-        if (is_filled)
+        if (material.shading_model == SHADING_MODEL_FLAT)
         {
-            if (material.shading_model == 1) // Flat
+            InternalMaterial internal_material = fetch_internal_material(face_color, material, face_tex_coord);
+            preshading_color = lighting(internal_material, camera, camera.abs_position, face_world_pos, face_world_normal);
+        }
+
+        if (back_material.shading_model == SHADING_MODEL_FLAT)
+        {
+            InternalMaterial internal_material = fetch_internal_material(face_back_color, back_material, face_tex_coord);
+            preshading_back_color = lighting(internal_material, camera, camera.abs_position, face_world_pos, -face_world_normal);
+        }
+
+        if (material.shading_model == SHADING_MODEL_GOURAUD ||
+            back_material.shading_model == SHADING_MODEL_GOURAUD)
+        {
+            vec3 vertex_world_pos = view_to_world(camera, gs_out.view_pos);
+            vec3 vertex_world_normal = view_dir_to_world(camera, gs_out.view_TBN[2]);
+
+            if (material.shading_model == SHADING_MODEL_GOURAUD)
             {
-                // front
-                InternalMaterial internal_material = fetch_internal_material(face_color, material, face_tex_coord);
-                FLAT_LIGHTING(pre_shading_colors.Flat_color, internal_material, camera, camera.abs_position, face_world_pos, face_world_normal);
-            
-                // back
-                internal_material = fetch_internal_material(face_back_color, back_material, face_tex_coord);
-                FLAT_LIGHTING(pre_shading_colors.Flat_back_color, internal_material, camera, camera.abs_position, face_world_pos, -face_world_normal);
+                InternalMaterial internal_material = fetch_internal_material(gs_out.color, material, gs_out.tex_coord.xy);
+                preshading_color = lighting(internal_material, camera, camera.abs_position, vertex_world_pos, vertex_world_normal);
             }
 
-            if (material.shading_model == 2) // Gouraud
+            if (back_material.shading_model == SHADING_MODEL_GOURAUD)
             {
-                // front
-                vec3 vertex_world_pos = view_to_world(camera, gs_out.view_pos);
-                vec3 vertex_world_normal = view_dir_to_world(camera, gs_out.view_TBN[2]);
-                InternalMaterial internal_material = fetch_internal_material(gs_out.color, material, gs_out.tex_coord.xy);
-                GOURAUD_LIGHTING(pre_shading_colors.Gouraud_color, internal_material, camera, camera.abs_position, vertex_world_pos, vertex_world_normal);
-            
-                // back
-                internal_material = fetch_internal_material(gs_out.back_color, back_material, gs_out.tex_coord.xy);
-                GOURAUD_LIGHTING(pre_shading_colors.Gouraud_back_color, internal_material, camera, camera.abs_position, vertex_world_pos, -vertex_world_normal);
+                InternalMaterial internal_material = fetch_internal_material(gs_out.back_color, back_material, gs_out.tex_coord.xy);
+                preshading_back_color = lighting(internal_material, camera, camera.abs_position, vertex_world_pos, -vertex_world_normal);
             }
         }
 

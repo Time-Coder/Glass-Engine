@@ -40,6 +40,7 @@ class BaseShader(GLObject):
 		self._should_recompile = True
 
 		self.attributes_info = {}
+		self.geometry_in = ""
 		self.uniforms_info = {}
 		self.uniform_blocks_info = {}
 		self.shader_storage_blocks_info = {}
@@ -145,6 +146,7 @@ class BaseShader(GLObject):
 		meta_info["clean_code"] = self._clean_code
 		meta_info["line_message_map"] = self._line_message_map
 		meta_info["attributes_info"] = self.attributes_info
+		meta_info["geometry_in"] = self.geometry_in
 		meta_info["uniforms_info"] = self.uniforms_info
 		meta_info["uniform_blocks_info"] = self.uniform_blocks_info
 		meta_info["shader_storage_blocks_info"] = self.shader_storage_blocks_info
@@ -175,6 +177,7 @@ class BaseShader(GLObject):
 		self._clean_code = meta_info["clean_code"]
 		self._line_message_map = meta_info["line_message_map"]
 		self.attributes_info = meta_info["attributes_info"]
+		self.geometry_in = meta_info["geometry_in"]
 		self.uniforms_info = meta_info["uniforms_info"]
 		self.uniform_blocks_info = meta_info["uniform_blocks_info"]
 		self.shader_storage_blocks_info = meta_info["shader_storage_blocks_info"]
@@ -229,6 +232,7 @@ class BaseShader(GLObject):
 
 			self._clean_code = ShaderParser.delete_C_comments(self._code)
 			self.attributes_info = {}
+			self.geometry_in = ""
 			self.uniforms_info = {}
 			self.uniform_blocks_info = {}
 			self.shader_storage_blocks_info = {}
@@ -236,19 +240,25 @@ class BaseShader(GLObject):
 			self.outs_info = {}
 			self.work_group_size = tuple()
 
-			if self._type == GL.GL_VERTEX_SHADER:
-				self.attributes_info = ShaderParser.find_attributes(self._clean_code)
+			
 
 			self.uniforms_info = ShaderParser.find_uniforms(self._clean_code)
 			self.uniform_blocks_info = ShaderParser.find_uniform_blocks(self._clean_code)
 			self.shader_storage_blocks_info = ShaderParser.find_shader_storage_blocks(self._clean_code)
 			self.structs_info = ShaderParser.find_structs(self._clean_code)
 
+			if self._type == GL.GL_VERTEX_SHADER:
+				self.attributes_info = ShaderParser.find_attributes(self._clean_code)
+
+			if self._type == GL.GL_GEOMETRY_SHADER:
+				self.geometry_in = ShaderParser.find_geometry_in(self._clean_code)
+
 			if self._type == GL.GL_FRAGMENT_SHADER:
 				self.outs_info = ShaderParser.find_outs(self._clean_code)
 
 			if self._type == GL.GL_COMPUTE_SHADER:
 				self.work_group_size = ShaderParser.find_work_group_size(self._clean_code)
+		
 		elif GlassConfig.print:
 			print(f"using precompiled cache: {used_name}")
 

@@ -1,9 +1,9 @@
 #ifndef _DIR_LIGHT_SHADOW_MAPPING_GLSL__
 #define _DIR_LIGHT_SHADOW_MAPPING_GLSL__
 
-vec4 world_to_lightNDC(DirLight light, Camera camera, int level, vec3 world_coord, out float depth_length)
+vec4 world_to_lightNDC(DirLight light, Camera CSM_camera, int level, vec3 world_coord, out float depth_length)
 {
-    BoundingSphere bounding_sphere = Frustum_bounding_sphere(camera, level);
+    BoundingSphere bounding_sphere = Frustum_bounding_sphere(CSM_camera, level);
 
     vec3 center = bounding_sphere.center - light.direction*bounding_sphere.radius;
     float back_offset = 0;
@@ -29,23 +29,23 @@ vec4 world_to_lightNDC(DirLight light, Camera camera, int level, vec3 world_coor
     return NDC_coord;
 }
 
-vec4 world_to_lightNDC(DirLight light, Camera camera, int level, vec3 world_coord)
+vec4 world_to_lightNDC(DirLight light, Camera CSM_camera, int level, vec3 world_coord)
 {
     float depth_length = 0;
-    return world_to_lightNDC(light, camera, level, world_coord, depth_length);
+    return world_to_lightNDC(light, CSM_camera, level, world_coord, depth_length);
 }
 
-float SSM(DirLight light, Camera camera, vec3 frag_pos, vec3 frag_normal)
+float SSM(DirLight light, Camera CSM_camera, vec3 frag_pos, vec3 frag_normal)
 {
-    int level = locate_CSM_leveli(camera, frag_pos);
+    int level = locate_CSM_leveli(CSM_camera, frag_pos);
     float depth_length = 0;
-    vec4 light_NDC = world_to_lightNDC(light, camera, level, frag_pos, depth_length);
+    vec4 light_NDC = world_to_lightNDC(light, CSM_camera, level, frag_pos, depth_length);
     float self_depth = (light_NDC.z / light_NDC.w + 1) / 2;
     vec3 depth_map_tex_coord;
     depth_map_tex_coord.xy = (light_NDC.xy / light_NDC.w + 1) / 2;
     depth_map_tex_coord.z = level;
 
-    BoundingSphere bounding_sphere = Frustum_bounding_sphere(camera, level);
+    BoundingSphere bounding_sphere = Frustum_bounding_sphere(CSM_camera, level);
     ivec2 tex_size = textureSize(sampler2DArray(light.depth_map_handle), 0).xy;
     float beta = acos(max(0, dot(frag_normal, -light.direction)));
     float bias = 2 * bounding_sphere.radius / max(tex_size.x, tex_size.y) * min(10, tan(beta));
@@ -58,13 +58,13 @@ float SSM(DirLight light, Camera camera, vec3 frag_pos, vec3 frag_normal)
     return visibility;
 }
 
-float _get_PCF_value(DirLight light, Camera camera, int level, vec3 frag_pos, vec3 frag_normal, float PCF_width, out int total_count, inout int rand_seed)
+float _get_PCF_value(DirLight light, Camera CSM_camera, int level, vec3 frag_pos, vec3 frag_normal, float PCF_width, out int total_count, inout int rand_seed)
 {
     float depth_length = 0;
-    vec4 light_NDC = world_to_lightNDC(light, camera, level, frag_pos, depth_length);
+    vec4 light_NDC = world_to_lightNDC(light, CSM_camera, level, frag_pos, depth_length);
     float self_depth = (light_NDC.z / light_NDC.w + 1) / 2;
 
-    BoundingSphere bounding_sphere = Frustum_bounding_sphere(camera, level);
+    BoundingSphere bounding_sphere = Frustum_bounding_sphere(CSM_camera, level);
     ivec2 tex_size = textureSize(sampler2DArray(light.depth_map_handle), 0).xy;
     float beta = acos(max(0, dot(frag_normal, -light.direction)));
     float bias = (1+ceil(0.5*PCF_width)) * 2 * bounding_sphere.radius / max(tex_size.x, tex_size.y) * min(tan(beta), 10);
@@ -106,19 +106,19 @@ float _get_PCF_value(DirLight light, Camera camera, int level, vec3 frag_pos, ve
     return visibility;
 }
 
-float PCF(DirLight light, Camera camera, vec3 frag_pos, vec3 frag_normal)
+float PCF(DirLight light, Camera CSM_camera, vec3 frag_pos, vec3 frag_normal)
 {
-    float level = locate_CSM_level(camera, frag_pos);
+    float level = locate_CSM_level(CSM_camera, frag_pos);
     int leveli = int(level);
     float level_rear = level - leveli;
 
     int rand_seed = 0;
     int total_count = 0;
-    float visibility = _get_PCF_value(light, camera, leveli, frag_pos, frag_normal, 7, total_count, rand_seed);
-    if (leveli < camera.CSM_levels)
+    float visibility = _get_PCF_value(light, CSM_camera, leveli, frag_pos, frag_normal, 7, total_count, rand_seed);
+    if (leveli < CSM_camera.CSM_levels)
     {
         int total_count2 = 0;
-        float visibility2 = _get_PCF_value(light, camera, leveli+1, frag_pos, frag_normal, 7, total_count2, rand_seed);
+        float visibility2 = _get_PCF_value(light, CSM_camera, leveli+1, frag_pos, frag_normal, 7, total_count2, rand_seed);
         float weight1 = total_count*(1-level_rear);
         float weight2 = total_count2*level_rear;
         float weight_sum = weight1 + weight2;

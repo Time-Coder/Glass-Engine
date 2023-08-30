@@ -46,7 +46,7 @@ void main()
     vec2 frag_tex_coord = fs_in.tex_coord.st;
 
     // 高度贴图和法线贴图改变几何信息
-    change_geometry(
+    CHANGE_GEOMETRY(
         (gl_FrontFacing ? material : back_material),
         view_pos, view_normal,
         frag_tex_coord, view_TBN

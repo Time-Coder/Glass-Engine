@@ -7,10 +7,11 @@ from .Increment import Increment
 
 from OpenGL import GL
 import numpy as np
+from typing import Literal
 
 class AttrList(SameTypeList):
 
-    def __init__(self, _list:list=None, draw_type:GLInfo.draw_types=GL.GL_STATIC_DRAW, dtype=None):
+    def __init__(self, _list:list|None=None, draw_type:GLInfo.draw_types_literal=GL.GL_STATIC_DRAW, dtype:GLInfo.attr_types_literal=None):
         SameTypeList.__init__(self, _list, dtype)
 
         self._draw_type = draw_type
@@ -20,20 +21,19 @@ class AttrList(SameTypeList):
         self.is_new_vbo = False
 
     @property
-    def vbo(self):
+    def vbo(self)->VBO:
         return self._vbo
     
     @property
-    def draw_type(self):
+    def draw_type(self)->GLInfo.draw_types_literal:
         return self._draw_type
     
     @draw_type.setter
-    @checktype
-    def draw_type(self, draw_type:GLInfo.draw_types):
+    def draw_type(self, draw_type:GLInfo.draw_types_literal):
         self._draw_type = draw_type
 
     @property
-    def dtype(self):
+    def dtype(self)->GLInfo.attr_types_literal:
         if self._dtype is not None:
             return self._dtype
         
@@ -43,7 +43,7 @@ class AttrList(SameTypeList):
         return None
     
     @dtype.setter
-    def dtype(self, dtype):
+    def dtype(self, dtype:GLInfo.attr_types_literal):
         if self._dtype == dtype:
             return
         
@@ -51,28 +51,29 @@ class AttrList(SameTypeList):
         self._list_dirty = True
         self.stride = sizeof(dtype)
 
-    def _apply(self):
+    def _apply(self)->None:
         self._check_in_items()
         if self._increment is None:
             self.__first_apply()
         elif self._increment.is_changed:
             self.__apply_increment()
 
-    def __first_apply(self):
+    def __first_apply(self)->None:
         if not self:
             return
 
         assert self._increment is None
         self._increment = Increment(self)
 
-        assert self._vbo.nbytes == 0
+        assert self._vbo.nbytes == 0 and self._vbo.id == 0
         self.stride = sizeof(self.const_get(0))
         self._vbo.malloc(self.capacity*self.stride, self._draw_type)
 
         value_array = self.ndarray
         self._vbo.bufferSubData(0, value_array.nbytes, value_array)
+        self.is_new_vbo = True
 
-    def __apply_increment(self):
+    def __apply_increment(self)->None:
         self.is_new_vbo = False
 
         assert self._increment.is_changed

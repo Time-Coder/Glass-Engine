@@ -79,9 +79,9 @@ vec4 textureCubeFace(samplerCube cube_image, vec2 tex_coord, int face_id)
     return texture(cube_image, cube_tex_coord);
 }
 
-#ifdef FRAGMENT_SHADER
 vec2 textureQueryLodSeamless(sampler2D image, vec2 tex_coord)
 {
+#ifdef FRAGMENT_SHADER
     ivec2 texture_size = textureSize(image, 0);
     float ds_dx = dFdx(tex_coord.s);
     if (ds_dx >= 0.9) ds_dx -= 1;
@@ -109,6 +109,9 @@ vec2 textureQueryLodSeamless(sampler2D image, vec2 tex_coord)
     result.x = lod;
 
     return result;
+#else
+    return textureQueryLod(image, tex_coord);
+#endif
 }
 
 vec4 textureSeamless(sampler2D image, vec2 tex_coord)
@@ -179,6 +182,5 @@ vec4 textureSphereLodBias(sampler2D image, vec3 sphecial_tex_coord, float lod_bi
 
     return textureLod(image, tex_coord, texture_lod);
 }
-#endif
 
 #endif

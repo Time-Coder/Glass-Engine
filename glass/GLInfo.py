@@ -4,6 +4,7 @@ import sys
 sys.path.append(os.path.abspath(os.path.dirname(os.path.realpath(__file__)) + "/.."))
 
 from OpenGL import GL, constant
+from typing import Literal
 import OpenGL.GL.ARB.gpu_shader_int64 as gsi64
 import numpy as np
 import glm
@@ -302,6 +303,8 @@ class GLInfo:
 		GL.GL_STENCIL_INDEX, GL.GL_STENCIL_INDEX1, GL.GL_STENCIL_INDEX4, GL.GL_STENCIL_INDEX8, GL.GL_STENCIL_INDEX16,
 		GL.GL_DEPTH_STENCIL, GL.GL_DEPTH24_STENCIL8, GL.GL_DEPTH32F_STENCIL8, None
 	]
+	internal_formats_literal = Literal[*internal_formats]
+
 	color_internal_formats = \
 	[
 		GL.GL_RED, GL.GL_R8, GL.GL_R8_SNORM, GL.GL_R16, GL.GL_R16_SNORM,
@@ -322,6 +325,8 @@ class GLInfo:
 		GL.GL_RGBA32I, GL.GL_RGBA32UI, GL.GL_COMPRESSED_RGBA, GL.GL_COMPRESSED_SRGB_ALPHA,
 		GL.GL_COMPRESSED_RGBA_BPTC_UNORM, GL.GL_COMPRESSED_SRGB_ALPHA_BPTC_UNORM
 	]
+	color_internal_formats_literal = Literal[*color_internal_formats]
+
 	image_internal_formats = \
 	[
 		GL.GL_RGBA32F, GL.GL_RGBA16F, GL.GL_RG32F, GL.GL_RG16F, GL.GL_R11F_G11F_B10F,
@@ -329,6 +334,8 @@ class GLInfo:
 		GL.GL_RG8, GL.GL_R16, GL.GL_R8, GL.GL_RGBA16_SNORM, GL.GL_RGBA8_SNORM,
 		GL.GL_RG16_SNORM, GL.GL_RG8_SNORM, GL.GL_R16_SNORM, None
 	]
+	image_internal_formats_literal = Literal[*image_internal_formats]
+
 	isampler_internal_formats = \
 	[
 		GL.GL_RGBA32I, GL.GL_RGBA16I, GL.GL_RGBA8I,
@@ -336,11 +343,15 @@ class GLInfo:
 		GL.GL_RG32I, GL.GL_RG16I, GL.GL_RG8I,
 		GL.GL_R32I, GL.GL_R16I, GL.GL_R8I, None
 	]
+	isampler_internal_formats_literal = Literal[*isampler_internal_formats]
+
 	iimage_internal_formats = \
 	[
 		GL.GL_RGBA32I, GL.GL_RGBA16I, GL.GL_RGBA8I, GL.GL_RG32I, GL.GL_RG16I,
 		GL.GL_RG8I, GL.GL_R32I, GL.GL_R16I, GL.GL_R8I, None
 	]
+	iimage_internal_formats_literal = Literal[*iimage_internal_formats]
+
 	usampler_internal_formats = \
 	[
 		GL.GL_RGBA32UI, GL.GL_RGBA16UI, GL.GL_RGB10_A2UI, GL.GL_RGBA8UI,
@@ -348,33 +359,45 @@ class GLInfo:
 		GL.GL_RG32UI, GL.GL_RG16UI, GL.GL_RG8UI,
 		GL.GL_R32UI, GL.GL_R16UI, GL.GL_R8UI, None
 	]
+	usampler_internal_formats_literal = Literal[*usampler_internal_formats]
+
 	uimage_internal_formats = \
 	[
 		GL.GL_RGBA32UI, GL.GL_RGBA16UI, GL.GL_RGB10_A2UI, GL.GL_RGBA8UI,
 		GL.GL_RG32UI, GL.GL_RG16UI, GL.GL_RG8UI, GL.GL_R32UI, GL.GL_R16UI,
 		GL.GL_R8UI, None
 	]
+	uimage_internal_formats_literal = Literal[*uimage_internal_formats]
+
 	depth_internal_formats = \
 	[
 		GL.GL_DEPTH_COMPONENT, GL.GL_DEPTH_COMPONENT16, GL.GL_DEPTH_COMPONENT24,
 		GL.GL_DEPTH_COMPONENT32, GL.GL_DEPTH_COMPONENT32F,
 	]
+	depth_internal_formats_literal = Literal[*depth_internal_formats]
+
 	stencil_internal_formats = \
 	[
 		GL.GL_STENCIL_INDEX, GL.GL_STENCIL_INDEX1, GL.GL_STENCIL_INDEX4,
 		GL.GL_STENCIL_INDEX8, GL.GL_STENCIL_INDEX16,
 	]
+	stencil_internal_formats_literal = Literal[*stencil_internal_formats]
+
 	depth_stencil_internal_formats = \
 	[
 		GL.GL_DEPTH_STENCIL, GL.GL_DEPTH24_STENCIL8, GL.GL_DEPTH32F_STENCIL8
 	]
+	depth_stencil_internal_formats_literal = Literal[*depth_stencil_internal_formats]
+
 	fog_modes = [GL.GL_LINEAR, GL.GL_EXP, GL.GL_EXP2]
+	fog_modes_literal = Literal[*fog_modes]
 
 	dtypes = \
 	[
 		GL.GL_BYTE, GL.GL_UNSIGNED_BYTE, GL.GL_SHORT, GL.GL_UNSIGNED_SHORT, GL.GL_INT,
 		GL.GL_UNSIGNED_INT, GL.GL_HALF_FLOAT, GL.GL_FLOAT, GL.GL_DOUBLE, None
 	]
+	dtypes_literal = Literal[*dtypes]
 
 	operations = \
 	[
@@ -385,6 +408,7 @@ class GLInfo:
 		GL.GL_DECR, # 将模板缓冲区的值递减 1（如果结果小于 0，将会回环到最大值）
 		GL.GL_INVERT # 按位取反模板缓冲区的值
 	]
+	operations_literal = Literal[*operations]
 
 	shader_ext_map = \
 	{
@@ -410,21 +434,60 @@ class GLInfo:
 		GL.GL_COMPUTE_SHADER: ".comp"
 	}
 
+	primitive_type_map = \
+	{
+		"points": [GL.GL_POINTS],
+		"lines": [GL.GL_LINES, GL.GL_LINE_STRIP, GL.GL_LINE_LOOP],
+		"lines_adjacency": [GL.GL_LINES_ADJACENCY, GL.GL_LINE_STRIP_ADJACENCY],
+		"triangles": [GL.GL_TRIANGLES, GL.GL_TRIANGLE_STRIP, GL.GL_TRIANGLE_FAN],
+		"triangles_adjacency": [GL.GL_TRIANGLES_ADJACENCY, GL.GL_TRIANGLE_STRIP_ADJACENCY]
+	}
+
 	polygon_modes = [GL.GL_FILL, GL.GL_LINE, GL.GL_POINT]
+	polygon_modes_literal = Literal[*polygon_modes]
+
 	depth_funcs = [GL.GL_ALWAYS, GL.GL_NEVER, GL.GL_LESS, GL.GL_EQUAL, GL.GL_LEQUAL, GL.GL_GREATER, GL.GL_NOTEQUAL, GL.GL_GEQUAL]
+	depth_funcs_literal = Literal[*depth_funcs]
+
 	depth_func_strs = ["always", "never", "<", "==", "<=", ">", "!=", ">="]
+	depth_func_strs_literal = Literal[*depth_func_strs]
+
 	stencil_funcs = [GL.GL_ALWAYS, GL.GL_NEVER, GL.GL_LESS, GL.GL_EQUAL, GL.GL_LEQUAL, GL.GL_GREATER, GL.GL_NOTEQUAL, GL.GL_GEQUAL]
+	stencil_funcs_literal = Literal[*stencil_funcs]
+
 	stencil_func_strs = ["always", "never", "<", "==", "<=", ">", "!=", ">="]
+	stencil_func_strs_literal = Literal[*stencil_func_strs]
+
 	shader_types = [GL.GL_VERTEX_SHADER, GL.GL_FRAGMENT_SHADER, GL.GL_GEOMETRY_SHADER, GL.GL_TESS_CONTROL_SHADER, GL.GL_TESS_EVALUATION_SHADER, None]
+	shader_types_literal = Literal[*shader_types]
+	
 	wrap_types = [GL.GL_REPEAT, GL.GL_MIRRORED_REPEAT, GL.GL_CLAMP_TO_EDGE, GL.GL_CLAMP_TO_BORDER, GL.GL_MIRROR_CLAMP_TO_EDGE]
+	wrap_types_literal = Literal[*wrap_types]
+	
 	filter_types = [GL.GL_NEAREST, GL.GL_LINEAR, None]
+	filter_types_literal = Literal[*filter_types]
+	
 	none_color_attachment_types = [GL.GL_DEPTH_ATTACHMENT, GL.GL_STENCIL_ATTACHMENT, GL.GL_DEPTH_STENCIL_ATTACHMENT]
+	none_color_attachment_types_literal = Literal[*none_color_attachment_types]
+	
 	draw_types = [GL.GL_STATIC_DRAW, GL.GL_DYNAMIC_DRAW, GL.GL_STREAM_DRAW, GL.GL_DYNAMIC_COPY]
+	draw_types_literal = Literal[*draw_types]
+	
 	triangle_types = [GL.GL_TRIANGLES, GL.GL_TRIANGLE_STRIP, GL.GL_TRIANGLE_FAN]
+	triangle_types_literal = Literal[*triangle_types]
+	
 	line_types = [GL.GL_LINES, GL.GL_LINE_LOOP, GL.GL_LINE_STRIP]
-	element_types = [*triangle_types, *line_types, GL.GL_POINTS, GL.GL_PATCHES]
+	line_types_literal = Literal[*line_types]
+	
+	primitive_types = [*triangle_types, *line_types, GL.GL_POINTS, GL.GL_PATCHES]
+	primitive_types_literal = Literal[*primitive_types]
+	
 	cull_face_types = [GL.GL_BACK, GL.GL_FRONT, GL.GL_FRONT_AND_BACK, None]
+	cull_face_types_literal = Literal[*cull_face_types]
+	
 	blend_equations = [GL.GL_FUNC_ADD, GL.GL_FUNC_SUBTRACT, GL.GL_FUNC_REVERSE_SUBTRACT]
+	blend_equations_literal = Literal[*blend_equations]
+	
 	blend_funcs = \
 	[
 		GL.GL_ZERO, GL.GL_ONE,
@@ -435,6 +498,8 @@ class GLInfo:
 		GL.GL_CONSTANT_COLOR, GL.GL_ONE_MINUS_CONSTANT_COLOR,
 		GL.GL_CONSTANT_ALPHA, GL.GL_ONE_MINUS_CONSTANT_ALPHA
 	]
+	blend_funcs_literal = Literal[*blend_funcs]
+
 	attr_types = \
 	(
 		int, float,
@@ -450,7 +515,11 @@ class GLInfo:
 		glm.dmat3x2, glm.dmat3x3, glm.dmat3x4,
 		glm.dmat4x2, glm.dmat4x3, glm.dmat4x4,
 	)
+	attr_types_literal = Literal[*attr_types]
+
 	int_types = [GL.GL_BYTE, GL.GL_UNSIGNED_BYTE, GL.GL_SHORT, GL.GL_UNSIGNED_SHORT, GL.GL_INT, GL.GL_UNSIGNED_INT]
+	int_types_literal = Literal[*int_types]
+
 	atom_type_names = \
 	[
 		"bool", "int", "uint", "uint64_t", "float", "double", "atomic_uint",
@@ -478,6 +547,7 @@ class GLInfo:
 		"samplerCube", "samplerCubeArray",
 		"image2D", "iimage2D", "uimage2D"
 	]
+	atom_type_names_literal = Literal[*atom_type_names]
 
 	atom_type_map = \
 	{

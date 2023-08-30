@@ -46,10 +46,10 @@ class SameTypeList:
             self.__current_index = 0
             return self
 
-    def __init__(self, _list:(list,np.ndarray)=None, dtype=None):
+    def __init__(self, _list:list|np.ndarray|None=None, dtype:type|None=None):
         self.reset(_list, dtype)
 
-    def reset(self, _list=None, dtype=None):
+    def reset(self, _list:list|np.ndarray|None=None, dtype:type|None=None):
         if _list is None:
             _list = []
 

@@ -26,7 +26,7 @@ class Mesh(SceneNode):
         Sharp = 2
 
     @checktype
-    def __init__(self, element_type:GLInfo.element_types=GL.GL_TRIANGLES,
+    def __init__(self, primitive:GLInfo.primitive_types=GL.GL_TRIANGLES,
                  color:(glm.vec3,glm.vec4)=glm.vec4(0.396, 0.74151, 0.69102, 1), back_color:(glm.vec3,glm.vec4)=None,
                  name:str="", block:bool=True, shared:bool=True,
                  auto_build:bool=True, surf_type:SurfType=None):
@@ -77,7 +77,7 @@ class Mesh(SceneNode):
         self.__shared = shared
         self.__auto_build = auto_build
         self.__surf_type = surf_type
-        self.__element_type = element_type
+        self.__primitive = primitive
         self.__geometry_info = None
         self.__self_calculated_normal = False
         self.__has_transparent = False
@@ -116,7 +116,7 @@ class Mesh(SceneNode):
     
     @property
     def is_filled(self):
-        return (self.element_type in GLInfo.triangle_types)
+        return (self.primitive in GLInfo.triangle_types)
 
     def build(self):
         pass
@@ -808,13 +808,13 @@ class Mesh(SceneNode):
             geometry_info["z_max"] = vertices["position"].ndarray[:,2].max()
 
     @property
-    def element_type(self):
-        return self.__element_type
+    def primitive(self):
+        return self.__primitive
 
-    @element_type.setter
+    @primitive.setter
     @checktype
-    def element_type(self, element_type:GLInfo.element_types):
-        self.__element_type = element_type
+    def primitive(self, primitive:GLInfo.primitive_types):
+        self.__primitive = primitive
 
     def generate_temp_TBN(self, vertex0, vertex1, vertex2):
         if self.should_add_color:
@@ -898,16 +898,16 @@ class Mesh(SceneNode):
             return
 
         with self.render_hint:
-            if self.__element_type in GLInfo.triangle_types:
-                program.draw_triangles(self._vertices, self._indices, instances, self.__element_type)
-            elif self.__element_type in GLInfo.line_types:
-                if self.__element_type in [GL.GL_LINE_STRIP, GL.GL_LINE_LOOP]:
-                    program.draw_lines(self._vertices, None, instances, self.__element_type)
+            if self.__primitive in GLInfo.triangle_types:
+                program.draw_triangles(self._vertices, self._indices, instances, self.__primitive)
+            elif self.__primitive in GLInfo.line_types:
+                if self.__primitive in [GL.GL_LINE_STRIP, GL.GL_LINE_LOOP]:
+                    program.draw_lines(self._vertices, None, instances, self.__primitive)
                 else:
-                    program.draw_lines(self._vertices, self._indices, instances, self.__element_type)
-            elif self.__element_type == GL.GL_POINTS:
+                    program.draw_lines(self._vertices, self._indices, instances, self.__primitive)
+            elif self.__primitive == GL.GL_POINTS:
                 program.draw_points(self._vertices, instances)
-            elif self.__element_type == GL.GL_PATCHES:
+            elif self.__primitive == GL.GL_PATCHES:
                 program.draw_patches(self._vertices, self._indices, instances)
 
     def _test_transparent(self):

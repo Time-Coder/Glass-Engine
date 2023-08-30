@@ -2,20 +2,18 @@
 
 #extension GL_ARB_bindless_texture : enable
 
-in GeometryOut
+in VertexOut
 {
     mat4 affine_transform;
     vec3 view_pos;
     mat3 view_TBN;
     vec3 tex_coord;
     vec4 color;
-    vec4 back_color;
     flat bool visible;
+    vec3 preshading_color;
+    flat uvec2 env_map_handle;
+    vec4 NDC;
 } fs_in;
-
-in vec3 preshading_color;
-in vec3 preshading_back_color;
-in flat uvec2 env_map_handle;
 
 // 几何信息
 layout(location=0) out vec4 view_pos_and_alpha;
@@ -36,8 +34,6 @@ layout(location=7) out uvec4 mixed_uint;
 #include "write_to_gbuffer.glsl"
 
 uniform Material material;
-uniform Material back_material;
-uniform bool is_sphere;
 uniform vec3 mesh_center;
 
 void main()
@@ -46,31 +42,25 @@ void main()
     {
         discard;
     }
-    
+
     vec2 tex_coord = fs_in.tex_coord.st;
     mat3 view_TBN = fs_in.view_TBN;
     vec3 view_pos = fs_in.view_pos;
     vec3 env_center = transform_apply(fs_in.affine_transform, mesh_center);
 
-    Material current_material = (gl_FrontFacing ? material : back_material);
-    vec4 current_color = (gl_FrontFacing ? fs_in.color : fs_in.back_color);
-    change_geometry(current_material, tex_coord, view_TBN, view_pos);
+    change_geometry(material, tex_coord, view_TBN, view_pos);
 
     InternalMaterial internal_material = 
-        fetch_internal_material(current_color, current_material, tex_coord);
-    if (current_material.shading_model == SHADING_MODEL_FLAT ||
-        current_material.shading_model == SHADING_MODEL_GOURAUD)
-    {
-        internal_material.preshading_color = (gl_FrontFacing ? preshading_color : preshading_back_color);
-    }
+        fetch_internal_material(fs_in.color, material, tex_coord);
+    internal_material.preshading_color = fs_in.preshading_color;
     
     write_to_gbuffer(
         internal_material,
         view_pos,
         view_TBN[2],
         env_center,
-        env_map_handle,
-        is_sphere,
+        fs_in.env_map_handle,
+        false,
 
         view_pos_and_alpha,
         view_normal_and_emission_r,

@@ -7,16 +7,16 @@ from .GlassConfig import GlassConfig
 
 class BO(GLObject):
 
-	def __init__(self):
+	def __init__(self)->None:
 		GLObject.__init__(self)
-		self._nbytes = 0
-		self._draw_type = GL.GL_STATIC_DRAW
+		self._nbytes:int = 0
+		self._draw_type:GLInfo.draw_types_literal = GL.GL_STATIC_DRAW
 
-	def delete(self):
+	def delete(self)->None:
 		GLObject.delete(self)
 		self._nbytes = 0
 
-	def bufferData(self, value_array, draw_type:GLInfo.draw_types=GL.GL_STATIC_DRAW):
+	def bufferData(self, value_array, draw_type:GLInfo.draw_types_literal=GL.GL_STATIC_DRAW)->None:
 		if GlassConfig.debug and self.__class__.__name__ in ["FBO", "RBO"]:
 			raise AttributeError("'" + self.__class__.__name__ + "' object has no attribute 'bufferData'")
 
@@ -37,7 +37,7 @@ class BO(GLObject):
 		self._nbytes = array_bytes
 		self._draw_type = draw_type
 
-	def malloc(self, nbytes, draw_type:GLInfo.draw_types=GL.GL_STATIC_DRAW):
+	def malloc(self, nbytes:int, draw_type:GLInfo.draw_types_literal=GL.GL_STATIC_DRAW)->None:
 		if GlassConfig.debug:
 			if self.__class__.__name__ in ["FBO", "RBO"]:
 				raise AttributeError("'" + self.__class__.__name__ + "' object has no attribute 'malloc'")
@@ -47,7 +47,7 @@ class BO(GLObject):
 		self._nbytes = nbytes
 		self._draw_type = draw_type
 
-	def memmove(self, old_start:int, nbytes:int, new_start:int):
+	def memmove(self, old_start:int, nbytes:int, new_start:int)->None:
 		if GlassConfig.debug:
 			if old_start < 0:
 				raise ValueError("source start position should be positive, " + str(old_start) + " is passed")
@@ -95,7 +95,7 @@ class BO(GLObject):
 		GL.glDeleteBuffers(1, np.array([temp_bo_id]))
 		temp_bo_id = 0
 
-	def bufferSubData(self, start:int, nbytes:int, value_array):
+	def bufferSubData(self, start:int, nbytes:int, value_array)->None:
 		if GlassConfig.debug:
 			if self.__class__.__name__ in ["FBO", "RBO"]:
 				raise AttributeError("'" + self.__class__.__name__ + "' object has no attribute 'bufferSubData'")
@@ -136,7 +136,7 @@ class BO(GLObject):
 		self.bind()
 		GL.glBufferSubData(self.__class__._basic_info["target_type"], start, nbytes, value_array)
 
-	def copy_to(self, src_start:int, nbytes:int, dest_bo, dest_start:int):
+	def copy_to(self, src_start:int, nbytes:int, dest_bo, dest_start:int)->None:
 		if GlassConfig.debug:
 			if self.__class__.__name__ in ["FBO", "RBO"]:
 				raise AttributeError("'" + self.__class__.__name__ + "' object has no attribute 'copy_to'")
@@ -185,7 +185,7 @@ class BO(GLObject):
 			GL.glDeleteBuffers(1, np.array([temp_bo_id]))
 			temp_bo_id = 0
 
-	def shallow_copy_to(self, dest_bo):
+	def shallow_copy_to(self, dest_bo)->None:
 		self_members = dir(self)
 		dest_members = dir(dest_bo)
 		for key in self_members:
@@ -193,7 +193,7 @@ class BO(GLObject):
 				setattr(dest_bo, key, getattr(self, key))
 
 	@property
-	def nbytes(self):
+	def nbytes(self)->int:
 		if GlassConfig.debug:
 			if self.__class__.__name__ in ["FBO", "RBO"]:
 				raise AttributeError("'" + self.__class__.__name__ + "' object has no attribute 'nbytes'")
@@ -201,11 +201,11 @@ class BO(GLObject):
 		return self._nbytes
 
 	@property
-	def empty(self):
+	def empty(self)->bool:
 		return (self._nbytes == 0)
 
 	@property
-	def draw_type(self):
+	def draw_type(self)->GLInfo.draw_types_literal:
 		if GlassConfig.debug:
 			if self.__class__.__name__ in ["FBO", "RBO"]:
 				raise AttributeError("'" + self.__class__.__name__ + "' object has no attribute 'draw_type'")

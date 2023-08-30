@@ -4,11 +4,11 @@ from .utils import di
 class Block:
 
 	class Variable:
-		def __init__(self, block, name):
-			self._block_id = id(block)
-			self._name = name
-			self._bound_var = None
-			self._binding_point = 0
+		def __init__(self, block, name:str)->None:
+			self._block_id:int = id(block)
+			self._name:str = name
+			self._bound_var:object = None
+			self._binding_point:int = 0
 
 			atom_info_list = block._block_map[self._name]["atoms"]
 			if not atom_info_list:
@@ -21,13 +21,13 @@ class Block:
 				atom_name = atom_info["name"]
 				self._atom_info_map[atom_name] = atom_info
 				structure_key_list.append("(" + atom_info["type"] + ", " + atom_name + ")")
-			self._structure_key = ", ".join(structure_key_list)
+			self._structure_key:str = ", ".join(structure_key_list)
 
 		@property
 		def block(self):
 			return di(self._block_id)
 
-		def bind(self, var):
+		def bind(self, var:object)->None:
 			if var is self._bound_var:
 				return
 
@@ -53,7 +53,7 @@ class Block:
 
 			self._bound_var = var
 
-		def unbind(self):
+		def unbind(self)->None:
 			if self._bound_var is None:
 				return
 
@@ -75,16 +75,16 @@ class Block:
 		def binding_point(self)->int:
 			return self._binding_point
 
-		def __del__(self):
+		def __del__(self)->None:
 			try:
 				self.unbind()
 			except:
 				pass
 
-		def __hash__(self):
+		def __hash__(self)->int:
 			return id(self)
 		
-		def __eq__(self, other):
+		def __eq__(self, other)->bool:
 			return (id(self) == id(other))
 
 		def bind_to_point(self, binding_point:int)->None:
@@ -103,7 +103,7 @@ class Block:
 
 			self._binding_point = binding_point
 
-		def upload(self, force_upload:bool=False):
+		def upload(self, force_upload:bool=False)->None:
 			if self._bound_var is None:
 				return
 
@@ -136,19 +136,19 @@ class Block:
 		return di(self._program_id)
 
 	@property
-	def auto_upload(self):
+	def auto_upload(self)->bool:
 		return self._auto_upload
 	
 	@auto_upload.setter
-	def auto_upload(self, flag:bool):
+	def auto_upload(self, flag:bool)->None:
 		self._auto_upload = flag
 
-	def upload(self, force_upload:bool=False):
+	def upload(self, force_upload:bool=False)->None:
 		for block_var in self._block_var_map.values():
 			block_var.upload(force_upload)
 
 	@classmethod
-	def upload_var(cls, var, force_upload:bool=False):
+	def upload_var(cls, var:object, force_upload:bool=False)->None:
 		id_var = id(var)
 		if id_var not in cls._bound_vars:
 			return
@@ -168,7 +168,7 @@ class Block:
 
 		return self._block_var_map[name]
 	
-	def __setitem__(self, name:str, var):
+	def __setitem__(self, name:str, var:object)->None:
 		self[name].bind(var)
 
 	@property

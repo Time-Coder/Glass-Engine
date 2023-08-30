@@ -8,9 +8,9 @@ from .GLObject import GLObject
 from .GLInfo import GLInfo
 
 class VAP:
-	def __init__(self, vao, attribute_location):
+	def __init__(self, vao, location):
 		self._vao = vao
-		self._location = attribute_location
+		self._location = location
 		self._vbo = None
 		self._element_type = None
 		self._stride = 0
@@ -100,11 +100,14 @@ class VAO(GLObject):
 		self._ebo = None
 		self._VAP_map = {}
 
-	def __getitem__(self, attribute_location):
-		if attribute_location not in self._VAP_map:
-			self._VAP_map[attribute_location] = VAP(self, attribute_location)
+	def __getitem__(self, location):
+		if location not in self._VAP_map:
+			self._VAP_map[location] = VAP(self, location)
 			
-		return self._VAP_map[attribute_location]
+		return self._VAP_map[location]
+	
+	def __contains__(self, location):
+		return (location in self._VAP_map)
 
 	def setEBO(self, ebo):
 		if self._ebo is ebo:

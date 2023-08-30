@@ -1,7 +1,7 @@
 #ifndef _POINT_LIGHT_SHADOW_MAPPING_GLSL__
 #define _POINT_LIGHT_SHADOW_MAPPING_GLSL__
 
-float SSM(PointLight light, Camera camera, vec3 frag_pos, vec3 frag_normal)
+float SSM(PointLight light, vec3 frag_pos, vec3 frag_normal)
 {
     vec3 depth_map_tex_coord = frag_pos - light.abs_position;
     float self_depth = length(depth_map_tex_coord);

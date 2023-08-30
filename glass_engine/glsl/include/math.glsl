@@ -7,6 +7,18 @@ const float PI = acos(-1);
 const float cos45 = 0.5*sqrt(2);
 const float sin45 = cos45;
 
+float roundn(float value, uint n)
+{
+    float pow10n = pow(10, n);
+    return round(value * pow10n) / pow10n;
+}
+
+uint get_digit(uint value, uint p)
+{
+    value /= p;
+    return (value - value / 10 * 10);
+}
+
 float triangle_area(vec2 A, vec2 B, vec2 C)
 {
     float a = length(B - C);

@@ -20,11 +20,11 @@ class ACBO(BO):
 
     _ACBO_map = {}
 
-    def __init__(self):
+    def __init__(self)->None:
         BO.__init__(self)
     
     @staticmethod
-    def set(binding:int, offset:int, value:int):
+    def set(binding:int, offset:int, value:int)->None:
         acbo = None
         if binding not in ACBO._ACBO_map:
             acbo = ACBO()
@@ -44,7 +44,7 @@ class ACBO(BO):
         acbo.bufferSubData(offset, 4, np.array([int(value)], dtype=np.uint32))
 
     @staticmethod
-    def get(binding:int, offset:int):
+    def get(binding:int, offset:int)->int:
         if binding not in ACBO._ACBO_map:
             return 0
 
@@ -54,6 +54,6 @@ class ACBO(BO):
         GL.glGetBufferSubData(GL.GL_ATOMIC_COUNTER_BUFFER, offset, 4, data)
         return int(data[0])
 
-    def bind_to_point(self, binding_point:int):
+    def bind_to_point(self, binding_point:int)->None:
         self.bind()
         GL.glBindBufferBase(GL.GL_ATOMIC_COUNTER_BUFFER, binding_point, self._id)

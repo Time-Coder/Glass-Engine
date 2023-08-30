@@ -3,7 +3,7 @@
 
 #include "Phong.glsl"
 
-float Toonify(float value, int bands, float softness)
+float Toonify(float value, uint bands, float softness)
 {
     return (soft_floor(value*(bands - 1) - softness/2, softness/2) + 1) / (bands - 1);
 }
