@@ -1,8 +1,7 @@
-from .PointLight import PointLight
-from glass.utils import checktype, di
+from .PointLight import PointLight, FlatPointLight
+from glass.utils import checktype
 from glass.DictList import DictList
 from glass.ShaderStorageBlock import ShaderStorageBlock
-from glass import GLConfig
 
 import glm
 import math
@@ -59,44 +58,17 @@ class SpotLight(PointLight):
 
         self._update_scene_lights()
 
-class FlatSpotLight:
+class FlatSpotLight(FlatPointLight):
 
     def __init__(self, spot_light:SpotLight):
-        self.abs_position = glm.dvec3(0, 0, 0)
         self.direction = glm.dvec3(0, 1, 0)
-        self.depth_fbo_map = {}
-        self.depth_map_handle = 0
-        self.need_update_depth_map = True
-        self.update(spot_light)
-
-    @property
-    def depth_fbo(self):
-        return self.depth_fbo_map.get(GLConfig.buffered_current_context, None)
-    
-    @depth_fbo.setter
-    def depth_fbo(self, fbo):
-        self.depth_fbo_map[GLConfig.buffered_current_context] = fbo
+        FlatPointLight.__init__(self, spot_light)
         
     def update(self, spot_light:SpotLight):
-        self.color = spot_light._color.flat
-        self.brightness = spot_light._brightness
-        self.ambient = spot_light._ambient.flat
-        self.diffuse = spot_light._diffuse.flat
-        self.specular = spot_light._specular.flat
         self.half_span_angle_rad = spot_light._span_angle/180*math.pi/2
         self.half_softness_rad = spot_light._softness/180*math.pi/2
-        self.K1 = spot_light._K1
-        self.K2 = spot_light._K2
-        self.coverage = spot_light._coverage
         self.aggregate_coeff = spot_light.aggregate_coeff
-        self.generate_shadows = spot_light.generate_shadows
-        self.rim_power = spot_light._rim_power
-        self._source_id = id(spot_light)
-        spot_light._flats.add(self)
-
-    def before_del(self):
-        spot_light = di(self._source_id)
-        spot_light._flats.remove(self)
+        FlatPointLight.update(self, spot_light)
 
 class SpotLights(ShaderStorageBlock.HostClass):
 

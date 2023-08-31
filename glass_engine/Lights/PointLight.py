@@ -1,10 +1,9 @@
-from .Light import Light
+from .Light import Light, FlatLight
 from ..algorithm import fzero
 
-from glass.utils import checktype, di
+from glass.utils import checktype
 from glass.DictList import DictList
 from glass.ShaderStorageBlock import ShaderStorageBlock
-from glass import GLConfig
 
 import glm
 import math
@@ -119,40 +118,18 @@ class PointLight(Light):
 
         self.__update_coverage()
 
-class FlatPointLight:
+class FlatPointLight(FlatLight):
 
     def __init__(self, point_light:PointLight):
         self.abs_position = glm.dvec3(0, 0, 0)
-        self.depth_fbo_map = {}
-        self.depth_map_handle = 0
         self.need_update_depth_map = True
-        self.update(point_light)
-
-    @property
-    def depth_fbo(self):
-        return self.depth_fbo_map.get(GLConfig.buffered_current_context, None)
-    
-    @depth_fbo.setter
-    def depth_fbo(self, fbo):
-        self.depth_fbo_map[GLConfig.buffered_current_context] = fbo
+        FlatLight.__init__(self, point_light)
 
     def update(self, point_light:PointLight):
-        self.color = point_light._color.flat
-        self.brightness = point_light._brightness
-        self.ambient = point_light._ambient.flat
-        self.diffuse = point_light._diffuse.flat
-        self.specular = point_light._specular.flat
         self.K1 = point_light._K1
         self.K2 = point_light._K2
         self.coverage = point_light._coverage
-        self.generate_shadows = point_light._generate_shadows
-        self.rim_power = point_light._rim_power
-        self._source_id = id(point_light)
-        point_light._flats.add(self)
-
-    def before_del(self):
-        point_light = di(self._source_id)
-        point_light._flats.remove(self)
+        FlatLight.update(self, point_light)
 
 class PointLights(ShaderStorageBlock.HostClass):
 
