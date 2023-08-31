@@ -3,7 +3,6 @@ import OpenGL.GL.ARB.gpu_shader_int64 as gsi64
 import ctypes
 import functools
 
-from .utils import checktype
 from .helper import nitems, sizeof
 from .GLObject import GLObject
 from .GLInfo import GLInfo

@@ -1,5 +1,7 @@
 #version 460 core
 
+#extension GL_ARB_bindless_texture : enable
+
 layout(location=0) out vec4 view_pos_alpha;
 layout(location=1) out vec3 view_normal;
 
@@ -31,25 +33,13 @@ void main()
     }
 
     mat3 view_TBN = fs_in.view_TBN;
-    view_normal = normalize(view_TBN[2]);
-    if (!gl_FrontFacing)
-    {
-        view_normal = -view_normal;
-    }
-    view_TBN[2] = view_normal;
-    if (hasnan(view_normal))
-    {
-        return;
-    }
-
     vec3 view_pos = fs_in.view_pos;
     vec2 frag_tex_coord = fs_in.tex_coord.st;
 
     // 高度贴图和法线贴图改变几何信息
-    CHANGE_GEOMETRY(
+    change_geometry(
         (gl_FrontFacing ? material : back_material),
-        view_pos, view_normal,
-        frag_tex_coord, view_TBN
+        frag_tex_coord, view_TBN, view_pos
     );
 
     // 实际使用的材质
@@ -65,4 +55,5 @@ void main()
     }
 
     view_pos_alpha = vec4(view_pos, internal_material.opacity);
+    view_normal = view_TBN[2];
 }
