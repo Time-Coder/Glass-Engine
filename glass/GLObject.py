@@ -2,6 +2,7 @@ import numpy as np
 from OpenGL import GL
 
 from .WeakSet import WeakSet
+from .GLConfig import GLConfig
 
 class _MetaGLObject(type):
 
@@ -23,8 +24,10 @@ class _MetaGLObject(type):
 
 class GLObject(metaclass=_MetaGLObject):
 
-    def __init__(self):
+    def __init__(self, context_shared=True):
         self._id = 0
+        self._context_shared = context_shared
+        self._context = 0
         if self.__class__ not in _MetaGLObject._all_instances:
             _MetaGLObject._all_instances[self.__class__] = WeakSet()
 
@@ -35,6 +38,14 @@ class GLObject(metaclass=_MetaGLObject):
     
     def __eq__(self, _value)->bool:
         return (id(self) == id(_value))
+
+    @property
+    def context_shared(self):
+        return self._context_shared
+    
+    @property
+    def context(self):
+        return self._context
 
     @property
     def id(self):
@@ -98,6 +109,10 @@ class GLObject(metaclass=_MetaGLObject):
         self._id = 0
 
     def bind(self):
+        current_context = GLConfig.buffered_current_context
+        if self._context != 0 and current_context != self._context:
+            raise RuntimeError(f"try to bind context({self._context})'s {self.__class__.__name__}({self.id}) in context({current_context})")
+
         if self._id == 0:
             gen_func = self.__class__._basic_info["gen_func"]
             need_number = self.__class__._basic_info["need_number"]
@@ -119,6 +134,9 @@ class GLObject(metaclass=_MetaGLObject):
             bind_func(self._id)
         else:
             bind_func(target_type, self._id)
+
+        if not self._context_shared:
+            self._context = current_context
 
     def unbind(self):
         if not self.is_bound:

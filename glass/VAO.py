@@ -1,13 +1,18 @@
 from OpenGL import GL
 import OpenGL.GL.ARB.gpu_shader_int64 as gsi64
 import ctypes
+import functools
 
 from .utils import checktype
 from .helper import nitems, sizeof
 from .GLObject import GLObject
 from .GLInfo import GLInfo
+from .GLConfig import GLConfig
 
 class VAP:
+
+	_cmd_buffer = {}
+
 	def __init__(self, vao, location):
 		self._vao = vao
 		self._location = location
@@ -18,6 +23,22 @@ class VAP:
 		self._divisor = 0
 		self._enabled = False
 
+	@staticmethod
+	def contex_check(func):
+		@functools.wraps(func)
+		def wraps(*args, **kwargs):
+			self = args[0]
+			if self._vao.context != 0 and self._vao.context != GLConfig.buffered_current_context:
+				if self._vao.context not in VAP._cmd_buffer:
+					VAP._cmd_buffer[self._vao.context] = []
+				VAP._cmd_buffer[self._vao.context].append((func, args, kwargs))
+				return
+			
+			return func(*args, **kwargs)
+		
+		return wraps
+
+	@contex_check
 	def interp(self, vbo, element_type, stride = 0, offset = 0):
 		self._vao.bind()
 		vbo.bind()
@@ -63,24 +84,27 @@ class VAP:
 		return self._enabled
 	
 	@enabled.setter
+	@contex_check
 	def enabled(self, flag:bool):
-		self._enabled = flag
+		self._vao.bind()
 		if flag:
 			GL.glEnableVertexAttribArray(self._location)
 		else:
 			GL.glDisableVertexAttribArray(self._location)
+		self._enabled = flag
 
 	@divisor.setter
-	@checktype
+	@contex_check
 	def divisor(self, value:int):
 		if value < 0:
 			raise ValueError("divisor should be integer that not less than 0")
 
 		if self._divisor == value:
 			return
-
+		
+		self._vao.bind()
+		GL.glVertexAttribDivisor(self._location, value)
 		self._divisor = value
-		GL.glVertexAttribDivisor(self._location, self._divisor)
 		self.enabled = True
 
 class VAO(GLObject):
@@ -96,9 +120,10 @@ class VAO(GLObject):
 	}
 
 	def __init__(self):
-		GLObject.__init__(self)
+		GLObject.__init__(self, context_shared=False)
 		self._ebo = None
 		self._VAP_map = {}
+		self._context:int = 0
 
 	def __getitem__(self, location):
 		if location not in self._VAP_map:
@@ -108,6 +133,15 @@ class VAO(GLObject):
 	
 	def __contains__(self, location):
 		return (location in self._VAP_map)
+	
+	@staticmethod
+	def execute_cmd_buffer():
+		current_context = GLConfig.buffered_current_context
+		if current_context not in VAP._cmd_buffer:
+			return
+		
+		for cmd in VAP._cmd_buffer[current_context]:
+			cmd[0](*cmd[1], **cmd[2])
 
 	def setEBO(self, ebo):
 		if self._ebo is ebo:
@@ -120,3 +154,7 @@ class VAO(GLObject):
 	@property
 	def ebo(self):
 		return self._ebo
+	
+	@property
+	def context(self):
+		return self._context

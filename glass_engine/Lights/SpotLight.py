@@ -2,6 +2,7 @@ from .PointLight import PointLight
 from glass.utils import checktype, di
 from glass.DictList import DictList
 from glass.ShaderStorageBlock import ShaderStorageBlock
+from glass import GLConfig
 
 import glm
 import math
@@ -63,11 +64,19 @@ class FlatSpotLight:
     def __init__(self, spot_light:SpotLight):
         self.abs_position = glm.dvec3(0, 0, 0)
         self.direction = glm.dvec3(0, 1, 0)
-        self.depth_fbo = None
+        self.depth_fbo_map = {}
         self.depth_map_handle = 0
         self.need_update_depth_map = True
         self.update(spot_light)
 
+    @property
+    def depth_fbo(self):
+        return self.depth_fbo_map.get(GLConfig.buffered_current_context, None)
+    
+    @depth_fbo.setter
+    def depth_fbo(self, fbo):
+        self.depth_fbo_map[GLConfig.buffered_current_context] = fbo
+        
     def update(self, spot_light:SpotLight):
         self.color = spot_light._color.flat
         self.brightness = spot_light._brightness
