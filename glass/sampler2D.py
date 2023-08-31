@@ -17,7 +17,6 @@ from .Indices import Indices
 from .Vertices import Vertices, Vertex
 from .GLConfig import GLConfig
 from .GlassConfig import GlassConfig
-from .WeakSet import WeakSet
 
 class sampler2D(FBOAttachment):
 

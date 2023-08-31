@@ -2,7 +2,7 @@ from .CommonRenderer import CommonRenderer
 
 from ..Frame import Frame
 
-from glass import ShaderProgram, GLConfig, sampler2D, FBO, RBO, sampler2DMS, GLInfo
+from glass import ShaderProgram, GLConfig, sampler2D, FBO, RBO, sampler2DMS
 # from glass.utils import profiler
 
 from OpenGL import GL

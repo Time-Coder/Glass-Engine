@@ -4,7 +4,6 @@ import glm
 import numpy as np
 
 from .GLConfig import GLConfig
-from .GlassConfig import GlassConfig
 from .VAO import VAO
 from .utils import checktype, di
 from .AttrList import AttrList
@@ -174,6 +173,8 @@ class Vertices:
             vao[location].interp(attr_list.vbo, feed_type, attr_list.stride, 0)
             if divisor is not None:
                 vao[location].divisor = divisor
+
+            attr_list.is_new_vbo = False
 
     def _apply_increment(self, instances)->bool:
         for key, attr_list in self._attr_list_map.items():

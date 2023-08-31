@@ -1,13 +1,11 @@
 from .SameTypeList import SameTypeList
 from .GLInfo import GLInfo
-from .utils import checktype
 from .helper import sizeof
 from .VBO import VBO
 from .Increment import Increment
 
 from OpenGL import GL
 import numpy as np
-from typing import Literal
 
 class AttrList(SameTypeList):
 
