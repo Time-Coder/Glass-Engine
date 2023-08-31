@@ -1,5 +1,6 @@
 from glass.utils import checktype
 from glass import sampler2D
+from glass.WeakSet import WeakSet
 
 import glm
 from enum import Enum
@@ -102,7 +103,7 @@ class Material:
         self.__has_transparent = True
         self.__has_opaque = False
 
-        self._parent_meshes = set()
+        self._parent_meshes = WeakSet()
 
     @staticmethod
     def param_setter(func):
@@ -111,10 +112,11 @@ class Material:
             self = args[0]
             value = args[1]
 
-            if not self._opacity_user_set:
-                if self._opacity != 1:
-                    self._opacity = 1
-                    self._test_transparent()
+            if func.__name__ != "shading_model":
+                if not self._opacity_user_set:
+                    if self._opacity != 1:
+                        self._opacity = 1
+                        self._test_transparent()
 
             equal = False
             try:
@@ -131,6 +133,10 @@ class Material:
 
             safe_func = checktype(func)
             return_value = safe_func(*args, **kwargs)
+
+            self._update_all_env_maps()
+            if func.__name__ == "generate_shadows":
+                self._update_all_depth_maps()
 
             return return_value
 
@@ -268,6 +274,7 @@ class Material:
         return self.__shading_model
     
     @shading_model.setter
+    @param_setter
     def shading_model(self, shading_model:ShadingModel):
         self.__shading_model = shading_model
 
@@ -859,6 +866,16 @@ class Material:
         material.set_as(type)
         return material
     
+    def _update_all_depth_maps(self):
+        for mesh in self._parent_meshes:
+            for scene in mesh.scenes:
+                scene._should_update_depth_maps = True
+
+    def _update_all_env_maps(self):
+        for mesh in self._parent_meshes:
+            for scene in mesh.scenes:
+                scene._should_update_env_maps = True
+
     def _test_transparent(self):
         self.__has_transparent = False
         self.__has_opaque = False

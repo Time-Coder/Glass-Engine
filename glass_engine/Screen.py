@@ -2,7 +2,7 @@ from .Manipulators.Manipulator import Manipulator
 from .Renderers.Renderer import Renderer
 from .Frame import Frame
 
-from glass import GLConfig, FBO, RBO, sampler2DMS, sampler2D, RenderHint, SSBO, UBO
+from glass import GLConfig, FBO, RBO, sampler2DMS, sampler2D, RenderHint, SSBO, UBO, VAO
 from glass.utils import extname, di
 
 from PyQt6.QtOpenGLWidgets import QOpenGLWidget
@@ -288,10 +288,11 @@ class Screen(QOpenGLWidget):
 
     def makeCurrent(self)->None:
         QOpenGLWidget.makeCurrent(self)
-
         GLConfig.buffered_current_context = GLConfig.current_context
+
         SSBO.makeCurrent()
         UBO.makeCurrent()
+        VAO.execute_cmd_buffer()
 
     def resizeGL(self, width:int, height:int)->None:
         QOpenGLWidget.resizeGL(self, width, height)

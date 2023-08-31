@@ -13,6 +13,7 @@ import numpy as np
 class CommonRenderer(Renderer):
 
     __dir_light_depth_geo_shader_template = None
+    __dir_light_depth_lines_geo_shader_template = None
     __dir_light_depth_points_geo_shader_template = None
 
     def __init__(self):
@@ -209,6 +210,22 @@ class CommonRenderer(Renderer):
         return target_filename
     
     @property
+    def dir_light_depth_lines_geo_shader_path(self):
+        self_folder = os.path.dirname(os.path.abspath(__file__))
+        target_filename = GlassConfig.cache_folder + f"/DirLight_depth_lines{self.camera.CSM_levels}.gs"
+        template_filename = self_folder + "/../glsl/Pipelines/DirLight_depth/DirLight_depth_lines.gs"
+        if not os.path.isfile(target_filename) or modify_time(template_filename) > modify_time(target_filename):
+            if CommonRenderer.__dir_light_depth_lines_geo_shader_template is None:
+                CommonRenderer.__dir_light_depth_lines_geo_shader_template = cat(template_filename)
+
+            content = CommonRenderer.__dir_light_depth_lines_geo_shader_template.replace("{CSM_levels}", str(self.camera.CSM_levels))
+            out_file = open(target_filename, "w")
+            out_file.write(content)
+            out_file.close()
+
+        return target_filename
+
+    @property
     def dir_light_depth_points_geo_shader_path(self):
         self_folder = os.path.dirname(os.path.abspath(__file__))
         target_filename = GlassConfig.cache_folder + f"/DirLight_depth_points{self.camera.CSM_levels}.gs"
@@ -240,6 +257,23 @@ class CommonRenderer(Renderer):
 
         return program
     
+    @property
+    def dir_light_depth_lines_program(self):
+        key = f"dir_light_depth_lines{self.camera.CSM_levels}"
+        if key in self.programs:
+            return self.programs[key]
+        
+        self_folder = os.path.dirname(os.path.abspath(__file__))
+        program = ShaderProgram()
+        program.add_include_path(self_folder + "/../glsl/Pipelines/DirLight_depth")
+        program.compile(self_folder + "/../glsl/Pipelines/DirLight_depth/DirLight_depth.vs")
+        program.compile(self.dir_light_depth_lines_geo_shader_path)
+        program.compile(self_folder + "/../glsl/Pipelines/DirLight_depth/DirLight_depth.fs")
+
+        self.programs[key] = program
+
+        return program
+
     @property
     def dir_light_depth_points_program(self):
         key = f"dir_light_depth_points{self.camera.CSM_levels}"
@@ -273,6 +307,21 @@ class CommonRenderer(Renderer):
         return program
     
     @property
+    def point_light_depth_lines_program(self):
+        if "point_light_depth_lines" in self.programs:
+            return self.programs["point_light_depth_lines"]
+        
+        self_folder = os.path.dirname(os.path.abspath(__file__))
+        program = ShaderProgram()
+        program.compile(self_folder + "/../glsl/Pipelines/PointLight_depth/PointLight_depth.vs")
+        program.compile(self_folder + "/../glsl/Pipelines/PointLight_depth/PointLight_depth_lines.gs")
+        program.compile(self_folder + "/../glsl/Pipelines/PointLight_depth/PointLight_depth.fs")
+
+        self.programs["point_light_depth_lines"] = program
+
+        return program
+
+    @property
     def point_light_depth_points_program(self):
         if "point_light_depth_points" in self.programs:
             return self.programs["point_light_depth_points"]
@@ -302,6 +351,21 @@ class CommonRenderer(Renderer):
 
         return program
     
+    @property
+    def spot_light_depth_lines_program(self):
+        if "spot_light_depth_lines" in self.programs:
+            return self.programs["spot_light_depth_lines"]
+        
+        self_folder = os.path.dirname(os.path.abspath(__file__))
+        program = ShaderProgram()
+        program.compile(self_folder + "/../glsl/Pipelines/PointLight_depth/PointLight_depth.vs")
+        program.compile(self_folder + "/../glsl/Pipelines/SpotLight_depth/SpotLight_depth_lines.gs")
+        program.compile(self_folder + "/../glsl/Pipelines/SpotLight_depth/SpotLight_depth.fs")
+
+        self.programs["spot_light_depth_lines"] = program
+
+        return program
+
     @property
     def spot_light_depth_points_program(self):
         if "spot_light_depth_points" in self.programs:
@@ -393,6 +457,11 @@ class CommonRenderer(Renderer):
                             self.spot_light_depth_program["explode_distance"] = mesh.explode_distance
                             mesh.draw(self.spot_light_depth_program, instances)
 
+                    if self._lines_cast_shadows:
+                        self.spot_light_depth_lines_program["spot_light"] = spot_light
+                        for mesh, instances in self._lines_cast_shadows:
+                            mesh.draw(self.spot_light_depth_lines_program, instances)
+
                     if self._points_cast_shadows:
                         self.spot_light_depth_points_program["spot_light"] = spot_light
                         for mesh, instances in self._points_cast_shadows:
@@ -428,6 +497,11 @@ class CommonRenderer(Renderer):
                         for mesh, instances in self._meshes_cast_shadows:
                             self.point_light_depth_program["explode_distance"] = mesh.explode_distance
                             mesh.draw(self.point_light_depth_program, instances)
+
+                    if self._lines_cast_shadows:
+                        self.point_light_depth_lines_program["point_light"] = point_light
+                        for mesh, instances in self._lines_cast_shadows:
+                            mesh.draw(self.point_light_depth_lines_program, instances)
 
                     if self._points_cast_shadows:
                         self.point_light_depth_points_program["point_light"] = point_light
@@ -498,6 +572,12 @@ class CommonRenderer(Renderer):
                             self.dir_light_depth_program["explode_distance"] = mesh.explode_distance
                             mesh.draw(self.dir_light_depth_program, instances)
 
+                    if self._lines_cast_shadows:
+                        self.dir_light_depth_lines_program["dir_light"] = dir_light
+                        self.dir_light_depth_lines_program["camera"] = self.camera
+                        for mesh, instances in self._lines_cast_shadows:
+                            mesh.draw(self.dir_light_depth_lines_program, instances)
+
                     if self._points_cast_shadows:
                         self.dir_light_depth_points_program["dir_light"] = dir_light
                         self.dir_light_depth_points_program["camera"] = self.camera
@@ -529,6 +609,24 @@ class CommonRenderer(Renderer):
 
         return program
     
+    @property
+    def forward_lines_program(self):
+        if "forward_lines" in self.programs:
+            return self.programs["forward_lines"]
+        
+        self_folder = os.path.dirname(os.path.abspath(__file__))
+        program = ShaderProgram()
+        program.compile(self_folder + "/../glsl/Pipelines/forward_rendering/forward_draw_lines.vs")
+        program.compile(self_folder + "/../glsl/Pipelines/forward_rendering/forward_draw_points.fs")
+
+        program["PointLights"].bind(self.scene.point_lights)
+        program["DirLights"].bind(self.scene.dir_lights)
+        program["SpotLights"].bind(self.scene.spot_lights)
+
+        self.programs["forward_lines"] = program
+
+        return program
+
     @property
     def forward_points_program(self):
         if "forward_points" in self.programs:
@@ -633,6 +731,22 @@ class CommonRenderer(Renderer):
         return self.programs["gen_env_map"]
     
     @property
+    def gen_env_map_lines_program(self):
+        if "gen_env_map_lines" not in self.programs:
+            self_folder = os.path.dirname(os.path.abspath(__file__))
+            program = ShaderProgram()
+            program.compile(self_folder + "/../glsl/Pipelines/env_mapping/gen_env_map_points.vs")
+            program.compile(self_folder + "/../glsl/Pipelines/env_mapping/gen_env_map_lines.gs")
+            program.compile(self_folder + "/../glsl/Pipelines/env_mapping/gen_env_map_points.fs")
+            program["DirLights"].bind(self.scene.dir_lights)
+            program["PointLights"].bind(self.scene.point_lights)
+            program["SpotLights"].bind(self.scene.spot_lights)
+            
+            self.programs["gen_env_map_lines"] = program
+
+        return self.programs["gen_env_map_lines"]
+
+    @property
     def gen_env_map_points_program(self):
         if "gen_env_map_points" not in self.programs:
             self_folder = os.path.dirname(os.path.abspath(__file__))
@@ -673,8 +787,7 @@ class CommonRenderer(Renderer):
         return self.fbos["ssao"]
     
     def env_map_fbo(self, instance):
-        current_context = GLConfig.buffered_current_context
-        key = ("env_map_fbo", current_context)
+        key = ("env_map_fbo", GLConfig.buffered_current_context)
         if key in instance.user_data:
             return instance.user_data[key]
         
@@ -721,6 +834,22 @@ class CommonRenderer(Renderer):
         self.gen_env_map_program["mesh_center"] = mesh.center
         mesh.draw(self.gen_env_map_program, instances)
 
+    def prepare_gen_env_map_draw_lines(self, view_center:glm.vec3, is_opaque_pass:bool):
+        self.gen_env_map_lines_program["CSM_camera"] = self.camera
+        self.gen_env_map_lines_program["view_center"] = view_center
+        self.gen_env_map_lines_program["is_opaque_pass"] = is_opaque_pass
+        self.gen_env_map_lines_program["use_skybox_map"] = self.scene.skybox.is_completed
+        self.gen_env_map_lines_program["skybox_map"] = self.scene.skybox.skybox_map
+        self.gen_env_map_lines_program["use_skydome_map"] = self.scene.skydome.is_completed
+        self.gen_env_map_lines_program["skydome_map"] = self.scene.skydome.skydome_map
+        self.gen_env_map_lines_program["fog"] = self.scene.fog
+        self.gen_env_map_lines_program["SSAO_map"] = None
+
+    def gen_env_map_draw_lines(self, mesh, instances):
+        self.gen_env_map_lines_program["material"] = mesh.material
+        self.gen_env_map_lines_program["mesh_center"] = mesh.center
+        mesh.draw(self.gen_env_map_lines_program, instances)
+
     def prepare_gen_env_map_draw_points(self, view_center:glm.vec3, is_opaque_pass:bool):
         self.gen_env_map_points_program["CSM_camera"] = self.camera
         self.gen_env_map_points_program["view_center"] = view_center
@@ -761,6 +890,11 @@ class CommonRenderer(Renderer):
                         for other_mesh, other_instances in self._opaque_meshes:
                             self.gen_env_map_draw_mesh(other_mesh, other_instances)
 
+                    if self._opaque_lines:
+                        self.prepare_gen_env_map_draw_lines(view_center, True)
+                        for other_mesh, other_instances in self._opaque_lines:
+                            self.gen_env_map_draw_lines(other_mesh, other_instances)
+
                     if self._opaque_points:
                         self.prepare_gen_env_map_draw_points(view_center, True)
                         for other_mesh, other_instances in self._opaque_points:
@@ -786,6 +920,11 @@ class CommonRenderer(Renderer):
                             self.prepare_gen_env_map_draw_mesh(view_center, False)
                             for other_mesh, other_instances in self._transparent_meshes:
                                 self.gen_env_map_draw_mesh(other_mesh, other_instances)
+
+                        if self._transparent_lines:
+                            self.prepare_gen_env_map_draw_lines(view_center, False)
+                            for other_mesh, other_instances in self._transparent_lines:
+                                self.gen_env_map_draw_lines(other_mesh, other_instances)
 
                         if self._transparent_points:
                             self.prepare_gen_env_map_draw_points(view_center, False)
@@ -845,6 +984,24 @@ class CommonRenderer(Renderer):
         self.forward_program["mesh_center"] = mesh.center
         mesh.draw(self.forward_program, instances)
 
+    def prepare_forward_draw_lines(self, is_opaque_pass:bool):
+        self.forward_lines_program["camera"] = self.camera
+        self.forward_lines_program["is_opaque_pass"] = is_opaque_pass
+        self.forward_lines_program["SSAO_map"] = self._SSAO_map
+        self.forward_lines_program["use_skybox_map"] = self.scene.skybox.is_completed
+        self.forward_lines_program["skybox_map"] = self.scene.skybox.skybox_map
+        self.forward_lines_program["use_skydome_map"] = self.scene.skydome.is_completed
+        self.forward_lines_program["skydome_map"] = self.scene.skydome.skydome_map
+        self.forward_lines_program["fog"] = self.scene.fog
+
+    def forward_draw_lines(self, mesh, instances):
+        if mesh.material.need_env_map:
+            self.gen_env_map(mesh, instances)
+
+        self.forward_lines_program["material"] = mesh.material
+        self.forward_lines_program["mesh_center"] = mesh.center
+        mesh.draw(self.forward_lines_program, instances)
+
     def prepare_forward_draw_points(self, is_opaque_pass:bool):
         self.forward_points_program["camera"] = self.camera
         self.forward_points_program["is_opaque_pass"] = is_opaque_pass
@@ -856,7 +1013,7 @@ class CommonRenderer(Renderer):
         self.forward_points_program["fog"] = self.scene.fog
 
     def forward_draw_points(self, mesh, instances):
-        if mesh.material.need_env_map or mesh._back_material.need_env_map:
+        if mesh.material.need_env_map:
             self.gen_env_map(mesh, instances)
 
         self.forward_points_program["material"] = mesh.material
@@ -892,12 +1049,17 @@ class CommonRenderer(Renderer):
 
                 if self._transparent_meshes:
                     self.prepare_forward_draw_mesh(False)
-                    for mesh, instances in self._transparent_meshes.items():
+                    for mesh, instances in self._transparent_meshes:
                         self.forward_draw_mesh(mesh, instances)
+
+                if self._transparent_lines:
+                    self.prepare_forward_draw_lines(False)
+                    for mesh, instances in self._transparent_lines:
+                        self.forward_draw_lines(mesh, instances)
 
                 if self._transparent_points:
                     self.prepare_forward_draw_points(False)
-                    for mesh, instances in self._transparent_points.items():
+                    for mesh, instances in self._transparent_points:
                         self.forward_draw_points(mesh, instances)
 
         # 取出 OIT 信息

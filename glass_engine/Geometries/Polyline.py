@@ -26,7 +26,12 @@ class Polyline(Mesh):
         for i in range(len_points):
             if i > 0:
                 length += glm.length(points[i]-points[i-1])
-            vertices[i] = Vertex(position=points[i], tex_coord=glm.vec3(length, 0, 0))
+            bitangent = None
+            if i < len_points-1:
+                bitangent = glm.normalize(points[i+1] - points[i])
+            else:
+                bitangent = glm.normalize(points[i] - points[i-1])
+            vertices[i] = Vertex(position=points[i], bitangent=bitangent, tex_coord=glm.vec3(length, 0, 0))
 
         del vertices[len_points:]
 

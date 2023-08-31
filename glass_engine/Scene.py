@@ -27,11 +27,13 @@ class Scene:
         self._fog = Fog()
         self._skybox = SkyBox()
         self._skydome = SkyDome()
-        self._point_lights = PointLights()
         self._dir_lights = DirLights()
+        self._point_lights = PointLights()
         self._spot_lights = SpotLights()
 
         self.__anything_changed = False
+        self._should_update_env_maps = False
+        self._should_update_depth_maps = False
 
     def add(self, scene_node:SceneNode)->None:
         self._root.add_child(scene_node)
@@ -196,6 +198,16 @@ class Scene:
             self.__update_env_maps()
             self.__update_depth_maps()
             self.__anything_changed = False
+            self._should_update_env_maps = False
+            self._should_update_depth_maps = False
+        else:
+            if self._should_update_env_maps:
+                self.__update_env_maps()
+                self._should_update_env_maps = False
+
+            if self._should_update_depth_maps:
+                self.__update_depth_maps()
+                self._should_update_depth_maps = False
 
         self.__clear_dirty()
         for mesh in self._all_meshes:

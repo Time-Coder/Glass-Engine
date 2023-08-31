@@ -35,6 +35,11 @@ class ForwardRenderer(CommonRenderer):
                     for mesh, instances in self._opaque_meshes:
                         self.forward_draw_mesh(mesh, instances)
 
+                if self._opaque_lines:
+                    self.prepare_forward_draw_lines(True)
+                    for mesh, instances in self._opaque_lines:
+                        self.forward_draw_lines(mesh, instances)
+
                 if self._opaque_points:
                     self.prepare_forward_draw_points(True)
                     for mesh, instances in self._opaque_points:

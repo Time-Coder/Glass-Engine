@@ -44,7 +44,7 @@ class FBO(BO):
 
 	@checktype
 	def __init__(self, width:int=0, height:int=0, samples:int=None, layers:int=None):
-		BO.__init__(self)
+		BO.__init__(self, context_shared=False)
 		self._last_active_id = 0
 		self._resolved_fbo = None
 		self._content_changed = False

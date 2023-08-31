@@ -2,6 +2,7 @@ from .Light import Light
 from glass.utils import di
 from glass.DictList import DictList
 from glass.ShaderStorageBlock import ShaderStorageBlock
+from glass import GLConfig
 
 import glm
 
@@ -14,9 +15,17 @@ class FlatDirLight:
         self.direction = glm.dvec3(0, 1, 0)
         self.abs_orientation = glm.dquat(1, 0, 0, 0)
         self.max_back_offset = 0
-        self.depth_fbo = None
+        self.depth_fbo_map = {}
         self.depth_map_handle = 0
         self.update(dir_light)
+
+    @property
+    def depth_fbo(self):
+        return self.depth_fbo_map.get(GLConfig.buffered_current_context, None)
+    
+    @depth_fbo.setter
+    def depth_fbo(self, fbo):
+        self.depth_fbo_map[GLConfig.buffered_current_context] = fbo
 
     def update(self, dir_light:DirLight):
         self.color = dir_light._color.flat

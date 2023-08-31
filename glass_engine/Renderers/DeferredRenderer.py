@@ -48,6 +48,22 @@ class DeferredRenderer(CommonRenderer):
         return program
     
     @property
+    def draw_lines_to_gbuffer_program(self):
+        if "draw_lines_to_gbuffer" in self.programs:
+            return self.programs["draw_lines_to_gbuffer"]
+        
+        self_folder = os.path.dirname(os.path.abspath(__file__))
+        program = ShaderProgram()
+        program.compile(self_folder + "/../glsl/Pipelines/forward_rendering/forward_draw_lines.vs")
+        program.compile(self_folder + "/../glsl/Pipelines/deferred_rendering/draw_points_to_gbuffer.fs")
+        program["PointLights"].bind(self.scene.point_lights)
+        program["DirLights"].bind(self.scene.dir_lights)
+        program["SpotLights"].bind(self.scene.spot_lights)
+        self.programs["draw_lines_to_gbuffer"] = program
+
+        return program
+
+    @property
     def draw_points_to_gbuffer_program(self):
         if "draw_points_to_gbuffer" in self.programs:
             return self.programs["draw_points_to_gbuffer"]
@@ -133,6 +149,17 @@ class DeferredRenderer(CommonRenderer):
         self.draw_to_gbuffer_program["mesh_center"] = mesh.center
         mesh.draw(self.draw_to_gbuffer_program, instances)
 
+    def prepare_draw_lines_to_gbuffer(self):
+        self.draw_lines_to_gbuffer_program["camera"] = self.camera
+
+    def draw_lines_to_gbuffer(self, mesh, instances):
+        if mesh.material.need_env_map:
+            self.gen_env_map(mesh, instances)
+
+        self.draw_lines_to_gbuffer_program["material"] = mesh.material
+        self.draw_lines_to_gbuffer_program["mesh_center"] = mesh.center
+        mesh.draw(self.draw_lines_to_gbuffer_program, instances)
+
     def prepare_draw_points_to_gbuffer(self):
         self.draw_points_to_gbuffer_program["camera"] = self.camera
 
@@ -158,6 +185,11 @@ class DeferredRenderer(CommonRenderer):
                     self.prepare_draw_to_gbuffer()
                     for mesh, instances in self._opaque_meshes:
                         self.draw_to_gbuffer(mesh, instances)
+
+                if self._opaque_lines:
+                    self.prepare_draw_lines_to_gbuffer()
+                    for mesh, instances in self._opaque_lines:
+                        self.draw_lines_to_gbuffer(mesh, instances)
 
                 if self._opaque_points:
                     self.prepare_draw_points_to_gbuffer()

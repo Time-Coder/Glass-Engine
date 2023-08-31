@@ -7,8 +7,8 @@ from .GlassConfig import GlassConfig
 
 class BO(GLObject):
 
-	def __init__(self)->None:
-		GLObject.__init__(self)
+	def __init__(self, context_shared=True)->None:
+		GLObject.__init__(self, context_shared=context_shared)
 		self._nbytes:int = 0
 		self._draw_type:GLInfo.draw_types_literal = GL.GL_STATIC_DRAW
 
