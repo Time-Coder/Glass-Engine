@@ -1,5 +1,6 @@
 from ..SceneNode import SceneNode
-from glass.utils import checktype
+from glass.utils import checktype, di
+from glass import GLConfig
 
 import glm
 
@@ -156,3 +157,38 @@ class Light(SceneNode):
             flat.generate_shadows = self._generate_shadows
 
         self._update_scene_lights()
+
+class FlatLight:
+
+    def __init__(self, light:Light):
+        self.depth_fbo_map = {}
+        self.depth_map_handle = 0
+        self._source_id = 0
+        self.update(light)
+
+    @property
+    def depth_fbo(self):
+        return self.depth_fbo_map.get(GLConfig.buffered_current_context, None)
+    
+    @depth_fbo.setter
+    def depth_fbo(self, fbo):
+        self.depth_fbo_map[GLConfig.buffered_current_context] = fbo
+
+    def update(self, light:Light):
+        self.color = light._color.flat
+        self.brightness = light._brightness
+        self.ambient = light._ambient.flat
+        self.diffuse = light._diffuse.flat
+        self.specular = light._specular.flat
+        self.generate_shadows = light._generate_shadows
+        self.rim_power = light._rim_power
+        
+        self._source_id = id(light)
+        light._flats.add(self)
+
+    def before_del(self):
+        if self._source_id == 0:
+            return
+        
+        light = di(self._source_id)
+        light._flats.remove(self)

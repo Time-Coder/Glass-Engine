@@ -1,46 +1,19 @@
-from .Light import Light
-from glass.utils import di
+from .Light import Light, FlatLight
 from glass.DictList import DictList
 from glass.ShaderStorageBlock import ShaderStorageBlock
-from glass import GLConfig
 
 import glm
 
 class DirLight(Light):
     pass
 
-class FlatDirLight:
+class FlatDirLight(FlatLight):
 
     def __init__(self, dir_light:DirLight):
         self.direction = glm.dvec3(0, 1, 0)
         self.abs_orientation = glm.dquat(1, 0, 0, 0)
         self.max_back_offset = 0
-        self.depth_fbo_map = {}
-        self.depth_map_handle = 0
-        self.update(dir_light)
-
-    @property
-    def depth_fbo(self):
-        return self.depth_fbo_map.get(GLConfig.buffered_current_context, None)
-    
-    @depth_fbo.setter
-    def depth_fbo(self, fbo):
-        self.depth_fbo_map[GLConfig.buffered_current_context] = fbo
-
-    def update(self, dir_light:DirLight):
-        self.color = dir_light._color.flat
-        self.brightness = dir_light._brightness
-        self.ambient = dir_light._ambient.flat
-        self.diffuse = dir_light._diffuse.flat
-        self.specular = dir_light._specular.flat
-        self.generate_shadows = dir_light._generate_shadows
-        self.rim_power = dir_light._rim_power
-        self._source_id = id(dir_light)
-        dir_light._flats.add(self)
-
-    def before_del(self):
-        dir_light = di(self._source_id)
-        dir_light._flats.remove(self)
+        FlatLight.__init__(self, dir_light)
 
 class DirLights(ShaderStorageBlock.HostClass):
 
