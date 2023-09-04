@@ -25,7 +25,7 @@ class ImageQuad(Mesh):
     def __init__(self, image:(str,np.ndarray), align_center:AlignCenter=AlignCenter.BottomCenter,
                  width:float=None, height:float=None,
                  vertical:bool=True, name:str=""):
-        Mesh.__init__(self, color=glm.vec4(0,0,0,0), back_color=glm.vec4(0,0,0,0), name=name, block=True)
+        Mesh.__init__(self, color=glm.vec4(0), back_color=glm.vec4(0), name=name, block=True)
         self.__align_center = align_center
 
         _image = image
@@ -77,7 +77,7 @@ class ImageQuad(Mesh):
         if vertical:
             vertex0.position = glm.vec3(-width/2-align0, 0, -height/2-align1)
         vertex0.normal = normal
-        vertex0.tex_coord = glm.vec3(0, 0, 0)
+        vertex0.tex_coord = glm.vec3(0)
 
         # 右下
         vertex1 = Vertex()

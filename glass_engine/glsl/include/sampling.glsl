@@ -12,7 +12,7 @@ max(textureLod(image, tex_coord, lod), 0.0)
 vec3 vec2_to_cube_tex_coord(vec2 tex_coord, int face_id)
 {
     tex_coord = clamp(tex_coord, vec2(0), vec2(1));
-    vec3 cube_tex_coord = vec3(0, 0, 0);
+    vec3 cube_tex_coord = vec3(0);
     tex_coord -= vec2(0.5, 0.5);
     tex_coord *= 2;
     switch (face_id)
@@ -137,7 +137,7 @@ vec4 textureSphere(sampler2D image, vec3 sphecial_tex_coord, float bias)
     float len = length(sphecial_tex_coord);
     if (len < 1E-6)
     {
-        return vec4(0, 0, 0, 0);
+        return vec4(0);
     }
     sphecial_tex_coord /= len;
 

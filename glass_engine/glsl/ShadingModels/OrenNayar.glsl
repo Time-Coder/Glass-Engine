@@ -26,7 +26,7 @@ vec3 OrenNayar_lighting(
 {
     vec3 diffuse_color = material.diffuse * OrenNayar_diffuse(to_light, to_camera, normal, material.roughness);
     vec3 rim_color = material.diffuse * rim(to_light, to_camera, normal, material.light_rim_power, material.rim_power);
-    return material.ambient + diffuse_color + rim_color;
+    return material.ambient + material.shadow_visibility * diffuse_color + rim_color;
 }
 
 #endif

@@ -59,7 +59,7 @@ void main()
         gs_out.color = gs_in[i].color;
         gs_out.visible = gs_in[i].visible;
         env_map_handle = gs_in[i].env_map_handle;
-        preshading_color = vec3(0, 0, 0);
+        preshading_color = vec3(0);
 
         // pre shading
         if (material.shading_model == SHADING_MODEL_FLAT ||

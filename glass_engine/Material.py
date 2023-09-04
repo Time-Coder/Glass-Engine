@@ -1,5 +1,6 @@
 from glass.utils import checktype
 from glass import sampler2D
+from glass.ImageLoader import ImageLoader
 from glass.WeakSet import WeakSet
 
 import glm
@@ -59,8 +60,8 @@ class Material:
         self.__specular = glm.vec3(0.3)
         self.__shininess = 0.6*128
         self.__shininess_strength = 1
-        self.__emission = glm.vec3(0, 0, 0)
-        self.__reflection = glm.vec4(0, 0, 0, 0)
+        self.__emission = glm.vec3(0)
+        self.__reflection = glm.vec4(0)
         self.__refractive_index = 0
         self._opacity = 0
         self.__height_scale = 0.05
@@ -451,14 +452,19 @@ class Material:
     
     @ambient_map.setter
     @param_setter
-    def ambient_map(self, ambient_map:(sampler2D,str)):
+    def ambient_map(self, ambient_map:(sampler2D,str,np.ndarray)):
         if isinstance(ambient_map, sampler2D) or ambient_map is None:
             self.__ambient_map = ambient_map
-        elif isinstance(ambient_map, str):
-            if self.__ambient_map is None:
-                self.__ambient_map = sampler2D(ambient_map)
-            else:
-                self.__ambient_map.image = ambient_map
+        elif isinstance(ambient_map, (str,np.ndarray)):
+            if isinstance(ambient_map, str):
+                ambient_map = ImageLoader.load(ambient_map)
+            threshold = 0.5
+            image_dtype = ambient_map.dtype
+            if "int" in str(image_dtype):
+                threshold = 127
+            if ambient_map.max() > threshold:
+                ambient_map = (0.1 * ambient_map).astype(image_dtype)
+            self.__ambient_map = sampler2D(ambient_map)
 
     @property
     def diffuse_map(self):

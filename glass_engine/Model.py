@@ -5,6 +5,7 @@ from .Material import Material
 from glass.utils import checktype
 from glass.AttrList import AttrList
 from glass import Vertices, sampler2D, Indices, GLInfo
+from glass.ImageLoader import ImageLoader
 
 import os
 import sys
@@ -159,21 +160,37 @@ class Model(SceneNode):
                     image_path = self.__dir_name + "/" + texture_map_list[0]
                     
                     if texture_map == "roughness_map" and image_path == arm_map:
-                        material.arm_map = image_path
-                        material.ao_map = None
-                        break
+                        image = ImageLoader.load(image_path)
+                        if len(image.shape) > 2 and image.shape[2] >= 3:
+                            material.arm_map = sampler2D.load(image_path)
+                            material.ao_map = None
+                            break
 
                     if texture_map == "metallic_map" and image_path == arm_map:
-                        material.arm_map = image_path
-                        material.ao_map = None
-                        material.roughness_map = None
-                        break
+                        image = ImageLoader.load(image_path)
+                        if len(image.shape) > 2 and image.shape[2] >= 3:
+                            material.arm_map = sampler2D.load(image_path)
+                            material.ao_map = None
+                            material.roughness_map = None
+                            break
 
                     if texture_map in ["ao_map", "roughness_map", "metallic_map"]:
                         arm_map = image_path
 
                     if os.path.isfile(image_path):
-                        setattr(material, texture_map, sampler2D.load(image_path))
+                        if texture_map == "ambient_map":
+                            image = ImageLoader.load(image_path)
+                            image_dtype = image.dtype
+                            threshold = 0.5
+                            if "int" in str(image_dtype):
+                                threshold = 127
+
+                            if image.max() > threshold:
+                                image = (0.1*image).astype(image_dtype)
+
+                            material.ambient_map = sampler2D(image)
+                        else:
+                            setattr(material, texture_map, sampler2D.load(image_path))
 
             self.__materials.append(material)
 

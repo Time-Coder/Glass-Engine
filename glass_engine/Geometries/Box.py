@@ -39,7 +39,7 @@ class Box(Mesh):
 
         # 左面
         position = glm.vec3(-Lx/2,  Ly/2, -Lz/2)
-        tex_coord = glm.vec3(0, 0, 0) if normalize_tex_coord else glm.vec3(0.5-position.y, 0.5+position.z, 0)
+        tex_coord = glm.vec3(0) if normalize_tex_coord else glm.vec3(0.5-position.y, 0.5+position.z, 0)
         vertices[0] = Vertex(
             position=position,
             normal=glm.vec3(-1, 0, 0),
@@ -68,7 +68,7 @@ class Box(Mesh):
 
         # 右面
         position = glm.vec3(Lx/2, -Ly/2, -Lz/2)
-        tex_coord = glm.vec3(0, 0, 0) if normalize_tex_coord else glm.vec3(0.5+position.y, 0.5+position.z, 0)
+        tex_coord = glm.vec3(0) if normalize_tex_coord else glm.vec3(0.5+position.y, 0.5+position.z, 0)
         vertices[4] = Vertex(
             position=position,
             normal=glm.vec3(1, 0, 0),
@@ -97,7 +97,7 @@ class Box(Mesh):
 
         # 后面
         position = glm.vec3(-Lx/2, -Ly/2, -Lz/2)
-        tex_coord = glm.vec3(0, 0, 0) if normalize_tex_coord else glm.vec3(0.5+position.x, 0.5+position.z, 0)
+        tex_coord = glm.vec3(0) if normalize_tex_coord else glm.vec3(0.5+position.x, 0.5+position.z, 0)
         vertices[8] = Vertex(
             position=position,
             normal=glm.vec3(0, -1, 0),
@@ -126,7 +126,7 @@ class Box(Mesh):
 
         # 前面
         position = glm.vec3( Lx/2, Ly/2, -Lz/2)
-        tex_coord = glm.vec3(0, 0, 0) if normalize_tex_coord else glm.vec3(0.5-position.x, 0.5+position.z, 0)
+        tex_coord = glm.vec3(0) if normalize_tex_coord else glm.vec3(0.5-position.x, 0.5+position.z, 0)
         vertices[12] = Vertex(
             position=position,
             normal=glm.vec3(0, 1, 0),
@@ -155,7 +155,7 @@ class Box(Mesh):
 
         # 下面
         position = glm.vec3(-Lx/2,  Ly/2, -Lz/2)
-        tex_coord = glm.vec3(0, 0, 0) if normalize_tex_coord else glm.vec3(0.5+position.x, 0.5-position.y)
+        tex_coord = glm.vec3(0) if normalize_tex_coord else glm.vec3(0.5+position.x, 0.5-position.y)
         vertices[16] = Vertex(
             position=position,
             normal=glm.vec3(0, 0, -1),
@@ -184,7 +184,7 @@ class Box(Mesh):
 
         # 上面
         position = glm.vec3(-Lx/2, -Ly/2, Lz/2)
-        tex_coord = glm.vec3(0, 0, 0) if normalize_tex_coord else glm.vec3(0.5+position.x, 0.5+position.y)
+        tex_coord = glm.vec3(0) if normalize_tex_coord else glm.vec3(0.5+position.x, 0.5+position.y)
         vertices[20] = Vertex(
             position=position,
             normal=glm.vec3(0, 0, 1),

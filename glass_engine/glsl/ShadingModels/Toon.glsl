@@ -21,7 +21,7 @@ vec3 Toon_lighting(
     float rim_factor = pow(1 - dot(normal, to_camera), 1/(0.001+material.rim_power)) * pow(max(0, dot(to_light, normal)), 1/(1+material.light_rim_power));
     vec3 rim_color = material.diffuse * soft_step(rim_factor-0.2, 0.05);
 
-    return material.ambient + diffuse_color + specular_color + rim_color;
+    return material.ambient + material.shadow_visibility*(diffuse_color + specular_color) + rim_color;
 }
 
 #endif

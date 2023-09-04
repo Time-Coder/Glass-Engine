@@ -77,6 +77,6 @@ void main()
     if (!is_opaque_pass && out_color.a < 1)
     {
         get_OIT_info(out_color, accum, reveal);
-        out_color = vec4(0, 0, 0, 0);
+        out_color = vec4(0);
     }
 }

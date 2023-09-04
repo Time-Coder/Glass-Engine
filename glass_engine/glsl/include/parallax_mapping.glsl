@@ -113,7 +113,7 @@ void change_geometry(Material material, inout vec2 tex_coord, inout mat3 view_TB
     {
         vec3 normal_in_tbn = 2*texture(material.normal_map, tex_coord).rgb-1;
         float len_normal = length(normal_in_tbn);
-        if (len_normal < 1E-6) normal_in_tbn = vec3(0, 0, 0);
+        if (len_normal < 1E-6) normal_in_tbn = vec3(0);
         else normal_in_tbn /= len_normal;
         
         view_TBN[0] = material.height_scale/0.05 * view_TBN[0]/dot(view_TBN[0], view_TBN[0]);
@@ -121,7 +121,7 @@ void change_geometry(Material material, inout vec2 tex_coord, inout mat3 view_TB
         view_TBN[2] = view_TBN * normal_in_tbn;
 
         len_normal = length(view_TBN[2]);
-        if (len_normal < 1E-6) view_TBN[2] = vec3(0, 0, 0);
+        if (len_normal < 1E-6) view_TBN[2] = vec3(0);
         else view_TBN[2] /= len_normal;
     }
 }

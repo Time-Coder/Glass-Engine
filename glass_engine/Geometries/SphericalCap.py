@@ -41,7 +41,7 @@ class SphericalCap(Mesh):
         i_index = 0
 
         vertex_bottom_center = Vertex()
-        vertex_bottom_center.position = glm.vec3(0, 0, 0)
+        vertex_bottom_center.position = glm.vec3(0)
         vertex_bottom_center.normal = glm.vec3(0, 0, -1)
         vertex_bottom_center.tex_coord = glm.vec3(0.5, 0.5, 0)
         vertices[i_vertex] = vertex_bottom_center

@@ -64,7 +64,7 @@ void main()
 
     vec2 tex_size = textureSize(screen_image, 0);
     vec2 tex_offset = 1.0 / tex_size;
-    frag_color = vec4(0, 0, 0, 0);
+    frag_color = vec4(0);
     
     float pixel_per_meter = 0.5 * tex_size.y / (camera.near*camera.tan_half_fov);
     float coc_in_pixel = pixel_per_meter * abs(camera.aperture*(1-camera.near*factor));

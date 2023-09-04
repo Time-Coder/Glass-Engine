@@ -9,7 +9,7 @@ import numpy as np
 
 class Rotator(Mesh):
     def __init__(self, section:(list,tuple,np.ndarray),
-                 axis_start:glm.vec3=glm.vec3(0,0,0), axis_stop:glm.vec3=glm.vec3(0,0,1),
+                 axis_start:glm.vec3=glm.vec3(0), axis_stop:glm.vec3=glm.vec3(0,0,1),
                  n_divide:int=100, start_angle:float=0, span_angle:float=360,
                  n_lat_divide:int=100,
                  color:(glm.vec3,glm.vec4)=glm.vec4(0.396, 0.74151, 0.69102, 1), back_color:(glm.vec3,glm.vec4)=None,
@@ -43,7 +43,7 @@ class Rotator(Mesh):
         # 计算原点到轴的垂足 H
         A = axis_start
         B = axis_stop
-        C = glm.vec3(0, 0, 0)
+        C = glm.vec3(0)
         AC = C-A
         AB = B-A
         AB = glm.normalize(AB)
@@ -71,7 +71,7 @@ class Rotator(Mesh):
                 pos = quat * (section[j] - H) + H
                 vertex = Vertex()
                 vertex.position = pos
-                vertex.normal = glm.vec3(0,0,0)
+                vertex.normal = glm.vec3(0)
 
                 if j > 0:
                     l += glm.length(section[j] - section[j-1])

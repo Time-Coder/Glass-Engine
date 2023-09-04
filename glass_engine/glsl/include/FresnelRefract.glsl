@@ -3,7 +3,7 @@
 
 vec3 wavelength_to_color(float wavelength)
 {
-    vec4 color = vec4(0, 0, 0, 0);
+    vec4 color = vec4(0);
     if (380.0 <= wavelength && wavelength < 440.0)
     {
         color.r = (440.0 - wavelength) / (440.0 - 380.0);

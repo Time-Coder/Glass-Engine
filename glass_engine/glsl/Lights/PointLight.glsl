@@ -36,7 +36,7 @@ vec3 lighting(
     float d2 = dot(to_light, to_light);
     if (d2 > light.coverage*light.coverage)
     {
-        return vec3(0, 0, 0);
+        return vec3(0);
     }
     float d = sqrt(d2);
     to_light /= d;
@@ -47,12 +47,11 @@ vec3 lighting(
     material.specular = light.specular * material.specular;
     material.light_rim_power = 0.2;
 
+    material.shadow_visibility = 1;
     if (light.generate_shadows && material.recv_shadows &&
         (light.depth_map_handle.x > 0 || light.depth_map_handle.y > 0))
     {
-        float shadow_visibility = PCF(light, frag_pos, frag_normal);
-        material.diffuse *= shadow_visibility;
-        material.specular *= shadow_visibility;
+        material.shadow_visibility = PCF(light, frag_pos, frag_normal);
     }
 
     vec3 lighting_color = lighting(to_light, to_camera, frag_normal, material);
@@ -70,7 +69,7 @@ vec3 get_ambient_diffuse(
     float d2 = dot(to_light, to_light);
     if (d2 > light.coverage*light.coverage)
     {
-        return vec3(0, 0, 0);
+        return vec3(0);
     }
     float d = sqrt(d2);
     to_light = to_light / d;
@@ -96,7 +95,7 @@ vec3 get_specular(
     float d2 = dot(to_light, to_light);
     if (d2 > light.coverage*light.coverage)
     {
-        return vec3(0, 0, 0);
+        return vec3(0);
     }
     float d = sqrt(d2);
     to_light = to_light / d;

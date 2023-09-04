@@ -931,8 +931,8 @@ class CommonRenderer(Renderer):
                     GLConfig.blend_src_rgbi[2] = GL.GL_ONE
                     GLConfig.blend_dest_rgbi[2] = GL.GL_ONE
                     with env_map_fbo:
-                        GLConfig.clear_buffer(1, glm.vec4(0, 0, 0, 0))
-                        GLConfig.clear_buffer(2, glm.vec4(0, 0, 0, 0))
+                        GLConfig.clear_buffer(1, glm.vec4(0))
+                        GLConfig.clear_buffer(2, glm.vec4(0))
 
                         if self._transparent_meshes:
                             self.prepare_gen_env_map_draw_mesh(view_center, False)
@@ -1062,8 +1062,8 @@ class CommonRenderer(Renderer):
             GLConfig.blend_src_rgbi[2] = GL.GL_ONE
             GLConfig.blend_dest_rgbi[2] = GL.GL_ONE
             with self.OIT_fbo:
-                GLConfig.clear_buffer(1, glm.vec4(0, 0, 0, 0))
-                GLConfig.clear_buffer(2, glm.vec4(0, 0, 0, 0))
+                GLConfig.clear_buffer(1, glm.vec4(0))
+                GLConfig.clear_buffer(2, glm.vec4(0))
 
                 if self._transparent_meshes:
                     self.prepare_forward_draw_mesh(False)

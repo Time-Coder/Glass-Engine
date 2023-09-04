@@ -24,7 +24,7 @@ void main()
     float dx = tex_offset.x;
     float dy = tex_offset.y;
 
-    frag_color = vec4(0, 0, 0, 0);
+    frag_color = vec4(0);
     for (int i = 0; i < rows; i++)
     {
         float t = fs_in.tex_coord.t + (i - 0.5*(rows-1))*dy;

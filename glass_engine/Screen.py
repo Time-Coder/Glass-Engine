@@ -173,7 +173,7 @@ class Screen(QOpenGLWidget):
         self._is_gl_init = False
         self._before_filter_image = None
         self._video_writers = []
-        self._background_color = glm.vec4(0, 0, 0, 0)
+        self._background_color = glm.vec4(0)
         
         self._camera_id = id(camera)
 
@@ -301,7 +301,7 @@ class Screen(QOpenGLWidget):
     def _draw_to_before_filter_image(self, should_update_scene:bool)->bool:
         if self._before_filter_image is None or should_update_scene:
             with self._before_filter_fbo:
-                clear_color = self.camera.scene.fog.apply(self.background_color, glm.vec3(0,0,0), glm.vec3(0,self.camera.far,0))
+                clear_color = self.camera.scene.fog.apply(self.background_color, glm.vec3(0), glm.vec3(0,self.camera.far,0))
                 with GLConfig.LocalConfig(clear_color=clear_color):
                     with self.renderer.render_hint:
                         should_update_scene = self.renderer.render() or should_update_scene
@@ -329,7 +329,7 @@ class Screen(QOpenGLWidget):
             should_update_scene = self._draw_to_before_filter_image(should_update_scene)
             should_update_filter = self.renderer.filters.draw(self._before_filter_image)
         else:
-            clear_color = self.camera.scene.fog.apply(self.background_color, glm.vec3(0,0,0), glm.vec3(0,self.camera.far,0))
+            clear_color = self.camera.scene.fog.apply(self.background_color, glm.vec3(0), glm.vec3(0,self.camera.far,0))
             with GLConfig.LocalConfig(clear_color=clear_color):
                 with self.renderer.render_hint:
                     should_update_scene = self.renderer.render() or should_update_scene
@@ -571,7 +571,7 @@ class Screen(QOpenGLWidget):
     def capture(self, save_path:str|None=None, viewport:tuple[int]|None=None)->np.ndarray:
         self.makeCurrent()
         with self._before_filter_fbo:
-            clear_color = self.camera.scene.fog.apply(self.background_color, glm.vec3(0,0,0), glm.vec3(0,self.camera.far,0))
+            clear_color = self.camera.scene.fog.apply(self.background_color, glm.vec3(0), glm.vec3(0,self.camera.far,0))
             with GLConfig.LocalConfig(clear_color=clear_color):
                 with self.renderer.render_hint:
                     self.renderer.render()

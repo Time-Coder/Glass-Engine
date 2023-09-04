@@ -20,7 +20,7 @@ uniform vec2 sigma;
 void main()
 {
     vec2 tex_offset = 1.0 / textureSize(screen_image, 0).xy;
-    frag_color = vec4(0, 0, 0, 0);
+    frag_color = vec4(0);
     
     if(horizontal)
     {

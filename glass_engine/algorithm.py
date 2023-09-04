@@ -405,7 +405,7 @@ def polygon_normal(polygon, centroid=None):
     if centroid is None:
         centroid = polygon_centroid(polygon)
 
-    normal = glm.vec3(0, 0, 0)
+    normal = glm.vec3(0)
     weight_sum = 0
     len_polygon = len(polygon)
     for i in range(1, len_polygon+1):

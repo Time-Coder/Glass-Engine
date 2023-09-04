@@ -5,6 +5,7 @@ import OpenEXR, Imath
 import numpy as np
 
 from .utils import extname, relative_path
+from .GlassConfig import GlassConfig
 
 class ImageLoader:
 
@@ -22,7 +23,8 @@ class ImageLoader:
         if ext_name == "glsl":
             raise ValueError(f"not supported image format: '{file_name}'")
         
-        print(f"loading image: {relative_path(file_name)} ", end="", flush=True)
+        if GlassConfig.print:
+            print(f"loading image: {relative_path(file_name)} ", end="", flush=True)
         image = None
         if ext_name == "exr":
             image = ImageLoader.OpenEXR_load(file_name)
@@ -30,16 +32,21 @@ class ImageLoader:
             image = ImageLoader.PIL_load(file_name)
             if image is None:
                 image = ImageLoader.cv2_load(file_name)
-        print("done")
 
         if image is None:
+            if GlassConfig.print:
+                print("")
             raise ValueError(f"not supported image format: '{file_name}'")
-
+        
         image = cv2.flip(image, 0)
+
         if image.dtype in [np.float32, np.float64] and image.max() > 1:
             image = ImageLoader.tone_mapping(image)
 
         ImageLoader.__image_map[file_name] = image
+
+        if GlassConfig.print:
+            print("done")
 
         return image
     
@@ -78,10 +85,10 @@ class ImageLoader:
             elif pil_image.mode == "1":
                 dest_mode = "L"
 
-            if dest_mode == pil_image.mode:
-                return np.array(pil_image)
-            else:
-                return np.array(pil_image.convert(dest_mode))
+            if dest_mode != pil_image.mode:
+                pil_image = pil_image.convert(dest_mode)
+
+            return np.array(pil_image)
         except:
             return None
     

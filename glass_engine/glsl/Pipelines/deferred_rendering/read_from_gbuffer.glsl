@@ -87,7 +87,8 @@ PostShadingInfo read_from_gbuffer(
     shading_info.material.roughness = (((uint(0xFF) << 16) & mixed_uint.w) >> 16) / 255.0;
     shading_info.material.metallic = (((uint(0xFF) << 8) & mixed_uint.w) >> 8) / 255.0;
     shading_info.material.rim_power = (uint(0xFF) & mixed_uint.w) / 255.0;
-
+    shading_info.material.shadow_visibility = 1;
+    
     return shading_info;
 }
 

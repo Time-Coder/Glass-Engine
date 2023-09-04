@@ -49,7 +49,7 @@ class Prism(Mesh):
 
         # 底面中心点
         vertex_bottom = Vertex()
-        vertex_bottom.position = glm.vec3(0, 0, 0)
+        vertex_bottom.position = glm.vec3(0)
         vertex_bottom.normal = glm.vec3(0, 0, -1)
         vertex_bottom.tex_coord = glm.vec3(0.5, 0.5, 0)
         vertices[i_vertex] = vertex_bottom

@@ -177,7 +177,7 @@ class DeferredRenderer(CommonRenderer):
            not self._opaque_points:
             return
         
-        with GLConfig.LocalConfig(clear_color=glm.vec4(0,0,0,0)):
+        with GLConfig.LocalConfig(clear_color=glm.vec4(0)):
             with self.gbuffer:
                 GLConfig.clear_buffers()
 

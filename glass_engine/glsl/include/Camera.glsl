@@ -224,7 +224,7 @@ Camera cube_camera(int face_id, vec3 center_pos)
 
 Camera cube_camera(int face_id)
 {
-	return cube_camera(face_id, vec3(0, 0, 0), 0.1, 100);
+	return cube_camera(face_id, vec3(0), 0.1, 100);
 }
 
 #endif

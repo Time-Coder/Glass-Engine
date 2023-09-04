@@ -25,7 +25,7 @@ vec4 post_shading_all(Camera camera, Camera CSM_camera, PostShadingInfo shading_
 
     // 环境映射
     vec3 view_dir = normalize(shading_info.world_pos - camera.abs_position);
-    vec4 env_color = vec4(0, 0, 0, 0);
+    vec4 env_color = vec4(0);
     if (shading_info.is_sphere)
     {
         env_color = sphere_reflect_refract_color(

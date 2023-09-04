@@ -54,11 +54,11 @@ def init_Hexahedron(cls):
         pos1 = cls.base_positions[index[1]]
         pos2 = cls.base_positions[index[2]]
 
-        tex_coord0 = glm.vec3(0, 0, 0)
+        tex_coord0 = glm.vec3(0)
         tex_coord1 = glm.vec3(1, 0, 0)
         tex_coord2 = glm.vec3(1, 1, 0)
         if i % 2 == 1:
-            tex_coord0 = glm.vec3(0, 0, 0)
+            tex_coord0 = glm.vec3(0)
             tex_coord1 = glm.vec3(1, 1, 0)
             tex_coord2 = glm.vec3(0, 1, 0)
 
