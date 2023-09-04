@@ -105,8 +105,7 @@ class ShaderProgram(GPUProgram):
         GL.glAttachShader(self._id, self.fragment_shader._id)
 
         related_files = "\n  " + "\n  ".join(self._get_compiled_files())
-        if GlassConfig.print:
-            print(f"linking: {related_files}")
+        print(f"linking: {related_files}")
 
         GL.glProgramParameteri(self._id, GL.GL_PROGRAM_BINARY_RETRIEVABLE_HINT, GL.GL_TRUE)
         GL.glLinkProgram(self._id)
@@ -159,9 +158,7 @@ class ShaderProgram(GPUProgram):
         meta_info["shader_storage_block_map"] = self._shader_storage_block_map
         meta_info["include_paths"] = self._include_paths
         save_var(meta_info, self._meta_file_name)
-
-        if GlassConfig.print:
-            print("done")
+        print("done")
 
     def _apply(self):
         if not self._linked_but_not_applied:
@@ -179,14 +176,8 @@ class ShaderProgram(GPUProgram):
             binary_data = in_file.read(binary_length)
             in_file.close()
 
-            related_files = "\n  " + "\n  ".join(self._get_compiled_files())
-            if GlassConfig.print:
-                print(f"using linked cache of: {related_files}")
             GL.glProgramBinary(self._id, binary_format, binary_data, binary_length)
             status = GL.glGetProgramiv(self._id, GL.GL_LINK_STATUS)
-            if GlassConfig.print:
-                print("done")
-
             if GL.GL_TRUE != status:
                 self._reapply()
         else:
@@ -195,41 +186,41 @@ class ShaderProgram(GPUProgram):
         self._linked_but_not_applied = False
 
     def _test_should_relink(self):
-        max_compiled_time = 0
+        max_modify_time = 0
         shader_should_recompile = False
 
         binary_name = os.path.basename(self.vertex_shader.file_name)
-        abs_file_names = os.path.abspath(self.vertex_shader.file_name)
+        abs_file_names = os.path.abspath(self.vertex_shader.file_name).replace("\\", "/")
         shader_should_recompile = shader_should_recompile or self.vertex_shader._should_recompile
-        if self.vertex_shader._meta_mtime > max_compiled_time:
-            max_compiled_time = self.vertex_shader._meta_mtime
+        if self.vertex_shader._max_modify_time > max_modify_time:
+            max_modify_time = self.vertex_shader._max_modify_time
 
         if self.geometry_shader.is_compiled:
             binary_name += ("+" + os.path.basename(self.geometry_shader.file_name))
-            abs_file_names += ("+" + os.path.abspath(self.geometry_shader.file_name))
+            abs_file_names += ("+" + os.path.abspath(self.geometry_shader.file_name).replace("\\", "/"))
             shader_should_recompile = shader_should_recompile or self.geometry_shader._should_recompile
-            if self.geometry_shader._meta_mtime > max_compiled_time:
-                max_compiled_time = self.geometry_shader._meta_mtime
+            if self.geometry_shader._max_modify_time > max_modify_time:
+                max_modify_time = self.geometry_shader._max_modify_time
 
         if self.tess_ctrl_shader.is_compiled:
             binary_name += ("+" + os.path.basename(self.tess_ctrl_shader.file_name))
-            abs_file_names += ("+" + os.path.abspath(self.tess_ctrl_shader.file_name))
+            abs_file_names += ("+" + os.path.abspath(self.tess_ctrl_shader.file_name).replace("\\", "/"))
             shader_should_recompile = shader_should_recompile or self.tess_ctrl_shader._should_recompile
-            if self.tess_ctrl_shader._meta_mtime > max_compiled_time:
-                max_compiled_time = self.tess_ctrl_shader._meta_mtime
+            if self.tess_ctrl_shader._max_modify_time > max_modify_time:
+                max_modify_time = self.tess_ctrl_shader._max_modify_time
 
         if self.tess_eval_shader.is_compiled:
             binary_name += ("+" + os.path.basename(self.tess_eval_shader.file_name))
-            abs_file_names += ("+" + os.path.abspath(self.tess_eval_shader.file_name))
+            abs_file_names += ("+" + os.path.abspath(self.tess_eval_shader.file_name).replace("\\", "/"))
             shader_should_recompile = shader_should_recompile or self.tess_eval_shader._should_recompile
-            if self.tess_eval_shader._meta_mtime > max_compiled_time:
-                max_compiled_time = self.tess_eval_shader._meta_mtime
+            if self.tess_eval_shader._max_modify_time > max_modify_time:
+                max_modify_time = self.tess_eval_shader._max_modify_time
 
         binary_name += ("+" + os.path.basename(self.fragment_shader.file_name))
-        abs_file_names += ("+" + os.path.abspath(self.fragment_shader.file_name))
+        abs_file_names += ("+" + os.path.abspath(self.fragment_shader.file_name).replace("\\", "/"))
         shader_should_recompile = shader_should_recompile or self.fragment_shader._should_recompile
-        if self.fragment_shader._meta_mtime > max_compiled_time:
-            max_compiled_time = self.fragment_shader._meta_mtime
+        if self.fragment_shader._max_modify_time > max_modify_time:
+            max_modify_time = self.fragment_shader._max_modify_time
 
         base = GlassConfig.cache_folder + "/" + binary_name + "_" + md5s(abs_file_names)
         self._binary_file_name = base + ".bin"
@@ -239,8 +230,8 @@ class ShaderProgram(GPUProgram):
         meta_mtime = modify_time(self._meta_file_name)
         if not shader_should_recompile and \
            bin_mtime > 0 and meta_mtime > 0 and \
-           max_compiled_time < bin_mtime and \
-           max_compiled_time < meta_mtime:
+           max_modify_time < bin_mtime and \
+           max_modify_time < meta_mtime:
             meta_info = load_var(self._meta_file_name)
             self._attributes_info = meta_info["attributes_info"]
             self._acceptable_primitives= meta_info["acceptable_primitives"]
@@ -401,14 +392,28 @@ class ShaderProgram(GPUProgram):
             available_units = GLConfig.available_texture_units - self_used_texture_units
             it_available_units = iter(available_units)
             for sampler_info in not_set_samplers:
+                location = sampler_info["location"]
+
                 texture_id = 0
                 if sampler_info["sampler"] is not None:
                     texture_id = sampler_info["sampler"].id
-                texture_unit = next(it_available_units)
+                
+                texture_unit = TextureUnits.unit_of_texture((target_type, texture_id))
+                if texture_unit is None:
+                    try:
+                        texture_unit = next(it_available_units)
+                    except:
+                        raise RuntimeError(f"run out all {GLConfig.max_texture_units} texture units")
+                
                 target_type = sampler_info["target_type"]
                 GLConfig.active_texture_unit = texture_unit
                 GL.glBindTexture(target_type, texture_id)
                 TextureUnits[texture_unit] = (target_type, texture_id)
+
+                if location not in self.uniform._texture_value_map or \
+                   self.uniform._texture_value_map[location] != texture_unit:
+                    GL.glUniform1i(location, texture_unit)
+                    self.uniform._texture_value_map[location] = texture_unit
 
         if not_set_images:
             available_units = GLConfig.available_image_units - self_used_image_units
@@ -418,12 +423,21 @@ class ShaderProgram(GPUProgram):
                 if sampler_info["sampler"] is not None:
                     texture_id = sampler_info["sampler"].id
 
-                texture_unit = next(it_available_units)
+                texture_unit = ImageUnits.unit_of_image((target_type, texture_id))
+                try:
+                    texture_unit = next(it_available_units)
+                except:
+                    raise RuntimeError(f"run out all {GLConfig.max_image_units} image units")
                 target_type = sampler_info["target_type"]
                 access = sampler_info["access"]
                 internal_format = sampler_info["sampler"].internal_format
                 GL.glBindImageTexture(texture_unit, texture_id, 0, False, 0, access, internal_format)
                 ImageUnits[texture_unit] = (target_type, texture_id)
+
+                if location not in self.uniform._texture_value_map or \
+                   self.uniform._texture_value_map[location] != texture_unit:
+                    GL.glUniform1i(location, texture_unit)
+                    self.uniform._texture_value_map[location] = texture_unit
 
         if self._uniform_not_set_warning and GlassConfig.debug:
             not_set_uniforms = []

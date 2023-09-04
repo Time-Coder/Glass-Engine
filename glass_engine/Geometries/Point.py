@@ -8,7 +8,7 @@ from OpenGL import GL
 
 class Point(Mesh):
 
-    def __init__(self, position:glm.vec3=glm.vec3(0,0,0), color:(glm.vec3,glm.vec4)=glm.vec4(0.396, 0.74151, 0.69102, 1), point_size:int=3,
+    def __init__(self, position:glm.vec3=glm.vec3(0,0,0), color:(glm.vec3,glm.vec4)=glm.vec4(0.396, 0.74151, 0.69102, 1), point_size:int=5,
                  name:str=""):
         Mesh.__init__(self, primitive=GL.GL_POINTS, color=color, name=name)
         self.render_hint.point_size = point_size

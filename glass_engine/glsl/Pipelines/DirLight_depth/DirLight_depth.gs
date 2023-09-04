@@ -6,8 +6,21 @@
 layout (triangles, invocations={CSM_levels}) in;
 layout (triangle_strip, max_vertices=3) out;
 
-in flat int vertex_visible[];
-out flat int visible;
+in VertexOut
+{
+    vec4 color;
+    vec4 back_color;
+    vec3 tex_coord;
+    flat bool visible;
+} gs_in[];
+
+out GeometryOut
+{
+    vec4 color;
+    vec4 back_color;
+    vec3 tex_coord;
+    flat bool visible;
+} gs_out;
 
 #include "../../Lights/DirLight.glsl"
 
@@ -25,7 +38,10 @@ void main()
     for (int i = 0; i < 3; i++)
     {
         vec3 world_pos = gl_in[i].gl_Position.xyz + explode_distance * face_world_normal;
-        visible = vertex_visible[i];
+        gs_out.visible = gs_in[i].visible;
+        gs_out.color = gs_in[i].color;
+        gs_out.back_color = gs_in[i].back_color;
+        gs_out.tex_coord = gs_in[i].tex_coord;
         
         gl_Position = world_to_lightNDC(dir_light, camera, gl_InvocationID, world_pos);
         EmitVertex();

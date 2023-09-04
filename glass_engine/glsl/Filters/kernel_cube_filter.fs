@@ -31,7 +31,7 @@ void main()
         for (int j = 0; j < cols; j++)
         {
             float s = fs_in.tex_coord.s + (j - 0.5*(cols-1))*dx;
-            frag_color += data[i*cols + j] * textureCubeFace(screen_image, vec2(s, t), gl_Layer);
+            frag_color += data[i*cols + j] * max(textureCubeFace(screen_image, vec2(s, t), gl_Layer), 0.0);
         }
     }
 }

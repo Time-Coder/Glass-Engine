@@ -3,6 +3,7 @@ import math
 import copy
 import numpy as np
 from functools import cache
+from glass.AttrList import AttrList
 
 def fzero(f, interval):
     lower = interval[0]
@@ -250,6 +251,15 @@ def generate_TBN(vertices, indices):
     return tangent, bitangent, normal
 
 def generate_auto_TBN(vertices, indices, calculate_normal=True):
+    if "tangent" not in vertices._attr_list_map:
+        vertices._attr_list_map["tangent"] = AttrList(dtype=glm.vec3)
+
+    if "bitangent" not in vertices._attr_list_map:
+        vertices._attr_list_map["bitangent"] = AttrList(dtype=glm.vec3)
+
+    if "normal" not in vertices._attr_list_map:
+        vertices._attr_list_map["normal"] = AttrList(dtype=glm.vec3)
+
     points_list = []
     for i in range(vertices["position"].ndarray.shape[0]):
         points_list.append({
@@ -288,6 +298,15 @@ def generate_auto_TBN(vertices, indices, calculate_normal=True):
                 vertices["normal"].ndarray[index, :] = info["normal"]
 
 def generate_smooth_TBN(vertices, indices, calculate_normal=True):
+    if "tangent" not in vertices._attr_list_map:
+        vertices._attr_list_map["tangent"] = AttrList(dtype=glm.vec3)
+
+    if "bitangent" not in vertices._attr_list_map:
+        vertices._attr_list_map["bitangent"] = AttrList(dtype=glm.vec3)
+
+    if "normal" not in vertices._attr_list_map:
+        vertices._attr_list_map["normal"] = AttrList(dtype=glm.vec3)
+
     points_map = {}
     pos_keys = []
     for i in range(vertices["position"].ndarray.shape[0]):
@@ -331,17 +350,7 @@ def generate_smooth_TBN(vertices, indices, calculate_normal=True):
             vertices["bitangent"].ndarray[index, :] = info["bitangent"]
             if calculate_normal:
                 vertices["normal"].ndarray[index, :] = info["normal"]
-
-def generate_sharp_TBN(vertices, indices, calculate_normal=True):
-    if "tangent" in vertices:
-        vertices["tangent"].ndarray = np.zeros_like(vertices["tangent"].ndarray)
-
-    if "bitangent" in vertices:
-        vertices["bitangent"].ndarray = np.zeros_like(vertices["bitangent"].ndarray)
-
-    if "normal" in vertices:
-        vertices["normal"].ndarray = np.zeros_like(vertices["normal"].ndarray)
-
+        
 def line_intersect_plane(line_start:glm.vec3, line_direction:glm.vec3,
                          plane_start:glm.vec3, plane_normal:glm.vec3):
     A = plane_start

@@ -24,9 +24,9 @@ class ImageLoader:
         if ext_name == "exr":
             image = ImageLoader.OpenEXR_load(file_name)
         else:
-            image = ImageLoader.cv2_load(file_name)
+            image = ImageLoader.PIL_load(file_name)
             if image is None:
-                image = ImageLoader.PIL_load(file_name)
+                image = ImageLoader.cv2_load(file_name)
         if image is None:
             raise ValueError(f"not supported image format: '{file_name}'")
 

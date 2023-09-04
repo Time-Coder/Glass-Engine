@@ -8,8 +8,8 @@ from .Polyline import Polyline
 # 面
 from .RectangleFace import RectangleFace
 
-from .RegularPolygonFace import RegularPolygonFace
-from .HollowRegularPolygonFace import HollowRegularPolygonFace
+from .RPolygonFace import RPolygonFace
+from .HollowRPolygonFace import HollowRPolygonFace
 
 from .CircleFace import CircleFace
 from .TorusFace import TorusFace
@@ -17,7 +17,7 @@ from .EllipseFace import EllipseFace
 
 # 体
 
-# 非曲面体
+# 多面体
 from .Box import Box
 
 from .Prism import Prism
@@ -69,3 +69,4 @@ from .Torus import Torus
 from .TrefoilKnot import TrefoilKnot
 from .SphericalHarmonics import SphericalHarmonics
 from .CoordSys import CoordSys
+from .ImageQuad import ImageQuad

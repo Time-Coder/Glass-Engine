@@ -8,23 +8,29 @@ from OpenGL import GL
 import glm
 import os
 
-def _init_GaussFilter(cls):
-    cls.program = ShaderProgram()
-    cls.program.compile(Frame.draw_frame_vs)
-    cls.program.compile(os.path.dirname(os.path.abspath(__file__)) + "/../glsl/Filters/gauss_filter.fs")
-
-    cls.cube_program = ShaderProgram()
-    cls.cube_program.compile(Frame.draw_frame_vs)
-    cls.cube_program.compile(Frame.draw_frame_array_gs(6))
-    cls.cube_program.compile(os.path.dirname(os.path.abspath(__file__)) + "/../glsl/Filters/gauss_cube_filter.fs")
-
-    return cls
-
-@_init_GaussFilter
 class GaussFilter(Filter):
 
     __array_programs = {}
+    __program = None
+    __cube_program = None
 
+    @staticmethod
+    def program():
+        if GaussFilter.__program is None:
+            GaussFilter.__program = ShaderProgram()
+            GaussFilter.__program.compile(Frame.draw_frame_vs)
+            GaussFilter.__program.compile(os.path.dirname(os.path.abspath(__file__)) + "/../glsl/Filters/gauss_filter.fs")
+        return GaussFilter.__program
+    
+    @staticmethod
+    def cube_program():
+        if GaussFilter.__cube_program is None:
+            GaussFilter.__cube_program = ShaderProgram()
+            GaussFilter.__cube_program.compile(Frame.draw_frame_vs)
+            GaussFilter.__cube_program.compile(Frame.draw_frame_array_gs(6))
+            GaussFilter.__cube_program.compile(os.path.dirname(os.path.abspath(__file__)) + "/../glsl/Filters/gauss_cube_filter.fs")
+        return GaussFilter.__cube_program
+    
     @checktype
     def __init__(self, kernel_shape:(int,tuple)=32, sigma:(float,tuple)=0):
         Filter.__init__(self)
@@ -42,23 +48,54 @@ class GaussFilter(Filter):
         else:
             self.__sigma.x, self.__sigma.y = sigma, sigma
 
-        self.horizontal_fbo = FBO()
-        self.horizontal_fbo.attach(0, sampler2D)
+        self._horizontal_fbo = None
+        self._vertical_fbo = None
+        self._horizontal_array_fbo = None
+        self._vertical_array_fbo = None
+        self._horizontal_cube_fbo = None
+        self._vertical_cube_fbo = None
 
-        self.vertical_fbo = FBO()
-        self.vertical_fbo.attach(0, sampler2D)
+    @property
+    def horizontal_fbo(self):
+        if self._horizontal_fbo is None:
+            self._horizontal_fbo = FBO()
+            self._horizontal_fbo.attach(0, sampler2D)
+        return self._horizontal_fbo
 
-        self.horizontal_array_fbo = FBO()
-        self.horizontal_array_fbo.attach(0, sampler2DArray)
+    @property
+    def vertical_fbo(self):
+        if self._vertical_fbo is None:
+            self._vertical_fbo = FBO()
+            self._vertical_fbo.attach(0, sampler2D)
+        return self._vertical_fbo
 
-        self.vertical_array_fbo = FBO()
-        self.vertical_array_fbo.attach(0, sampler2DArray)
+    @property
+    def horizontal_array_fbo(self):
+        if self._horizontal_array_fbo is None:
+            self._horizontal_array_fbo = FBO()
+            self._horizontal_array_fbo.attach(0, sampler2DArray)
+        return self._horizontal_array_fbo
 
-        self.horizontal_cube_fbo = FBO()
-        self.horizontal_cube_fbo.attach(0, samplerCube)
+    @property
+    def vertical_array_fbo(self):
+        if self._vertical_array_fbo is None:
+            self._vertical_array_fbo = FBO()
+            self._vertical_array_fbo.attach(0, sampler2DArray)
+        return self._vertical_array_fbo
 
-        self.vertical_cube_fbo = FBO()
-        self.vertical_cube_fbo.attach(0, samplerCube)
+    @property
+    def horizontal_cube_fbo(self):
+        if self._horizontal_cube_fbo is None:
+            self._horizontal_cube_fbo = FBO()
+            self._horizontal_cube_fbo.attach(0, samplerCube)
+        return self._horizontal_cube_fbo
+
+    @property
+    def vertical_cube_fbo(self):
+        if self._vertical_cube_fbo is None:
+            self._vertical_cube_fbo = FBO()
+            self._vertical_cube_fbo.attach(0, samplerCube)
+        return self._vertical_cube_fbo
 
     def __call__(self, screen_image:(sampler2D,sampler2DArray,samplerCube))->(sampler2D,sampler2DArray,samplerCube):
         if self.__sigma.x == 0:
@@ -72,18 +109,18 @@ class GaussFilter(Filter):
 
             with GLConfig.LocalConfig(cull_face=None, polygon_mode=GL.GL_FILL):
 
-                GaussFilter.program["kernel_shape"] = self.__kernel_shape
-                GaussFilter.program["sigma"] = self.__sigma
+                GaussFilter.program()["kernel_shape"] = self.__kernel_shape
+                GaussFilter.program()["sigma"] = self.__sigma
 
                 with self.horizontal_fbo:
-                    GaussFilter.program["screen_image"] = screen_image
-                    GaussFilter.program["horizontal"] = True
-                    GaussFilter.program.draw_triangles(Frame.vertices, Frame.indices)
+                    GaussFilter.program()["screen_image"] = screen_image
+                    GaussFilter.program()["horizontal"] = True
+                    GaussFilter.program().draw_triangles(Frame.vertices, Frame.indices)
 
                 with self.vertical_fbo:
-                    GaussFilter.program["screen_image"] = self.horizontal_fbo.color_attachment(0)
-                    GaussFilter.program["horizontal"] = False
-                    GaussFilter.program.draw_triangles(Frame.vertices, Frame.indices)
+                    GaussFilter.program()["screen_image"] = self.horizontal_fbo.color_attachment(0)
+                    GaussFilter.program()["horizontal"] = False
+                    GaussFilter.program().draw_triangles(Frame.vertices, Frame.indices)
 
             return self.vertical_fbo.color_attachment(0)
         elif isinstance(screen_image, sampler2DArray):
@@ -112,7 +149,7 @@ class GaussFilter(Filter):
             self.horizontal_cube_fbo.resize(screen_image.width, screen_image.height)
             self.vertical_cube_fbo.resize(screen_image.width, screen_image.height)
 
-            program = GaussFilter.cube_program
+            program = GaussFilter.cube_program()
 
             with GLConfig.LocalConfig(cull_face=None, polygon_mode=GL.GL_FILL):
                 
@@ -142,18 +179,18 @@ class GaussFilter(Filter):
 
         with GLConfig.LocalConfig(cull_face=None, polygon_mode=GL.GL_FILL):
 
-            GaussFilter.program["kernel_shape"] = self.__kernel_shape
-            GaussFilter.program["sigma"] = self.__sigma
+            GaussFilter.program()["kernel_shape"] = self.__kernel_shape
+            GaussFilter.program()["sigma"] = self.__sigma
 
             with self.horizontal_fbo:
-                GaussFilter.program["screen_image"] = screen_image
-                GaussFilter.program["horizontal"] = True
-                GaussFilter.program.draw_triangles(Frame.vertices, Frame.indices)
+                GaussFilter.program()["screen_image"] = screen_image
+                GaussFilter.program()["horizontal"] = True
+                GaussFilter.program().draw_triangles(Frame.vertices, Frame.indices)
 
             GLConfig.clear_buffers()
-            GaussFilter.program["screen_image"] = self.horizontal_fbo.color_attachment(0)
-            GaussFilter.program["horizontal"] = False
-            GaussFilter.program.draw_triangles(Frame.vertices, Frame.indices)
+            GaussFilter.program()["screen_image"] = self.horizontal_fbo.color_attachment(0)
+            GaussFilter.program()["horizontal"] = False
+            GaussFilter.program().draw_triangles(Frame.vertices, Frame.indices)
 
     @property
     def kernel_shape(self)->tuple:

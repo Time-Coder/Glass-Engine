@@ -36,17 +36,33 @@ class DOFFilter(Filter):
 
         self.current_focus = DOFFilter.CurrentFocus()
 
-        self.horizontal_fbo = FBO()
-        self.horizontal_fbo.attach(0, sampler2D, GL.GL_RGBA32F)
+        self._horizontal_fbo = None
+        self._vertical_fbo = None
+        self._program = None
 
-        self.vertical_fbo = FBO()
-        self.vertical_fbo.attach(0, sampler2D, GL.GL_RGBA32F)
+    @property
+    def horizontal_fbo(self):
+        if self._horizontal_fbo is None:
+            self._horizontal_fbo = FBO()
+            self._horizontal_fbo.attach(0, sampler2D, GL.GL_RGBA32F)
+        return self._horizontal_fbo
 
-        self.program = ShaderProgram()
-        self.program.compile(Frame.draw_frame_vs)
-        self.program.compile(os.path.dirname(os.path.abspath(__file__)) + "/../glsl/Filters/dof_filter.fs")
-        self.program["CurrentFocus"].bind(self.current_focus)
+    @property
+    def vertical_fbo(self):
+        if self._vertical_fbo is None:
+            self._vertical_fbo = FBO()
+            self._vertical_fbo.attach(0, sampler2D, GL.GL_RGBA32F)
+        return self._vertical_fbo
 
+    @property
+    def program(self):
+        if self._program is None:
+            self._program = ShaderProgram()
+            self._program.compile(Frame.draw_frame_vs)
+            self._program.compile(os.path.dirname(os.path.abspath(__file__)) + "/../glsl/Filters/dof_filter.fs")
+            self._program["CurrentFocus"].bind(self.current_focus)
+        return self._program
+    
     @property
     def camera(self):        
         return di(self._camera_id)

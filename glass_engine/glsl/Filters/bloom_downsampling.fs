@@ -10,7 +10,7 @@ out vec4 frag_color;
 uniform sampler2D screen_image;
 uniform int mip_level;
 
-#include "../include/math.glsl"
+#include "../include/sampling.glsl"
 
 float first_weight(vec4 color, float max_value)
 {
@@ -37,22 +37,22 @@ void main()
     // - l - m -
     // g - h - i
     // === ('e' is the current texel) ===
-    vec4 a = texture(screen_image, vec2(fs_in.tex_coord.x - 2*dx, fs_in.tex_coord.y + 2*dy));
-    vec4 b = texture(screen_image, vec2(fs_in.tex_coord.x,        fs_in.tex_coord.y + 2*dy));
-    vec4 c = texture(screen_image, vec2(fs_in.tex_coord.x + 2*dx, fs_in.tex_coord.y + 2*dy));
+    vec4 a = textureColor(screen_image, vec2(fs_in.tex_coord.x - 2*dx, fs_in.tex_coord.y + 2*dy));
+    vec4 b = textureColor(screen_image, vec2(fs_in.tex_coord.x,        fs_in.tex_coord.y + 2*dy));
+    vec4 c = textureColor(screen_image, vec2(fs_in.tex_coord.x + 2*dx, fs_in.tex_coord.y + 2*dy));
 
-    vec4 d = texture(screen_image, vec2(fs_in.tex_coord.x - 2*dx, fs_in.tex_coord.y));
-    vec4 e = texture(screen_image, vec2(fs_in.tex_coord.x,        fs_in.tex_coord.y));
-    vec4 f = texture(screen_image, vec2(fs_in.tex_coord.x + 2*dx, fs_in.tex_coord.y));
+    vec4 d = textureColor(screen_image, vec2(fs_in.tex_coord.x - 2*dx, fs_in.tex_coord.y));
+    vec4 e = textureColor(screen_image, vec2(fs_in.tex_coord.x,        fs_in.tex_coord.y));
+    vec4 f = textureColor(screen_image, vec2(fs_in.tex_coord.x + 2*dx, fs_in.tex_coord.y));
 
-    vec4 g = texture(screen_image, vec2(fs_in.tex_coord.x - 2*dx, fs_in.tex_coord.y - 2*dy));
-    vec4 h = texture(screen_image, vec2(fs_in.tex_coord.x,        fs_in.tex_coord.y - 2*dy));
-    vec4 i = texture(screen_image, vec2(fs_in.tex_coord.x + 2*dx, fs_in.tex_coord.y - 2*dy));
+    vec4 g = textureColor(screen_image, vec2(fs_in.tex_coord.x - 2*dx, fs_in.tex_coord.y - 2*dy));
+    vec4 h = textureColor(screen_image, vec2(fs_in.tex_coord.x,        fs_in.tex_coord.y - 2*dy));
+    vec4 i = textureColor(screen_image, vec2(fs_in.tex_coord.x + 2*dx, fs_in.tex_coord.y - 2*dy));
 
-    vec4 j = texture(screen_image, vec2(fs_in.tex_coord.x - dx, fs_in.tex_coord.y + dy));
-    vec4 k = texture(screen_image, vec2(fs_in.tex_coord.x + dx, fs_in.tex_coord.y + dy));
-    vec4 l = texture(screen_image, vec2(fs_in.tex_coord.x - dx, fs_in.tex_coord.y - dy));
-    vec4 m = texture(screen_image, vec2(fs_in.tex_coord.x + dx, fs_in.tex_coord.y - dy));
+    vec4 j = textureColor(screen_image, vec2(fs_in.tex_coord.x - dx, fs_in.tex_coord.y + dy));
+    vec4 k = textureColor(screen_image, vec2(fs_in.tex_coord.x + dx, fs_in.tex_coord.y + dy));
+    vec4 l = textureColor(screen_image, vec2(fs_in.tex_coord.x - dx, fs_in.tex_coord.y - dy));
+    vec4 m = textureColor(screen_image, vec2(fs_in.tex_coord.x + dx, fs_in.tex_coord.y - dy));
 
     if (mip_level == 0)
     {
@@ -81,7 +81,6 @@ void main()
         weight_sum += (w_j+w_k+w_l+w_m)*0.125;
 
         frag_color = frag_color / weight_sum;
-        frag_color = max(frag_color, 0.0001);
     }
     else
     {

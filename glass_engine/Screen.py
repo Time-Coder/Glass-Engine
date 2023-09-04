@@ -312,8 +312,6 @@ class Screen(QOpenGLWidget):
         return should_update_scene
 
     def paintGL(self)->None:
-        sampler2D._should_update = False
-
         self.makeCurrent()
         self.frame_started.emit()
 
@@ -339,7 +337,7 @@ class Screen(QOpenGLWidget):
         self.__calc_fps()
         self.frame_ended.emit()
 
-        if should_update_scene or should_update_filter or sampler2D._should_update:
+        if should_update_scene or should_update_filter:
             if should_update_scene:
                 self._before_filter_image = None
                 

@@ -15,5 +15,5 @@ uniform samplerCube screen_image;
 
 void main()
 {
-    frag_color = textureCubeFaceFXAA(screen_image, fs_in.tex_coord, gl_Layer);
+    frag_color = textureColorCubeFaceFXAA(screen_image, fs_in.tex_coord, gl_Layer);
 }

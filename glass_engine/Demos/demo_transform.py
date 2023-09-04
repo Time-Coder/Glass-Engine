@@ -157,7 +157,7 @@ class MainWindow(QDialog):
         self.scene.add(self.model)
         self.scene.add(coord_sys)
 
-        self.scene.skydome = self_path + "/assets/skydomes/industrial_sunset_puresky_4k.exr"
+        self.scene.skydome = self_path + "/assets/skydomes/puresky.exr"
         
         vlayout.addWidget(self.camera.screen)
 

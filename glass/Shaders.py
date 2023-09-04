@@ -76,8 +76,6 @@ class BaseShader(GLObject):
 		file_name = os.path.abspath(file_name).replace("\\", "/")
 		rel_name = relative_path(file_name)
 		if file_name in cls._shader_map:
-			if GlassConfig.print:
-				print(f"using existing shader: {rel_name}")
 			return cls._shader_map[file_name]
 		else:
 			shader = cls()
@@ -117,8 +115,7 @@ class BaseShader(GLObject):
 			if self._id == 0:
 				raise MemoryError("Failed to create Shader!")
 			
-		if GlassConfig.print:
-			print(f"compiling {self.file_name}")
+		print(f"compiling {self.file_name}")
 		GL.glShaderSource(self._id, self._code)
 		GL.glCompileShader(self._id)
 
@@ -159,7 +156,7 @@ class BaseShader(GLObject):
 
 	def _test_should_recompile(self):
 		meta_mtime = modify_time(self._meta_file_name)
-		self._meta_mtime = meta_mtime
+		self._max_modify_time = 0
 
 		if meta_mtime == 0:
 			self._should_recompile = True
@@ -167,11 +164,18 @@ class BaseShader(GLObject):
 		
 		meta_info = load_var(self._meta_file_name)
 		related_files = meta_info["related_files"]
+		should_recompile = False
 		for file_name in related_files:			
 			mtime = modify_time(file_name)
 			if mtime == 0 or mtime > meta_mtime:
-				self._should_recompile = True
-				return True
+				should_recompile = True
+
+			if mtime > self._max_modify_time:
+				self._max_modify_time = mtime
+
+		if should_recompile:
+			self._should_recompile = True
+			return True
 		
 		self._code = meta_info["code"]
 		self._clean_code = meta_info["clean_code"]
@@ -218,8 +222,6 @@ class BaseShader(GLObject):
 		self._meta_file_name = GlassConfig.cache_folder + "/" + base_name + "_" + md5s(abs_name) + ".meta"
 
 		if self._test_should_recompile():
-			if GlassConfig.print:
-				print(f"precompiling {used_name}")
 			self._code = cat(file_name)
 			self.related_files = [abs_name]
 			self.add_include_path(".")
@@ -258,9 +260,6 @@ class BaseShader(GLObject):
 
 			if self._type == GL.GL_COMPUTE_SHADER:
 				self.work_group_size = ShaderParser.find_work_group_size(self._clean_code)
-		
-		elif GlassConfig.print:
-			print(f"using precompiled cache: {used_name}")
 
 		self._compiled_but_not_applied = True
 
@@ -415,8 +414,6 @@ class BaseShader(GLObject):
 
 				self._code = self._code[:pos_include_start] + include_content + self._code[pos_include_end:]
 				if include_content:
-					if GlassConfig.print:
-						print(f"expanding include: {used_name}")
 					include_line_num = ShaderParser.line_of(self._code, pos_include_start)
 					include_lines = ShaderParser.lines(include_content)
 					include_line_end = include_line_num + include_lines

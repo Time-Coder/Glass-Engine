@@ -9,6 +9,8 @@ in TexCoord
 
 out vec4 frag_color;
 
+#include "../include/sampling.glsl"
+
 uniform sampler2DArray screen_image;
 
 buffer Kernel
@@ -31,7 +33,7 @@ void main()
         for (int j = 0; j < cols; j++)
         {
             float s = fs_in.tex_coord.s + (j - 0.5*(cols-1))*dx;
-            frag_color += data[i*cols + j] * texture2DArray(screen_image, vec3(s, t, gl_Layer));
+            frag_color += data[i*cols + j] * textureColor(screen_image, vec3(s, t, gl_Layer));
         }
     }
 }

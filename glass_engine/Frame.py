@@ -18,7 +18,7 @@ def _init_Frame(cls):
     cls.indices[0] = glm.uvec3(0, 1, 2)
     cls.indices[1] = glm.uvec3(0, 2, 3)
 
-    self_folder = os.path.dirname(os.path.abspath(__file__))
+    self_folder = os.path.dirname(os.path.abspath(__file__)).replace("\\", "/")
     cls.draw_frame_vs = os.path.abspath(self_folder + "/glsl/Pipelines/draw_frame.vs")
     cls.draw_frame_fs = os.path.abspath(self_folder + "/glsl/Pipelines/draw_frame.fs")
 

@@ -7,6 +7,8 @@ in TexCoord
 
 out vec4 frag_color;
 
+#include "../include/sampling.glsl"
+
 uniform sampler2D screen_image;
 uniform bool horizontal;
 
@@ -29,7 +31,7 @@ void main()
             float ds = dj*tex_offset.x;
             float s = fs_in.tex_coord.s + ds;
             float weight = exp(-dj*dj/double_sigma_x2);
-            frag_color += weight * texture(screen_image, vec2(s, t));
+            frag_color += weight * textureColor(screen_image, vec2(s, t));
             weight_sum += weight;
         }
         frag_color = frag_color / weight_sum;
@@ -45,7 +47,7 @@ void main()
             float dt = di*tex_offset.y;
             float t = fs_in.tex_coord.t + dt;
             float weight = exp(-di*di/double_sigma_y2);
-            frag_color += weight * texture(screen_image, vec2(s, t));
+            frag_color += weight * textureColor(screen_image, vec2(s, t));
             weight_sum += weight;
         }
         frag_color = frag_color / weight_sum;

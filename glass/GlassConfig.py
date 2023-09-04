@@ -4,7 +4,7 @@ import sys
 class GlassConfig:
 
     def __init__(self):
-        self.__cache_folder = os.path.dirname(os.path.abspath(sys.argv[0])) + "/__glcache__"
+        self.__cache_folder = os.path.dirname(os.path.abspath(sys.argv[0])).replace("\\", "/") + "/__glcache__"
         self.__debug = True
         self.__print = False
         self.__warning = True

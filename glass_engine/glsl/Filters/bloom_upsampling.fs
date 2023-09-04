@@ -7,6 +7,8 @@ in TexCoord
 
 out vec4 frag_color;
 
+#include "../include/sampling.glsl"
+
 uniform float filter_radius;
 uniform sampler2D screen_image;
 
@@ -22,17 +24,17 @@ void main()
     // d - e - f
     // g - h - i
     // === ('e' is the current texel) ===
-    vec4 a = texture(screen_image, vec2(fs_in.tex_coord.x - dx, fs_in.tex_coord.y + dy));
-    vec4 b = texture(screen_image, vec2(fs_in.tex_coord.x,      fs_in.tex_coord.y + dy));
-    vec4 c = texture(screen_image, vec2(fs_in.tex_coord.x + dx, fs_in.tex_coord.y + dy));
+    vec4 a = textureColor(screen_image, vec2(fs_in.tex_coord.x - dx, fs_in.tex_coord.y + dy));
+    vec4 b = textureColor(screen_image, vec2(fs_in.tex_coord.x,      fs_in.tex_coord.y + dy));
+    vec4 c = textureColor(screen_image, vec2(fs_in.tex_coord.x + dx, fs_in.tex_coord.y + dy));
 
-    vec4 d = texture(screen_image, vec2(fs_in.tex_coord.x - dx, fs_in.tex_coord.y));
-    vec4 e = texture(screen_image, vec2(fs_in.tex_coord.x,      fs_in.tex_coord.y));
-    vec4 f = texture(screen_image, vec2(fs_in.tex_coord.x + dx, fs_in.tex_coord.y));
+    vec4 d = textureColor(screen_image, vec2(fs_in.tex_coord.x - dx, fs_in.tex_coord.y));
+    vec4 e = textureColor(screen_image, vec2(fs_in.tex_coord.x,      fs_in.tex_coord.y));
+    vec4 f = textureColor(screen_image, vec2(fs_in.tex_coord.x + dx, fs_in.tex_coord.y));
 
-    vec4 g = texture(screen_image, vec2(fs_in.tex_coord.x - dx, fs_in.tex_coord.y - dy));
-    vec4 h = texture(screen_image, vec2(fs_in.tex_coord.x,      fs_in.tex_coord.y - dy));
-    vec4 i = texture(screen_image, vec2(fs_in.tex_coord.x + dx, fs_in.tex_coord.y - dy));
+    vec4 g = textureColor(screen_image, vec2(fs_in.tex_coord.x - dx, fs_in.tex_coord.y - dy));
+    vec4 h = textureColor(screen_image, vec2(fs_in.tex_coord.x,      fs_in.tex_coord.y - dy));
+    vec4 i = textureColor(screen_image, vec2(fs_in.tex_coord.x + dx, fs_in.tex_coord.y - dy));
 
     // Apply weighted distribution, by using a 3x3 tent filter:
     //  1   | 1 2 1 |

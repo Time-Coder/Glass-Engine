@@ -30,13 +30,24 @@ class HDRFilter(Filter):
 
         self._camera_id = id(None)
 
-        self.program = ShaderProgram()
-        self.program.compile(Frame.draw_frame_vs)
-        self.program.compile(os.path.dirname(os.path.abspath(__file__)) + "/../glsl/Filters/hdr_filter.fs")
-        self.program["CurrentLuma"].bind(self.current_luma)
+        self._program = None
+        self._fbo = None
 
-        self.fbo = FBO()
-        self.fbo.attach(0, sampler2D)
+    @property
+    def program(self):
+        if self._program is None:
+            self._program = ShaderProgram()
+            self._program.compile(Frame.draw_frame_vs)
+            self._program.compile(os.path.dirname(os.path.abspath(__file__)) + "/../glsl/Filters/hdr_filter.fs")
+            self._program["CurrentLuma"].bind(self.current_luma)
+        return self._program
+
+    @property
+    def fbo(self):
+        if self._fbo is None:
+            self._fbo = FBO()
+            self._fbo.attach(0, sampler2D)
+        return self._fbo
 
     @property
     def camera(self):        

@@ -8,6 +8,7 @@ in TexCoord
 out vec4 frag_color;
 
 #include "../include/Camera.glsl"
+#include "../include/sampling.glsl"
 
 uniform sampler2D screen_image;
 uniform Camera camera;
@@ -33,7 +34,7 @@ vec3 _Uncharted(vec3 x)
 
 void main()
 {
-    float target_luma = luminance(textureLod(screen_image, camera.focus_tex_coord, 7).rgb);
+    float target_luma = luminance(textureColorLod(screen_image, camera.focus_tex_coord, 7).rgb);
     float luma = target_luma;
     float _current_luma = current_luma;
     if(_current_luma != 0)
@@ -52,7 +53,7 @@ void main()
         memoryBarrier();
     }
         
-	frag_color = texture(screen_image, fs_in.tex_coord);
+	frag_color = textureColor(screen_image, fs_in.tex_coord);
 	// frag_color.rgb = vec3(1.0) - exp(-frag_color.rgb / (0.5+pow(luma, 1.0/3.0)));
 
     luma = 0.5*(0.5+pow(luma, 1.0/3.0));

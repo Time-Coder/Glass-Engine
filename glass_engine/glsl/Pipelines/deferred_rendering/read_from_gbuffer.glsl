@@ -2,6 +2,7 @@
 #define _READ_FROM_GBUFFER_GLSL__
 
 #include "../../include/ShadingInfo.glsl"
+#include "../../include/sampling.glsl"
 
 PostShadingInfo read_from_gbuffer(
     in Camera camera,
@@ -21,11 +22,11 @@ PostShadingInfo read_from_gbuffer(
 
     vec4 view_pos_and_alpha = texture(view_pos_and_alpha_map, fs_in.tex_coord);
     vec4 view_normal_and_emission_r = texture(view_normal_and_emission_r_map, fs_in.tex_coord);
-    vec4 ambient_and_emission_g = texture(ambient_and_emission_g_map, fs_in.tex_coord);
-    vec4 diffuse_or_base_color_and_emission_b = texture(diffuse_or_base_color_and_emission_b_map, fs_in.tex_coord);
-    vec4 specular_or_preshading_and_shininess = texture(specular_or_preshading_and_shininess_map, fs_in.tex_coord);
+    vec4 ambient_and_emission_g = textureColor(ambient_and_emission_g_map, fs_in.tex_coord);
+    vec4 diffuse_or_base_color_and_emission_b = textureColor(diffuse_or_base_color_and_emission_b_map, fs_in.tex_coord);
+    vec4 specular_or_preshading_and_shininess = textureColor(specular_or_preshading_and_shininess_map, fs_in.tex_coord);
     uvec4 mixed_uint = texture(mixed_uint_map, fs_in.tex_coord);
-    shading_info.material.reflection = texture(reflection_map, fs_in.tex_coord);
+    shading_info.material.reflection = textureColor(reflection_map, fs_in.tex_coord);
     vec4 env_center_and_mixed_value = texture(env_center_and_mixed_value_map, fs_in.tex_coord);
 
     vec3 view_pos = view_pos_and_alpha.xyz;
@@ -82,7 +83,7 @@ PostShadingInfo read_from_gbuffer(
         shading_info.material.shininess = specular_or_preshading_and_shininess.a;
     }
 
-    shading_info.material.ambient_occlusion = (mixed_uint.w >> 24) / 255.0;
+    shading_info.material.ao = (mixed_uint.w >> 24) / 255.0;
     shading_info.material.roughness = (((uint(0xFF) << 16) & mixed_uint.w) >> 16) / 255.0;
     shading_info.material.metallic = (((uint(0xFF) << 8) & mixed_uint.w) >> 8) / 255.0;
     shading_info.material.rim_power = (uint(0xFF) & mixed_uint.w) / 255.0;

@@ -30,7 +30,7 @@ void main()
             float d = (j - 0.5*(kernel_shape.x-1))*tex_offset.x;
             float s = fs_in.tex_coord.s + d;
             float weight = exp(-d*d/double_sigma_x2);
-            frag_color += weight * textureCubeFace(screen_image, vec2(s, t), gl_Layer);
+            frag_color += weight * max(textureCubeFace(screen_image, vec2(s, t), gl_Layer), 0.0);
             weight_sum += weight;
         }
         frag_color = frag_color / weight_sum;
@@ -45,7 +45,7 @@ void main()
             float d = (i - 0.5*(kernel_shape.y-1))*tex_offset.y;
             float t = fs_in.tex_coord.t + d;
             float weight = exp(-d*d/double_sigma_y2);
-            frag_color += weight * textureCubeFace(screen_image, vec2(s, t), gl_Layer);
+            frag_color += weight * max(textureCubeFace(screen_image, vec2(s, t), gl_Layer), 0.0);
             weight_sum += weight;
         }
         frag_color = frag_color / weight_sum;

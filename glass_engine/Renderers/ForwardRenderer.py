@@ -134,6 +134,7 @@ class ForwardRenderer(CommonRenderer):
     def render(self):
         # profiler.enable()
         self._should_update = False
+        sampler2D._should_update = False
         self.classify_meshes()
         self.update_dir_lights_depth()
         self.update_point_lights_depth()
@@ -142,4 +143,4 @@ class ForwardRenderer(CommonRenderer):
         self.draw_opaque()
         self.draw_transparent()
         # profiler.disable()
-        return self._should_update
+        return (self._should_update or sampler2D._should_update)

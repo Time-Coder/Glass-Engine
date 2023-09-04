@@ -22,20 +22,39 @@ class BloomFilter(Filter):
 
         self.light_extract_filter = LightExtractFilter()
 
-        self.down_program = ShaderProgram()
-        self.down_program.compile(Frame.draw_frame_vs)
-        self.down_program.compile(os.path.dirname(os.path.abspath(__file__)) + "/../glsl/Filters/bloom_downsampling.fs")
+        self._down_program = None
+        self._up_program = None
+        self._mix_fbo = None
 
-        self.up_program = ShaderProgram()
-        self.up_program.compile(Frame.draw_frame_vs)
-        self.up_program.compile(os.path.dirname(os.path.abspath(__file__)) + "/../glsl/Filters/bloom_upsampling.fs")
-
-        self.mix_fbo = FBO()
-        self.mix_fbo.attach(0, sampler2D)
-        self.mix_program = ShaderProgram()
-        self.mix_program.compile(Frame.draw_frame_vs)
-        self.mix_program.compile(os.path.dirname(os.path.abspath(__file__)) + "/../glsl/Filters/bloom_mix.fs")
-
+    @property
+    def down_program(self):
+        if self._down_program is None:
+            self._down_program = ShaderProgram()
+            self._down_program.compile(Frame.draw_frame_vs)
+            self._down_program.compile(os.path.dirname(os.path.abspath(__file__)) + "/../glsl/Filters/bloom_downsampling.fs")
+        
+        return self._down_program
+    
+    @property
+    def up_program(self):
+        if self._up_program is None:
+            self._up_program = ShaderProgram()
+            self._up_program.compile(Frame.draw_frame_vs)
+            self._up_program.compile(os.path.dirname(os.path.abspath(__file__)) + "/../glsl/Filters/bloom_upsampling.fs")
+        
+        return self._up_program
+    
+    @property
+    def mix_fbo(self):
+        if self._mix_fbo is None:
+            self._mix_fbo = FBO()
+            self._mix_fbo.attach(0, sampler2D)
+            self._mix_program = ShaderProgram()
+            self._mix_program.compile(Frame.draw_frame_vs)
+            self._mix_program.compile(os.path.dirname(os.path.abspath(__file__)) + "/../glsl/Filters/bloom_mix.fs")
+        
+        return self._mix_fbo
+    
     def __get_bloom_image(self, screen_image):
         self.__update_fbo_list(screen_image.width, screen_image.height)
         
