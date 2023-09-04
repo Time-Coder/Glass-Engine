@@ -71,6 +71,11 @@ vec3 transform_apply_to_normal(mat4 tran, vec3 normal)
 {
 	mat3 A = mat3(tran);
 	float det = determinant(A);
+	if (abs(det) < 1E-6)
+	{
+		return vec3(0);
+	}
+	
 	return sign(det) * normalize(transpose(inverse(mat3(tran))) * normal);
 }
 

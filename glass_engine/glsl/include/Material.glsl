@@ -98,6 +98,7 @@ struct InternalMaterial
     float Toon_specular_softness;
     float rim_power;
     float light_rim_power;
+    float shadow_visibility;
     bool fog;
 };
 
@@ -195,7 +196,7 @@ InternalMaterial fetch_internal_material(vec4 frag_color, Material material, vec
     }
     if (material.shading_model != SHADING_MODEL_UNLIT)
     {
-        internal_material.emission = mix(vec3(0,0,0), internal_material.emission, material_opacity);
+        internal_material.emission = mix(vec3(0), internal_material.emission, material_opacity);
     }
     else
     {

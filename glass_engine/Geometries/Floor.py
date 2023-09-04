@@ -44,7 +44,7 @@ class Floor(Mesh):
             tangent=glm.vec3(1/repeat_per_meter, 0, 0),
             bitangent=glm.vec3(0, 1/repeat_per_meter, 0),
             normal=glm.vec3(0, 0, 1),
-            tex_coord=glm.vec3(0, 0, 0))
+            tex_coord=glm.vec3(0))
         vertices[1] = Vertex(
             position=glm.vec3( length/2, -length/2, -0.001),
             tangent=glm.vec3(1/repeat_per_meter, 0, 0),

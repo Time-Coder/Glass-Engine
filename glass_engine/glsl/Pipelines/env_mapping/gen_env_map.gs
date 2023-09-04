@@ -93,8 +93,8 @@ void main()
     }
     else
     {
-        face_world_tangent = vec3(0, 0, 0);
-        face_world_bitangent = vec3(0, 0, 0);
+        face_world_tangent = vec3(0);
+        face_world_bitangent = vec3(0);
     }
 
     gl_Layer = gl_InvocationID;
@@ -106,7 +106,7 @@ void main()
         vec3 vertex_world_pos = gl_in[i].gl_Position.xyz;
         gs_out.view_pos = world_to_view(camera, vertex_world_pos) + explode_distance * face_view_normal;
         mat3 backup_TBN = mat3(face_world_tangent, face_world_bitangent, face_world_normal);
-        if (material.shading_model == 1) // Flat
+        if (material.shading_model == SHADING_MODEL_FLAT)
         {
             gs_out.view_TBN = world_TBN_to_view(camera, backup_TBN);
         }
@@ -121,8 +121,8 @@ void main()
         gs_out.visible = gs_in[i].visible;
 
         env_map_handle = gs_in[i].env_map_handle;
-        preshading_color = vec3(0, 0, 0);
-        preshading_back_color = vec3(0, 0, 0);
+        preshading_color = vec3(0);
+        preshading_back_color = vec3(0);
 
         // pre shading
         if (material.shading_model == SHADING_MODEL_FLAT)

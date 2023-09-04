@@ -840,7 +840,7 @@ class Mesh(SceneNode):
         if len_normal > 1E-6:
             normal = normal / len_normal
         else:
-            normal = glm.vec3(0, 0, 0)
+            normal = glm.vec3(0)
 
         tangent = st02.t*v01 - st01.t*v02
         bitangent = st01.s*v02 - st02.s*v01
@@ -848,8 +848,8 @@ class Mesh(SceneNode):
             tangent /= det
             bitangent /= det
         else:
-            tangent = glm.vec3(0, 0, 0)
-            bitangent = glm.vec3(0, 0, 0)
+            tangent = glm.vec3(0)
+            bitangent = glm.vec3(0)
         
         # vertex0
         vertex0.tangent = tangent

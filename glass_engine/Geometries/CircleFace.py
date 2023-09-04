@@ -48,7 +48,7 @@ class CircleFace(Mesh):
             normal = glm.vec3(0, -1, 0)
 
         vertex_center = Vertex()
-        vertex_center.position = glm.vec3(0, 0, 0)
+        vertex_center.position = glm.vec3(0)
         vertex_center.normal = normal
         vertex_center.tex_coord = glm.vec3(0.5, 0.5, 0)
         vertices[i_vertex] = vertex_center

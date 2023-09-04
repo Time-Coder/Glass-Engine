@@ -105,7 +105,8 @@ class ShaderProgram(GPUProgram):
         GL.glAttachShader(self._id, self.fragment_shader._id)
 
         related_files = "\n  " + "\n  ".join(self._get_compiled_files())
-        print(f"linking program: {related_files}")
+        if GlassConfig.print:
+            print(f"linking program: {related_files}")
 
         GL.glProgramParameteri(self._id, GL.GL_PROGRAM_BINARY_RETRIEVABLE_HINT, GL.GL_TRUE)
         GL.glLinkProgram(self._id)
@@ -158,7 +159,8 @@ class ShaderProgram(GPUProgram):
         meta_info["shader_storage_block_map"] = self._shader_storage_block_map
         meta_info["include_paths"] = self._include_paths
         save_var(meta_info, self._meta_file_name)
-        print("done")
+        if GlassConfig.print:
+            print("done")
 
     def _apply(self):
         if not self._linked_but_not_applied:

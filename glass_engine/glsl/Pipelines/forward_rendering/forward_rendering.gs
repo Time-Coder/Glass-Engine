@@ -94,8 +94,8 @@ void main()
     }
     else
     {
-        face_view_tangent = vec3(0, 0, 0);
-        face_view_bitangent = vec3(0, 0, 0);
+        face_view_tangent = vec3(0);
+        face_view_bitangent = vec3(0);
     }
 
     for (int i = 0; i < 3; i++)
@@ -103,7 +103,7 @@ void main()
         gs_out.affine_transform = gs_in[i].affine_transform;
         gs_out.view_pos = gl_in[i].gl_Position.xyz + explode_distance * face_view_normal;
         mat3 backup_TBN = mat3(face_view_tangent, face_view_bitangent, face_view_normal);
-        if (material.shading_model == 1) // Flat
+        if (material.shading_model == SHADING_MODEL_FLAT)
         {
             gs_out.view_TBN = backup_TBN;
         }
@@ -118,8 +118,8 @@ void main()
         gs_out.visible = gs_in[i].visible;
 
         env_map_handle = gs_in[i].env_map_handle;
-        preshading_color = vec3(0, 0, 0);
-        preshading_back_color = vec3(0, 0, 0);
+        preshading_color = vec3(0);
+        preshading_back_color = vec3(0);
 
         // pre lighting
         if (material.shading_model == SHADING_MODEL_FLAT)

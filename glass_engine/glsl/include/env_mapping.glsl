@@ -12,7 +12,7 @@ vec3 fetch_env_color(
     bool use_env_map, sampler2D env_map
 )
 {
-    vec4 env_color = vec4(0, 0, 0, 0);
+    vec4 env_color = vec4(0);
     float bias = 0.7*roughness;
 
     if (use_env_map)
@@ -43,7 +43,7 @@ vec4 sphere_reflect_refract_color(
 {
     if (!use_skybox_map && !use_skydome_map && !use_env_map)
     {
-        return vec4(0, 0, 0, 0);
+        return vec4(0);
     }
 
     vec4 reflection = material.reflection;
@@ -59,7 +59,7 @@ vec4 sphere_reflect_refract_color(
     bool use_refraction = (refractive_index > 1E-6);
     if (!use_reflection && !use_refraction)
     {
-        return vec4(0, 0, 0, 0);
+        return vec4(0);
     }
 
     float reflection_factor = 1;
@@ -75,8 +75,8 @@ vec4 sphere_reflect_refract_color(
 
     // 反射
     float sphere_radius = length(frag_pos - env_center);
-    vec3 reflection_color = vec3(0, 0, 0);
-    vec3 refraction_color = vec3(0, 0, 0);
+    vec3 reflection_color = vec3(0);
+    vec3 refraction_color = vec3(0);
     vec3 axis = cross(frag_normal, view_dir);
     int times = 3;
 
@@ -202,7 +202,7 @@ vec4 reflect_refract_color(
 {
     if (!use_skybox_map && !use_skydome_map && !use_env_map)
     {
-        return vec4(0, 0, 0, 0);
+        return vec4(0);
     }
 
     vec4 reflection = material.reflection;
@@ -218,7 +218,7 @@ vec4 reflect_refract_color(
     bool use_refraction = (refractive_index > 1E-6);
     if (!use_reflection && !use_refraction)
     {
-        return vec4(0, 0, 0, 0);
+        return vec4(0);
     }
 
     bool front_facing = true;
@@ -245,7 +245,7 @@ vec4 reflect_refract_color(
     }
 
     // 反射
-    vec3 reflection_color = vec3(0, 0, 0);
+    vec3 reflection_color = vec3(0);
     if (use_reflection)
     {
         vec3 reflect_out_dir = normalize(reflect(view_dir, frag_normal));
@@ -260,7 +260,7 @@ vec4 reflect_refract_color(
     }
 
     // 折射
-    vec3 refraction_color = vec3(0, 0, 0);
+    vec3 refraction_color = vec3(0);
     if (use_refraction)
     {
         if (front_facing)

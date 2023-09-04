@@ -47,7 +47,7 @@ class RPolygonFace(Mesh):
 
         # 中心点
         vertex_center = Vertex()
-        vertex_center.position = glm.vec3(0, 0, 0)
+        vertex_center.position = glm.vec3(0)
         vertex_center.normal = normal
         vertex_center.tex_coord = glm.vec3(0.5, 0.5, 0)
 

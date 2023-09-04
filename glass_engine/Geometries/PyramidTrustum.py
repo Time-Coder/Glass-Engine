@@ -52,7 +52,7 @@ class PyramidTrustum(Mesh):
 
         # 棱台底面中心点
         vertex_bottom_center = Vertex()
-        vertex_bottom_center.position = glm.vec3(0, 0, 0)
+        vertex_bottom_center.position = glm.vec3(0)
         vertex_bottom_center.normal = glm.vec3(0, 0, -1)
         vertex_bottom_center.tex_coord = glm.vec3(0.5, 0.5, 0)
 

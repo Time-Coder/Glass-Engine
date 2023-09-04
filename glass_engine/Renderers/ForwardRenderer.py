@@ -99,7 +99,7 @@ class ForwardRenderer(CommonRenderer):
         self._SSAO_map = None
         view_pos_alpha_map = None
         view_normal_map = None
-        with GLConfig.LocalConfig(clear_color=glm.vec4(0,0,0,0), polygon_mode=GL.GL_FILL):
+        with GLConfig.LocalConfig(clear_color=glm.vec4(0), polygon_mode=GL.GL_FILL):
             GLConfig.clear_buffers()
             if self._enable_SSAO or self.DOF:
                 with self.ssao_gbuffer:

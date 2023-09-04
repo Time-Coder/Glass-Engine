@@ -144,10 +144,6 @@ class MainWindow(QDialog):
         self_path = os.path.dirname(os.path.abspath(__file__))
         self.model = Model(self_path + "/assets/models/jet/11805_airplane_v2_L2.obj")
         self.model["root"].scale = 1/500
-        self.model["root"][0]["airplane_body"].material.ambient = 0.1
-        self.model["root"][0]["airplane_body"].material.ambient_map = None
-        self.model["root"][1]["airplane_wings"].material.ambient = 0.1
-        self.model["root"][1]["airplane_wings"].material.ambient_map = None
         self.model["root"].position.z -= 0.3
         model_coord_sys = CoordSys(1.6)
         self.model.add_child(model_coord_sys)
