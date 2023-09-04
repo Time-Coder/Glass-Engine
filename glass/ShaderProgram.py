@@ -105,7 +105,7 @@ class ShaderProgram(GPUProgram):
         GL.glAttachShader(self._id, self.fragment_shader._id)
 
         related_files = "\n  " + "\n  ".join(self._get_compiled_files())
-        print(f"linking: {related_files}")
+        print(f"linking program: {related_files}")
 
         GL.glProgramParameteri(self._id, GL.GL_PROGRAM_BINARY_RETRIEVABLE_HINT, GL.GL_TRUE)
         GL.glLinkProgram(self._id)

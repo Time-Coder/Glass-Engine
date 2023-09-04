@@ -80,9 +80,6 @@ class Model(SceneNode):
         self.__file_name = os.path.abspath(file_name)
         self.__dir_name = os.path.dirname(file_name)
 
-        self.__loading_model()
-
-    def __loading_model(self):
         self["root"].clear_children()
         if not self.__dynamic and self.__file_name in Model.__model_map:
             loaded_model_root = Model.__model_map[self.__file_name]
