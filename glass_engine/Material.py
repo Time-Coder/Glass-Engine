@@ -904,11 +904,11 @@ class Material:
         self.__has_opaque = False
         if self.use_opacity_map:
             image = self.opacity_map.image
-            if "int" in image.dtype.__name__:
+            if "int" in str(image.dtype):
                 self.__has_transparent = np.any(image < 255)
                 self.__has_opaque = np.any(image >= 255)
             else:
-                self.__has_transparent = np.any(image < 1-1E-6)
+                self.__has_transparent = np.any((1E-6 < image) & (image < 1-1E-6))
                 self.__has_opaque = np.any(image >= 1-1E-6)
         else:
             self.__has_transparent = self.opacity < 1-1E-6
@@ -929,7 +929,7 @@ class Material:
                 self.__has_transparent = np.any(image[:,:,3] < 255) or self.__has_transparent
                 self.__has_opaque = np.any(image[:,:,3] >= 255) and self.__has_opaque
             else:
-                self.__has_transparent = np.any(image[:,:,3] < 1-1E-6) or self.__has_transparent
+                self.__has_transparent = np.any((1E-6 < image[:,:,3]) & (image[:,:,3] < 1-1E-6)) or self.__has_transparent
                 self.__has_opaque = np.any(image[:,:,3] >= 1-1E-6) and self.__has_opaque
 
         for mesh in self._parent_meshes:

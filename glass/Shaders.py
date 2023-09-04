@@ -115,7 +115,7 @@ class BaseShader(GLObject):
 			if self._id == 0:
 				raise MemoryError("Failed to create Shader!")
 			
-		print(f"compiling {self.file_name}")
+		print(f"compiling shader: {self.file_name} ", end="", flush=True)
 		GL.glShaderSource(self._id, self._code)
 		GL.glCompileShader(self._id)
 
@@ -153,6 +153,7 @@ class BaseShader(GLObject):
 		save_var(meta_info, self._meta_file_name)
 		
 		self._compiled_but_not_applied = False
+		print("done")
 
 	def _test_should_recompile(self):
 		meta_mtime = modify_time(self._meta_file_name)
