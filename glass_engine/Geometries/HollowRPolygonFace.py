@@ -6,7 +6,7 @@ from glass import Vertex
 import glm
 import math
 
-class HollowRegularPolygonFace(Mesh):
+class HollowRPolygonFace(Mesh):
 
     @checktype
     def __init__(self, n_sides:int=5, start_side:int=0, total_sides:int=None,

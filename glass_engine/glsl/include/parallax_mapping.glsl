@@ -32,7 +32,8 @@ void parallax_mapping(sampler2D height_map, float height_scale, mat3 view_TBN, i
     
     bool is_line_high = (z_line > z_bump);
     bool should_break = false;
-    while(!should_break && (z_line > z_bump) == is_line_high)
+    int times = 0;
+    while (!should_break && (z_line > z_bump) == is_line_high && times < 100)
     {
         lower_d = upper_d;
         upper_d += delta_d;
@@ -48,11 +49,13 @@ void parallax_mapping(sampler2D height_map, float height_scale, mat3 view_TBN, i
 
         z_line_upper = z_line;
         z_bump_upper = z_bump;
+
+        times++;
     }
 
-    int times = 0;
+    times = 0;
     float middle_d;
-    while(upper_d - lower_d > 1E-6 && times < 20)
+    while (upper_d - lower_d > 1E-6 && times < 20)
     {
         // (lower_d, z_line_lower) -> (upper_d, z_line_upper)
         // (lower_d, z_bump_lower) -> (upper_d, z_bump_upper)
@@ -63,7 +66,7 @@ void parallax_mapping(sampler2D height_map, float height_scale, mat3 view_TBN, i
         z_line = -middle_d*cos_theta;
         tex_coord = frag_tex_coord + middle_d*view_dir_in_tbn.st;
         z_bump = height_scale * (texture(height_map, tex_coord).r-0.5);
-        if((z_line > z_bump) == is_line_high)
+        if ((z_line > z_bump) == is_line_high)
         {
             lower_d = middle_d;
             z_line_lower = z_line;
@@ -83,7 +86,7 @@ void parallax_mapping(sampler2D height_map, float height_scale, mat3 view_TBN, i
     view_pos = view_pos + middle_d*view_dir;
 }
 
-void change_geometry(Material material, vec2 tex_coord, inout mat3 view_TBN, inout vec3 view_pos)
+void change_geometry(Material material, inout vec2 tex_coord, inout mat3 view_TBN, inout vec3 view_pos)
 {
     // 正反面法向量翻转
     view_TBN[2] = normalize(view_TBN[2]);

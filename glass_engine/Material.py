@@ -86,12 +86,13 @@ class Material:
         self.__normal_map = None
         self.__height_map = None
         self._opacity_map = None
-        self.__ambient_occlusion_map = None
+        self.__ao_map = None
         self.__reflection_map = None
         self.__refractive_index_map = None
         self.__base_color_map = None
         self.__metallic_map = None
         self.__roughness_map = None
+        self.__arm_map = None
 
         self.__shading_model = Material.ShadingModel.PhongBlinn
 
@@ -275,7 +276,10 @@ class Material:
     
     @shading_model.setter
     @param_setter
-    def shading_model(self, shading_model:ShadingModel):
+    def shading_model(self, shading_model:(ShadingModel,None)):
+        if shading_model is None:
+            shading_model = Material.ShadingModel.Unlit
+
         self.__shading_model = shading_model
 
     @property
@@ -582,19 +586,34 @@ class Material:
         self._test_transparent()
 
     @property
-    def ambient_occlusion_map(self):
-        return self.__ambient_occlusion_map
+    def ao_map(self):
+        return self.__ao_map
     
-    @ambient_occlusion_map.setter
+    @ao_map.setter
     @param_setter
-    def ambient_occlusion_map(self, ambient_occlusion_map:(sampler2D,str,np.ndarray)):
-        if isinstance(ambient_occlusion_map, sampler2D) or ambient_occlusion_map is None:
-            self.__ambient_occlusion_map = ambient_occlusion_map
-        elif isinstance(ambient_occlusion_map, (str,np.ndarray)):
-            if self.__ambient_occlusion_map is None:
-                self.__ambient_occlusion_map = sampler2D(ambient_occlusion_map)
+    def ao_map(self, ao_map:(sampler2D,str,np.ndarray)):
+        if isinstance(ao_map, sampler2D) or ao_map is None:
+            self.__ao_map = ao_map
+        elif isinstance(ao_map, (str,np.ndarray)):
+            if self.__ao_map is None:
+                self.__ao_map = sampler2D(ao_map)
             else:
-                self.__ambient_occlusion_map.image = ambient_occlusion_map
+                self.__ao_map.image = ao_map
+
+    @property
+    def arm_map(self):
+        return self.__arm_map
+    
+    @arm_map.setter
+    @param_setter
+    def arm_map(self, arm_map:(sampler2D,str,np.ndarray)):
+        if isinstance(arm_map, sampler2D) or arm_map is None:
+            self.__arm_map = arm_map
+        elif isinstance(arm_map, (str,np.ndarray)):
+            if self.__arm_map is None:
+                self.__arm_map = sampler2D(arm_map)
+            else:
+                self.__arm_map.image = arm_map
 
     @property
     def reflection_map(self):
@@ -713,8 +732,12 @@ class Material:
         return (self._opacity_map is not None)
 
     @property
-    def use_ambient_occlusion_map(self):
-        return (self.__ambient_occlusion_map is not None)
+    def use_ao_map(self):
+        return (self.__ao_map is not None)
+    
+    @property
+    def use_arm_map(self):
+        return (self.__arm_map is not None)
 
     @property
     def use_reflection_map(self):
@@ -893,13 +916,16 @@ class Material:
 
         if self.use_diffuse_map:
             image = self.diffuse_map.image
+            if image is None:
+                return
+            
             if len(image.shape) == 2:
                 return
             
             if image.shape[2] < 4:
                 return
             
-            if "int" in image.dtype.__name__:
+            if "int" in str(image.dtype):
                 self.__has_transparent = np.any(image[:,:,3] < 255) or self.__has_transparent
                 self.__has_opaque = np.any(image[:,:,3] >= 255) and self.__has_opaque
             else:

@@ -118,8 +118,8 @@ class CommonRenderer(Renderer):
                     env_map = env_OIT_blend_fbo.color_attachment(0)
                     env_FXAA_fbo = self.env_FXAA_fbo(inst)
                     with env_FXAA_fbo:
-                        FXAAFilter.program["screen_image"] = env_map
-                        FXAAFilter.program.draw_triangles(Frame.vertices, Frame.indices)
+                        FXAAFilter.program()["screen_image"] = env_map
+                        FXAAFilter.program().draw_triangles(Frame.vertices, Frame.indices)
                     env_map = env_FXAA_fbo.color_attachment(0)
                     inst.env_map_handle = env_map.handle
                     inst.user_data["env_bake_state"] = "filtered"
@@ -454,17 +454,23 @@ class CommonRenderer(Renderer):
                     if self._meshes_cast_shadows:
                         self.spot_light_depth_program["spot_light"] = spot_light
                         for mesh, instances in self._meshes_cast_shadows:
+                            self.spot_light_depth_program["material"] = mesh.material
+                            self.spot_light_depth_program["back_material"] = mesh._back_material
                             self.spot_light_depth_program["explode_distance"] = mesh.explode_distance
                             mesh.draw(self.spot_light_depth_program, instances)
 
                     if self._lines_cast_shadows:
                         self.spot_light_depth_lines_program["spot_light"] = spot_light
                         for mesh, instances in self._lines_cast_shadows:
+                            self.spot_light_depth_lines_program["material"] = mesh.material
+                            self.spot_light_depth_lines_program["back_material"] = mesh._back_material
                             mesh.draw(self.spot_light_depth_lines_program, instances)
 
                     if self._points_cast_shadows:
                         self.spot_light_depth_points_program["spot_light"] = spot_light
                         for mesh, instances in self._points_cast_shadows:
+                            self.spot_light_depth_points_program["material"] = mesh.material
+                            self.spot_light_depth_points_program["back_material"] = mesh._back_material
                             mesh.draw(self.spot_light_depth_points_program, instances)
 
             new_handle = spot_light.depth_fbo.depth_attachment.handle
@@ -496,16 +502,22 @@ class CommonRenderer(Renderer):
                         self.point_light_depth_program["point_light"] = point_light
                         for mesh, instances in self._meshes_cast_shadows:
                             self.point_light_depth_program["explode_distance"] = mesh.explode_distance
+                            self.point_light_depth_program["material"] = mesh.material
+                            self.point_light_depth_program["back_material"] = mesh._back_material
                             mesh.draw(self.point_light_depth_program, instances)
 
                     if self._lines_cast_shadows:
                         self.point_light_depth_lines_program["point_light"] = point_light
                         for mesh, instances in self._lines_cast_shadows:
+                            self.point_light_depth_lines_program["material"] = mesh.material
+                            self.point_light_depth_lines_program["back_material"] = mesh._back_material
                             mesh.draw(self.point_light_depth_lines_program, instances)
 
                     if self._points_cast_shadows:
                         self.point_light_depth_points_program["point_light"] = point_light
                         for mesh, instances in self._points_cast_shadows:
+                            self.point_light_depth_points_program["material"] = mesh.material
+                            self.point_light_depth_points_program["back_material"] = mesh._back_material
                             mesh.draw(self.point_light_depth_points_program, instances)
 
             new_handle = point_light.depth_fbo.depth_attachment.handle
@@ -570,18 +582,24 @@ class CommonRenderer(Renderer):
                         self.dir_light_depth_program["camera"] = self.camera
                         for mesh, instances in self._meshes_cast_shadows:
                             self.dir_light_depth_program["explode_distance"] = mesh.explode_distance
+                            self.dir_light_depth_program["material"] = mesh.material
+                            self.dir_light_depth_program["back_material"] = mesh._back_material
                             mesh.draw(self.dir_light_depth_program, instances)
 
                     if self._lines_cast_shadows:
                         self.dir_light_depth_lines_program["dir_light"] = dir_light
                         self.dir_light_depth_lines_program["camera"] = self.camera
                         for mesh, instances in self._lines_cast_shadows:
+                            self.dir_light_depth_lines_program["material"] = mesh.material
+                            self.dir_light_depth_lines_program["back_material"] = mesh._back_material
                             mesh.draw(self.dir_light_depth_lines_program, instances)
 
                     if self._points_cast_shadows:
                         self.dir_light_depth_points_program["dir_light"] = dir_light
                         self.dir_light_depth_points_program["camera"] = self.camera
                         for mesh, instances in self._points_cast_shadows:
+                            self.dir_light_depth_points_program["material"] = mesh.material
+                            self.dir_light_depth_points_program["back_material"] = mesh._back_material
                             mesh.draw(self.dir_light_depth_points_program, instances)
 
             new_handle = dir_light.depth_fbo.depth_attachment.handle
@@ -952,8 +970,8 @@ class CommonRenderer(Renderer):
             if self._envFXAA:
                 env_FXAA_fbo = self.env_FXAA_fbo(instance)
                 with env_FXAA_fbo:
-                    FXAAFilter.program["screen_image"] = env_map
-                    FXAAFilter.program.draw_triangles(Frame.vertices, Frame.indices)
+                    FXAAFilter.program()["screen_image"] = env_map
+                    FXAAFilter.program().draw_triangles(Frame.vertices, Frame.indices)
                 env_map = env_FXAA_fbo.color_attachment(0)
                 instance.user_data["env_bake_state"] = "filtered"
             instance.env_map_handle = env_map.handle

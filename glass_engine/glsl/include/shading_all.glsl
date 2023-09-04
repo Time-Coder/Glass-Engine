@@ -2,6 +2,7 @@
 #define _SHADING_ALL_GLSL__
 
 #include "Camera.glsl"
+#include "sampling.glsl"
 #include "Material.glsl"
 #include "parallax_mapping.glsl"
 #include "transform.glsl"
@@ -73,11 +74,11 @@ vec4 post_shading_all(Camera camera, Camera CSM_camera, PostShadingInfo shading_
     }
     
     // SSAO
-    float ssao_factor = texture(shading_info.SSAO_map, shading_info.screen_tex_coord).r;
+    float ssao_factor = textureColor(shading_info.SSAO_map, shading_info.screen_tex_coord).r;
     out_color3 *= (1-ssao_factor);
 
     // AO map
-    out_color3 *= shading_info.material.ambient_occlusion;
+    out_color3 *= shading_info.material.ao;
 
     // 自发光
     out_color3 += shading_info.material.emission;

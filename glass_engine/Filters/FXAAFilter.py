@@ -4,48 +4,71 @@ from ..Frame import Frame
 
 import os
 
-def init_FXAAFilter(cls):
-    cls.program = ShaderProgram()
-    cls.program.compile(Frame.draw_frame_vs)
-    cls.program.compile(os.path.dirname(os.path.abspath(__file__)) + "/../glsl/Filters/FXAA_filter.fs")
-
-    cls.cube_program = ShaderProgram()
-    cls.cube_program.compile(Frame.draw_frame_vs)
-    cls.cube_program.compile(Frame.draw_frame_array_gs(6))
-    cls.cube_program.compile(os.path.dirname(os.path.abspath(__file__)) + "/../glsl/Filters/FXAA_cube_filter.fs")
-
-    return cls
-
-@init_FXAAFilter
 class FXAAFilter(Filter):
 
     __array_programs = {}
+    __program = None
+    __cube_program = None
 
+    @staticmethod
+    def program():
+        if FXAAFilter.__program is None:
+            FXAAFilter.__program = ShaderProgram()
+            FXAAFilter.__program.compile(Frame.draw_frame_vs)
+            FXAAFilter.__program.compile(os.path.dirname(os.path.abspath(__file__)) + "/../glsl/Filters/FXAA_filter.fs")
+        return FXAAFilter.__program
+    
+    @staticmethod
+    def cube_program():
+        if FXAAFilter.__cube_program is None:
+            FXAAFilter.__cube_program = ShaderProgram()
+            FXAAFilter.__cube_program.compile(Frame.draw_frame_vs)
+            FXAAFilter.__cube_program.compile(Frame.draw_frame_array_gs(6))
+            FXAAFilter.__cube_program.compile(os.path.dirname(os.path.abspath(__file__)) + "/../glsl/Filters/FXAA_cube_filter.fs")
+        return FXAAFilter.__cube_program
+    
     def __init__(self, internal_format:GLInfo.internal_formats=None):
         Filter.__init__(self)
         
-        self.fbo = FBO()
-        self.fbo.attach(0, sampler2D, internal_format)
+        self._internal_format = internal_format
+        self._fbo = None
+        self._array_fbo = None
+        self._cube_fbo = None
 
-        self.array_fbo = FBO()
-        self.array_fbo.attach(0, sampler2DArray, internal_format)
+    @property
+    def fbo(self):
+        if self._fbo is None:
+            self._fbo = FBO()
+            self._fbo.attach(0, sampler2D, self._internal_format)
+        return self._fbo
 
-        self.cube_fbo = FBO()
-        self.cube_fbo.attach(0, samplerCube, internal_format)
+    @property
+    def array_fbo(self):
+        if self._array_fbo is None:
+            self._array_fbo = FBO()
+            self._array_fbo.attach(0, sampler2DArray, self._internal_format)
+        return self._array_fbo
+
+    @property
+    def cube_fbo(self):
+        if self._cube_fbo is None:
+            self._cube_fbo = FBO()
+            self._cube_fbo.attach(0, samplerCube, self._internal_format)
+        return self._cube_fbo
 
     def __call__(self, screen_image:(sampler2D,samplerCube,sampler2DArray))->(sampler2D,samplerCube,sampler2DArray):
         if isinstance(screen_image, sampler2D):
             self.fbo.resize(screen_image.width, screen_image.height)
             with self.fbo:
-                FXAAFilter.program["screen_image"] = screen_image
-                FXAAFilter.program.draw_triangles(Frame.vertices, Frame.indices)
+                FXAAFilter.program()["screen_image"] = screen_image
+                FXAAFilter.program().draw_triangles(Frame.vertices, Frame.indices)
                 
             return self.fbo.color_attachment(0)
         elif isinstance(screen_image, samplerCube):
             self.cube_fbo.resize(screen_image.width, screen_image.height)
             with self.cube_fbo:
-                FXAAFilter.cube_program["screen_image"] = screen_image
-                FXAAFilter.cube_program.draw_triangles(Frame.vertices, Frame.indices)
+                FXAAFilter.cube_program()["screen_image"] = screen_image
+                FXAAFilter.cube_program().draw_triangles(Frame.vertices, Frame.indices)
 
             return self.cube_fbo.color_attachment(0)
         elif isinstance(screen_image, sampler2DArray):
@@ -58,8 +81,8 @@ class FXAAFilter(Filter):
             return self.array_fbo.color_attachment(0)
     
     def draw_to_active(self, screen_image: sampler2D) -> None:
-        FXAAFilter.program["screen_image"] = screen_image
-        FXAAFilter.program.draw_triangles(Frame.vertices, Frame.indices)
+        FXAAFilter.program()["screen_image"] = screen_image
+        FXAAFilter.program().draw_triangles(Frame.vertices, Frame.indices)
     
     @staticmethod
     def array_program(layers):

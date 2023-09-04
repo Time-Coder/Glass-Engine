@@ -72,7 +72,7 @@ void write_to_gbuffer(
         (uint(internal_material.recv_shadows) << 1) |
         uint(is_sphere));
     mixed_uint.w =
-        (uint(255 * internal_material.ambient_occlusion) << 24) | 
+        (uint(255 * internal_material.ao) << 24) | 
         (uint(255 * internal_material.roughness) << 16) | 
         (uint(255 * internal_material.metallic) << 8) | 
          uint(255 * internal_material.rim_power);

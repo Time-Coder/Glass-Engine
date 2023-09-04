@@ -151,13 +151,30 @@ class Model(SceneNode):
             [
                 "ambient_map", "diffuse_map", "specular_map",
                 "shininess_map", "emission_map", "height_map",
-                "normal_map", "opacity_map", "ambient_occlusion_map",
-                "reflection_map", "base_color_map", "roughness_map", "metallic_map"
+                "normal_map", "opacity_map", "reflection_map",
+                "base_color_map", "ao_map", "roughness_map", "metallic_map"
             ]
+
+            arm_map = None
             for texture_map in texture_maps:
                 texture_map_list = getattr(assimp_material, texture_map)
                 if texture_map_list:
                     image_path = self.__dir_name + "/" + texture_map_list[0]
+                    
+                    if texture_map == "roughness_map" and image_path == arm_map:
+                        material.arm_map = image_path
+                        material.ao_map = None
+                        break
+
+                    if texture_map == "metallic_map" and image_path == arm_map:
+                        material.arm_map = image_path
+                        material.ao_map = None
+                        material.roughness_map = None
+                        break
+
+                    if texture_map in ["ao_map", "roughness_map", "metallic_map"]:
+                        arm_map = image_path
+
                     if os.path.isfile(image_path):
                         setattr(material, texture_map, sampler2D.load(image_path))
 

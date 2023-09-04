@@ -17,18 +17,18 @@ vec3 fetch_env_color(
 
     if (use_env_map)
     {
-        env_color = textureSphereLodBias(env_map, out_dir, bias);
+        env_color = textureColorSphere(env_map, out_dir, bias);
     }
     
     vec3 sampling_dir = quat_apply(quat(cos45, sin45, 0, 0), out_dir);
     if (use_skybox_map)
     {
-        vec3 skybox_color = textureLodBias(skybox_map, sampling_dir, bias).rgb;
+        vec3 skybox_color = max(texture(skybox_map, sampling_dir, bias).rgb, 0.0);
         env_color.rgb = mix(skybox_color, env_color.rgb, env_color.a);
     }
     else if (use_skydome_map)
     {
-        vec3 skydome_color = textureSphereLodBias(skydome_map, out_dir, bias).rgb;
+        vec3 skydome_color = textureColorSphere(skydome_map, out_dir, bias).rgb;
         env_color.rgb = mix(skydome_color, env_color.rgb, env_color.a);
     }
     return env_color.rgb;

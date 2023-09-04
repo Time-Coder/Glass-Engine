@@ -35,7 +35,7 @@ vec3 CookTorrance_lighting(vec3 to_light, vec3 to_camera, vec3 normal, InternalM
     vec3 kd = (1 - F)*(1 - material.metallic);
     vec3 Lo = kd * material.base_color * cos_to_light + D*G*F / (4*cos_to_camera + 0.001);
     Lo /= (Lo + vec3(1.0));
-    return material.ambient + pow(Lo, vec3(1.0/2.2));
+    return material.ambient + Lo;
 }
 
 #endif

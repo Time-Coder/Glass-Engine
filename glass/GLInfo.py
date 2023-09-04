@@ -1,8 +1,3 @@
-import os
-import sys
-
-sys.path.append(os.path.abspath(os.path.dirname(os.path.realpath(__file__)) + "/.."))
-
 from OpenGL import GL, constant
 from typing import Literal
 import OpenGL.GL.ARB.gpu_shader_int64 as gsi64

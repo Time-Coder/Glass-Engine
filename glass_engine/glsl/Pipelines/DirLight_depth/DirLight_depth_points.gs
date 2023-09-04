@@ -6,8 +6,21 @@
 layout (points, invocations={CSM_levels}) in;
 layout (points, max_vertices=1) out;
 
-in flat int vertex_visible[];
-out flat int visible;
+in VertexOut
+{
+    vec4 color;
+    vec4 back_color;
+    vec3 tex_coord;
+    flat bool visible;
+} gs_in[];
+
+out GeometryOut
+{
+    vec4 color;
+    vec4 back_color;
+    vec3 tex_coord;
+    flat bool visible;
+} gs_out;
 
 #include "../../Lights/DirLight.glsl"
 
@@ -17,7 +30,11 @@ uniform Camera camera;
 void main()
 {
     gl_Layer = gl_InvocationID;
-    visible = vertex_visible[0];
+
+    gs_out.visible = gs_in[0].visible;
+    gs_out.color = gs_in[0].color;
+    gs_out.back_color = gs_in[0].back_color;
+    gs_out.tex_coord = gs_in[0].tex_coord;
     
     gl_Position = world_to_lightNDC(dir_light, camera, gl_InvocationID, gl_in[0].gl_Position.xyz);
     EmitVertex();

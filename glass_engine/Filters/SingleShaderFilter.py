@@ -3,7 +3,6 @@ from ..Frame import Frame
 
 from glass.utils import checktype, cat, md5s, relative_path, modify_time
 from glass import FBO, ShaderProgram, sampler2D, GLConfig, GlassConfig
-from glass.WeakSet import WeakSet
 
 from OpenGL import GL
 import os
@@ -16,17 +15,16 @@ class SingleShaderFilter(Filter):
     __template_content = ""
     __template_filename = os.path.dirname(os.path.abspath(__file__)) + "/../glsl/Filters/single_shader_filter_template.glsl"
 
-    _unknown_filters = WeakSet()
-    _dynamic_filters = WeakSet()
-
     @checktype
     def __init__(self, shader_path:str=None):
         Filter.__init__(self)
         
-        SingleShaderFilter._unknown_filters.add(self)
+        self._dynamic = False
 
-        self.fbo = FBO()
-        self.fbo.attach(0, sampler2D, GL.GL_RGBA32F)
+        self._fbo = None
+        self._program = None
+        self._fragment_filename = ""
+        self._uniforms = {}
 
         self._shader_path = ""
         self._start_time = 0
@@ -35,13 +33,17 @@ class SingleShaderFilter(Filter):
         
         if shader_path is not None:
             self.shader_path = shader_path
-    
-    def __del__(self):
-        if self in SingleShaderFilter._unknown_filters:
-            SingleShaderFilter._unknown_filters.remove(self)
 
-        if self in SingleShaderFilter._dynamic_filters:
-            SingleShaderFilter._dynamic_filters.remove(self)
+    @property
+    def fbo(self):
+        if self._fbo is None:
+            self._fbo = FBO()
+            self._fbo.attach(0, sampler2D, GL.GL_RGBA32F)
+        return self._fbo
+    
+    @property
+    def program(self):
+        return self._program
 
     def __hash__(self):
         return id(self)
@@ -71,26 +73,33 @@ class SingleShaderFilter(Filter):
             out_file.write(SingleShaderFilter.__template(shader_path))
             out_file.close()
 
-        self.program = ShaderProgram()
-        self.program.compile(Frame.draw_frame_vs)
-        self.program.compile(dest_file_name, GL.GL_FRAGMENT_SHADER)
-
+        self._fragment_filename = dest_file_name
         self._shader_path = shader_path
+
+    @property
+    def program(self):
+        if self._fragment_filename:
+            self._program = ShaderProgram()
+            self._program.compile(Frame.draw_frame_vs)
+            self._program.compile(self._fragment_filename, GL.GL_FRAGMENT_SHADER)
+            self._fragment_filename = ""
+
+        if self._uniforms and self._program is not None:
+            for name, value in self._uniforms.items():
+                self._program[name] = value
+            self._uniforms.clear()
+
+        return self._program
 
     def draw(self, screen_image):
         self.program["screen_image"] = screen_image
-        if self in SingleShaderFilter._unknown_filters:
-            is_dynamic = (self.program["iTime"].location != -1 or \
-                          self.program["iTimeDelta"].location != -1 or \
-                          self.program["iFrameRate"].location != -1 or \
-                          self.program["iFrame"].location != -1 or \
-                          self.program["iDate"].location != -1)
-            
-            SingleShaderFilter._unknown_filters.remove(self)
-            if is_dynamic:
-                SingleShaderFilter._dynamic_filters.add(self)
+        self._dynamic = (self.program["iTime"].location != -1 or \
+                         self.program["iTimeDelta"].location != -1 or \
+                         self.program["iFrameRate"].location != -1 or \
+                         self.program["iFrame"].location != -1 or \
+                         self.program["iDate"].location != -1)
 
-        if self in SingleShaderFilter._dynamic_filters:
+        if self._dynamic:
             current_time = time.time()
             now = datetime.now()
 
@@ -129,17 +138,23 @@ class SingleShaderFilter(Filter):
         return self.fbo.color_attachment(0)
     
     def __getitem__(self, name:str):
-        return self.program[name]
+        if self._program is None:
+            return self._uniforms[name]
+        else:
+            return self._program[name]
     
     def __setitem__(self, name:str, value):
-        self.program[name] = value
+        if self._program is None:
+            self._uniforms[name] = value
+        else:
+            self.program[name] = value
 
     @property
     def should_update(self):
         if not self.enabled:
             return False
         
-        return (self._should_update or self in SingleShaderFilter._dynamic_filters)
+        return (self._should_update or self._dynamic)
     
     @should_update.setter
     @checktype

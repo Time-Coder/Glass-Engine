@@ -5,9 +5,22 @@
 layout (triangles, invocations=6) in;
 layout (triangle_strip, max_vertices=3) out;
 
-in flat int vertex_visible[];
-out flat int visible;
-out vec3 world_pos;
+in VertexOut
+{
+    vec4 color;
+    vec4 back_color;
+    vec3 tex_coord;
+    flat bool visible;
+} gs_in[];
+
+out GeometryOut
+{
+    vec3 world_pos;
+    vec4 color;
+    vec4 back_color;
+    vec3 tex_coord;
+    flat bool visible;
+} gs_out;
 
 #include "../../include/Camera.glsl"
 #include "../../Lights/PointLight.glsl"
@@ -26,8 +39,11 @@ void main()
     Camera camera = cube_camera(gl_InvocationID, point_light.abs_position, 0.1, point_light.coverage);
     for (int i = 0; i < 3; i++)
     {
-        world_pos = gl_in[i].gl_Position.xyz + explode_distance * face_world_normal;
-        visible = vertex_visible[i];
+        gs_out.world_pos = gl_in[i].gl_Position.xyz + explode_distance * face_world_normal;
+        gs_out.visible = gs_in[i].visible;
+        gs_out.color = gs_in[i].color;
+        gs_out.back_color = gs_in[i].back_color;
+        gs_out.tex_coord = gs_in[i].tex_coord;
 
         gl_Position = Camera_project(camera, world_pos);
         EmitVertex();

@@ -24,7 +24,7 @@ float SSM(SpotLight light, vec3 frag_pos, vec3 frag_normal)
     self_depth -= bias;
 
     depth_map_tex_coord = quat_apply(quat(cos45, sin45, 0, 0), depth_map_tex_coord);
-    float sample_depth = texture(samplerCube(light.depth_map_handle), depth_map_tex_coord).r;
+    float sample_depth = textureColor(samplerCube(light.depth_map_handle), depth_map_tex_coord).r;
     sample_depth *= light.coverage;
 
     float visibility = ((sample_depth > self_depth) ? 1.0 : 0.0);
@@ -63,7 +63,7 @@ float PCF(SpotLight light, vec3 frag_pos, vec3 frag_normal)
         vec3 sample_dir = rand3_near(depth_map_tex_coord, max_angle_shift, rand_seed);
         sample_dir = quat_apply(correction_quat, sample_dir);
 
-        float sample_depth = texture(samplerCube(light.depth_map_handle), sample_dir).r;
+        float sample_depth = textureColor(samplerCube(light.depth_map_handle), sample_dir).r;
         sample_depth *= light.coverage;
 
         not_occ_count += (sample_depth > self_depth ? 1 : 0);

@@ -52,7 +52,7 @@ float SSM(DirLight light, Camera CSM_camera, vec3 frag_pos, vec3 frag_normal)
     bias /= depth_length;
     self_depth -= bias;
 
-    float sample_depth = texture2DArray(sampler2DArray(light.depth_map_handle), depth_map_tex_coord).r;
+    float sample_depth = textureColor(sampler2DArray(light.depth_map_handle), depth_map_tex_coord).r;
     float visibility = ((sample_depth > self_depth-bias) ? 1 : 0);
 
     return visibility;
@@ -92,7 +92,7 @@ float _get_PCF_value(DirLight light, Camera CSM_camera, int level, vec3 frag_pos
             continue;
         }
 
-        float sample_depth = texture2DArray(sampler2DArray(light.depth_map_handle), vec3(s, t, level)).r;
+        float sample_depth = textureColor(sampler2DArray(light.depth_map_handle), vec3(s, t, level)).r;
         not_occ_count += (sample_depth > self_depth ? 1 : 0);
         total_count += 1;
     }

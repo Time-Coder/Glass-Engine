@@ -1,3 +1,5 @@
+#include "../include/sampling.glsl"
+
 #define PI acos(-1)
 
 #define H(P) fract(sin(dot(P,vec2(127.1,311.7)))*43758.545)
@@ -6,7 +8,7 @@
 vec4 getColor(sampler2D screen_image, vec2 tex_coord)
 {
     float t = iTime * 0.6;
-    vec4 frag_color = texture2D(screen_image, tex_coord);
+    vec4 frag_color = textureColor(screen_image, tex_coord);
  
     vec2 uv  = (tex_coord-0.5) * 3.0;
 
@@ -28,7 +30,7 @@ vec4 getColor(sampler2D screen_image, vec2 tex_coord)
     for (float k = 0.0; k < 400.0; k++) {
         float r = H(vec2(k)) * 2.0 - 1.0;
         vec3 flarePos = vec3(H(vec2(k) * r) * 20.0 - 10.0, r * 8.0, (mod(sin(k / 200.0 * PI * 4.0) * 15.0 - t * 13.0 * k * 0.007, 25.0)));
-        float v = max(0.0, abs(dot(normalize(flarePos), rd)));
+        float v = max(abs(dot(normalize(flarePos), rd)), 0.0);
 
         flareIntensivity += pow(v, 30000.0) * 4.0;
         flareIntensivity += pow(v, 1e2) * 0.15; 

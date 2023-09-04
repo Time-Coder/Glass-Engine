@@ -1,6 +1,6 @@
 from .SceneNode import SceneNode
 from .Material import Material
-from .algorithm import generate_auto_TBN, generate_sharp_TBN, generate_smooth_TBN
+from .algorithm import generate_auto_TBN, generate_smooth_TBN
 
 from glass import ShaderProgram, Instances, Vertices, Indices, GLInfo, RenderHint
 from glass.utils import checktype, md5s
@@ -13,6 +13,7 @@ import inspect
 import types
 from enum import Enum
 import copy
+import numpy as np
 
 class Mesh(SceneNode):
 
@@ -23,7 +24,7 @@ class Mesh(SceneNode):
     class SurfType(Enum):
         Auto = 0
         Smooth = 1
-        Sharp = 2
+        Flat = 2
 
     @checktype
     def __init__(self, primitive:GLInfo.primitive_types=GL.GL_TRIANGLES,
@@ -600,15 +601,13 @@ class Mesh(SceneNode):
                 if builder is None:
                     return
                 
-                if self.__geometry_info["build_state"] == "build":
-                    try:
-                        while True:
-                            next(builder)
-                    except StopIteration:
-                        del Mesh.__builder_map[builder]
-                        self.__post_build(self.__geometry_info)
-                        self.__geometry_info["builder"] = None
-                        self.__geometry_info["build_state"] = "done"
+                try:
+                    while True:
+                        next(builder)
+                except StopIteration:
+                    del Mesh.__builder_map[builder]
+                    self.__post_build(self.__geometry_info)
+                    self.__geometry_info["builder"] = None
 
                 return
             else:
@@ -618,7 +617,6 @@ class Mesh(SceneNode):
                     "vertices": Vertices(draw_type=draw_type),
                     "indices": Indices(draw_type=draw_type),
                     "builder": None,
-                    "build_state": "build",
                     "x_min": 0, "x_max": 0,
                     "y_min": 0, "y_max": 0,
                     "z_min": 0, "z_max": 0,
@@ -634,7 +632,6 @@ class Mesh(SceneNode):
                 "vertices": Vertices(draw_type=draw_type),
                 "indices": Indices(draw_type=draw_type),
                 "builder": None,
-                "build_state": "build",
                 "x_min": 0, "x_max": 0,
                 "y_min": 0, "y_max": 0,
                 "z_min": 0, "z_max": 0,
@@ -650,12 +647,13 @@ class Mesh(SceneNode):
                         next(builder)
                 except StopIteration:
                     self.__post_build(self.__geometry_info)
+                    self.__geometry_info["builder"] = None
                 
             else: # not generator
                 self.build()
                 self.__post_build(self.__geometry_info)
+                self.__geometry_info["builder"] = None
 
-            self.__geometry_info["build_state"] = "done"
         else: # not block
             if inspect.isgeneratorfunction(self.build):
                 builder = self.build()
@@ -666,13 +664,11 @@ class Mesh(SceneNode):
                 except StopIteration:
                     del Mesh.__builder_map[builder]
                     self.__post_build(self.__geometry_info)
-                    self.__geometry_info["build_state"] = "done"
                     self.__geometry_info["builder"] = None
             else:
                 self.build()
                 self.__post_build(self.__geometry_info)
                 self.__geometry_info["builder"] = None
-                self.__geometry_info["build_state"] = "done"
 
     @property
     def __instance_key(self):
@@ -715,14 +711,12 @@ class Mesh(SceneNode):
         if builder is None:
             return
         
-        if self.__geometry_info["build_state"] == "build":
-            try:
-                next(builder)
-            except StopIteration:
-                del Mesh.__builder_map[builder]
-                self.__post_build(self.__geometry_info)
-                self.__geometry_info["builder"] = None
-                self.__geometry_info["build_state"] = "done"
+        try:
+            next(builder)
+        except StopIteration:
+            del Mesh.__builder_map[builder]
+            self.__post_build(self.__geometry_info)
+            self.__geometry_info["builder"] = None
     
     def __eq__(self, other):
         return (id(self) == id(other))
@@ -874,10 +868,7 @@ class Mesh(SceneNode):
             vertex1.normal = normal
             vertex2.normal = normal
 
-    def __generate_TBN(self, geometry_info):
-        if self.__surf_type is None:
-            return
-        
+    def __generate_TBN(self, geometry_info):        
         vertices = geometry_info["vertices"]
         indices = geometry_info["indices"]
 
@@ -886,10 +877,20 @@ class Mesh(SceneNode):
            'color' not in vertices:
             return
 
+        if "tangent" not in vertices._attr_list_map:
+            vertices._attr_list_map["tangent"] = AttrList(dtype=glm.vec3)
+            vertices["tangent"].ndarray = np.zeros_like(vertices["position"].ndarray)
+
+        if "bitangent" not in vertices._attr_list_map:
+            vertices._attr_list_map["bitangent"] = AttrList(dtype=glm.vec3)
+            vertices["bitangent"].ndarray = np.zeros_like(vertices["position"].ndarray)
+
+        if "normal" not in vertices._attr_list_map:
+            vertices._attr_list_map["normal"] = AttrList(dtype=glm.vec3)
+            vertices["normal"].ndarray = np.zeros_like(vertices["position"].ndarray)
+
         if self.__surf_type == Mesh.SurfType.Auto:
             generate_auto_TBN(vertices, indices, not self.self_calculated_normal)
-        elif self.__surf_type == Mesh.SurfType.Sharp:
-            generate_sharp_TBN(vertices, indices, not self.self_calculated_normal)
         elif self.__surf_type == Mesh.SurfType.Smooth:
             generate_smooth_TBN(vertices, indices, not self.self_calculated_normal)
 
