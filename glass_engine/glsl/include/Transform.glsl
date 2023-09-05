@@ -2,7 +2,6 @@
 #define _TRANSFORM_GLSL__
 
 #include "quat.glsl"
-#include "linalg.glsl"
 
 struct RigidTransform
 {
