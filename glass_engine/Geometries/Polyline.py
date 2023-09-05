@@ -11,8 +11,8 @@ class Polyline(Mesh):
     def __init__(self, points:list=[], color:(glm.vec3,glm.vec4)=glm.vec4(0.396, 0.74151, 0.69102, 1),
                  line_width:int=2, loop:bool=False,
                  name:str="", block:bool=True):
-        primitive = (GL.GL_LINE_STRIP if not loop else GL.GL_LINE_LOOP)
-        Mesh.__init__(self, primitive=primitive, color=color, name=name, block=block, shared=False)
+        primitive_type = (GL.GL_LINE_STRIP if not loop else GL.GL_LINE_LOOP)
+        Mesh.__init__(self, primitive_type=primitive_type, color=color, name=name, block=block, shared=False)
         self.render_hint.line_width = line_width
         self.__points = points
         self.start_building()
@@ -55,9 +55,9 @@ class Polyline(Mesh):
 
     @property
     def loop(self):
-        return (self.primitive == GL.GL_LINE_LOOP)
+        return (self.primitive_type == GL.GL_LINE_LOOP)
     
     @loop.setter
     @Mesh.param_setter
     def loop(self, flag:bool):
-        self.primitive = (GL.GL_LINE_STRIP if not flag else GL.GL_LINE_LOOP)
+        self.primitive_type = (GL.GL_LINE_STRIP if not flag else GL.GL_LINE_LOOP)
