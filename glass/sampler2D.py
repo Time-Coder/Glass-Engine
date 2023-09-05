@@ -151,7 +151,7 @@ class sampler2D(FBOAttachment):
         return self._handle
 
     def bind(self, update_fbo:bool=False, force_update_image:bool=False):
-        if self._should_update_shadertoy and self._shadertoy_program is not None:
+        if self._should_update_shadertoy and self._shadertoy_program is not None and (self.fbo.context == 0 or self.fbo.context == GLConfig.buffered_current_context):
             self.__update_shadertoy()
 
         FBOAttachment.bind(self, update_fbo)
