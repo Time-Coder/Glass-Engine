@@ -54,7 +54,8 @@ class Material:
         def __init__(self, ch_name):
             self.ch_name = ch_name
 
-    def __init__(self):
+    def __init__(self, name:str=""):
+        self.__name = name
         self.__ambient = 0.1 * glm.vec3(0.396, 0.74151, 0.69102)
         self.__diffuse = glm.vec3(0.396, 0.74151, 0.69102)
         self.__specular = glm.vec3(0.3)
@@ -106,6 +107,14 @@ class Material:
         self.__has_opaque = False
 
         self._parent_meshes = WeakSet()
+
+    @property
+    def name(self)->str:
+        return self.__name
+    
+    @name.setter
+    def name(self, name:str):
+        self.__name = name
 
     @staticmethod
     def param_setter(func):
