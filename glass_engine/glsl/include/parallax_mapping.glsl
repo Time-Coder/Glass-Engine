@@ -32,8 +32,7 @@ void parallax_mapping(sampler2D height_map, float height_scale, mat3 view_TBN, i
     
     bool is_line_high = (z_line > z_bump);
     bool should_break = false;
-    int times = 0;
-    while (!should_break && (z_line > z_bump) == is_line_high && times < 100)
+    while (!should_break && (z_line > z_bump) == is_line_high)
     {
         lower_d = upper_d;
         upper_d += delta_d;
@@ -49,11 +48,9 @@ void parallax_mapping(sampler2D height_map, float height_scale, mat3 view_TBN, i
 
         z_line_upper = z_line;
         z_bump_upper = z_bump;
-
-        times++;
     }
 
-    times = 0;
+    int times = 0;
     float middle_d;
     while (upper_d - lower_d > 1E-6 && times < 20)
     {
