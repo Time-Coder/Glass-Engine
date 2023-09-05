@@ -119,8 +119,8 @@ class Model(SceneNode):
         self.__dir_name = os.path.dirname(file_name)
 
         self["root"].clear_children()
-        if self.__shared and self.__file_name in Model.__model_map:
-            loaded_model_root = Model.__model_map[self.__file_name]
+        if self.__shared and (self.__file_name, self.__flags) in Model.__model_map:
+            loaded_model_root = Model.__model_map[self.__file_name, self.__flags]
             for child in loaded_model_root.children.values():
                 self["root"].add_child(child)
             return
@@ -249,7 +249,7 @@ class Model(SceneNode):
 
         self.__load_node(assimp_model.nodes[0], assimp_model, self["root"])
         if self.__shared:
-            Model.__model_map[self.__file_name] = self["root"]
+            Model.__model_map[self.__file_name, self.__flags] = self["root"]
     
     def __load_node(self, assimp_node, assimp_model, parent_node=None):
         node = parent_node
