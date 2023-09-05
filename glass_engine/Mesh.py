@@ -27,7 +27,7 @@ class Mesh(SceneNode):
         Flat = 2
 
     @checktype
-    def __init__(self, primitive:GLInfo.primitive_types=GL.GL_TRIANGLES,
+    def __init__(self, primitive_type:GLInfo.primitive_types=GL.GL_TRIANGLES,
                  color:(glm.vec3,glm.vec4)=glm.vec4(0.396, 0.74151, 0.69102, 1), back_color:(glm.vec3,glm.vec4)=None,
                  name:str="", block:bool=True, shared:bool=True,
                  auto_build:bool=True, surf_type:SurfType=None):
@@ -78,7 +78,7 @@ class Mesh(SceneNode):
         self.__shared = shared
         self.__auto_build = auto_build
         self.__surf_type = surf_type
-        self.__primitive = primitive
+        self.__primitive = primitive_type
         self.__geometry_info = None
         self.__self_calculated_normal = False
         self.__has_transparent = False
@@ -117,7 +117,7 @@ class Mesh(SceneNode):
     
     @property
     def is_filled(self):
-        return (self.primitive in GLInfo.triangle_types)
+        return (self.primitive_type in GLInfo.triangle_types)
 
     def build(self):
         pass
@@ -802,13 +802,13 @@ class Mesh(SceneNode):
             geometry_info["z_max"] = vertices["position"].ndarray[:,2].max()
 
     @property
-    def primitive(self):
+    def primitive_type(self):
         return self.__primitive
 
-    @primitive.setter
+    @primitive_type.setter
     @checktype
-    def primitive(self, primitive:GLInfo.primitive_types):
-        self.__primitive = primitive
+    def primitive_type(self, primitive_type:GLInfo.primitive_types):
+        self.__primitive = primitive_type
 
     def generate_temp_TBN(self, vertex0, vertex1, vertex2):
         if self.should_add_color:

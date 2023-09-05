@@ -23,7 +23,7 @@ class ModelMesh(Mesh):
 
     @checktype
     def __init__(self, assimp_mesh:AssimpModelLoader.Mesh, shared:bool=False):
-        Mesh.__init__(self, name=assimp_mesh.name, shared=shared)
+        Mesh.__init__(self, name=assimp_mesh.name, shared=shared, primitive_type=GLInfo.enum_map[assimp_mesh.primitive_type])
         self.__assimp_mesh = assimp_mesh
         self.start_building()
 
@@ -89,7 +89,7 @@ class Model(SceneNode):
     __model_map = {}
 
     @checktype
-    def __init__(self, file_name:str="", flags:PostProcessSteps=(PostProcessSteps.Triangulate | PostProcessSteps.CalcTangentSpace | PostProcessSteps.GenNormals | PostProcessSteps.GenBoundingBoxes), extra_flags:PostProcessSteps=PostProcessSteps.Nothing, exclude_flags:PostProcessSteps=PostProcessSteps.Nothing, shared:bool=True):
+    def __init__(self, file_name:str="", flags:PostProcessSteps=(PostProcessSteps.SortByPType | PostProcessSteps.ValidateDataStructure | PostProcessSteps.SplitLargeMeshes | PostProcessSteps.JoinIdenticalVertices | PostProcessSteps.Triangulate | PostProcessSteps.CalcTangentSpace | PostProcessSteps.GenNormals | PostProcessSteps.GenBoundingBoxes), extra_flags:PostProcessSteps=PostProcessSteps.Nothing, exclude_flags:PostProcessSteps=PostProcessSteps.Nothing, shared:bool=True):
         self.__shared = shared
         self.__flags = ((flags | extra_flags) & (~exclude_flags))
 
@@ -109,7 +109,7 @@ class Model(SceneNode):
         return self.__shared
 
     @checktype
-    def load(self, file_name:str, flags:PostProcessSteps=(PostProcessSteps.Triangulate | PostProcessSteps.CalcTangentSpace | PostProcessSteps.GenNormals | PostProcessSteps.GenBoundingBoxes), extra_flags:PostProcessSteps=PostProcessSteps.Nothing, exclude_flags:PostProcessSteps=PostProcessSteps.Nothing, shared=False):
+    def load(self, file_name:str, flags:PostProcessSteps=(PostProcessSteps.SplitLargeMeshes | PostProcessSteps.JoinIdenticalVertices | PostProcessSteps.Triangulate | PostProcessSteps.CalcTangentSpace | PostProcessSteps.GenNormals | PostProcessSteps.GenBoundingBoxes), extra_flags:PostProcessSteps=PostProcessSteps.Nothing, exclude_flags:PostProcessSteps=PostProcessSteps.Nothing, shared=False):
         if not os.path.isfile(file_name):
             raise FileNotFoundError(file_name)
         

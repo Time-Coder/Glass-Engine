@@ -397,7 +397,7 @@ class CommonRenderer(Renderer):
 
         for mesh_tuple in self.scene.all_meshes.items():
             mesh = mesh_tuple[0]
-            if mesh.primitive in GLInfo.triangle_types:
+            if mesh.primitive_type in GLInfo.triangle_types:
                 self._all_meshes.append(mesh_tuple)
                 
                 if mesh.material.cast_shadows:
@@ -409,7 +409,7 @@ class CommonRenderer(Renderer):
                 if mesh.has_opaque:
                     self._opaque_meshes.append(mesh_tuple)
 
-            elif mesh.primitive in GLInfo.line_types:
+            elif mesh.primitive_type in GLInfo.line_types:
                 self._all_lines.append(mesh_tuple)
                 
                 if mesh.material.cast_shadows:
@@ -421,7 +421,7 @@ class CommonRenderer(Renderer):
                 if mesh.has_opaque:
                     self._opaque_lines.append(mesh_tuple)
 
-            elif mesh.primitive == GL.GL_POINTS:
+            elif mesh.primitive_type == GL.GL_POINTS:
                 self._all_points.append(mesh_tuple)
                 
                 if mesh.material.cast_shadows:
