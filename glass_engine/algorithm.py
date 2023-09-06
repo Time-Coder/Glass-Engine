@@ -462,38 +462,38 @@ def Zernike_eval(n:int, m:int, r:float, theta:float):
         return R * np.sin(m*theta)
 
 @cache
-def associated_Legendre_coeff(n:int, m:int, k:int):
+def associated_Legendre_coeff(l:int, m:int, k:int):
     sgn = 1 if is_even(k) else -1
-    C = factorial(2*(n - k)) / (2**n * factorial(k) * factorial(n-k) * factorial(n - 2*k - m))
+    C = factorial(2*(l - k)) / (2**l * factorial(k) * factorial(l-k) * factorial(l - 2*k - m))
     return sgn * C
 
 @cache
-def associated_Legendre_eval(n:int, m:int, x:float):
-    if n < 0 or n < abs(m):
+def associated_Legendre_eval(l:int, m:int, x:float):
+    if l < 0 or l < abs(m):
         return 0
 
     if m < 0:
         m = abs(m)
         sgn = 1 if is_even(m) else -1
-        C = factorial(n - m) / factorial(n + m)
-        return sgn * C * associated_Legendre_eval(n, m, x)
+        C = factorial(l - m) / factorial(l + m)
+        return sgn * C * associated_Legendre_eval(l, m, x)
 
     P = 0
-    ub = int((n - m)/2)
+    ub = (l - m) // 2
     for k in range(ub + 1):
-        P += associated_Legendre_coeff(n, m, k) * x**(n - 2*k - m)
+        P += associated_Legendre_coeff(l, m, k) * x**(l - 2*k - m)
 
     P *= (1 - x**2)**(m/2)
     return P
 
 @cache
-def spherical_harmonics_coeff(n:int, m:int):
+def spherical_harmonics_coeff(l:int, m:int):
     sgn = 1 if is_even(m) else -1
-    return sgn * math.sqrt((2*n+1)/(4*math.pi) * factorial(n-m)/factorial(n+m))
+    return sgn * math.sqrt((2*l+1)/(4*math.pi) * factorial(l-m)/factorial(l+m))
 
 @cache
-def spherical_harmonics_eval(n:int, m:int, theta:float, phi:float):
-    A = spherical_harmonics_coeff(n, m)
-    P = associated_Legendre_eval(n, m, np.cos(theta))
+def spherical_harmonics_eval(l:int, m:int, theta:float, phi:float):
+    A = spherical_harmonics_coeff(l, m)
+    P = associated_Legendre_eval(l, m, np.cos(theta))
     return A * P * np.exp(m*phi*1j)
     
