@@ -79,8 +79,8 @@ class ModelViewManipulator(Manipulator):
         self.camera.position.z = self.__distance*math.sin(elevation)
 
         if glm.length(self.__offset) > 1E-6:
-            right = glm.dvec3(math.cos(azimuth), math.sin(azimuth), 0)
-            forward = glm.dvec3(-math.sin(elevation) * math.sin(azimuth), math.sin(elevation) * math.cos(azimuth), math.cos(elevation))
+            right = glm.vec3(math.cos(azimuth), math.sin(azimuth), 0)
+            forward = glm.vec3(-math.sin(elevation) * math.sin(azimuth), math.sin(elevation) * math.cos(azimuth), math.cos(elevation))
             self.camera.position += (self.__offset.x * right + self.__offset.y * forward)
 
         self.camera.pitch = -self.__elevation
@@ -184,27 +184,33 @@ class ModelViewManipulator(Manipulator):
             self.camera.screen.capture(file_name)
         
     def on_key_repeated(self, keys)->bool:
-        if Manipulator.Key.Key_W in keys:
+        if Manipulator.Key.Key_W in keys and \
+           Manipulator.Key.Key_S not in keys:
             self.__distance /= pow(2, 1/self.camera.screen.smooth_fps)
             self.__update_camera()
             return True
-        elif Manipulator.Key.Key_S in keys:
+        elif Manipulator.Key.Key_S in keys and \
+             Manipulator.Key.Key_W not in keys:
             self.__distance *= pow(2, 1/self.camera.screen.smooth_fps)
             self.__update_camera()
             return True
-        elif Manipulator.Key.Key_A in keys:
+        elif Manipulator.Key.Key_A in keys and \
+             Manipulator.Key.Key_D not in keys:
             self.__offset.x -= 0.5/self.camera.screen.smooth_fps * self.__distance * self.camera.tan_half_fov
             self.__update_camera()
             return True
-        elif Manipulator.Key.Key_D in keys:
+        elif Manipulator.Key.Key_D in keys and \
+             Manipulator.Key.Key_A not in keys:
             self.__offset.x += 0.5/self.camera.screen.smooth_fps * self.__distance * self.camera.tan_half_fov
             self.__update_camera()
             return True
-        elif Manipulator.Key.Key_E in keys:
+        elif Manipulator.Key.Key_E in keys and \
+             Manipulator.Key.Key_C not in keys:
             self.__offset.y += 0.5/self.camera.screen.smooth_fps * self.__distance * self.camera.tan_half_fov
             self.__update_camera()
             return True
-        elif Manipulator.Key.Key_C in keys:
+        elif Manipulator.Key.Key_C in keys and \
+             Manipulator.Key.Key_E not in keys:
             self.__offset.y -= 0.5/self.camera.screen.smooth_fps * self.__distance * self.camera.tan_half_fov
             self.__update_camera()
             return True

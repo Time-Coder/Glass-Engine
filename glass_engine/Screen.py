@@ -163,7 +163,7 @@ class Screen(QOpenGLWidget):
         self._pressed_keys = set()
         self._last_frame_time = 0
         self._is_cursor_hiden = False
-        self._hide_cursor_global_posF = QPointF(0, 0)
+        self._hide_cursor_global_pos = glm.vec2(0)
         self._last_cursor_global_pos = QPoint(0, 0)
         self._fps = 0
         self._smooth_fps = 0
@@ -506,9 +506,10 @@ class Screen(QOpenGLWidget):
             return
         
         self._is_cursor_hiden = True
-        self._hide_cursor_global_posF = QPointF(QCursor.pos())
+        cursor_pos = QCursor.pos()
+        self._hide_cursor_global_pos = glm.vec2(cursor_pos.x(), cursor_pos.y())
         self.setCursor(Qt.CursorShape.BlankCursor)
-        return self._hide_cursor_global_posF
+        return self._hide_cursor_global_pos
 
     def show_cursor(self)->None:
         if not self._is_cursor_hiden:
@@ -554,8 +555,8 @@ class Screen(QOpenGLWidget):
                 buffer = 100
                 if offset.x() > buffer or offset.x() < -buffer or \
                     offset.y() > buffer or offset.y() < -buffer:
-                    self._hide_cursor_global_posF.x = self._hide_cursor_global_posF.x() - offset.x()
-                    self._hide_cursor_global_posF.y = self._hide_cursor_global_posF.y() - offset.y()
+                    self._hide_cursor_global_pos.x -= offset.x()
+                    self._hide_cursor_global_pos.y -= offset.y()
                     QCursor.setPos(center_global_posF.toPoint())
                     cursor_global_posF = center_global_posF
             

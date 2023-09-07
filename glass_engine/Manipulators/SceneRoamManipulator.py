@@ -94,7 +94,7 @@ class SceneRoamManipulator(Manipulator):
             dx = d.x/100
             dy = d.y/100
 
-            self.camera.position = self._left_press_camera_pos + self.camera.orientation * glm.dvec3(-dx, 0, dy)
+            self.camera.position = self._left_press_camera_pos + self.camera.orientation * glm.vec3(-dx, 0, dy)
             return True
         
         return False
@@ -159,27 +159,27 @@ class SceneRoamManipulator(Manipulator):
         should_update = False
         if Manipulator.Key.Key_W in keys and \
            Manipulator.Key.Key_S not in keys: # 前进
-            self.camera.position += self.camera.orientation * glm.dvec3(0, d, 0)
+            self.camera.position += self.camera.orientation * glm.vec3(0, d, 0)
             should_update = True
         elif Manipulator.Key.Key_S in keys and \
             Manipulator.Key.Key_W not in keys: # 后退
-            self.camera.position += self.camera.orientation * glm.dvec3(0, -d, 0)
+            self.camera.position += self.camera.orientation * glm.vec3(0, -d, 0)
             should_update = True
         elif Manipulator.Key.Key_A in keys and \
             Manipulator.Key.Key_D not in keys: # 向左
-            self.camera.position += self.camera.orientation * glm.dvec3(-d, 0, 0)
+            self.camera.position += self.camera.orientation * glm.vec3(-d, 0, 0)
             should_update = True
         elif Manipulator.Key.Key_D in keys and \
             Manipulator.Key.Key_A not in keys: # 向右
-            self.camera.position += self.camera.orientation * glm.dvec3(d, 0, 0)
+            self.camera.position += self.camera.orientation * glm.vec3(d, 0, 0)
             should_update = True
         elif Manipulator.Key.Key_E in keys and \
             Manipulator.Key.Key_C not in keys: # 向上
-            self.camera.position += self.camera.orientation * glm.dvec3(0, 0, d)
+            self.camera.position += self.camera.orientation * glm.vec3(0, 0, d)
             should_update = True
         elif Manipulator.Key.Key_C in keys and \
             Manipulator.Key.Key_E not in keys: # 向下
-            self.camera.position += self.camera.orientation * glm.dvec3(0, 0, -d)
+            self.camera.position += self.camera.orientation * glm.vec3(0, 0, -d)
             should_update = True
         elif Manipulator.Key.Key_F in keys:
             print(self.camera.screen.fps)

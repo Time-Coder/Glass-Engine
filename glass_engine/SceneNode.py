@@ -9,15 +9,15 @@ from glass.WeakDict import WeakDict
 
 class SceneNode:
 
-    class dvec3(glm.dvec3):
+    class vec3(glm.vec3):
 
         def __init__(self, x:float=None, y:float=None, z:float=None, callback=None):
             if x is None and y is not None and z is not None:
-                glm.dvec3.__init__(self, x)
+                glm.vec3.__init__(self, x)
             elif x is not None and y is not None and z is not None:
-                glm.dvec3.__init__(self, x, y, z)
+                glm.vec3.__init__(self, x, y, z)
             else:
-                glm.dvec3.__init__(self)
+                glm.vec3.__init__(self)
 
             self._callback = callback
         
@@ -26,7 +26,7 @@ class SceneNode:
 
         @property
         def flat(self):
-            return glm.dvec3(self.x, self.y, self.z)
+            return glm.vec3(self.x, self.y, self.z)
 
         def __setattr__(self, name:str, value):
             if name in "xyzrgbstp":                
@@ -38,18 +38,18 @@ class SceneNode:
         def __rmul__(self, other):
             return other * self.flat
 
-    class dquat(glm.dquat):
+    class quat(glm.quat):
         def __init__(self, w:float=None, x:float=None, y:float=None, z:float=None, callback=None):
             if w is not None and x is not None and y is not None and z is not None:
-                glm.dquat.__init__(self, w, x, y, z)
+                glm.quat.__init__(self, w, x, y, z)
             else:
-                glm.dquat.__init__(self)
+                glm.quat.__init__(self)
 
             self._callback = callback
         
         @property
         def flat(self):
-            return glm.dquat(self.w, self.x, self.y, self.z)
+            return glm.quat(self.w, self.x, self.y, self.z)
 
         def __deepcopy__(self, memo):
             return self.flat
@@ -74,10 +74,10 @@ class SceneNode:
         else:
             self._name = self.__class__.__name__ + "_" + str(uuid.uuid1())
 
-        self._position = SceneNode.dvec3(0, 0, 0, callback=self._set_dirty)
-        self._orientation = SceneNode.dquat(1, 0, 0, 0, callback=self._update_yaw_pitch_roll)
-        self._scale = SceneNode.dvec3(1, 1, 1, callback=self._set_dirty)
-        self._yaw_pitch_roll = glm.dvec3(0, 0, 0)
+        self._position = SceneNode.vec3(0, 0, 0, callback=self._set_dirty)
+        self._orientation = SceneNode.quat(1, 0, 0, 0, callback=self._update_yaw_pitch_roll)
+        self._scale = SceneNode.vec3(1, 1, 1, callback=self._set_dirty)
+        self._yaw_pitch_roll = glm.vec3(0, 0, 0)
 
         self._parents = DictList(weak_ref=True)
         self._children = DictList()
