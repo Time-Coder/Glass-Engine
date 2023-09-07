@@ -29,22 +29,25 @@ class SceneRoamManipulator(Manipulator):
         self._moving_speed = 1
 
     def on_mouse_pressed(self, button:Manipulator.MouseButton, screen_pos:glm.vec2, global_pos:glm.vec2):
-        if self.camera.screen.is_cursor_hiden:
-            return False
+        if button == Manipulator.MouseButton.XButton1:
+            self._moving_speed /= pow(2, 1/2)
+        elif button == Manipulator.MouseButton.XButton2:
+            self._moving_speed *= pow(2, 1/2)
+        
+        if not self.camera.screen.is_cursor_hiden:
+            if button == Manipulator.MouseButton.RightButton:
+                self._is_right_pressed = True
+                self._right_press_global_pos = global_pos
+                self._right_press_yaw = self.camera.yaw
+                self._right_press_pitch = self.camera.pitch
+            elif button == Manipulator.MouseButton.LeftButton:
+                self._is_left_pressed = True
+                self._left_press_global_pos = global_pos
+                self._left_press_yaw = self.camera.yaw
+                self._left_press_pitch = self.camera.pitch
+                self._left_press_camera_pos = copy.deepcopy(self.camera.position)
 
-        if button == Manipulator.MouseButton.RightButton:
-            self._is_right_pressed = True
-            self._right_press_global_pos = global_pos
-            self._right_press_yaw = self.camera.yaw
-            self._right_press_pitch = self.camera.pitch
-            return False
-        elif button == Manipulator.MouseButton.LeftButton:
-            self._is_left_pressed = True
-            self._left_press_global_pos = global_pos
-            self._left_press_yaw = self.camera.yaw
-            self._left_press_pitch = self.camera.pitch
-            self._left_press_camera_pos = copy.deepcopy(self.camera.position)
-            return False
+        return False
 
     def on_mouse_released(self, button:Manipulator.MouseButton, screen_pos:glm.vec2, global_pos:glm.vec2):
         if button == Manipulator.MouseButton.RightButton:
@@ -91,21 +94,20 @@ class SceneRoamManipulator(Manipulator):
             dx = d.x/100
             dy = d.y/100
 
-            yaw = self._left_press_yaw/180*math.pi
-            horizontal_orientation = glm.dquat(math.cos(yaw/2), 0, 0, math.sin(yaw/2))
-            self.camera.position = self._left_press_camera_pos + horizontal_orientation*glm.dvec3(-dx, dy, 0)
+            self.camera.position = self._left_press_camera_pos + self.camera.orientation * glm.dvec3(-dx, 0, dy)
             return True
         
         return False
 
     def on_wheel_scrolled(self, angle:glm.vec2, screen_pos:glm.vec2, global_pos:glm.vec2):
         n = angle.y/120
-        if n > 0:
-            self._moving_speed *= 1.2
+        scale = pow(2, n/6)
+        if self.camera.projection_mode.value == 0:
+            self.camera.fov /= scale
         else:
-            self._moving_speed *= 0.8
+            self.camera.height /= scale
 
-        return False
+        return True
 
     def on_key_pressed(self, key:Manipulator.Key)->bool:
         if key in [Manipulator.Key.Key_Enter, Manipulator.Key.Key_Return]:

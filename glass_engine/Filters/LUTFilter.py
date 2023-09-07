@@ -8,7 +8,7 @@ from OpenGL import GL
 
 class LUTFilter(SingleShaderFilter):
 
-    def __init__(self, LUT_image, block_shape:glm.ivec2=glm.ivec2(64, 64)):
+    def __init__(self, LUT_image, block_shape:glm.ivec2=glm.ivec2(64, 64), contribute:float=1.0):
         self_folder = os.path.dirname(os.path.abspath(__file__))
         SingleShaderFilter.__init__(self, self_folder + "/../glsl/Filters/lut_filter.glsl")
 
@@ -22,8 +22,10 @@ class LUTFilter(SingleShaderFilter):
 
         self["block_shape"] = block_shape
         self["LUT_image"] = LUT_image
+        self["contribute"] = contribute
         self.__block_size = block_shape
         self.__LUT_image = LUT_image
+        self.__contribute = contribute
 
     @property
     def block_shape(self):
@@ -48,4 +50,11 @@ class LUTFilter(SingleShaderFilter):
         self.__LUT_image = LUT_image
         self["LUT_image"] = LUT_image
 
+    @property
+    def contribute(self):
+        return self.__contribute
     
+    @contribute.setter
+    def contribute(self, contribute:float):
+        self.__contribute = contribute
+        self["contribute"] = contribute
