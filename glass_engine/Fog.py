@@ -61,7 +61,7 @@ class Fog:
     
     @color.setter
     @checktype
-    def color(self, color:(glm.vec3,glm.dvec3)):
+    def color(self, color:glm.vec3):
         self._color = color
 
     @property

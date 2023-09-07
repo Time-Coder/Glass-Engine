@@ -121,7 +121,7 @@ class PointLight(Light):
 class FlatPointLight(FlatLight):
 
     def __init__(self, point_light:PointLight):
-        self.abs_position = glm.dvec3(0, 0, 0)
+        self.abs_position = glm.vec3(0, 0, 0)
         self.need_update_depth_map = True
         FlatLight.__init__(self, point_light)
 

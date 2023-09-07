@@ -10,9 +10,9 @@ layout (location = 5) in vec4 color;
 layout (location = 6) in vec4 back_color;
 
 // instance
-layout (location = 7) in dvec4 affine_transform_row0;
-layout (location = 8) in dvec4 affine_transform_row1;
-layout (location = 9) in dvec4 affine_transform_row2;
+layout (location = 7) in vec4 affine_transform_row0;
+layout (location = 8) in vec4 affine_transform_row1;
+layout (location = 9) in vec4 affine_transform_row2;
 layout (location = 10) in uvec2 env_map_handle;
 layout (location = 11) in int visible;
 
@@ -31,11 +31,12 @@ out VertexOut
 
 void main()
 {
-    dmat4 dtransform = dmat4(affine_transform_row0,
-                             affine_transform_row1,
-                             affine_transform_row2,
-                             dvec4(0, 0, 0, 1));
-    mat4 transform = transpose(mat4(dtransform));
+    mat4 transform = transpose(mat4(
+        affine_transform_row0,
+        affine_transform_row1,
+        affine_transform_row2,
+        vec4(0, 0, 0, 1)
+    ));
     
     vec3 world_pos = transform_apply(transform, position);
     gl_Position = vec4(world_pos, 1);

@@ -61,7 +61,7 @@ class SpotLight(PointLight):
 class FlatSpotLight(FlatPointLight):
 
     def __init__(self, spot_light:SpotLight):
-        self.direction = glm.dvec3(0, 1, 0)
+        self.direction = glm.vec3(0, 1, 0)
         FlatPointLight.__init__(self, spot_light)
         
     def update(self, spot_light:SpotLight):

@@ -9,9 +9,9 @@ layout (location = 1) in vec3 tex_coord;
 layout (location = 2) in vec4 color;
 
 // instance
-layout (location = 3) in dvec4 affine_transform_row0;
-layout (location = 4) in dvec4 affine_transform_row1;
-layout (location = 5) in dvec4 affine_transform_row2;
+layout (location = 3) in vec4 affine_transform_row0;
+layout (location = 4) in vec4 affine_transform_row1;
+layout (location = 5) in vec4 affine_transform_row2;
 layout (location = 6) in uvec2 env_map_handle;
 layout (location = 7) in int visible;
 
@@ -38,11 +38,12 @@ uniform Material material;
 
 void main()
 {
-    dmat4 dtransform = dmat4(affine_transform_row0,
-                             affine_transform_row1,
-                             affine_transform_row2,
-                             dvec4(0, 0, 0, 1));
-    mat4 transform = transpose(mat4(dtransform));
+    mat4 transform = transpose(mat4(
+        affine_transform_row0,
+        affine_transform_row1,
+        affine_transform_row2,
+        vec4(0, 0, 0, 1)
+    ));
 
     vs_out.affine_transform = transform;
     vs_out.color = color;
