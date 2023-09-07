@@ -48,7 +48,7 @@ float SSM(DirLight light, Camera CSM_camera, vec3 frag_pos, vec3 frag_normal)
     BoundingSphere bounding_sphere = Frustum_bounding_sphere(CSM_camera, level);
     ivec2 tex_size = textureSize(sampler2DArray(light.depth_map_handle), 0).xy;
     float beta = acos(max(0, dot(frag_normal, -light.direction)));
-    float bias = 2 * bounding_sphere.radius / max(tex_size.x, tex_size.y) * min(10, tan(beta));
+    float bias = 2 * bounding_sphere.radius / max(tex_size.x, tex_size.y) * clamp(tan(beta), 0.2, 10.0);
     bias /= depth_length;
     self_depth -= bias;
 
@@ -67,7 +67,7 @@ float _get_PCF_value(DirLight light, Camera CSM_camera, int level, vec3 frag_pos
     BoundingSphere bounding_sphere = Frustum_bounding_sphere(CSM_camera, level);
     ivec2 tex_size = textureSize(sampler2DArray(light.depth_map_handle), 0).xy;
     float beta = acos(max(0, dot(frag_normal, -light.direction)));
-    float bias = (1+ceil(0.5*PCF_width)) * 2 * bounding_sphere.radius / max(tex_size.x, tex_size.y) * min(tan(beta), 10);
+    float bias = (1+ceil(0.5*PCF_width)) * 2 * bounding_sphere.radius / max(tex_size.x, tex_size.y) * clamp(tan(beta), 0.2, 10.0);
     bias /= depth_length;
     self_depth -= bias;
 

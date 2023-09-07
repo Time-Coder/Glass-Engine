@@ -7,6 +7,8 @@ const float PI = acos(-1);
 const float cos45 = 0.5*sqrt(2);
 const float sin45 = cos45;
 
+#define saturate(value) clamp(value, 0.0, 1)
+
 float roundn(float value, uint n)
 {
     float pow10n = pow(10, n);
@@ -230,6 +232,8 @@ vec4 soft_abs(vec4 value, float softness)
 #define soft_step(value, softness) (0.5*(soft_sign((value), (softness)) + 1.0))
 #define soft_max(value1, value2, softness) (0.5 * ((value1) + (value2) + soft_abs((value1) - (value2), (softness))))
 #define soft_min(value1, value2, softness) (0.5 * ((value1) + (value2) - soft_abs((value1) - (value2), (softness))))
+#define soft_clamp(value, min_value, max_value, softness) soft_max(soft_min(value, max_value, softness), min_value, softness)
+#define soft_saturate(value, softness) soft_clamp(value, 0.0, 1.0, softness)
 
 float soft_floor(float x, float t)
 {

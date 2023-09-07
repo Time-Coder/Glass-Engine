@@ -13,7 +13,7 @@ float SSM(PointLight light, vec3 frag_pos, vec3 frag_normal)
     
     ivec2 tex_size = textureSize(samplerCube(light.depth_map_handle), 0);
     float beta = acos(max(0, dot(frag_normal, -depth_map_tex_coord)));
-    float bias = self_depth/max(tex_size.x, tex_size.y) * min(10, tan(beta));
+    float bias = self_depth/max(tex_size.x, tex_size.y) * clamp(tan(beta), 0.2, 10.0);
     self_depth -= bias;
 
     depth_map_tex_coord = quat_apply(quat(cos45, sin45, 0, 0), depth_map_tex_coord);
@@ -36,7 +36,7 @@ float PCF(PointLight light, vec3 frag_pos, vec3 frag_normal)
 
     float max_angle_shift = atan(0.05/self_depth);
     float beta = acos(max(0, dot(frag_normal, -depth_map_tex_coord)));
-    float bias = 0.05 * min(10, tan(beta));
+    float bias = 0.05 * clamp(tan(beta), 0.2, 10.0);
     self_depth -= bias;
 
     int n_samples = 10;
