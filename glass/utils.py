@@ -296,13 +296,10 @@ def load_var(file_path):
     return var
 
 def subscript(var, subscript_chain, feed_index:int=None):
-    for item in subscript_chain:
-        operator = item[0]
-        operant = item[1]
+    for operator, operant in subscript_chain:
         if operator == "getattr":
             var = getattr(var, operant)
-            # var = var.__getattribute__(operant)
-        else: # if operator == "getitem":
+        else:
             used_index = (operant if operant != "{0}" else feed_index)
             var = var[used_index]
 
@@ -318,12 +315,11 @@ def subscript_set(var, subscript_chain, value, feed_index:int=None, compare_befo
         
         if operator == "getattr":
             old_value = getattr(var, operant)
-            # old_value = var.__getattribute__(operant)
             if i != last_index:
                 var = old_value
             elif not compare_before_set or old_value != value:
                 setattr(var, operant, value)
-        else: # if operator == "getitem":
+        else:
             used_index = (operant if operant != "{0}" else feed_index)
             old_value = var[used_index]
             if i != last_index:

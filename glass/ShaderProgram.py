@@ -503,8 +503,9 @@ class ShaderProgram(GPUProgram):
             indices._apply()
             if vertices is not None:
                 current_context = GLConfig.buffered_current_context
-                if (current_context, self, instances) in vertices.vao_map:
-                    vertices.vao_map[current_context, self, instances].setEBO(indices.ebo)
+                key = (current_context, self, instances)
+                if key in vertices._vao_map:
+                    vertices._vao_map[key].setEBO(indices.ebo)
                 else:
                     total = 0
 

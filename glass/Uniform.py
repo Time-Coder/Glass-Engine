@@ -144,7 +144,7 @@ class Uniform:
 
             uniform = self.uniform
             program = uniform.program
-            if full_name not in program._uniform_map:
+            if GlassConfig.debug and full_name not in program._uniform_map:
                 error_message = "uniform variable '" + full_name + "' is not defined in following files:\n"
                 all_files = program._get_compiled_files()
                 error_message += "\n".join(all_files)
@@ -165,7 +165,7 @@ class Uniform:
 
             uniform = self.uniform
             program = uniform.program
-            if full_name not in program._uniform_map:
+            if GlassConfig.debug and full_name not in program._uniform_map:
                 error_message = "uniform variable '" + full_name + "' is not defined in following files:\n"
                 all_files = program._get_compiled_files()
                 error_message += "\n".join(all_files)
@@ -199,7 +199,7 @@ class Uniform:
 
     def __getitem__(self, name:str):
         program = self.program
-        if name not in program._uniform_map:
+        if GlassConfig.debug and name not in program._uniform_map:
             error_message = "uniform variable '" + name + "' is not defined in following files:\n"
             all_files = program._get_compiled_files()
             error_message += "\n".join(all_files)
@@ -260,7 +260,6 @@ class Uniform:
                 self._current_atom_name = name
                 func = Uniform._set_atom_func(uniform_type)
                 func(self, location, value)
-
                 self._atom_value_map[name] = Uniform._copy(value)
             else:
                 binding_point = uniform_info["binding_point"]

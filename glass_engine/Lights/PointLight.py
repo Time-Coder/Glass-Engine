@@ -31,37 +31,6 @@ class PointLight(Light):
         self._update_scene_lights()
 
     @property
-    def color(self):
-        return self._color
-
-    @color.setter
-    @checktype
-    def color(self, color:glm.vec3):
-        if self._color == color:
-            return
-        
-        self._color.r = color.r
-        self._color.g = color.g
-        self._color.b = color.b
-
-        for flat in self._flats:
-            flat.color = self._color
-
-    @property
-    def brightness(self):
-        return self._brightness
-
-    @brightness.setter
-    @checktype
-    def brightness(self, brightness:float):
-        if self._brightness == brightness:
-            return
-        
-        self._brightness = brightness
-        for flat in self._flats:
-            flat.brightness = self._brightness
-
-    @property
     def coverage(self):
         return 0.1*self._coverage
     

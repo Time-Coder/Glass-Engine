@@ -1,4 +1,3 @@
-from ._Manipulator import _MouseButton, _Key
 from glass.utils import di
 from enum import Flag, IntEnum
 
