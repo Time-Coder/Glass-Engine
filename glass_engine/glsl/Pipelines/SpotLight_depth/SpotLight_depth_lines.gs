@@ -39,7 +39,7 @@ void main()
         gs_out.back_color = gs_in[i].back_color;
         gs_out.tex_coord = gs_in[i].tex_coord;
 
-        gl_Position = Camera_project(camera, world_pos);
+        gl_Position = Camera_project(camera, gs_out.world_pos);
         EmitVertex();
     }
     EndPrimitive();

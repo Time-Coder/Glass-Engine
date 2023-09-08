@@ -57,23 +57,6 @@ class Mesh(SceneNode):
         
         self._propagation_props["explode_distance"] = 0
 
-        self._propagation_props["tangent_scale"] = 0
-        self._propagation_props["tangent_line_width"] = 2
-        self._propagation_props["tangent_color"] = glm.vec4(1, 0, 0, 1)
-
-        self._propagation_props["bitangent_scale"] = 0
-        self._propagation_props["bitangent_line_width"] = 2
-        self._propagation_props["bitangent_color"] = glm.vec4(0, 1, 0, 1)
-
-        self._propagation_props["normal_scale"] = 0
-        self._propagation_props["normal_line_width"] = 2
-        self._propagation_props["normal_color"] = glm.vec4(0, 0, 1, 1)
-
-        self._draw_outline_map = {}
-        self._draw_all_outlines = False
-        self.__outline_color = glm.vec3(1, 1, 0)
-        self.__outline_width = 3
-
         self.__block = block
         self.__shared = shared
         self.__auto_build = auto_build
@@ -134,33 +117,6 @@ class Mesh(SceneNode):
     @checktype
     def explode_distance(self, distance:float):
         self.set_propagation_prop("explode_distance", distance)
-    
-    @checktype
-    def draw_normal(self, scale:float=0.1, color:(glm.vec4,glm.vec3)=glm.vec4(0,0,1,1), normal_line_width:int=2):
-        if isinstance(color, glm.vec3):
-            color = glm.vec4(color, 1)
-
-        self.set_propagation_prop("normal_scale", scale)
-        self.set_propagation_prop("normal_color", color, callback=Mesh._update_mesh_callback)
-        self.set_propagation_prop("normal_line_width", normal_line_width)
-
-    @checktype
-    def draw_tangent(self, scale:float=0.1, color:(glm.vec4,glm.vec3)=glm.vec4(1,0,0,1), tangent_line_width:int=2):
-        if isinstance(color, glm.vec3):
-            color = glm.vec4(color, 1)
-
-        self.set_propagation_prop("tangent_scale", scale)
-        self.set_propagation_prop("tangent_color", color, callback=Mesh._update_mesh_callback)
-        self.set_propagation_prop("tangent_line_width", tangent_line_width)
-
-    @checktype
-    def draw_bitangent(self, scale:float=0.1, color:(glm.vec4,glm.vec3)=glm.vec4(0,1,0,1), bitangent_line_width:int=2):
-        if isinstance(color, glm.vec3):
-            color = glm.vec4(color, 1)
-
-        self.set_propagation_prop("bitangent_scale", scale)
-        self.set_propagation_prop("bitangent_color", color, callback=Mesh._update_mesh_callback)
-        self.set_propagation_prop("bitangent_line_width", bitangent_line_width)
 
     @staticmethod
     def _update_mesh_callback(child):
@@ -169,139 +125,6 @@ class Mesh(SceneNode):
         
         for scene in child.scenes:
             scene._update_mesh(child)
-
-    @property
-    def normal_scale(self):
-        return self.propagation_prop("normal_scale")
-    
-    @normal_scale.setter
-    @checktype
-    def normal_scale(self, scale:float):
-        self.set_propagation_prop("normal_scale", scale, callback=Mesh._update_mesh_callback)
-    
-    @property
-    def normal_color(self):
-        return self.propagation_prop("normal_color")
-    
-    @normal_color.setter
-    @checktype
-    def normal_color(self, color:glm.vec3):
-        self.set_propagation_prop("normal_color", color, callback=Mesh._update_mesh_callback)
-
-    @property
-    def normal_line_width(self):
-        return self.propagation_prop("normal_line_width")
-    
-    @normal_line_width.setter
-    @checktype
-    def normal_line_width(self, width:int):
-        self.set_propagation_prop("normal_line_width", width)
-
-    @property
-    def tangent_scale(self):
-        return self.propagation_prop("tangent_scale")
-    
-    @tangent_scale.setter
-    @checktype
-    def tangent_scale(self, scale:float):
-        self.set_propagation_prop("tangent_scale", scale, callback=Mesh._update_mesh_callback)
-    
-    @property
-    def tangent_color(self):
-        return self._tangent_color
-    
-    @tangent_color.setter
-    @checktype
-    def tangent_color(self, color:glm.vec3):
-        self.set_propagation_prop("tangent_color", color, callback=Mesh._update_mesh_callback)
-
-    @property
-    def tangent_line_width(self):
-        return self._tangent_line_width
-    
-    @tangent_line_width.setter
-    @checktype
-    def tangent_line_width(self, width:int):
-        self.set_propagation_prop("tangent_line_width", width)
-
-    @property
-    def bitangent_scale(self):
-        return self.propagation_prop("bitangent_scale")
-
-    @bitangent_scale.setter
-    @checktype
-    def bitangent_scale(self, scale:float):
-        self.set_propagation_prop("bitangent_scale", scale, callback=Mesh._update_mesh_callback)
-    
-    @property
-    def bitangent_color(self):
-        return self._bitangent_color
-    
-    @bitangent_color.setter
-    @checktype
-    def bitangent_color(self, color:glm.vec3):
-        self.set_propagation_prop("bitangent_color", color, callback=Mesh._update_mesh_callback)
-
-    @property
-    def bitangent_line_width(self):
-        return self._bitangent_line_width
-    
-    @bitangent_line_width.setter
-    @checktype
-    def bitangent_line_width(self, width:int):
-        self.set_propagation_prop("bitangent_line_width", width)
-
-    @checktype
-    def draw_outline(self, node_path:(list,tuple,bool)=None, flag:bool=True, width:float=None):
-        if node_path is None:
-            self._draw_all_outlines = flag
-            if width is not None:
-                self.__outline_width = width
-            return
-        
-        if isinstance(node_path, bool):
-            self._draw_all_outlines = node_path
-            if width is not None:
-                self.__outline_width = width
-            return
-
-        used_path = node_path
-        if used_path[-1] is not self:
-            used_path = [*node_path, self]
-        key = SceneNode.path_str(used_path)
-
-        if flag:
-            if width is None:
-                width = self.outline_width
-            self._draw_outline_map[key] = width
-        else:
-            del self._draw_outline_map[key]
-
-    def has_outline(self, node_path:list=None):
-        if node_path is None:
-            return (self._draw_all_outlines or self._draw_outline_map)
-        else:
-            return (SceneNode.path_str(node_path) in self._draw_outline_map)
-        
-    def clear_outline(self):
-        self._draw_outline_map.clear()
-        self._draw_all_outlines = False
-
-    @property
-    def outline_color(self):
-        return self.__outline_color
-    
-    @outline_color.setter
-    def outline_color(self, color:glm.vec3):
-        self.__outline_color = color
-
-    @property
-    def outline_width(self):
-        return self.__outline_width
-    
-    @outline_width.setter
-    def outline_width(self, width:float):
-        self.__outline_width = width
 
     @property
     def should_add_color(self):

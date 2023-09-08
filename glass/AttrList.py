@@ -17,10 +17,6 @@ class AttrList(SameTypeList):
 
         self.stride = 0
         self.is_new_vbo = False
-
-    @property
-    def vbo(self)->VBO:
-        return self._vbo
     
     @property
     def draw_type(self)->GLInfo.draw_types_literal:

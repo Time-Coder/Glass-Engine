@@ -59,10 +59,6 @@ class VAP:
 		self._offset = offset
 
 	@property
-	def vbo(self):
-		return self._vbo
-
-	@property
 	def element_type(self):
 		return self._element_type
 

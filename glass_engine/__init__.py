@@ -11,5 +11,6 @@ from .Model import Model
 
 from .ColorMap import ColorMap
 from .Frame import Frame
+from .Fog import Fog
 
 import glm

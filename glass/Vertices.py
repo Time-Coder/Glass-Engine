@@ -94,9 +94,7 @@ class Vertices:
     @checktype
     def __init__(self, _list:list=None, draw_type:GLInfo.draw_types=GL.GL_STATIC_DRAW, **kwargs):
         self._attr_list_map = {}
-        self._program_vao_map = {}
-        self._program_warning_map = {}
-        self._not_set_attributes = {}
+        self._vao_map = {}
         self._index_vertex_map = {}
         self._draw_type = draw_type
         self._tested_front_transparent = False
@@ -117,9 +115,7 @@ class Vertices:
     
     def reset(self, **kwargs):
         self._attr_list_map = kwargs
-        self._program_vao_map = {}
-        self._program_warning_map = {}
-        self._not_set_attributes = {}
+        self._vao_map = {}
         self._index_vertex_map = {}
         self._tested_front_transparent = False
         self._tested_back_transparent = False
@@ -139,15 +135,16 @@ class Vertices:
 
     def _first_apply(self, program, instances)->bool:
         current_context = GLConfig.buffered_current_context
-        if (current_context, program, instances) in self._program_vao_map or not self:
+        key = (current_context, program, instances)
+        if key in self._vao_map or not self:
             return False
 
         vao = VAO()
-        self._program_vao_map[current_context, program, instances] = vao
+        self._vao_map[key] = vao
         return self._apply_increment(instances)
 
     def _update_VAOs(self, key, attr_list, divisor=None):
-        for (context, program, insts), vao in self.vao_map.items():
+        for (context, program, insts), vao in self._vao_map.items():
             if key not in program._attributes_info:
                 continue
 
@@ -170,7 +167,7 @@ class Vertices:
                     error_message = f"vertex attribute '{key}' need type {need_type}, {feed_type} value were given"
                     raise TypeError(error_message)
             
-            vao[location].interp(attr_list.vbo, feed_type, attr_list.stride, 0)
+            vao[location].interp(attr_list._vbo, feed_type, attr_list.stride, 0)
             if divisor is not None:
                 vao[location].divisor = divisor
 
@@ -193,21 +190,14 @@ class Vertices:
     def _apply(self, program, instances):
         success = False
         current_context = GLConfig.buffered_current_context
-        if (current_context, program, instances) not in self._program_vao_map:
+        key = (current_context, program, instances)
+        if key not in self._vao_map:
             success = self._first_apply(program, instances)
         else:
             success = self._apply_increment(instances)
 
         if success:
-            self._program_vao_map[current_context, program, instances].bind()
-
-    @property
-    def vao_map(self):
-        return self._program_vao_map
-
-    @property
-    def vbo(self):
-        return self._vbo
+            self._vao_map[key].bind()
 
     def _process_slice(self, index):
         len_self = len(self)
