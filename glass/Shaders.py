@@ -74,7 +74,6 @@ class BaseShader(GLObject):
 			raise FileNotFoundError(file_name)
 		
 		file_name = os.path.abspath(file_name).replace("\\", "/")
-		rel_name = relative_path(file_name)
 		if file_name in cls._shader_map:
 			return cls._shader_map[file_name]
 		else:

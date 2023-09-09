@@ -1,5 +1,5 @@
 from glass.utils import checktype
-from glass import sampler2D, ShaderProgram
+from glass import sampler2D
 from glass.ImageLoader import ImageLoader
 from glass.WeakSet import WeakSet
 
@@ -8,7 +8,6 @@ from enum import Enum
 import numpy as np
 import math
 from functools import wraps
-import os
 
 class Material:
 
@@ -128,6 +127,8 @@ class Material:
             if func.__name__ in \
                ["diffuse", "diffuse_map",
                 "ambient", "ambient_map",
+                "specular", "specular_map",
+                "emission", "emission_map",
                 "base_color", "base_color_map"] and \
                not self._opacity_user_set and self._opacity == 0:
                 self._opacity = 1
@@ -144,7 +145,7 @@ class Material:
                             if "back_color" in mesh.vertices:
                                 colors = mesh.vertices["back_color"].ndarray.reshape(-1, 4)
 
-                        if colors is not None and np.all(colors == colors[0, :], axis=1):
+                        if colors is not None and np.all(colors == colors[0, :]):
                             used_color = glm.vec4(colors[0, 0], colors[0, 1], colors[0, 2], colors[0, 3])
                             self._diffuse = used_color
                             self._base_color = used_color

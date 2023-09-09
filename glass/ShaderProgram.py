@@ -334,7 +334,6 @@ class ShaderProgram(GPUProgram):
                 continue
             
             for atom_name, atom_info in Uniform._bound_vars[id(var)].items():
-                # atom_value = eval("var" + atom_info["suffix"])
                 atom_value = subscript(var, atom_info["subscript_chain"])
                 self._uniform._set_atom(atom_name, atom_value)
 
@@ -343,7 +342,7 @@ class ShaderProgram(GPUProgram):
 
         self._uniform._should_update_atoms.clear()
 
-        # 绑定所有纹理
+    def __update_samplers(self):
         self.use()
         self_used_texture_units = set()
         self_used_image_units = set()
@@ -386,7 +385,7 @@ class ShaderProgram(GPUProgram):
                 self_used_image_units.add(texture_unit)
 
             if location not in self.uniform._texture_value_map or \
-               self.uniform._texture_value_map[location] != texture_unit:
+            self.uniform._texture_value_map[location] != texture_unit:
                 GL.glUniform1i(location, texture_unit)
                 self.uniform._texture_value_map[location] = texture_unit
 
@@ -441,28 +440,32 @@ class ShaderProgram(GPUProgram):
                     GL.glUniform1i(location, texture_unit)
                     self.uniform._texture_value_map[location] = texture_unit
 
-        if self._uniform_not_set_warning and GlassConfig.debug:
-            not_set_uniforms = []
-            for name, uniform_info in self._uniform_map.items():
-                if name not in self._uniform._atom_value_map and \
-                   "location" not in uniform_info:
-                    location = GL.glGetUniformLocation(self._id, name)
-                    uniform_info["location"] = location
-                    if location != -1:
-                        not_set_uniforms.append(name)
-                        
-            if not_set_uniforms:
-                warning_message = "in shader program:\n(\n  "
-                warning_message += "\n  ".join(self._get_compiled_files())
-                warning_message += "\n): "
-                if len(not_set_uniforms) == 1:
-                    warning_message += f"uniform variable '{not_set_uniforms[0]}' is not set but used"
-                else:
-                    warning_message += "following uniform variables are not set but used:\n"
-                    warning_message += "\n".join(not_set_uniforms)
+    def __check_not_set_uniforms(self):
+        if not self._uniform_not_set_warning or \
+           not GlassConfig.debug or \
+           not GlassConfig.warning:
+            return
+
+        not_set_uniforms = []
+        for name, uniform_info in self._uniform_map.items():
+            if name not in self._uniform._atom_value_map and \
+            "location" not in uniform_info:
+                location = GL.glGetUniformLocation(self._id, name)
+                uniform_info["location"] = location
+                if location != -1:
+                    not_set_uniforms.append(name)
                     
-                if GlassConfig.warning:
-                    warnings.warn(warning_message, category=RuntimeWarning)
+        if not_set_uniforms:
+            warning_message = "in shader program:\n(\n  "
+            warning_message += "\n  ".join(self._get_compiled_files())
+            warning_message += "\n): "
+            if len(not_set_uniforms) == 1:
+                warning_message += f"uniform variable '{not_set_uniforms[0]}' is not set but used"
+            else:
+                warning_message += "following uniform variables are not set but used:\n"
+                warning_message += "\n".join(not_set_uniforms)
+                
+            warnings.warn(warning_message, category=RuntimeWarning)
 
     def __preprocess_before_draw(self, primitive_type, vertices, indices, instances, start_index, total, times, is_patch):
         if GlassConfig.debug:
@@ -491,6 +494,8 @@ class ShaderProgram(GPUProgram):
 
         self.use()
         self.__update_uniforms()
+        self.__update_samplers()
+        self.__check_not_set_uniforms()
         if self._uniform_block.auto_upload:
             self._uniform_block.upload()
         if self._shader_storage_block.auto_upload:

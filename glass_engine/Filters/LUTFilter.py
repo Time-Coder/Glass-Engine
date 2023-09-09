@@ -1,54 +1,45 @@
 from .SingleShaderFilter import SingleShaderFilter
+from .. import lut
 from glass import sampler2D
+from glass.utils import extname
 
 import numpy as np
 import os
-import glm
 from OpenGL import GL
 
 class LUTFilter(SingleShaderFilter):
 
-    def __init__(self, LUT_image, block_shape:glm.ivec2=glm.ivec2(64, 64), contribute:float=1.0):
+    def __init__(self, LUT:(str, np.ndarray, sampler2D), contribute:float=1.0):
         self_folder = os.path.dirname(os.path.abspath(__file__))
         SingleShaderFilter.__init__(self, self_folder + "/../glsl/Filters/lut_filter.glsl")
 
-        if not isinstance(block_shape, glm.ivec2):
-            block_shape = glm.ivec2(block_shape)
+        if isinstance(LUT, str) and extname(LUT) == "cube":
+            LUT = lut.cube_to_LUT(LUT)
+        
+        if not isinstance(LUT, sampler2D):
+            LUT = sampler2D(LUT)
 
-        if not isinstance(LUT_image, sampler2D):
-            LUT_image = sampler2D(LUT_image)
-
-        LUT_image.wrap = GL.GL_CLAMP_TO_EDGE
-
-        self["block_shape"] = block_shape
-        self["LUT_image"] = LUT_image
+        LUT.wrap = GL.GL_CLAMP_TO_EDGE
+        self["LUT"] = LUT
         self["contribute"] = contribute
-        self.__block_size = block_shape
-        self.__LUT_image = LUT_image
+        self.__LUT = LUT
         self.__contribute = contribute
 
     @property
-    def block_shape(self):
-        return self.__block_size
+    def LUT(self):
+        return self.__LUT
     
-    @block_shape.setter
-    def block_shape(self, block_shape:glm.ivec2):
-        self.__block_size = block_shape
-        self["block_shape"] = block_shape
+    @LUT.setter
+    def LUT(self, LUT:(str, np.ndarray, sampler2D)):
+        if isinstance(LUT, str) and extname(LUT) == "cube":
+            LUT = lut.cube_to_LUT(LUT)
+        
+        if not isinstance(LUT, sampler2D):
+            LUT = sampler2D(LUT)
 
-    @property
-    def LUT_image(self):
-        return self.__LUT_image
-    
-    @LUT_image.setter
-    def LUT_image(self, LUT_image):
-        if not isinstance(LUT_image, sampler2D):
-            LUT_image = sampler2D(LUT_image)
-            
-        LUT_image.wrap = GL.GL_CLAMP_TO_EDGE
-
-        self.__LUT_image = LUT_image
-        self["LUT_image"] = LUT_image
+        LUT.wrap = GL.GL_CLAMP_TO_EDGE
+        self.__LUT = LUT
+        self["LUT"] = LUT
 
     @property
     def contribute(self):
