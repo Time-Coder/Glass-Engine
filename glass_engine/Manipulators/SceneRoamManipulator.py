@@ -4,7 +4,6 @@ from glass.RenderHint import RenderHint
 import glm
 from OpenGL import GL
 import copy
-import math
 import datetime
 
 class SceneRoamManipulator(Manipulator):

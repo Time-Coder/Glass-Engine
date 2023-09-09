@@ -40,10 +40,6 @@ class SingleShaderFilter(Filter):
             self._fbo = FBO()
             self._fbo.attach(0, sampler2D, GL.GL_RGBA32F)
         return self._fbo
-    
-    @property
-    def program(self):
-        return self._program
 
     def __hash__(self):
         return id(self)

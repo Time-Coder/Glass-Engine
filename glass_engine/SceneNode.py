@@ -19,7 +19,7 @@ class SceneNode:
             else:
                 glm.vec3.__init__(self)
 
-            self._callback = callback
+            self.__dict__["_callback"] = callback
         
         def __deepcopy__(self, memo):
             return self.flat
@@ -29,7 +29,7 @@ class SceneNode:
             return glm.vec3(self.x, self.y, self.z)
 
         def __setattr__(self, name:str, value):
-            if name in "xyzrgbstp":                
+            if name in "xyzrgbstp":
                 if self._callback is not None:
                     self._callback()
 
@@ -45,7 +45,7 @@ class SceneNode:
             else:
                 glm.quat.__init__(self)
 
-            self._callback = callback
+            self.__dict__["_callback"] = callback
         
         @property
         def flat(self):
