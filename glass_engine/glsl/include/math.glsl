@@ -7,7 +7,7 @@ const float PI = acos(-1);
 const float cos45 = 0.5*sqrt(2);
 const float sin45 = cos45;
 
-#define saturate(value) clamp(value, 0.0, 1)
+#define saturate(value) clamp(value, 0.0, 1.0)
 
 float roundn(float value, uint n)
 {

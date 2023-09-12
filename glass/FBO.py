@@ -449,41 +449,56 @@ class FBO(BO):
 				GL.GL_DEPTH_BUFFER_BIT | GL.GL_STENCIL_BUFFER_BIT, GL.GL_NEAREST
 			)
 
-	def draw_to(self, fbo, *targets):
+	def draw_to(self, fbo, src_targets, dest_targets=None):
 		if fbo is self or fbo is None or fbo.id == self.id:
 			return
 
-		targets = list(targets)
-		if not targets:
-			targets = [*self._color_attachments.keys(), GL.GL_DEPTH_ATTACHMENT, GL.GL_STENCIL_ATTACHMENT, GL.GL_DEPTH_STENCIL_ATTACHMENT]
+		if not isinstance(src_targets, list):
+			src_targets = [src_targets]
+
+		if not src_targets:
+			src_targets = [*self._color_attachments.keys(), GL.GL_DEPTH_ATTACHMENT, GL.GL_STENCIL_ATTACHMENT, GL.GL_DEPTH_STENCIL_ATTACHMENT]
 		
-		for i, target in enumerate(targets):
+		if dest_targets is None:
+			dest_targets = src_targets
+
+		if not isinstance(dest_targets, list):
+			dest_targets = [dest_targets]
+
+		for i, target in enumerate(src_targets):
 			if GL.GL_COLOR_ATTACHMENT0 <= target < GL.GL_COLOR_ATTACHMENT0 + GLConfig.max_color_attachments:
-				targets[i] = target - GL.GL_COLOR_ATTACHMENT0
+				src_targets[i] = target - GL.GL_COLOR_ATTACHMENT0
+
+		for i, target in enumerate(dest_targets):
+			if GL.GL_COLOR_ATTACHMENT0 <= target < GL.GL_COLOR_ATTACHMENT0 + GLConfig.max_color_attachments:
+				dest_targets[i] = target - GL.GL_COLOR_ATTACHMENT0
 
 		with fbo:
 			GL.glBindFramebuffer(GL.GL_READ_FRAMEBUFFER, self._id)
 			GL.glBindFramebuffer(GL.GL_DRAW_FRAMEBUFFER, fbo._id)
 
 			for target in self._color_attachments:
-				if target not in targets:
+				if target not in src_targets:
 					continue
 
+				index = src_targets.index(target)
+				dest_target = dest_targets[index]
+
 				GL.glReadBuffer(GL.GL_COLOR_ATTACHMENT0 + target)
-				GL.glDrawBuffer(GL.GL_COLOR_ATTACHMENT0 + target)
+				GL.glDrawBuffer(GL.GL_COLOR_ATTACHMENT0 + dest_target)
 				GL.glBlitFramebuffer(
 					0, 0, self._width, self._height,
 					0, 0, fbo.width, fbo.height,
 					GL.GL_COLOR_BUFFER_BIT, GL.GL_LINEAR
 				)
-				
-			if self._depth_attachment is not None and GL.GL_DEPTH_ATTACHMENT in targets:
+
+			if self._depth_attachment is not None and GL.GL_DEPTH_ATTACHMENT in src_targets:
 				GL.glBlitFramebuffer(
 					0, 0, self._width, self._height,
 					0, 0, fbo.width, fbo.height,
 					GL.GL_DEPTH_BUFFER_BIT, GL.GL_NEAREST
 				)
-			if self._stencil_attachment is not None and GL.GL_STENCIL_ATTACHMENT in targets:
+			if self._stencil_attachment is not None and GL.GL_STENCIL_ATTACHMENT in src_targets:
 				GL.glBlitFramebuffer(
 					0, 0, self._width, self._height,
 					0, 0, fbo.width, fbo.height,

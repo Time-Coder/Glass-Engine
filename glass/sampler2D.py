@@ -26,6 +26,7 @@ class sampler2D(FBOAttachment):
     _default_filter_mipmap = GL.GL_LINEAR
 
     _sampler2D_map = {}
+    __empty_sampler = None
     _should_update = False
     __shadertoy_template_content = ""
     __shadertoy_template_filename = os.path.dirname(os.path.abspath(__file__)) + "/glsl/shadertoy_template.glsl"
@@ -116,10 +117,16 @@ class sampler2D(FBOAttachment):
 
     def __del__(self):
         if self._handle != 0:
-            # bt.glMakeTextureHandleNonResidentARB(self._handle)
             self._handle = 0
 
         FBOAttachment.__del__(self)
+
+    @staticmethod
+    def empty_sampler():
+        if sampler2D.__empty_sampler is None:
+            sampler2D.__empty_sampler = sampler2D()
+
+        return sampler2D.__empty_sampler
 
     @property
     def is_shadertoy(self)->bool:

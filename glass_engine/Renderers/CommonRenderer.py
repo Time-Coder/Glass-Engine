@@ -1,5 +1,5 @@
 from .Renderer import Renderer
-from ..Filters import GaussFilter, KernelFilter, BloomFilter, DOFFilter, HDRFilter, FXAAFilter
+from ..PostProcessEffects import GaussBlur, KernelFilter, FXAA
 from ..Frame import Frame
 
 from glass import ShaderProgram, GLConfig, FBO, RBO, sampler2D, sampler2DMS, samplerCube, sampler2DArray, GlassConfig, GLInfo
@@ -19,16 +19,11 @@ class CommonRenderer(Renderer):
     def __init__(self):
         Renderer.__init__(self)
 
-        self._enable_SSAO = False
-        self._SSAO_map = None
-        self._SSAO_samples = 64
-        self._SSAO_radius = 0.2
-        self._SSAO_power = 2.2
-        self._SSAO_filter = GaussFilter(15)
-        self._envFXAA = True
-        self._should_update = False
+        self._depth_map = None
+        self._view_pos_map = None
+        self._view_normal_map = None
 
-        self._DOF = False
+        self._should_update = False
         self._all_meshes = []
         self._all_lines = []
         self._all_points = []
@@ -41,101 +36,6 @@ class CommonRenderer(Renderer):
         self._meshes_cast_shadows = []
         self._lines_cast_shadows = []
         self._points_cast_shadows = []
-
-        self._depth_filter_kernel = KernelFilter.Kernel(np.ones((5, 5))/25)
-
-        self.filters["bloom"] = BloomFilter()
-        self.filters["DOF"] = DOFFilter()
-        self.filters["HDR"] = HDRFilter()
-        self.filters["FXAA"] = FXAAFilter(internal_format=GL.GL_RGBA8)
-
-        self.filters["bloom"].enabled = False
-        self.filters["DOF"].enabled = False
-        self.filters["HDR"].enabled = False
-        self.filters["FXAA"].enabled = False
-
-    @property
-    def bloom(self):
-        return self.filters["bloom"].enabled
-    
-    @bloom.setter
-    @checktype
-    def bloom(self, flag:bool):
-        self.filters["bloom"].enabled = flag
-
-    @property
-    def HDR(self):
-        return self.filters["HDR"].enabled
-    
-    @HDR.setter
-    @checktype
-    def HDR(self, flag:bool):
-        self.filters["HDR"].enabled = flag
-
-    @property
-    def DOF(self):
-        return self.filters["DOF"].enabled
-    
-    @DOF.setter
-    @checktype
-    def DOF(self, flag:bool):
-        self.filters["DOF"].enabled = flag
-
-    @property
-    def FXAA(self):
-        return self.filters["FXAA"].enabled
-    
-    @FXAA.setter
-    def FXAA(self, flag:bool):
-        self.filters["FXAA"].enabled = flag
-
-    @property
-    def envFXAA(self):
-        return self._envFXAA
-    
-    @envFXAA.setter
-    def envFXAA(self, flag:bool):
-        if self._envFXAA == flag:
-            return
-        
-        self._envFXAA = flag
-        if self.scene is None:
-            return
-        
-        if flag:
-            self.camera.screen.makeCurrent()
-            for mesh, instances in self.scene.all_meshes.items():
-                if not mesh.material.need_env_map and \
-                   not mesh._back_material.need_env_map:
-                    continue
-
-                for inst in instances:
-                    if "env_bake_state" not in inst.user_data or \
-                       inst.user_data["env_bake_state"] != "baked":
-                        continue
-
-                    env_OIT_blend_fbo = self.env_OIT_blend_fbo(inst)
-                    env_map = env_OIT_blend_fbo.color_attachment(0)
-                    env_FXAA_fbo = self.env_FXAA_fbo(inst)
-                    with env_FXAA_fbo:
-                        FXAAFilter.program()["screen_image"] = env_map
-                        FXAAFilter.program().draw_triangles(Frame.vertices, Frame.indices)
-                    env_map = env_FXAA_fbo.color_attachment(0)
-                    inst.env_map_handle = env_map.handle
-                    inst.user_data["env_bake_state"] = "filtered"
-        else:
-            for mesh, instances in self.scene.all_meshes.items():
-                if not mesh.material.need_env_map and \
-                   not mesh._back_material.need_env_map:
-                    continue
-
-                for inst in instances:
-                    if "env_bake_state" not in inst.user_data or \
-                       inst.user_data["env_bake_state"] != "filtered":
-                        continue
-
-                    env_OIT_blend_fbo = self.env_OIT_blend_fbo(inst)
-                    inst.env_map_handle = env_OIT_blend_fbo.color_attachment(0).handle
 
     @property
     def programs(self):
@@ -150,48 +50,6 @@ class CommonRenderer(Renderer):
             self._fbos = {}
 
         return self._fbos
-
-    @property
-    def SSAO(self):
-        return self._enable_SSAO
-    
-    @SSAO.setter
-    @checktype
-    def SSAO(self, flag:bool):
-        self._enable_SSAO = flag
-
-    @property
-    def SSAO_radius(self):
-        return self._SSAO_radius
-    
-    @SSAO_radius.setter
-    @checktype
-    def SSAO_radius(self, radius:float):
-        self._SSAO_radius = radius
-
-    @property
-    def SSAO_samples(self):
-        return self._SSAO_samples
-    
-    @SSAO_samples.setter
-    @checktype
-    def SSAO_samples(self, samples:int):
-        self._SSAO_samples = samples
-
-    @property
-    def SSAO_power(self):
-        return self._SSAO_power
-    
-    @SSAO_power.setter
-    @checktype
-    def SSAO_power(self, power:float):
-        self._SSAO_power = power
-
-    def startup(self):
-        self.filters["DOF"].camera = self.camera
-        self.filters["HDR"].camera = self.camera
-
-        return False
     
     @property
     def dir_light_depth_geo_shader_path(self):
@@ -573,7 +431,7 @@ class CommonRenderer(Renderer):
                 dir_light.depth_fbo.depth_attachment.wrap_t = GL.GL_CLAMP_TO_BORDER
                 dir_light.depth_fbo.depth_attachment.border_color = glm.vec4(1, 1, 1, 1)
 
-                dir_light.depth_filter = GaussFilter(5)
+                dir_light.depth_filter = GaussBlur(5)
             
             with GLConfig.LocalConfig(clear_color=glm.vec4(1,1,1,1), depth_test=True, blend=False, cull_face=None, polygon_mode=GL.GL_FILL):
                 with dir_light.depth_fbo:
@@ -689,7 +547,9 @@ class CommonRenderer(Renderer):
                 fbo.attach(0, sampler2DMS, GL.GL_RGBA32F)
                 fbo.attach(1, sampler2DMS, GL.GL_RGBA32F)
                 fbo.attach(2, sampler2DMS, GL.GL_R32F)
-                fbo.attach(GL.GL_DEPTH_ATTACHMENT, RBO)
+                fbo.attach(3, sampler2DMS, GL.GL_RGB32F)
+                fbo.attach(4, sampler2DMS, GL.GL_RGB32F)
+                fbo.attach(GL.GL_DEPTH_ATTACHMENT, sampler2DMS)
                 fbo.auto_clear = False
                 self.fbos["OIT_ms"] = fbo
             return fbo
@@ -702,7 +562,9 @@ class CommonRenderer(Renderer):
                 fbo.attach(0, sampler2D, GL.GL_RGBA32F)
                 fbo.attach(1, sampler2D, GL.GL_RGBA32F)
                 fbo.attach(2, sampler2D, GL.GL_R32F)
-                fbo.attach(GL.GL_DEPTH_ATTACHMENT, RBO)
+                fbo.attach(3, sampler2D, GL.GL_RGB32F)
+                fbo.attach(4, sampler2D, GL.GL_RGB32F)
+                fbo.attach(GL.GL_DEPTH_ATTACHMENT, sampler2D)
                 fbo.auto_clear = False
                 self.fbos["OIT"] = fbo
             return fbo
@@ -779,30 +641,6 @@ class CommonRenderer(Renderer):
             self.programs["gen_env_map_points"] = program
 
         return self.programs["gen_env_map_points"]
-
-    @property
-    def generate_ssao_program(self):
-        if "generate_ssao" in self.programs:
-            return self.programs["generate_ssao"]
-        
-        program = ShaderProgram()
-        program.compile(Frame.draw_frame_vs)
-        program.compile(os.path.dirname(os.path.abspath(__file__)) + "/../glsl/Pipelines/SSAO/generate_ssao.fs")
-        self.programs["generate_ssao"] = program
-        
-        return program
-    
-    @property
-    def ssao_fbo(self):
-        half_screen_size = GLConfig.screen_size/2
-        if "ssao" in self.fbos:
-            self.fbos["ssao"].resize(half_screen_size.x, half_screen_size.y)
-        else:
-            fbo = FBO(half_screen_size.x, half_screen_size.y)
-            fbo.attach(0, sampler2D)
-            self.fbos["ssao"] = fbo
-
-        return self.fbos["ssao"]
     
     def env_map_fbo(self, instance):
         key = ("env_map_fbo", GLConfig.buffered_current_context)
@@ -837,12 +675,9 @@ class CommonRenderer(Renderer):
         self.gen_env_map_program["CSM_camera"] = self.camera
         self.gen_env_map_program["view_center"] = view_center
         self.gen_env_map_program["is_opaque_pass"] = is_opaque_pass
-        self.gen_env_map_program["use_skybox_map"] = self.scene.skybox.is_completed
         self.gen_env_map_program["skybox_map"] = self.scene.skybox.skybox_map
-        self.gen_env_map_program["use_skydome_map"] = self.scene.skydome.is_completed
         self.gen_env_map_program["skydome_map"] = self.scene.skydome.skydome_map
         self.gen_env_map_program["fog"] = self.scene.fog
-        self.gen_env_map_program["SSAO_map"] = None
 
     def gen_env_map_draw_mesh(self, mesh, instances):
         self.gen_env_map_program["explode_distance"] = mesh.explode_distance
@@ -856,12 +691,9 @@ class CommonRenderer(Renderer):
         self.gen_env_map_lines_program["CSM_camera"] = self.camera
         self.gen_env_map_lines_program["view_center"] = view_center
         self.gen_env_map_lines_program["is_opaque_pass"] = is_opaque_pass
-        self.gen_env_map_lines_program["use_skybox_map"] = self.scene.skybox.is_completed
         self.gen_env_map_lines_program["skybox_map"] = self.scene.skybox.skybox_map
-        self.gen_env_map_lines_program["use_skydome_map"] = self.scene.skydome.is_completed
         self.gen_env_map_lines_program["skydome_map"] = self.scene.skydome.skydome_map
         self.gen_env_map_lines_program["fog"] = self.scene.fog
-        self.gen_env_map_lines_program["SSAO_map"] = None
 
     def gen_env_map_draw_lines(self, mesh, instances):
         self.gen_env_map_lines_program["material"] = mesh.material
@@ -872,12 +704,9 @@ class CommonRenderer(Renderer):
         self.gen_env_map_points_program["CSM_camera"] = self.camera
         self.gen_env_map_points_program["view_center"] = view_center
         self.gen_env_map_points_program["is_opaque_pass"] = is_opaque_pass
-        self.gen_env_map_points_program["use_skybox_map"] = self.scene.skybox.is_completed
         self.gen_env_map_points_program["skybox_map"] = self.scene.skybox.skybox_map
-        self.gen_env_map_points_program["use_skydome_map"] = self.scene.skydome.is_completed
         self.gen_env_map_points_program["skydome_map"] = self.scene.skydome.skydome_map
         self.gen_env_map_points_program["fog"] = self.scene.fog
-        self.gen_env_map_points_program["SSAO_map"] = None
 
     def gen_env_map_draw_points(self, mesh, instances):
         self.gen_env_map_points_program["material"] = mesh.material
@@ -967,13 +796,12 @@ class CommonRenderer(Renderer):
 
             env_map = env_OIT_blend_fbo.color_attachment(0)
             instance.user_data["env_bake_state"] = "baked"
-            if self._envFXAA:
-                env_FXAA_fbo = self.env_FXAA_fbo(instance)
-                with env_FXAA_fbo:
-                    FXAAFilter.program()["screen_image"] = env_map
-                    FXAAFilter.program().draw_triangles(Frame.vertices, Frame.indices)
-                env_map = env_FXAA_fbo.color_attachment(0)
-                instance.user_data["env_bake_state"] = "filtered"
+            env_FXAA_fbo = self.env_FXAA_fbo(instance)
+            with env_FXAA_fbo:
+                FXAA.program()["screen_image"] = env_map
+                FXAA.program().draw_triangles(Frame.vertices, Frame.indices)
+            env_map = env_FXAA_fbo.color_attachment(0)
+            instance.user_data["env_bake_state"] = "filtered"
             instance.env_map_handle = env_map.handle
             instance.visible = 1
             self.increase_bake_times(instance)
@@ -984,10 +812,7 @@ class CommonRenderer(Renderer):
     def prepare_forward_draw_mesh(self, is_opaque_pass:bool):
         self.forward_program["camera"] = self.camera
         self.forward_program["is_opaque_pass"] = is_opaque_pass
-        self.forward_program["SSAO_map"] = self._SSAO_map
-        self.forward_program["use_skybox_map"] = self.scene.skybox.is_completed
         self.forward_program["skybox_map"] = self.scene.skybox.skybox_map
-        self.forward_program["use_skydome_map"] = self.scene.skydome.is_completed
         self.forward_program["skydome_map"] = self.scene.skydome.skydome_map
         self.forward_program["fog"] = self.scene.fog
 
@@ -1005,10 +830,7 @@ class CommonRenderer(Renderer):
     def prepare_forward_draw_lines(self, is_opaque_pass:bool):
         self.forward_lines_program["camera"] = self.camera
         self.forward_lines_program["is_opaque_pass"] = is_opaque_pass
-        self.forward_lines_program["SSAO_map"] = self._SSAO_map
-        self.forward_lines_program["use_skybox_map"] = self.scene.skybox.is_completed
         self.forward_lines_program["skybox_map"] = self.scene.skybox.skybox_map
-        self.forward_lines_program["use_skydome_map"] = self.scene.skydome.is_completed
         self.forward_lines_program["skydome_map"] = self.scene.skydome.skydome_map
         self.forward_lines_program["fog"] = self.scene.fog
 
@@ -1023,10 +845,7 @@ class CommonRenderer(Renderer):
     def prepare_forward_draw_points(self, is_opaque_pass:bool):
         self.forward_points_program["camera"] = self.camera
         self.forward_points_program["is_opaque_pass"] = is_opaque_pass
-        self.forward_points_program["SSAO_map"] = self._SSAO_map
-        self.forward_points_program["use_skybox_map"] = self.scene.skybox.is_completed
         self.forward_points_program["skybox_map"] = self.scene.skybox.skybox_map
-        self.forward_points_program["use_skydome_map"] = self.scene.skydome.is_completed
         self.forward_points_program["skydome_map"] = self.scene.skydome.skydome_map
         self.forward_points_program["fog"] = self.scene.fog
 
@@ -1043,12 +862,71 @@ class CommonRenderer(Renderer):
         if "env_OIT_blend" in self.programs:
             return self.programs["env_OIT_blend"]
         
+        self_folder = os.path.dirname(os.path.abspath(__file__))
         program = ShaderProgram()
         program.compile(Frame.draw_frame_vs)
-        program.compile(os.path.dirname(os.path.abspath(__file__)) + "/../glsl/Pipelines/env_mapping/env_OIT_blend.fs")
+        program.compile(self_folder + "/../glsl/Pipelines/env_mapping/env_OIT_blend.fs")
         self.programs["env_OIT_blend"] = program
 
         return program
+
+    @property
+    def draw_geometry_program(self):
+        if "draw_geometry" in self.programs:
+            return self.programs["draw_geometry"]
+        
+        self_folder = os.path.dirname(os.path.abspath(__file__))
+        program = ShaderProgram()
+        program.compile(self_folder + "/../glsl/Pipelines/draw_geometry/draw_geometry.vs")
+        program.compile(self_folder + "/../glsl/Pipelines/draw_geometry/draw_geometry.gs")
+        program.compile(self_folder + "/../glsl/Pipelines/draw_geometry/draw_geometry.fs")
+        self.programs["draw_geometry"] = program
+
+        return program
+    
+    @property
+    def draw_geometry_lines_program(self):
+        if "draw_geometry_lines" in self.programs:
+            return self.programs["draw_geometry_lines"]
+        
+        self_folder = os.path.dirname(os.path.abspath(__file__))
+        program = ShaderProgram()
+        program.compile(self_folder + "/../glsl/Pipelines/draw_geometry/draw_geometry_lines.vs")
+        program.compile(self_folder + "/../glsl/Pipelines/draw_geometry/draw_geometry_points.fs")
+        self.programs["draw_geometry_lines"] = program
+
+        return program
+    
+    @property
+    def draw_geometry_points_program(self):
+        if "draw_geometry_points" in self.programs:
+            return self.programs["draw_geometry_points"]
+        
+        self_folder = os.path.dirname(os.path.abspath(__file__))
+        program = ShaderProgram()
+        program.compile(self_folder + "/../glsl/Pipelines/draw_geometry/draw_geometry_points.vs")
+        program.compile(self_folder + "/../glsl/Pipelines/draw_geometry/draw_geometry_points.fs")
+        self.programs["draw_geometry_points"] = program
+
+        return program
+
+    def draw_geometry(self, mesh, instances):
+        self.draw_geometry_program["material"] = mesh.material
+        self.draw_geometry_program["back_material"] = mesh._back_material
+        self.draw_geometry_program["explode_distance"] = mesh.explode_distance
+        mesh.draw(self.draw_geometry_program, instances)
+
+    def draw_geometry_lines(self, mesh, instances):
+        self.draw_geometry_lines_program["material"] = mesh.material
+        self.draw_geometry_lines_program["back_material"] = mesh._back_material
+        self.draw_geometry_lines_program["explode_distance"] = mesh.explode_distance
+        mesh.draw(self.draw_geometry_lines_program, instances)
+
+    def draw_geometry_points(self, mesh, instances):
+        self.draw_geometry_points_program["material"] = mesh.material
+        self.draw_geometry_points_program["back_material"] = mesh._back_material
+        self.draw_geometry_points_program["explode_distance"] = mesh.explode_distance
+        mesh.draw(self.draw_geometry_points_program, instances)
 
     def draw_transparent(self):
         if not self._transparent_meshes and \
@@ -1095,3 +973,32 @@ class CommonRenderer(Renderer):
             self.OIT_blend_program["accum_map"] = accum_map
             self.OIT_blend_program["reveal_map"] = reveal_map
             self.OIT_blend_program.draw_triangles(Frame.vertices, Frame.indices)
+
+        if self.camera.screen.SSAO or self.camera.screen.DOF:
+            used_fbo = None
+            if self.__class__.__name__ == "ForwardRenderer":
+                used_fbo = self.OIT_fbo
+            elif self.__class__.__name__ == "DeferredRenderer":
+                used_fbo = self.gbuffer
+
+            with GLConfig.LocalConfig(depth_test=True, depth_write=True, blend=False):
+                with used_fbo:
+                    if self._transparent_meshes:
+                        self.draw_geometry_program["camera"] = self.camera
+                        for mesh, instances in self._transparent_meshes:
+                            self.draw_geometry(mesh, instances)
+
+                    if self._transparent_lines:
+                        self.draw_geometry_lines_program["camera"] = self.camera
+                        for mesh, instances in self._transparent_lines:
+                            self.draw_geometry_lines(mesh, instances)
+
+                    if self._transparent_points:
+                        self.draw_geometry_points_program["camera"] = self.camera
+                        for mesh, instances in self._transparent_points:
+                            self.draw_geometry_points(mesh, instances)
+
+            resolved = used_fbo.resolved
+            self._depth_map = resolved.depth_attachment
+            self._view_pos_map = resolved.color_attachment(3)
+            self._view_normal_map = resolved.color_attachment(4)

@@ -6,17 +6,26 @@
 #define CAMERA_PROJECTION_PERSPECTIVE 0
 #define CAMERA_PROJECTION_ORTHOGRAPHIC 1
 
+struct CameraLens
+{
+	float focus;
+	float aperture;
+	bool auto_focus;
+	vec2 focus_tex_coord;
+	float focus_change_time;
+
+	float explosure;
+	bool auto_explosure;
+	bool local_explosure;
+	float explosure_adapt_time;
+};
+
 struct Camera
 {
 	// 内参数
 	// 共有
 	float near;
 	float far;
-	float focus;
-	float aperture;
-	bool auto_focus;
-	vec2 focus_tex_coord;
-	float focus_change_speed;
 	uint projection_mode;
 
 	// 透视投影专有
@@ -34,6 +43,8 @@ struct Camera
 
 	// CSM 阴影使用参数
 	uint CSM_levels;
+
+	CameraLens lens;
 };
 
 struct BoundingSphere
@@ -93,6 +104,21 @@ vec4 view_to_NDC(Camera camera, vec3 view_coord, uint projection_mode)
 	}
 	
 	return NDC_coord;
+}
+
+vec3 screen_to_view(Camera camera, vec3 screen_coord)
+{
+	vec3 view_coord;
+	float clip = camera.far - camera.near;
+	view_coord.y = camera.near * camera.far / (camera.far - clip * screen_coord.z);
+	view_coord.x = (2*screen_coord.x - 1) * view_coord.y * camera.aspect * camera.tan_half_fov;
+	view_coord.z = (2*screen_coord.y - 1) * view_coord.y * camera.tan_half_fov;
+	return view_coord;
+}
+
+vec3 screen_to_world(Camera camera, vec3 screen_coord)
+{
+	return view_to_world(camera, screen_to_view(camera, screen_coord));
 }
 
 vec4 view_to_NDC(Camera camera, vec3 view_coord)

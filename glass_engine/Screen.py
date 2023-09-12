@@ -1,5 +1,6 @@
 from .Manipulators.Manipulator import Manipulator
 from .Renderers.Renderer import Renderer
+from .PostProcessEffects import PostProcessEffects, BloomEffect, ACESToneMapper, FXAA, DOFEffect, SSAOEffect, ExplosureAdaptor
 from .Frame import Frame
 
 from glass import GLConfig, FBO, RBO, sampler2DMS, sampler2D, RenderHint, SSBO, UBO, VAO
@@ -168,10 +169,10 @@ class Screen(QOpenGLWidget):
         self._fps = 0
         self._smooth_fps = 0
         self._fps_filter = SlideAverageFilter()
-        self.__before_filter_fbo = None
-        self.__before_filter_fbo_ms = None
+        self.__before_PPE_fbo = None
+        self.__before_PPE_fbo_ms = None
         self._is_gl_init = False
-        self._before_filter_image = None
+        self._before_PPE_image = None
         self._video_writers = []
         self._background_color = glm.vec4(0)
         
@@ -182,6 +183,22 @@ class Screen(QOpenGLWidget):
         
         self.__render_hint = RenderHint()
         self._listen_cursor_timer = self.startTimer(10)
+
+        self._post_process_effects = PostProcessEffects()
+
+        self._post_process_effects["SSAO"] = SSAOEffect()
+        self._post_process_effects["bloom"] = BloomEffect()
+        self._post_process_effects["DOF"] = DOFEffect()
+        self._post_process_effects["explosure_adaptor"] = ExplosureAdaptor()
+        self._post_process_effects["tone_mapper"] = ACESToneMapper()
+        self._post_process_effects["FXAA"] = FXAA(internal_format=GL.GL_RGBA8)
+
+        self._post_process_effects["SSAO"].enabled = False
+        self._post_process_effects["bloom"].enabled = False
+        self._post_process_effects["DOF"].enabled = False
+        self._post_process_effects["explosure_adaptor"].enabled = False
+        self._post_process_effects["tone_mapper"].enabled = False
+        self._post_process_effects["FXAA"].enabled = False
 
     @property
     def background_color(self)->glm.vec4:
@@ -195,8 +212,14 @@ class Screen(QOpenGLWidget):
         self._background_color = color
 
     def update(self)->None:
-        self._before_filter_image = None
+        self._before_PPE_image = None
         QOpenGLWidget.update(self)
+
+    def _assign_values_to_PPEs(self):
+        self._post_process_effects.camera = self.camera
+        self._post_process_effects.depth_map = self.renderer._depth_map
+        self._post_process_effects.view_normal_map = self.renderer._view_normal_map
+        self._post_process_effects.view_pos_map = self._renderer._view_pos_map
 
     def _update(self)->None:
         QOpenGLWidget.update(self)
@@ -220,6 +243,13 @@ class Screen(QOpenGLWidget):
         if not self._is_gl_init:
             self._samples = samples
             self._samples_set_by_user = True
+
+    def _set_samples(self, samples:int)->None:
+        surface_format = QSurfaceFormat()
+        surface_format.setSamples(samples)
+        self.setFormat(surface_format)
+        if not self._is_gl_init:
+            self._samples = samples
 
     @property
     def renderer(self)->Renderer:
@@ -296,18 +326,19 @@ class Screen(QOpenGLWidget):
 
     def resizeGL(self, width:int, height:int)->None:
         QOpenGLWidget.resizeGL(self, width, height)
-        self._before_filter_image = None
+        self._before_PPE_image = None
 
-    def _draw_to_before_filter_image(self, should_update_scene:bool)->bool:
-        if self._before_filter_image is None or should_update_scene:
-            with self._before_filter_fbo:
+    def _draw_to_before_PPE(self, should_update_scene:bool)->bool:
+        if self._before_PPE_image is None or should_update_scene:
+            with self._before_PPE_fbo:
                 clear_color = self.camera.scene.fog.apply(self.background_color, glm.vec3(0), glm.vec3(0,self.camera.far,0))
                 with GLConfig.LocalConfig(clear_color=clear_color):
                     with self.renderer.render_hint:
                         should_update_scene = self.renderer.render() or should_update_scene
 
-            self._before_filter_image = self._before_filter_fbo.resolved.color_attachment(0)
-            self.renderer.filters.screen_update_time = time.time()
+            resolved = self._before_PPE_fbo.resolved
+            self._before_PPE_image = resolved.color_attachment(0)
+            self._post_process_effects.screen_update_time = time.time()
 
         return should_update_scene
 
@@ -316,18 +347,20 @@ class Screen(QOpenGLWidget):
         self.frame_started.emit()
 
         should_update_scene = self.camera.scene.generate_meshes()
-        should_update_filter = False
+        should_update_PPEs = False
         
         if self._video_writers:
-            should_update_scene = self._draw_to_before_filter_image(should_update_scene)
-            screen_image = self.renderer.filters(self._before_filter_image)
-            should_update_filter = self.renderer.filters.should_update
+            should_update_scene = self._draw_to_before_PPE(should_update_scene)
+            self._assign_values_to_PPEs()
+            screen_image = self._post_process_effects.apply(self._before_PPE_image)
+            should_update_PPEs = self._post_process_effects.should_update
             Frame.draw(screen_image)
             for video_writer in self._video_writers:
                 video_writer._frame_queue.put((time.time(), screen_image.fbo.data(0)))
-        elif self.renderer.filters.has_valid:
-            should_update_scene = self._draw_to_before_filter_image(should_update_scene)
-            should_update_filter = self.renderer.filters.draw(self._before_filter_image)
+        elif self._post_process_effects.has_valid:
+            should_update_scene = self._draw_to_before_PPE(should_update_scene)
+            self._assign_values_to_PPEs()
+            should_update_PPEs = self._post_process_effects.draw_to_active(self._before_PPE_image)
         else:
             clear_color = self.camera.scene.fog.apply(self.background_color, glm.vec3(0), glm.vec3(0,self.camera.far,0))
             with GLConfig.LocalConfig(clear_color=clear_color):
@@ -337,31 +370,31 @@ class Screen(QOpenGLWidget):
         self.__calc_fps()
         self.frame_ended.emit()
 
-        if should_update_scene or should_update_filter:
+        if should_update_scene or should_update_PPEs:
             if should_update_scene:
-                self._before_filter_image = None
+                self._before_PPE_image = None
                 
             self._update()
 
     @property
-    def _before_filter_fbo(self)->FBO:
+    def _before_PPE_fbo(self)->FBO:
         screen_size = GLConfig.screen_size
         if self.samples > 1:
-            if self.__before_filter_fbo_ms is not None:
-                self.__before_filter_fbo_ms.resize(screen_size.x, screen_size.y, self.samples)
+            if self.__before_PPE_fbo_ms is not None:
+                self.__before_PPE_fbo_ms.resize(screen_size.x, screen_size.y, self.samples)
             else:
-                self.__before_filter_fbo_ms = FBO(screen_size.x, screen_size.y, self.samples)
-                self.__before_filter_fbo_ms.attach(0, sampler2DMS, GL.GL_RGBA32F)
-                self.__before_filter_fbo_ms.attach(GL.GL_DEPTH_STENCIL_ATTACHMENT, RBO, GL.GL_DEPTH_STENCIL)
-            return self.__before_filter_fbo_ms
+                self.__before_PPE_fbo_ms = FBO(screen_size.x, screen_size.y, self.samples)
+                self.__before_PPE_fbo_ms.attach(0, sampler2DMS, GL.GL_RGBA32F)
+                self.__before_PPE_fbo_ms.attach(GL.GL_DEPTH_ATTACHMENT, RBO)
+            return self.__before_PPE_fbo_ms
         else:
-            if self.__before_filter_fbo is not None:
-                self.__before_filter_fbo.resize(screen_size.x, screen_size.y)
+            if self.__before_PPE_fbo is not None:
+                self.__before_PPE_fbo.resize(screen_size.x, screen_size.y)
             else:
-                self.__before_filter_fbo = FBO(screen_size.x, screen_size.y)
-                self.__before_filter_fbo.attach(0, sampler2D, GL.GL_RGBA32F)
-                self.__before_filter_fbo.attach(GL.GL_DEPTH_STENCIL_ATTACHMENT, RBO, GL.GL_DEPTH_STENCIL)
-            return self.__before_filter_fbo
+                self.__before_PPE_fbo = FBO(screen_size.x, screen_size.y)
+                self.__before_PPE_fbo.attach(0, sampler2D, GL.GL_RGBA32F)
+                self.__before_PPE_fbo.attach(GL.GL_DEPTH_ATTACHMENT, RBO)
+            return self.__before_PPE_fbo
         
     @staticmethod
     def __mouse_parameters(mouse_event:QMouseEvent)->tuple[Manipulator.MouseButton, glm.vec2, glm.vec2]:
@@ -526,6 +559,10 @@ class Screen(QOpenGLWidget):
             Screen.__has_exec = True
 
     @property
+    def post_process_effects(self):
+        return self._post_process_effects
+
+    @property
     def is_cursor_hiden(self)->bool:
         return self._is_cursor_hiden
 
@@ -571,20 +608,22 @@ class Screen(QOpenGLWidget):
 
     def capture(self, save_path:str|None=None, viewport:tuple[int]|None=None)->np.ndarray:
         self.makeCurrent()
-        with self._before_filter_fbo:
+        with self._before_PPE_fbo:
             clear_color = self.camera.scene.fog.apply(self.background_color, glm.vec3(0), glm.vec3(0,self.camera.far,0))
             with GLConfig.LocalConfig(clear_color=clear_color):
                 with self.renderer.render_hint:
                     self.renderer.render()
 
         image = None
-        if self.renderer.filters.has_valid:
-            self._before_filter_image = self._before_filter_fbo.resolved.color_attachment(0)
-            self.renderer.filters.screen_update_time = time.time()
-            result_sampler = self.renderer.filters(self._before_filter_image)
+        resolved = self._before_PPE_fbo.resolved
+        if self._post_process_effects.has_valid:
+            self._before_PPE_image = resolved.color_attachment(0)
+            self._post_process_effects.screen_update_time = time.time()
+            self._assign_values_to_PPEs()
+            result_sampler = self._post_process_effects.apply(self._before_PPE_image)
             image = result_sampler.fbo.data(0)
         else:
-            image = self._before_filter_fbo.resolved.data(0)
+            image = resolved.data(0)
 
         if viewport is None:
             viewport = GLConfig.viewport
@@ -630,3 +669,51 @@ class Screen(QOpenGLWidget):
         while self._video_writers:
             video_writer = self._video_writers.pop()
             video_writer.stop()
+
+    @property
+    def bloom(self):
+        return self._post_process_effects["bloom"]
+    
+    @bloom.setter
+    def bloom(self, flag:bool):
+        self._post_process_effects["bloom"].enabled = flag
+    
+    @property
+    def SSAO(self):
+        return self._post_process_effects["SSAO"]
+    
+    @SSAO.setter
+    def SSAO(self, flag:bool):
+        self._post_process_effects["SSAO"].enabled = flag
+    
+    @property
+    def tone_mapper(self):
+        return self._post_process_effects["tone_mapper"]
+    
+    @tone_mapper.setter
+    def tone_mapper(self, flag:bool):
+        self._post_process_effects["tone_mapper"].enabled = flag
+    
+    @property
+    def DOF(self):
+        return self._post_process_effects["DOF"]
+    
+    @DOF.setter
+    def DOF(self, flag:bool):
+        self._post_process_effects["DOF"].enabled = flag
+    
+    @property
+    def explosure_adaptor(self):
+        return self._post_process_effects["explosure_adaptor"]
+    
+    @explosure_adaptor.setter
+    def explosure_adaptor(self, flag:bool):
+        self._post_process_effects["explosure_adaptor"].enabled = flag
+    
+    @property
+    def FXAA(self):
+        return self._post_process_effects["FXAA"]
+    
+    @FXAA.setter
+    def FXAA(self, flag:bool):
+        self._post_process_effects["FXAA"].enabled = flag

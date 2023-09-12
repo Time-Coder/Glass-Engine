@@ -15,6 +15,28 @@ class Camera(SinglePathNode):
         Perspective = 0
         Orthographic = 1
 
+    class Lens:
+
+        def __init__(self):
+            self.focus:float = 0.09
+            self.aperture:float = 0.05
+            self.auto_focus:bool = True
+            self.focus_tex_coord:glm.vec2 = glm.vec2(0.5, 0.5)
+            self.focus_change_time:float = 2
+
+            self.explosure:float = 1
+            self.auto_explosure:bool = True
+            self.local_explosure:bool = False
+            self.explosure_adapt_time:float = 2
+
+        @property
+        def clear_distance(self):
+            return 1/(1/self.focus - 1/self.near)
+        
+        @clear_distance.setter
+        def clear_distance(self, distance:float):
+            self.focus = 1/(1/self.near + 1/distance)
+
     @checktype
     def __init__(self, projection_mode:ProjectionMode=ProjectionMode.Perspective, name:str=""):
         SinglePathNode.__init__(self, name)
@@ -29,15 +51,17 @@ class Camera(SinglePathNode):
         self.__near = 0.1
         self.__clip = self.__far - self.__near
         self.__height = 40*2*self.__near*self.__tan_half_fov
-        self.__focus = 0.9*self.__near
-        self.__aperture = 0.05
-        self.__auto_focus = True
-        self.__focus_tex_coord = glm.vec2(0.5, 0.5)
-        self.__focus_change_speed = 0.005 # m/s
+        self.__CSM_levels = 5
+
+        self.__lens = Camera.Lens()
+
         self.__screen = Screen(self)
         self.__screen.manipulator = SceneRoamManipulator()
         self.__screen.renderer = ForwardRenderer()
-        self.__CSM_levels = 5
+
+    @property
+    def lens(self):
+        return self.__lens
 
     @property
     def projection_mode(self):
@@ -154,60 +178,6 @@ class Camera(SinglePathNode):
     @property
     def screen(self):
         return self.__screen
-    
-    @property
-    def focus(self):
-        return self.__focus
-    
-    @focus.setter
-    @checktype
-    def focus(self, focus:float):
-        self.__focus = focus
-
-    @property
-    def aperture(self):
-        return self.__aperture
-    
-    @aperture.setter
-    @checktype
-    def aperture(self, diameter:float):
-        self.__aperture = diameter
-
-    @property
-    def clear_distance(self):
-        return 1/(1/self.focus - 1/self.near)
-    
-    @clear_distance.setter
-    @checktype
-    def clear_distance(self, distance:float):
-        self.focus = 1/(1/self.near + 1/distance)
-
-    @property
-    def auto_focus(self):
-        return self.__auto_focus
-    
-    @auto_focus.setter
-    @checktype
-    def auto_focus(self, flag:bool):
-        self.__auto_focus = flag
-
-    @property
-    def focus_tex_coord(self):
-        return self.__focus_tex_coord
-    
-    @focus_tex_coord.setter
-    @checktype
-    def focus_tex_coord(self, tex_coord:glm.vec2):
-        self.__focus_tex_coord = tex_coord
-
-    @property
-    def focus_change_speed(self):
-        return self.__focus_change_speed
-    
-    @focus_change_speed.setter
-    @checktype
-    def focus_change_speed(self, speed:float):
-        self.__focus_change_speed = speed
 
     @property
     def CSM_levels(self):

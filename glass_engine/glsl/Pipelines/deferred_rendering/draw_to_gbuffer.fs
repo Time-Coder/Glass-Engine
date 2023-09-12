@@ -18,13 +18,13 @@ in vec3 preshading_back_color;
 in flat uvec2 env_map_handle;
 
 // 几何信息
-layout(location=0) out vec4 view_pos_and_alpha;
-layout(location=1) out vec4 view_normal_and_emission_r;
+layout(location=3) out vec4 view_pos_and_alpha;
+layout(location=4) out vec4 view_normal_and_emission_r;
 
 // 光照信息
 layout(location=2) out vec4 ambient_and_emission_g;
-layout(location=3) out vec4 diffuse_or_base_color_and_emission_b;
-layout(location=4) out vec4 specular_or_preshading_and_shininess;
+layout(location=0) out vec4 diffuse_or_base_color_and_emission_b;
+layout(location=1) out vec4 specular_or_preshading_and_shininess;
 layout(location=5) out vec4 reflection;
 layout(location=6) out vec4 env_center_and_mixed_value;
 layout(location=7) out uvec4 mixed_uint;

@@ -31,7 +31,6 @@ out GeometryOut
 out vec3 preshading_color;
 out vec3 preshading_back_color;
 out flat uvec2 env_map_handle;
-out vec4 NDC;
 
 #include "../../include/Camera.glsl"
 #include "../../include/Material.glsl"
@@ -153,8 +152,7 @@ void main()
             }
         }
 
-        NDC = view_to_NDC(camera, gs_out.view_pos);
-        gl_Position = NDC;
+        gl_Position = view_to_NDC(camera, gs_out.view_pos);
         EmitVertex();
     }
 
