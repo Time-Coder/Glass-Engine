@@ -25,7 +25,7 @@ class BloomEffect(PostProcessEffect):
 
         self.strength:float = 0.5
         self.threshold:float = 1
-        self.times:int = 6
+        self.blur_times:int = 6
 
     @property
     def down_program(self):
@@ -73,14 +73,14 @@ class BloomEffect(PostProcessEffect):
         
         with GLConfig.LocalConfig(cull_face=None, polygon_mode=GL.GL_FILL):
             current_index = 0
-            for i in range(self._times):
+            for i in range(self.blur_times):
                 down_fbo = self.bloom_down_fbo(i)
                 if down_fbo is None:
                     break
 
                 with down_fbo:
                     GLConfig.clear_buffers()
-                    self.down_program["threshold"] = self._threshold
+                    self.down_program["threshold"] = self.threshold
                     self.down_program["mip_level"] = i
                     self.down_program["screen_image"] = screen_image
                     self.down_program.draw_triangles(Frame.vertices, Frame.indices)
@@ -93,7 +93,7 @@ class BloomEffect(PostProcessEffect):
                 for i in range(current_index, -1, -1):
                     down_fbo = self.bloom_down_fbo(i)
                     with down_fbo:
-                        self.up_program["filter_radius"] = 0.02 * self._strength
+                        self.up_program["filter_radius"] = 0.02 * self.strength
                         self.up_program["screen_image"] = screen_image
                         self.up_program.draw_triangles(Frame.vertices, Frame.indices)
                     screen_image = down_fbo.color_attachment(0)
@@ -116,14 +116,6 @@ class BloomEffect(PostProcessEffect):
                 self.mix_program["bloom_image"] = bloom_image
                 self.mix_program.draw_triangles(Frame.vertices, Frame.indices)
         return self.mix_fbo.color_attachment(0)
-    
-    @property
-    def threshold(self):
-        return self._threshold
-    
-    @threshold.setter
-    def threshold(self, threshold:float):
-        self._threshold = threshold
 
     def __update_fbo_list(self, src_width:int, src_height:int):
         if src_width == self._src_width and \
