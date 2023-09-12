@@ -2,7 +2,10 @@
 
 in vec2 frag_tex_coord;
 in vec3 world_coord;
-out vec4 frag_color;
+
+layout(location=0) out vec4 frag_color;
+layout(location=3) out vec3 view_pos;
+layout(location=4) out vec3 view_normal;
 
 #include "../../include/fog.glsl"
 #include "../../include/sampling.glsl"
@@ -16,4 +19,7 @@ void main()
 {
     frag_color = textureColorLod(skydome_map, frag_tex_coord, 0);
     frag_color.rgb = fog_apply(fog, frag_color.rgb, camera.abs_position, world_coord);
+
+    view_pos = vec3(0);
+    view_normal = vec3(0);
 }

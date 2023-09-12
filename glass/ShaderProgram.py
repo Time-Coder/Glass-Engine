@@ -456,9 +456,9 @@ class ShaderProgram(GPUProgram):
                     not_set_uniforms.append(name)
                     
         if not_set_uniforms:
-            warning_message = "in shader program:\n(\n  "
+            warning_message = "in shader program:\n  "
             warning_message += "\n  ".join(self._get_compiled_files())
-            warning_message += "\n): "
+            warning_message += "\n"
             if len(not_set_uniforms) == 1:
                 warning_message += f"uniform variable '{not_set_uniforms[0]}' is not set but used"
             else:

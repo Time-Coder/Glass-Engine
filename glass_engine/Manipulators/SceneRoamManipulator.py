@@ -60,7 +60,7 @@ class SceneRoamManipulator(Manipulator):
                 height = self.camera.screen.height()
                 s = x/(width-1)
                 t = 1 - y/(height-1)
-                self.camera.focus_tex_coord = glm.vec2(s, t)
+                self.camera.lens.focus_tex_coord = glm.vec2(s, t)
                 return True
 
         return False
@@ -127,7 +127,7 @@ class SceneRoamManipulator(Manipulator):
                 self.camera.screen.renderer.render_hint.polygon_mode = GL.GL_FILL
             return True
         elif key == Manipulator.Key.Key_O:
-            self.camera.screen.renderer.SSAO = (not self.camera.screen.renderer.SSAO)
+            self.camera.screen.SSAO.enabled = (not self.camera.screen.SSAO.enabled)
             return True
         elif key == Manipulator.Key.Key_P:
             now = datetime.datetime.now()

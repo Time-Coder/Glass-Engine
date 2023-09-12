@@ -26,7 +26,6 @@ out VertexOut
     flat bool visible;
     vec3 preshading_color;
     flat uvec2 env_map_handle;
-    vec4 NDC;
 } vs_out;
 
 #include "../../include/transform.glsl"
@@ -59,9 +58,8 @@ void main()
     vs_out.view_TBN = world_TBN_to_view(camera, mat3(world_tangent, world_bitangent, world_normal));
     vs_out.env_map_handle = env_map_handle;
     vs_out.visible = (visible != 0);
-    vs_out.NDC = view_to_NDC(camera, vs_out.view_pos);
 
-    gl_Position = vs_out.NDC;
+    gl_Position = view_to_NDC(camera, vs_out.view_pos);
 
     // pre shading
     if (material.shading_model == SHADING_MODEL_FLAT ||

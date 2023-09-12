@@ -18,7 +18,6 @@ PostShadingInfo read_from_gbuffer(
 )
 {
     PostShadingInfo shading_info = PostShadingInfo_create();
-    shading_info.screen_tex_coord = tex_coord;
 
     vec4 view_pos_and_alpha = texture(view_pos_and_alpha_map, fs_in.tex_coord);
     vec4 view_normal_and_emission_r = texture(view_normal_and_emission_r_map, fs_in.tex_coord);
@@ -46,7 +45,6 @@ PostShadingInfo read_from_gbuffer(
     shading_info.env_center = env_center_and_mixed_value.xyz;
 
     uvec2 env_map_handle = mixed_uint.xy;
-    shading_info.use_env_map = (env_map_handle.x > 0 || env_map_handle.y > 0);
     shading_info.env_map = sampler2D(env_map_handle);
 
     shading_info.material.shading_model = uint((mixed_uint.z >> 3) & 0xF);

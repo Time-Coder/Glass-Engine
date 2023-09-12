@@ -7,41 +7,42 @@
 
 vec3 fetch_env_color(
     vec3 out_dir, float roughness,
-    bool use_skybox_map, samplerCube skybox_map,
-    bool use_skydome_map, sampler2D skydome_map,
-    bool use_env_map, sampler2D env_map
+    samplerCube skybox_map,
+    sampler2D skydome_map,
+    sampler2D env_map
 )
 {
     vec4 env_color = vec4(0);
     float bias = 0.7*roughness;
 
-    if (use_env_map)
+    if (textureValid(env_map))
     {
         env_color = textureColorSphere(env_map, out_dir, bias);
     }
     
     vec3 sampling_dir = quat_apply(quat(cos45, sin45, 0, 0), out_dir);
-    if (use_skybox_map)
+    if (textureValid(skybox_map))
     {
         vec3 skybox_color = max(texture(skybox_map, sampling_dir, bias).rgb, 0.0);
         env_color.rgb = mix(skybox_color, env_color.rgb, env_color.a);
     }
-    else if (use_skydome_map)
+    else if (textureValid(skydome_map))
     {
         vec3 skydome_color = textureColorSphere(skydome_map, out_dir, bias).rgb;
         env_color.rgb = mix(skydome_color, env_color.rgb, env_color.a);
     }
+
     return env_color.rgb;
 }
 
 vec4 sphere_reflect_refract_color(
     InternalMaterial material, Camera CSM_camera,
     vec3 env_center, vec3 view_dir, vec3 frag_pos, vec3 frag_normal,
-    bool use_skybox_map, samplerCube skybox_map,
-    bool use_skydome_map, sampler2D skydome_map,
-    bool use_env_map, sampler2D env_map)
+    samplerCube skybox_map,
+    sampler2D skydome_map,
+    sampler2D env_map)
 {
-    if (!use_skybox_map && !use_skydome_map && !use_env_map)
+    if (textureEmpty(skybox_map) && textureEmpty(skydome_map) && textureEmpty(env_map))
     {
         return vec4(0);
     }
@@ -93,9 +94,7 @@ vec4 sphere_reflect_refract_color(
         {
             reflection_color = reflection_factor * fetch_env_color(
                 reflect_out_dir, material.roughness,
-                use_skybox_map, skybox_map,
-                use_skydome_map, skydome_map,
-                use_env_map, env_map
+                skybox_map, skydome_map, env_map
             );
             vec3 specular_color = get_specular(material, CSM_camera, reflect_out_dir, frag_pos, frag_normal);
             reflection_color += reflection_factor*specular_color;
@@ -123,9 +122,7 @@ vec4 sphere_reflect_refract_color(
                 {
                     refraction_color += refraction_factor * fetch_env_color(
                         refract_out_dir, material.roughness,
-                        use_skybox_map, skybox_map,
-                        use_skydome_map, skydome_map,
-                        use_env_map, env_map
+                        skybox_map, skydome_map, env_map
                     );
                     if (i >= 1)
                     {
@@ -163,9 +160,7 @@ vec4 sphere_reflect_refract_color(
             {
                 refraction_color += refraction_factor * fetch_env_color(
                     refract_out_dir, material.roughness,
-                    use_skybox_map, skybox_map,
-                    use_skydome_map, skydome_map,
-                    use_env_map, env_map
+                    skybox_map, skydome_map, env_map
                 );
                 if (i >= 1)
                 {
@@ -196,11 +191,9 @@ vec4 sphere_reflect_refract_color(
 vec4 reflect_refract_color(
     InternalMaterial material, Camera CSM_camera,
     vec3 env_center, vec3 view_dir, vec3 frag_pos, vec3 frag_normal,
-    bool use_skybox_map, samplerCube skybox_map,
-    bool use_skydome_map, sampler2D skydome_map,
-    bool use_env_map, sampler2D env_map)
+    samplerCube skybox_map, sampler2D skydome_map, sampler2D env_map)
 {
-    if (!use_skybox_map && !use_skydome_map && !use_env_map)
+    if (textureEmpty(skybox_map) && textureEmpty(skydome_map) && textureEmpty(env_map))
     {
         return vec4(0);
     }
@@ -251,9 +244,7 @@ vec4 reflect_refract_color(
         vec3 reflect_out_dir = normalize(reflect(view_dir, frag_normal));
         reflection_color = reflection_factor * fetch_env_color(
             reflect_out_dir, material.roughness,
-            use_skybox_map, skybox_map,
-            use_skydome_map, skydome_map,
-            use_env_map, env_map
+            skybox_map, skydome_map, env_map
         );
         vec3 specular_color = get_specular(material, CSM_camera, reflect_out_dir, frag_pos, frag_normal);
         reflection_color += reflection_factor * specular_color;
@@ -271,9 +262,7 @@ vec4 reflect_refract_color(
         vec3 refract_out_dir = normalize(refract(view_dir, frag_normal, refractive_index));
         refraction_color = (1-reflection_factor)*fetch_env_color(
             refract_out_dir, material.roughness,
-            use_skybox_map, skybox_map,
-            use_skydome_map, skydome_map,
-            use_env_map, env_map
+            skybox_map, skydome_map, env_map
         );
         vec3 specular_color = get_specular(material, CSM_camera, refract_out_dir, frag_pos, frag_normal);
         refraction_color += (1 - reflection_factor) * specular_color;

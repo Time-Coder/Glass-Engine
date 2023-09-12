@@ -27,7 +27,6 @@ out GeometryOut
 
 out vec3 preshading_color;
 out flat uvec2 env_map_handle;
-out vec4 NDC;
 
 #include "../../include/transform.glsl"
 #include "../../include/Camera.glsl"

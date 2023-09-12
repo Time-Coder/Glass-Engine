@@ -3,6 +3,7 @@
 
 #include "Material.glsl"
 #include "math.glsl"
+#include "sampling.glsl"
 #include "ShadingInfo.glsl"
 
 void parallax_mapping(sampler2D height_map, float height_scale, mat3 view_TBN, inout vec3 view_pos, inout vec2 frag_tex_coord)
@@ -98,7 +99,7 @@ void change_geometry(Material material, inout vec2 tex_coord, inout mat3 view_TB
     }
 
     // 视差贴图
-    if (material.use_height_map)
+    if (textureValid(material.height_map))
     {
         parallax_mapping(
             material.height_map, material.height_scale, view_TBN,
@@ -106,7 +107,7 @@ void change_geometry(Material material, inout vec2 tex_coord, inout mat3 view_TB
     }
 
     // 法向量贴图
-    if (material.use_normal_map)
+    if (textureValid(material.normal_map))
     {
         vec3 normal_in_tbn = 2*texture(material.normal_map, tex_coord).rgb-1;
         float len_normal = length(normal_in_tbn);

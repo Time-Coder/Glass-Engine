@@ -12,7 +12,13 @@ class DeferredRenderer(CommonRenderer):
 
     def __init__(self):
         CommonRenderer.__init__(self)
-        self.filters["FXAA"].enabled = True
+        
+    def startup(self):
+        CommonRenderer.startup(self)
+        screen = self.camera.screen
+        if not screen._samples_set_by_user and not screen._is_gl_init:
+            screen._set_samples(1)
+        screen.FXAA = True
 
     @property
     def deferred_render_program(self):
@@ -112,7 +118,7 @@ class DeferredRenderer(CommonRenderer):
                 fbo.attach(5, sampler2DMS, GL.GL_RGBA32F) # reflection
                 fbo.attach(6, sampler2DMS, GL.GL_RGBA32F) # env_center_and_mixed_value
                 fbo.attach(7, usampler2DMS, GL.GL_RGBA32UI) # mixed_uint
-                fbo.attach(GL.GL_DEPTH_ATTACHMENT, RBO)
+                fbo.attach(GL.GL_DEPTH_ATTACHMENT, sampler2DMS)
                 fbo.auto_clear = False
                 self.fbos["gbuffer_ms"] = fbo
             return fbo
@@ -130,7 +136,7 @@ class DeferredRenderer(CommonRenderer):
                 fbo.attach(5, sampler2D, GL.GL_RGBA32F) # reflection
                 fbo.attach(6, sampler2D, GL.GL_RGBA32F) # env_center_and_mixed_value
                 fbo.attach(7, usampler2D, GL.GL_RGBA32UI) # mixed_uint
-                fbo.attach(GL.GL_DEPTH_ATTACHMENT, RBO)
+                fbo.attach(GL.GL_DEPTH_ATTACHMENT, sampler2D)
                 fbo.auto_clear = False
                 self.fbos["gbuffer"] = fbo
             return fbo
@@ -197,19 +203,18 @@ class DeferredRenderer(CommonRenderer):
                         self.draw_points_to_gbuffer(mesh, instances)
 
         resolved = self.gbuffer.resolved
-        view_pos_and_alpha_map = resolved.color_attachment(0)
-        view_normal_and_emission_r_map = resolved.color_attachment(1)
+        view_pos_and_alpha_map = resolved.color_attachment(3)
+        view_normal_and_emission_r_map = resolved.color_attachment(4)
         ambient_and_emission_g_map = resolved.color_attachment(2)
-        diffuse_or_base_color_and_emission_b_map = resolved.color_attachment(3)
-        specular_or_preshading_and_shininess_map = resolved.color_attachment(4)
+        diffuse_or_base_color_and_emission_b_map = resolved.color_attachment(0)
+        specular_or_preshading_and_shininess_map = resolved.color_attachment(1)
         reflection_map = resolved.color_attachment(5)
         env_center_and_mixed_value_map = resolved.color_attachment(6)
         mixed_uint_map = resolved.color_attachment(7)
 
-        if self.DOF:
-            self.filters["DOF"].view_pos_map = view_pos_and_alpha_map
-
-        self.generate_SSAO(view_pos_and_alpha_map, view_normal_and_emission_r_map)
+        self._view_pos_map = view_pos_and_alpha_map
+        self._view_normal_map = view_normal_and_emission_r_map
+        self._depth_map = resolved.depth_attachment
 
         with GLConfig.LocalConfig(cull_face=None, polygon_mode=GL.GL_FILL):
             GLConfig.clear_buffers()
@@ -222,12 +227,9 @@ class DeferredRenderer(CommonRenderer):
             self.deferred_render_program["reflection_map"] = reflection_map
             self.deferred_render_program["env_center_and_mixed_value_map"] = env_center_and_mixed_value_map
             self.deferred_render_program["mixed_uint_map"] = mixed_uint_map
-            self.deferred_render_program["SSAO_map"] = self._SSAO_map
             self.deferred_render_program["skydome_map"] = self.scene.skydome.skydome_map
             self.deferred_render_program["skybox_map"] = self.scene.skybox.skybox_map
             self.deferred_render_program["fog"] = self.scene.fog
-            self.deferred_render_program["use_skybox_map"] = self.scene.skybox.is_completed
-            self.deferred_render_program["use_skydome_map"] = self.scene.skydome.is_completed
             self.deferred_render_program.draw_triangles(Frame.vertices, Frame.indices)
 
         self.gbuffer.draw_to_active(GL.GL_DEPTH_ATTACHMENT)
@@ -240,27 +242,8 @@ class DeferredRenderer(CommonRenderer):
         elif self.scene.skydome.is_completed:
             self.scene.skydome.draw(self.camera)
         
-        if self._transparent_meshes or \
-           self._transparent_lines or \
-           self._transparent_points:
+        if self._transparent_meshes or self._transparent_lines or self._transparent_points:
             self.gbuffer.draw_to(self.OIT_fbo, GL.GL_DEPTH_ATTACHMENT)
-
-    def generate_SSAO(self, view_pos_alpha_map, view_normal_map):
-        self._SSAO_map = None
-        if not self._enable_SSAO or GLConfig.polygon_mode != GL.GL_FILL:
-            return
-        
-        with GLConfig.LocalConfig(cull_face=None, polygon_mode=GL.GL_FILL):
-            with self.ssao_fbo:
-                self.generate_ssao_program["camera"] = self.camera
-                self.generate_ssao_program["view_pos_alpha_map"] = view_pos_alpha_map
-                self.generate_ssao_program["view_normal_map"] = view_normal_map
-                self.generate_ssao_program["SSAO_radius"] = self.SSAO_radius
-                self.generate_ssao_program["SSAO_samples"] = self.SSAO_samples
-                self.generate_ssao_program["SSAO_power"] = self.SSAO_power
-                self.generate_ssao_program.draw_triangles(Frame.vertices, Frame.indices)
-
-        self._SSAO_map = self._SSAO_filter(self.ssao_fbo.color_attachment(0))
 
     def render(self):
         self._should_update = False

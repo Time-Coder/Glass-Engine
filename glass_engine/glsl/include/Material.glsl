@@ -38,23 +38,6 @@ struct Material
     float Toon_specular_softness;
     float rim_power;
     bool fog;
-
-	bool use_ambient_map;
-	bool use_diffuse_map;
-	bool use_specular_map;
-	bool use_emission_map;
-	bool use_shininess_map;
-	bool use_glossiness_map;
-	bool use_normal_map;
-	bool use_height_map;
-	bool use_opacity_map;
-	bool use_reflection_map;
-	bool use_refractive_index_map;
-	bool use_base_color_map;
-    bool use_ao_map;
-	bool use_metallic_map;
-	bool use_roughness_map;
-    bool use_arm_map;
     bool env_mix_diffuse;
 
 	sampler2D ambient_map;
@@ -67,7 +50,6 @@ struct Material
 	sampler2D height_map;
 	sampler2D opacity_map;
 	sampler2D reflection_map;
-	sampler2D refractive_index_map;
 	sampler2D base_color_map;
     sampler2D ao_map;
     sampler2D roughness_map;
@@ -116,22 +98,22 @@ InternalMaterial fetch_internal_material(vec4 frag_color, Material material, vec
 
     // 材质不透明度
     float material_opacity = material.opacity;
-    if (material.use_opacity_map)
+    if (textureValid(material.opacity_map))
     {
         material_opacity = textureColor(material.opacity_map, tex_coord).r;
     }
 
     // 环境光颜色
     internal_material.ambient = material.ambient;
-    if (material.use_ambient_map)
+    if (textureValid(material.ambient_map))
     {
         internal_material.ambient = textureColor(material.ambient_map, tex_coord).rgb;
     }
-    else if (material.use_diffuse_map)
+    else if (textureValid(material.diffuse_map))
     {
         internal_material.ambient = 0.1 * textureColor(material.diffuse_map, tex_coord).rgb;
     }
-    else if (material.use_base_color_map)
+    else if (textureValid(material.base_color_map))
     {
         internal_material.ambient = 0.1 * textureColor(material.base_color_map, tex_coord).rgb;
     }
@@ -144,13 +126,13 @@ InternalMaterial fetch_internal_material(vec4 frag_color, Material material, vec
     // 漫反射颜色
     internal_material.diffuse = material.diffuse;
     internal_material.opacity = 1 - (1-frag_color.a)*(1-material_opacity);
-    if (material.use_diffuse_map)
+    if (textureValid(material.diffuse_map))
     {
         vec4 material_diffuse4 = textureColor(material.diffuse_map, tex_coord);
         internal_material.diffuse = material_diffuse4.rgb;
         internal_material.opacity = 1 - (1-frag_color.a)*(1-material_diffuse4.a*material_opacity);
     }
-    else if (material.use_base_color_map)
+    else if (textureValid(material.base_color_map))
     {
         vec4 material_diffuse4 = textureColor(material.base_color_map, tex_coord);
         internal_material.diffuse = material_diffuse4.rgb;
@@ -160,7 +142,7 @@ InternalMaterial fetch_internal_material(vec4 frag_color, Material material, vec
 
     // 镜面高光颜色
     internal_material.specular = material.specular;
-    if (material.use_specular_map)
+    if (textureValid(material.specular_map))
     {
         internal_material.specular = textureColor(material.specular_map, tex_coord).rgb;
     }
@@ -169,11 +151,11 @@ InternalMaterial fetch_internal_material(vec4 frag_color, Material material, vec
 
     // 闪耀度
     internal_material.shininess = material.shininess;
-    if (material.use_shininess_map)
+    if (textureValid(material.shininess_map))
     {
         internal_material.shininess = textureColor(material.shininess_map, tex_coord).r;
     }
-    else if (material.use_glossiness_map)
+    else if (textureValid(material.glossiness_map))
     {
         float glossiness = textureColor(material.glossiness_map, tex_coord).r;
         internal_material.shininess = glossiness * glossiness;
@@ -185,7 +167,7 @@ InternalMaterial fetch_internal_material(vec4 frag_color, Material material, vec
     {
         internal_material.opacity = 1 - (1-frag_color.a)*(1-material_opacity);
     }
-    if (material.use_emission_map)
+    if (textureValid(material.emission_map))
     {
         vec4 material_emission4 = textureColor(material.emission_map, tex_coord);
         internal_material.emission = material_emission4.rgb;
@@ -205,7 +187,7 @@ InternalMaterial fetch_internal_material(vec4 frag_color, Material material, vec
 
     // 反射
     internal_material.reflection = material.reflection;
-    if (material.use_reflection_map)
+    if (textureValid(material.reflection_map))
     {
         internal_material.reflection = textureColor(material.reflection_map, tex_coord);
     }
@@ -217,16 +199,12 @@ InternalMaterial fetch_internal_material(vec4 frag_color, Material material, vec
 
     // 折射率
     internal_material.refractive_index = material.refractive_index;
-    if (material.use_refractive_index_map)
-    {
-        internal_material.refractive_index = textureColor(material.refractive_index_map, tex_coord).r;
-    }
     
     // arm
     internal_material.ao = 1;
     internal_material.roughness = material.roughness;
     internal_material.metallic = material.metallic;
-    if (material.use_arm_map)
+    if (textureValid(material.arm_map))
     {
         vec3 arm = textureColor(material.arm_map, tex_coord).rgb;
         internal_material.ao = arm[0];
@@ -235,20 +213,20 @@ InternalMaterial fetch_internal_material(vec4 frag_color, Material material, vec
     }
 
     // 环境光遮蔽
-    if (material.use_ao_map)
+    if (textureValid(material.ao_map))
     {
         internal_material.ao = textureColor(material.ao_map, tex_coord).r;
     }
     internal_material.ao = mix(1, internal_material.ao, material_opacity);
 
     // 粗糙度
-    if (material.use_roughness_map)
+    if (textureValid(material.roughness_map))
     {
         internal_material.roughness = textureColor(material.roughness_map, tex_coord).r;
     }
 
     // 金属度
-    if (material.use_metallic_map)
+    if (textureValid(material.metallic_map))
     {
         internal_material.metallic = textureColor(material.metallic_map, tex_coord).r;
     }
@@ -259,11 +237,11 @@ InternalMaterial fetch_internal_material(vec4 frag_color, Material material, vec
     {
         internal_material.base_color = internal_material.diffuse;
     }
-    if (material.use_base_color_map)
+    if (textureValid(material.base_color_map))
     {
         internal_material.base_color = textureColor(material.base_color_map, tex_coord).rgb;
     }
-    else if (material.use_diffuse_map)
+    else if (textureValid(material.diffuse_map))
     {
         internal_material.base_color = textureColor(material.diffuse_map, tex_coord).rgb;
     }

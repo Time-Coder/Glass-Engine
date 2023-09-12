@@ -34,9 +34,9 @@ vec4 post_shading_all(Camera camera, Camera CSM_camera, PostShadingInfo shading_
             shading_info.env_center, view_dir,
             shading_info.world_pos, shading_info.world_normal,
 
-            shading_info.use_skybox_map, shading_info.skybox_map,
-            shading_info.use_skydome_map, shading_info.skydome_map,
-            shading_info.use_env_map, shading_info.env_map
+            shading_info.skybox_map,
+            shading_info.skydome_map,
+            shading_info.env_map
         );
     }
     else
@@ -47,9 +47,9 @@ vec4 post_shading_all(Camera camera, Camera CSM_camera, PostShadingInfo shading_
             shading_info.env_center, view_dir,
             shading_info.world_pos, shading_info.world_normal,
 
-            shading_info.use_skybox_map, shading_info.skybox_map,
-            shading_info.use_skydome_map, shading_info.skydome_map,
-            shading_info.use_env_map, shading_info.env_map
+            shading_info.skybox_map,
+            shading_info.skydome_map,
+            shading_info.env_map
         );
     }
     if (env_color.a >= 1-1E-6)
@@ -60,6 +60,10 @@ vec4 post_shading_all(Camera camera, Camera CSM_camera, PostShadingInfo shading_
             final_color.rgb = fog_apply(shading_info.fog, final_color.rgb, camera.abs_position, shading_info.world_pos);
         }
         return final_color;
+    }
+    if (length(shading_info.material.reflection) > 0)
+    {
+        return env_color;
     }
 
     vec3 out_color3;
@@ -72,10 +76,6 @@ vec4 post_shading_all(Camera camera, Camera CSM_camera, PostShadingInfo shading_
     {
         out_color3 = lighting(shading_info.material, CSM_camera, camera.abs_position, shading_info.world_pos, shading_info.world_normal);
     }
-    
-    // SSAO
-    float ssao_factor = textureColor(shading_info.SSAO_map, shading_info.screen_tex_coord).r;
-    out_color3 *= (1-ssao_factor);
 
     // AO map
     out_color3 *= shading_info.material.ao;
@@ -94,7 +94,7 @@ vec4 post_shading_all(Camera camera, Camera CSM_camera, PostShadingInfo shading_
     return vec4(out_color3, shading_info.material.opacity);
 }
 
-vec4 shading_all(Camera camera, Camera CSM_camera, ShadingInfo shading_info)
+vec4 shading_all(Camera camera, Camera CSM_camera, inout ShadingInfo shading_info)
 {
     // 高度贴图和法线贴图改变几何信息
     change_geometry(shading_info.material, shading_info.tex_coord, shading_info.view_TBN, shading_info.view_pos);
@@ -132,32 +132,26 @@ vec4 shading_all(Camera camera, Camera CSM_camera, ShadingInfo shading_info)
     vec3 world_pos = view_to_world(camera, shading_info.view_pos);
     vec3 world_normal = view_dir_to_world(camera, shading_info.view_TBN[2]);
     vec3 env_center = transform_apply(shading_info.affine_transform, shading_info.mesh_center);
-    vec2 screen_tex_coord = (shading_info.NDC.xy / shading_info.NDC.w + 1)/2;
     internal_material.preshading_color = shading_info.preshading_color;
 
     PostShadingInfo post_shading_info = PostShadingInfo(
         internal_material,
 
-        shading_info.use_skybox_map,
         shading_info.skybox_map,
-        shading_info.use_skydome_map,
         shading_info.skydome_map,
-        shading_info.use_env_map,
         shading_info.env_map,
-        shading_info.SSAO_map,
         shading_info.is_sphere,
         shading_info.fog,
 
         world_pos,
         world_normal,
-        env_center,
-        screen_tex_coord
+        env_center
     );
 
     return post_shading_all(camera, CSM_camera, post_shading_info);
 }
 
-vec4 shading_all(Camera camera, ShadingInfo shading_info)
+vec4 shading_all(Camera camera, inout ShadingInfo shading_info)
 {
     return shading_all(camera, camera, shading_info);
 }

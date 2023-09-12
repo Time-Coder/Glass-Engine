@@ -158,6 +158,7 @@ class _MetaGLConfig(type):
     __available_texture_units = None
     __available_image_units = None
     __available_extensions = None
+    __depth_bits = None
 
     @property
     def debug(cls):
@@ -469,6 +470,13 @@ class _MetaGLConfig(type):
         GL.glActiveTexture(GL.GL_TEXTURE0 + unit)
 
     # Read only:
+    @property
+    def depth_bits(self):
+        if _MetaGLConfig.__depth_bits is None:
+            _MetaGLConfig.__depth_bits = int(GL.glGetIntegerv(GL.GL_DEPTH_BITS))
+
+        return _MetaGLConfig.__depth_bits
+
     @property
     def max_color_attachments(cls):
         if _MetaGLConfig.__max_color_attachments is None:

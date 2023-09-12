@@ -90,7 +90,6 @@ class Material:
         self._opacity_map = None
         self._ao_map = None
         self._reflection_map = None
-        self._refractive_index_map = None
         self._base_color_map = None
         self._metallic_map = None
         self._roughness_map = None
@@ -129,6 +128,8 @@ class Material:
                 "ambient", "ambient_map",
                 "specular", "specular_map",
                 "emission", "emission_map",
+                "reflection", "reflection_map",
+                "refractive_index",
                 "base_color", "base_color_map"] and \
                not self._opacity_user_set and self._opacity == 0:
                 self._opacity = 1
@@ -673,24 +674,6 @@ class Material:
         self._reflection_user_set = True
 
     @property
-    def refractive_index_map(self):
-        return self._refractive_index_map
-    
-    @refractive_index_map.setter
-    @param_setter
-    def refractive_index_map(self, refractive_index_map:(sampler2D,str,np.ndarray)):
-        if isinstance(refractive_index_map, sampler2D) or refractive_index_map is None:
-            self._refractive_index_map = refractive_index_map
-        elif isinstance(refractive_index_map, (str,np.ndarray)):
-            if self._refractive_index_map is None:
-                self._refractive_index_map = sampler2D(refractive_index_map)
-            else:
-                self._refractive_index_map.image = refractive_index_map
-
-        if not self._reflection_user_set:
-            self._reflection = glm.vec4(1, 1, 1, 1)
-
-    @property
     def base_color_map(self):
         return self._base_color_map
     
@@ -734,70 +717,6 @@ class Material:
                 self._roughness_map = sampler2D(roughness_map)
             else:
                 self._roughness_map.image = roughness_map
-
-    @property
-    def use_ambient_map(self):
-        return (self._ambient_map is not None)
-
-    @property
-    def use_diffuse_map(self):
-        return (self._diffuse_map is not None)
-
-    @property
-    def use_specular_map(self):
-        return (self._specular_map is not None)
-
-    @property
-    def use_shininess_map(self):
-        return (self._shininess_map is not None)
-    
-    @property
-    def use_glossiness_map(self):
-        return (self._glossiness_map is not None)
-
-    @property
-    def use_emission_map(self):
-        return (self._emission_map is not None)
-
-    @property
-    def use_normal_map(self):
-        return (self._normal_map is not None)
-
-    @property
-    def use_height_map(self):
-        return (self._height_map is not None)
-
-    @property
-    def use_opacity_map(self):
-        return (self._opacity_map is not None)
-
-    @property
-    def use_ao_map(self):
-        return (self._ao_map is not None)
-    
-    @property
-    def use_arm_map(self):
-        return (self._arm_map is not None)
-
-    @property
-    def use_reflection_map(self):
-        return (self._reflection_map is not None)
-
-    @property
-    def use_refractive_index_map(self):
-        return (self._refractive_index_map is not None)
-    
-    @property
-    def use_base_color_map(self):
-        return (self._base_color_map is not None)
-    
-    @property
-    def use_metallic_map(self):
-        return (self._metallic_map is not None)
-    
-    @property
-    def use_roughness_map(self):
-        return (self._roughness_map is not None)
 
     @checktype
     def set_as(self, type:Type):
@@ -942,7 +861,7 @@ class Material:
     def _test_transparent(self):
         self._has_transparent = False
         self._has_opaque = False
-        if self.use_opacity_map:
+        if self.opacity_map is not None:
             image = self.opacity_map.image
             if image is None:
                 self._has_transparent = True
@@ -958,7 +877,7 @@ class Material:
             self._has_transparent = self.opacity < 1-1E-6
             self._has_opaque = self.opacity >= 1-1E-6
 
-        if self.use_diffuse_map:
+        if self.diffuse_map is not None:
             image = self.diffuse_map.image
             if image is None:
                 self._has_transparent = True

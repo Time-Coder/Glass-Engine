@@ -9,6 +9,9 @@ max(texture(image, tex_coord), 0.0)
 #define textureColorLod(image, tex_coord, lod) \
 max(textureLod(image, tex_coord, lod), 0.0)
 
+#define textureValid(image) (length(max(textureSize(image, 0)-1, 0)) > 1E-6)
+#define textureEmpty(image) (length(max(textureSize(image, 0)-1, 0)) <= 1E-6)
+
 vec3 vec2_to_cube_tex_coord(vec2 tex_coord, int face_id)
 {
     tex_coord = clamp(tex_coord, vec2(0), vec2(1));
