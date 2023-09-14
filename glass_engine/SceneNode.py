@@ -168,7 +168,13 @@ class SceneNode:
 
         if node.name in self._children:
             if self._children[node.name] is not node:
-                raise NameError("already has one child named '" + node.name + "'")
+                old_name = node.name
+                i = 1
+                new_name = f"{old_name}-{i}"
+                while new_name in self._children:
+                    i += 1
+                    new_name = f"{old_name}-{i}"
+                node.name = new_name
             else:
                 return
 

@@ -110,9 +110,18 @@ vec3 screen_to_view(Camera camera, vec3 screen_coord)
 {
 	vec3 view_coord;
 	float clip = camera.far - camera.near;
-	view_coord.y = camera.near * camera.far / (camera.far - clip * screen_coord.z);
-	view_coord.x = (2*screen_coord.x - 1) * view_coord.y * camera.aspect * camera.tan_half_fov;
-	view_coord.z = (2*screen_coord.y - 1) * view_coord.y * camera.tan_half_fov;
+	if (camera.projection_mode == CAMERA_PROJECTION_PERSPECTIVE)
+	{
+		view_coord.y = camera.near * camera.far / (camera.far - clip * screen_coord.z);
+		view_coord.x = (2*screen_coord.x - 1) * view_coord.y * camera.aspect * camera.tan_half_fov;
+		view_coord.z = (2*screen_coord.y - 1) * view_coord.y * camera.tan_half_fov;
+	}
+	else
+	{
+		view_coord.y = screen_coord.z*clip + camera.near;
+		view_coord.x = (screen_coord.x - 0.5) * camera.width;
+		view_coord.z = (screen_coord.y - 0.5) * camera.height;
+	}
 	return view_coord;
 }
 

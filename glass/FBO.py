@@ -317,7 +317,7 @@ class FBO(BO):
 				self._depth_stencil_attachment.bind(update_fbo=True)
 
 		BO.bind(self)
-		GL.glViewport(0, 0, self._width, self._height)
+		GLConfig.viewport = (0, 0, self._width, self._height)
 		if self._auto_clear:
 			GL.glClear(GL.GL_COLOR_BUFFER_BIT | GL.GL_DEPTH_BUFFER_BIT | GL.GL_STENCIL_BUFFER_BIT)
 		
@@ -504,7 +504,7 @@ class FBO(BO):
 					0, 0, fbo.width, fbo.height,
 					GL.GL_STENCIL_BUFFER_BIT, GL.GL_NEAREST
 				)
-			if self._depth_stencil_attachment is not None and GL.GL_DEPTH_STENCIL_ATTACHMENT in targets:
+			if self._depth_stencil_attachment is not None and GL.GL_DEPTH_STENCIL_ATTACHMENT in src_targets:
 				GL.glBlitFramebuffer(
 					0, 0, self._width, self._height,
 					0, 0, fbo.width, fbo.height,

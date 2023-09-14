@@ -15,7 +15,7 @@ vec4 getColor(sampler2D screen_image, vec2 tex_coord)
     {
         if (frag_coord.x == 0 && frag_coord.y == 0)
         {
-            current_luma = (1.0/camera.lens.explosure) - 0.5;
+            current_luma = pow((1.0/camera.lens.explosure) - 0.5, 2.0);
             memoryBarrier();
         }
 
@@ -45,13 +45,13 @@ vec4 getColor(sampler2D screen_image, vec2 tex_coord)
             }
         }
 
-        color.rgb = color.rgb / (0.5 + luma);
+        color.rgb = color.rgb / (0.5 + sqrt(luma));
         return color;
     }
     else
     {
         float luma = luminance(max(textureLod(screen_image, tex_coord, 7).rgb, 0.0));
-        color.rgb = color.rgb / (0.5 + luma);
+        color.rgb = color.rgb / (0.5 + sqrt(luma));
     }
     return color;
 }

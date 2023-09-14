@@ -9,3 +9,5 @@ temp_shaders
 build
 dist
 *.egg-info
+*.avi
+*.mp4

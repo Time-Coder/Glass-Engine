@@ -152,8 +152,9 @@ class _MetaGLConfig(type):
     __max_shader_storage_buffer_bindings = None
     __max_color_attachments = None
     __max_draw_buffers = None
-    __screen_size = glm.ivec2()
+    __screen_size = {}
     __buffered_current_context = None
+    __buffered_viewport = {}
     __gl_version = None
     __available_texture_units = None
     __available_image_units = None
@@ -447,16 +448,28 @@ class _MetaGLConfig(type):
         GL.glViewport(*viewport)
 
     @property
-    def screen_size(cls):
-        current_viewport = GL.glGetIntegerv(GL.GL_VIEWPORT)
-        _MetaGLConfig.__screen_size.x = int(current_viewport[2])
-        _MetaGLConfig.__screen_size.y = int(current_viewport[3])
-        return _MetaGLConfig.__screen_size
+    def buffered_viewport(cls):
+        current_context = cls.buffered_current_context
+        if current_context not in _MetaGLConfig.__buffered_viewport:
+            return cls.viewport
+        
+        return _MetaGLConfig.__buffered_viewport[current_context]
     
-    @screen_size.setter
-    def screen_size(cls, screen_size:glm.vec2):
-        view_port = cls.viewport
-        GL.glViewport(view_port[0], view_port[1], screen_size.x, screen_size.y)
+    @buffered_viewport.setter
+    def buffered_viewport(cls, viewport):
+        current_context = cls.buffered_current_context
+        _MetaGLConfig.__buffered_viewport[current_context] = viewport
+
+    @property
+    def screen_size(cls)->glm.ivec2:
+        current_context = cls.buffered_current_context
+        if current_context not in _MetaGLConfig.__screen_size:
+            _MetaGLConfig.__screen_size[current_context] = glm.ivec2()
+
+        viewport = cls.viewport
+        _MetaGLConfig.__screen_size[current_context].x = viewport[2]
+        _MetaGLConfig.__screen_size[current_context].y = viewport[3]
+        return _MetaGLConfig.__screen_size[current_context]
 
     @property
     def active_texture_unit(cls):

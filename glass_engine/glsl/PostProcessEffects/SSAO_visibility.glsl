@@ -46,7 +46,7 @@ vec4 getColor(sampler2D screen_image, vec2 tex_coord)
         vec3 sample_view_pos = view_pos + radius * view_TBN * vec3(x, y, z);
         float sample_depth = sample_view_pos.y;
 
-        vec2 sample_tex_coord = tex_coord_of_view_pos(sample_view_pos);
+        vec2 sample_tex_coord = view_pos_to_tex_coord(sample_view_pos);
         if (sample_tex_coord.x < 0 || sample_tex_coord.x > 1 ||
             sample_tex_coord.y < 0 || sample_tex_coord.y > 1)
         {
