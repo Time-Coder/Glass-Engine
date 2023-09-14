@@ -56,6 +56,9 @@ class VideoRecorder:
     def _start(self, viewport, fps):
         if self._started:
             return
+        
+        if fps == 0:
+            fps = 24
 
         self._viewport = viewport
         self._dt = 1/fps

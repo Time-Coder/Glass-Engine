@@ -293,12 +293,9 @@ class Screen(QOpenGLWidget):
             screen_image.fbo.draw_to_active(0)
 
             if self._paint_times > 0:
-                fps = 24
-                if self.smooth_fps != 0:
-                    fps = self.smooth_fps
                 view_port = GLConfig.buffered_viewport
                 for video_recorder in self._video_recorders:
-                    video_recorder._start(view_port, fps)
+                    video_recorder._start(view_port, self.smooth_fps)
                     video_recorder._frame_queue.put((time.time(), screen_image.fbo.data(0)))
         elif self._post_process_effects.has_valid:
             should_update_scene = self._draw_to_before_PPE(should_update_scene)
