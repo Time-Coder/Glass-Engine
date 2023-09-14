@@ -120,7 +120,7 @@ class GPUProgram(GLObject):
 			return self._uniform_block[name]
 		else:
 			error_message = "'" + name + "' is not defined in following files:\n"
-			error_message += "\n".join(self._get_compiled_files())
+			error_message += "\n".join(self.related_files)
 			raise NameError(error_message)
 
 	def __setitem__(self, name:str, value):
@@ -135,7 +135,7 @@ class GPUProgram(GLObject):
 			self._uniform_block[name] = value
 		else:
 			error_message = "'" + name + "' is not defined in following files:\n"
-			error_message += "\n".join(self._get_compiled_files())
+			error_message += "\n".join(self.related_files)
 			raise NameError(error_message)
 		
 	def __contains__(self, name:str):
@@ -222,7 +222,8 @@ class GPUProgram(GLObject):
 	def uniform_not_set_warning(self, flag:bool):
 		self._uniform_not_set_warning = flag
 
-	def _get_compiled_files(self):
+	@property
+	def related_files(self):
 		return []
 	
 	def _format_error_warning(self, message):

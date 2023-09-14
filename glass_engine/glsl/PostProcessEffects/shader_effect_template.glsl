@@ -65,13 +65,13 @@ vec3 world_normal_of(vec2 tex_coord)
     return view_dir_to_world(camera, view_normal);
 }
 
-vec2 tex_coord_of_view_pos(vec3 view_pos)
+vec2 view_pos_to_tex_coord(vec3 view_pos)
 {
     vec4 NDC = view_to_NDC(camera, view_pos);
     return 0.5*(NDC.xy/NDC.w + 1);
 }
 
-vec2 tex_coord_of_world_pos(vec3 world_pos)
+vec2 world_pos_to_tex_coord(vec3 world_pos)
 {
     vec4 NDC = Camera_project(camera, world_pos);
     return 0.5*(NDC.xy/NDC.w + 1);

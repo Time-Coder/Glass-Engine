@@ -2,7 +2,7 @@ from .PostProcessEffect import PostProcessEffect
 from ..Frame import Frame
 
 from glass import FBO, ShaderProgram, sampler2D, GLConfig
-from glass.utils import checktype, di
+from glass.utils import checktype
 from glass.ShaderStorageBlock import ShaderStorageBlock
 
 from OpenGL import GL

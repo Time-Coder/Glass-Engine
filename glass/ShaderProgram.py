@@ -21,6 +21,12 @@ from .ImageUnits import ImageUnits
 
 class ShaderProgram(GPUProgram):
 
+    __accum_draw_calls:dict[int,int] = {}
+    __accum_draw_points:dict[int,int] = {}
+    __accum_draw_lines:dict[int,int] = {}
+    __accum_draw_meshes:dict[int,int] = {}
+    __accum_draw_patches:dict[int,int] = {}
+
     def __init__(self):
         GPUProgram.__init__(self)
         self.vertex_shader = VertexShader()
@@ -104,7 +110,7 @@ class ShaderProgram(GPUProgram):
             GL.glAttachShader(self._id, self.tess_eval_shader._id)
         GL.glAttachShader(self._id, self.fragment_shader._id)
 
-        related_files = "\n  " + "\n  ".join(self._get_compiled_files())
+        related_files = "\n  " + "\n  ".join(self.related_files)
         if GlassConfig.print:
             print(f"linking program: {related_files}")
 
@@ -457,7 +463,7 @@ class ShaderProgram(GPUProgram):
                     
         if not_set_uniforms:
             warning_message = "in shader program:\n  "
-            warning_message += "\n  ".join(self._get_compiled_files())
+            warning_message += "\n  ".join(self.related_files)
             warning_message += "\n"
             if len(not_set_uniforms) == 1:
                 warning_message += f"uniform variable '{not_set_uniforms[0]}' is not set but used"
@@ -525,6 +531,86 @@ class ShaderProgram(GPUProgram):
     def patch_vertices(self, value:int):
         self._patch_vertices = value
 
+    @staticmethod
+    def __increase_draw_calls():
+        current_context = GLConfig.buffered_current_context
+        if current_context not in ShaderProgram.__accum_draw_calls:
+            ShaderProgram.__accum_draw_calls[current_context] = 0
+
+        ShaderProgram.__accum_draw_calls[current_context] += 1
+
+    @staticmethod
+    def __increase_draw_points():
+        current_context = GLConfig.buffered_current_context
+        if current_context not in ShaderProgram.__accum_draw_points:
+            ShaderProgram.__accum_draw_points[current_context] = 0
+
+        ShaderProgram.__accum_draw_points[current_context] += 1
+
+    @staticmethod
+    def __increase_draw_lines():
+        current_context = GLConfig.buffered_current_context
+        if current_context not in ShaderProgram.__accum_draw_lines:
+            ShaderProgram.__accum_draw_lines[current_context] = 0
+
+        ShaderProgram.__accum_draw_lines[current_context] += 1
+
+    @staticmethod
+    def __increase_draw_meshes():
+        current_context = GLConfig.buffered_current_context
+        if current_context not in ShaderProgram.__accum_draw_meshes:
+            ShaderProgram.__accum_draw_meshes[current_context] = 0
+
+        ShaderProgram.__accum_draw_meshes[current_context] += 1
+
+    @staticmethod
+    def __increase_draw_patches():
+        current_context = GLConfig.buffered_current_context
+        if current_context not in ShaderProgram.__accum_draw_patches:
+            ShaderProgram.__accum_draw_patches[current_context] = 0
+
+        ShaderProgram.__accum_draw_patches[current_context] += 1
+
+    @staticmethod
+    def accum_draw_calls():
+        current_context = GLConfig.buffered_current_context
+        if current_context not in ShaderProgram.__accum_draw_calls:
+            return 0
+        
+        return ShaderProgram.__accum_draw_calls[current_context]
+    
+    @staticmethod
+    def accum_draw_points():
+        current_context = GLConfig.buffered_current_context
+        if current_context not in ShaderProgram.__accum_draw_points:
+            return 0
+        
+        return ShaderProgram.__accum_draw_points[current_context]
+    
+    @staticmethod
+    def accum_draw_lines():
+        current_context = GLConfig.buffered_current_context
+        if current_context not in ShaderProgram.__accum_draw_lines:
+            return 0
+        
+        return ShaderProgram.__accum_draw_lines[current_context]
+    
+    @staticmethod
+    def accum_draw_meshes():
+        current_context = GLConfig.buffered_current_context
+        if current_context not in ShaderProgram.__accum_draw_meshes:
+            return 0
+        
+        return ShaderProgram.__accum_draw_meshes[current_context]
+
+    @staticmethod
+    def accum_draw_patches():
+        current_context = GLConfig.buffered_current_context
+        if current_context not in ShaderProgram.__accum_draw_patches:
+            return 0
+        
+        return ShaderProgram.__accum_draw_patches[current_context]
+
     def draw_patches(self,
           vertices:Vertices=None, indices:Indices=None, instances:Instances=None,
           start_index:int=0, total:int=None, times:int=None):
@@ -553,6 +639,9 @@ class ShaderProgram(GPUProgram):
             else:
                 GL.glDrawArraysInstanced(GL.GL_PATCHES, start_index, total, times)
 
+        self.__increase_draw_patches()
+        self.__increase_draw_calls()
+
     def draw_triangles(self,
             vertices:Vertices=None, indices:Indices=None, instances:Instances=None,
             primitive_type:GLInfo.triangle_types=GL.GL_TRIANGLES,
@@ -578,6 +667,9 @@ class ShaderProgram(GPUProgram):
             else:
                 GL.glDrawArraysInstanced(primitive_type, start_index, total, times)
 
+        self.__increase_draw_meshes()
+        self.__increase_draw_calls()
+
     def draw_points(self,
         vertices:Vertices=None, instances:Instances=None,
         start_index:int=0, total:int=None, times:int=None):
@@ -597,6 +689,9 @@ class ShaderProgram(GPUProgram):
             GL.glDrawArrays(GL.GL_POINTS, start_index, total)
         else:
             GL.glDrawArraysInstanced(GL.GL_POINTS, start_index, total, times)
+
+        self.__increase_draw_points()
+        self.__increase_draw_calls()
 
     def draw_lines(self,
         vertices:Vertices=None, indices:Indices=None, instances:Instances=None,
@@ -623,7 +718,11 @@ class ShaderProgram(GPUProgram):
             else:
                 GL.glDrawArraysInstanced(primitive_type, start_index, total, times)
 
-    def _get_compiled_files(self):
+        self.__increase_draw_lines()
+        self.__increase_draw_calls()
+
+    @property
+    def related_files(self):
         result = []
 
         if self.vertex_shader._file_name:

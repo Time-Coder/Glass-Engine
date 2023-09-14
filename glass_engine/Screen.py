@@ -1,17 +1,16 @@
 from .Manipulators.Manipulator import Manipulator
 from .Renderers.Renderer import Renderer
 from .PostProcessEffects import PostProcessEffects, BloomEffect, ACESToneMapper, FXAA, DOFEffect, SSAOEffect, ExplosureAdaptor
-from .Frame import Frame
 
-from glass import GLConfig, FBO, RBO, sampler2DMS, sampler2D, RenderHint, SSBO, UBO, VAO
+from glass import ShaderProgram, GLConfig, FBO, RBO, sampler2DMS, sampler2D, RenderHint, SSBO, UBO, VAO
 from glass.utils import extname, di
+from .VideoRecorder import VideoRecorder, convert_to_image
 
 from PyQt6.QtOpenGLWidgets import QOpenGLWidget
 from PyQt6.QtGui import QMouseEvent, QKeyEvent, QCursor, QWheelEvent, QSurfaceFormat, QCloseEvent
 from PyQt6.QtCore import Qt, QPointF, QPoint, QTimerEvent, pyqtSignal, QSize
 from PyQt6.QtWidgets import QApplication, QWidget
 
-import queue
 import time
 import glm
 import sys
@@ -19,8 +18,6 @@ from OpenGL import GL
 import numpy as np
 import os
 import cv2
-import threading
-import math
 
 class SlideAverageFilter:
 
@@ -46,90 +43,6 @@ class SlideAverageFilter:
     @window_width.setter
     def window_width(self, window_width:int)->None:
         self._window_width = window_width
-
-def convert_to_image(data:np.ndarray, viewport:tuple[int])->np.ndarray:
-    if viewport[0] != 0 or \
-       viewport[1] != 0 or \
-       viewport[2] != data.shape[1] or \
-       viewport[3] != data.shape[0]:
-        width_pad = max(viewport[0] + viewport[2] - data.shape[1], 0)
-        height_pad = max(viewport[1] + viewport[3] - data.shape[0], 0)
-        if len(data.shape) == 2:
-            if width_pad > 0 or height_pad > 0:
-                data = np.pad(data, ((height_pad,0), (0,width_pad)))
-            data = data[viewport[1]:viewport[1]+viewport[3], viewport[0]:viewport[0]+viewport[2]]
-        else:
-            if width_pad > 0 or height_pad > 0:
-                data = np.pad(data, ((height_pad,0), (0,width_pad), (0, 0)))
-            data = data[viewport[1]:viewport[1]+viewport[3], viewport[0]:viewport[0]+viewport[2], :]
-
-    image = data
-    if "float" in str(data.dtype):
-        image = np.clip(255*data, 0, 255)
-
-    image = image.astype(np.uint8)
-    image = cv2.flip(image, 0)
-
-    channels = (1 if len(image.shape) < 3 else image.shape[2])
-    if channels == 3:
-        image = cv2.cvtColor(image, cv2.COLOR_RGB2BGR)
-    elif channels == 4:
-        image = cv2.cvtColor(image, cv2.COLOR_RGBA2BGR)
-
-    return image
-
-class VideoWriter:
-    def __init__(self, screen, file_name:str, fourcc:list[str], viewport:tuple[int], fps:float|int)->None:
-        self._screen_id = id(screen)
-
-        self._cv_video_writer = cv2.VideoWriter(file_name, fourcc, fps, (viewport[2], viewport[3]))
-        self._viewport = viewport
-        self._last_frame = None
-        self._frame_queue = queue.Queue()
-        self._start_time = time.time()
-        self._stop_time = float("inf")
-        self._dt = 1/fps
-        self._writing_thread = threading.Thread(target=self._writing_loop, daemon=True)
-        self._writing_thread.start()
-
-    def __del__(self)->None:
-        self.stop()
-
-    def stop(self)->None:
-        if math.isinf(self._stop_time):
-            self._stop_time = time.time()
-            self._frame_queue.put(None)
-
-    def _writing_loop(self)->None:
-        t = self._start_time
-        while t < self._stop_time:
-            frame = self._frame_queue.get()
-            if frame is None:
-                if self._last_frame is None:
-                    break
-
-                while t < self._stop_time:
-                    self._cv_video_writer.write(self._last_frame[1])
-                    t += self._dt
-
-                break
-            image = convert_to_image(frame[1], self._viewport)
-
-            if self._last_frame is None:
-                self._last_frame = (frame[0], image)
-
-            while t <= min(self._stop_time, frame[0]):
-                self._cv_video_writer.write(self._last_frame[1])
-                t += self._dt
-
-            self._last_frame = (frame[0], image)
-
-        self._cv_video_writer.release()
-        try:
-            screen = di(self._screen_id)
-            screen._screen_video_writers.remove(self)
-        except:
-            pass
 
 class Screen(QOpenGLWidget):
 
@@ -168,12 +81,24 @@ class Screen(QOpenGLWidget):
         self._last_cursor_global_pos = QPoint(0, 0)
         self._fps = 0
         self._smooth_fps = 0
+        self._before_draw_calls = 0
+        self._before_draw_points = 0
+        self._before_draw_lines = 0
+        self._before_draw_meshes = 0
+        self._before_draw_patches = 0
+        self._draw_calls = 0
+        self._draw_points = 0
+        self._draw_lines = 0
+        self._draw_meshes = 0
+        self._draw_patches = 0
+        self._paint_times = 0
+
         self._fps_filter = SlideAverageFilter()
         self.__before_PPE_fbo = None
         self.__before_PPE_fbo_ms = None
         self._is_gl_init = False
         self._before_PPE_image = None
-        self._video_writers = []
+        self._video_recorders = []
         self._background_color = glm.vec4(0)
         
         self._camera_id = id(camera)
@@ -181,7 +106,9 @@ class Screen(QOpenGLWidget):
         self._manipulator = None
         self._renderer = None
         
-        self.__render_hint = RenderHint()
+        self._render_hint = RenderHint()
+        self._render_hint.depth_test = True
+
         self._listen_cursor_timer = self.startTimer(10)
 
         self._post_process_effects = PostProcessEffects()
@@ -299,14 +226,14 @@ class Screen(QOpenGLWidget):
 
     @property
     def render_hint(self)->RenderHint:
-        return self.__render_hint
+        return self._render_hint
     
     @render_hint.setter
     def render_hint(self, hint:RenderHint)->None:
         if hint is None:
             hint = RenderHint()
 
-        self.__render_hint = hint
+        self._render_hint = hint
 
     def initializeGL(self)->None:
         self.makeCurrent()
@@ -319,6 +246,7 @@ class Screen(QOpenGLWidget):
     def makeCurrent(self)->None:
         QOpenGLWidget.makeCurrent(self)
         GLConfig.buffered_current_context = GLConfig.current_context
+        GLConfig.buffered_viewport = GLConfig.viewport
 
         SSBO.makeCurrent()
         UBO.makeCurrent()
@@ -333,7 +261,7 @@ class Screen(QOpenGLWidget):
             with self._before_PPE_fbo:
                 clear_color = self.camera.scene.fog.apply(self.background_color, glm.vec3(0), glm.vec3(0,self.camera.far,0))
                 with GLConfig.LocalConfig(clear_color=clear_color):
-                    with self.renderer.render_hint:
+                    with self.render_hint:
                         should_update_scene = self.renderer.render() or should_update_scene
 
             resolved = self._before_PPE_fbo.resolved
@@ -342,21 +270,36 @@ class Screen(QOpenGLWidget):
 
         return should_update_scene
 
+    def __mark_draw_calls(self):
+        self._before_draw_calls = ShaderProgram.accum_draw_calls()
+        self._before_draw_points = ShaderProgram.accum_draw_points()
+        self._before_draw_lines = ShaderProgram.accum_draw_lines()
+        self._before_draw_meshes = ShaderProgram.accum_draw_meshes()
+        self._before_draw_patches = ShaderProgram.accum_draw_patches()
+
     def paintGL(self)->None:
         self.makeCurrent()
         self.frame_started.emit()
+        self.__mark_draw_calls()
 
         should_update_scene = self.camera.scene.generate_meshes()
         should_update_PPEs = False
         
-        if self._video_writers:
+        if self._video_recorders:
             should_update_scene = self._draw_to_before_PPE(should_update_scene)
             self._assign_values_to_PPEs()
             screen_image = self._post_process_effects.apply(self._before_PPE_image)
             should_update_PPEs = self._post_process_effects.should_update
-            Frame.draw(screen_image)
-            for video_writer in self._video_writers:
-                video_writer._frame_queue.put((time.time(), screen_image.fbo.data(0)))
+            screen_image.fbo.draw_to_active(0)
+
+            if self._paint_times > 0:
+                fps = 60
+                if self.smooth_fps != 0:
+                    fps = self.smooth_fps
+                view_port = GLConfig.buffered_viewport
+                for video_recorder in self._video_recorders:
+                    video_recorder._start(view_port, fps)
+                    video_recorder._frame_queue.put((time.time(), screen_image.fbo.data(0)))
         elif self._post_process_effects.has_valid:
             should_update_scene = self._draw_to_before_PPE(should_update_scene)
             self._assign_values_to_PPEs()
@@ -364,7 +307,7 @@ class Screen(QOpenGLWidget):
         else:
             clear_color = self.camera.scene.fog.apply(self.background_color, glm.vec3(0), glm.vec3(0,self.camera.far,0))
             with GLConfig.LocalConfig(clear_color=clear_color):
-                with self.renderer.render_hint:
+                with self.render_hint:
                     should_update_scene = self.renderer.render() or should_update_scene
 
         self.__calc_fps()
@@ -534,6 +477,13 @@ class Screen(QOpenGLWidget):
             self._fps = 1 / dt
             self._smooth_fps = self._fps_filter(self._fps)
 
+        self._draw_calls = ShaderProgram.accum_draw_calls() - self._before_draw_calls
+        self._draw_points = ShaderProgram.accum_draw_points() - self._before_draw_points
+        self._draw_lines = ShaderProgram.accum_draw_lines() - self._before_draw_lines
+        self._draw_meshes = ShaderProgram.accum_draw_meshes() - self._before_draw_meshes
+        self._draw_patches = ShaderProgram.accum_draw_patches() - self._before_draw_patches
+        self._paint_times += 1
+
     def hide_cursor(self)->None:
         if self._is_cursor_hiden:
             return
@@ -573,6 +523,26 @@ class Screen(QOpenGLWidget):
     @property
     def smooth_fps(self)->float:
         return self._smooth_fps
+    
+    @property
+    def draw_calls(self)->int:
+        return self._draw_calls
+    
+    @property
+    def draw_points(self)->int:
+        return self._draw_points
+    
+    @property
+    def draw_lines(self)->int:
+        return self._draw_lines
+    
+    @property
+    def draw_meshes(self)->int:
+        return self._draw_meshes
+    
+    @property
+    def draw_patches(self)->int:
+        return self._draw_patches
 
     def timerEvent(self, timer_event:QTimerEvent)->None:
         if timer_event.timerId() == self._listen_cursor_timer:
@@ -611,7 +581,7 @@ class Screen(QOpenGLWidget):
         with self._before_PPE_fbo:
             clear_color = self.camera.scene.fog.apply(self.background_color, glm.vec3(0), glm.vec3(0,self.camera.far,0))
             with GLConfig.LocalConfig(clear_color=clear_color):
-                with self.renderer.render_hint:
+                with self.render_hint:
                     self.renderer.render()
 
         image = None
@@ -626,7 +596,7 @@ class Screen(QOpenGLWidget):
             image = resolved.data(0)
 
         if viewport is None:
-            viewport = GLConfig.viewport
+            viewport = GLConfig.buffered_viewport
         image = convert_to_image(image, viewport)
         
         if save_path is not None:
@@ -638,14 +608,14 @@ class Screen(QOpenGLWidget):
 
         return image
 
-    def capture_video(self, save_path:str, viewport:tuple[int]|None=None, fps:float|int|None=None)->VideoWriter:
+    def capture_video(self, save_path:str, viewport:tuple[int]|None=None, fps:float|int|None=None)->VideoRecorder:
         ext_name = extname(save_path)
         if ext_name not in ["mp4", "avi"]:
             raise ValueError(f"not supported video type: .{ext_name}, only support .mp4 and .avi")
         
         fourcc = None
         if ext_name == "mp4":
-            fourcc = cv2.VideoWriter_fourcc(*"MP4V")
+            fourcc = cv2.VideoWriter_fourcc(*"mp4v")
         elif ext_name == "avi":
             fourcc = cv2.VideoWriter_fourcc(*"XVID")
 
@@ -658,17 +628,20 @@ class Screen(QOpenGLWidget):
 
         if viewport is None:
             QOpenGLWidget.makeCurrent(self)
-            viewport = GLConfig.viewport
+            try:
+                viewport = GLConfig.buffered_viewport
+            except:
+                viewport = None
 
-        video_writer = VideoWriter(self._video_writers, save_path, fourcc, viewport, fps)
-        self._video_writers.append(video_writer)
+        video_recorder = VideoRecorder(self._video_recorders, save_path, fourcc, viewport, fps)
+        self._video_recorders.append(video_recorder)
 
-        return video_writer
+        return video_recorder
 
     def closeEvent(self, close_event:QCloseEvent)->None:
-        while self._video_writers:
-            video_writer = self._video_writers.pop()
-            video_writer.stop()
+        while self._video_recorders:
+            video_recorder = self._video_recorders.pop()
+            video_recorder.stop()
 
     @property
     def bloom(self):

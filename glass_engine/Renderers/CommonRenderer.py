@@ -1,14 +1,13 @@
 from .Renderer import Renderer
-from ..PostProcessEffects import GaussBlur, KernelFilter, FXAA
+from ..PostProcessEffects import GaussBlur, FXAA
 from ..Frame import Frame
 
-from glass import ShaderProgram, GLConfig, FBO, RBO, sampler2D, sampler2DMS, samplerCube, sampler2DArray, GlassConfig, GLInfo
-from glass.utils import checktype, cat, modify_time
+from glass import ShaderProgram, GLConfig, FBO, sampler2D, sampler2DMS, samplerCube, sampler2DArray, GlassConfig, GLInfo
+from glass.utils import cat, modify_time
 
 from OpenGL import GL
 import glm
 import os
-import numpy as np
 
 class CommonRenderer(Renderer):
 
@@ -974,7 +973,7 @@ class CommonRenderer(Renderer):
             self.OIT_blend_program["reveal_map"] = reveal_map
             self.OIT_blend_program.draw_triangles(Frame.vertices, Frame.indices)
 
-        if self.camera.screen.SSAO or self.camera.screen.DOF:
+        if self.camera.screen.post_process_effects.has_valid:
             used_fbo = None
             if self.__class__.__name__ == "ForwardRenderer":
                 used_fbo = self.OIT_fbo

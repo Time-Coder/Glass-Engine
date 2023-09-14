@@ -160,28 +160,29 @@ class SceneRoamManipulator(Manipulator):
            Manipulator.Key.Key_S not in keys: # 前进
             self.camera.position += self.camera.orientation * glm.vec3(0, d, 0)
             should_update = True
-        elif Manipulator.Key.Key_S in keys and \
+        if Manipulator.Key.Key_S in keys and \
             Manipulator.Key.Key_W not in keys: # 后退
             self.camera.position += self.camera.orientation * glm.vec3(0, -d, 0)
             should_update = True
-        elif Manipulator.Key.Key_A in keys and \
+        if Manipulator.Key.Key_A in keys and \
             Manipulator.Key.Key_D not in keys: # 向左
             self.camera.position += self.camera.orientation * glm.vec3(-d, 0, 0)
             should_update = True
-        elif Manipulator.Key.Key_D in keys and \
+        if Manipulator.Key.Key_D in keys and \
             Manipulator.Key.Key_A not in keys: # 向右
             self.camera.position += self.camera.orientation * glm.vec3(d, 0, 0)
             should_update = True
-        elif Manipulator.Key.Key_E in keys and \
+        if Manipulator.Key.Key_E in keys and \
             Manipulator.Key.Key_C not in keys: # 向上
             self.camera.position += self.camera.orientation * glm.vec3(0, 0, d)
             should_update = True
-        elif Manipulator.Key.Key_C in keys and \
+        if Manipulator.Key.Key_C in keys and \
             Manipulator.Key.Key_E not in keys: # 向下
             self.camera.position += self.camera.orientation * glm.vec3(0, 0, -d)
             should_update = True
-        elif Manipulator.Key.Key_F in keys:
-            print(self.camera.screen.fps)
+        if Manipulator.Key.Key_F in keys:
+            screen = self.camera.screen
+            print("fps:", screen.fps, "draw calls:", screen.draw_calls)
             should_update = True
 
         return should_update

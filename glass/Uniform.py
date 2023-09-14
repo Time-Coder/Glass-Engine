@@ -146,8 +146,7 @@ class Uniform:
             program = uniform.program
             if GlassConfig.debug and full_name not in program._uniform_map:
                 error_message = "uniform variable '" + full_name + "' is not defined in following files:\n"
-                all_files = program._get_compiled_files()
-                error_message += "\n".join(all_files)
+                error_message += "\n".join(program.related_files)
                 raise NameError(error_message)
             
             if full_name not in uniform._uniform_var_map:
@@ -167,8 +166,7 @@ class Uniform:
             program = uniform.program
             if GlassConfig.debug and full_name not in program._uniform_map:
                 error_message = "uniform variable '" + full_name + "' is not defined in following files:\n"
-                all_files = program._get_compiled_files()
-                error_message += "\n".join(all_files)
+                error_message += "\n".join(program.related_files)
                 raise NameError(error_message)
 
             uniform[full_name] = value
@@ -200,9 +198,8 @@ class Uniform:
     def __getitem__(self, name:str):
         program = self.program
         if GlassConfig.debug and name not in program._uniform_map:
-            error_message = "uniform variable '" + name + "' is not defined in following files:\n"
-            all_files = program._get_compiled_files()
-            error_message += "\n".join(all_files)
+            error_message = f"uniform variable '{name}' is not defined in following files:\n"
+            error_message += "\n".join(program.related_files)
             raise NameError(error_message)
 
         if name not in self._uniform_var_map:
@@ -213,9 +210,8 @@ class Uniform:
     def __setitem__(self, name:str, value):
         program = self.program
         if GlassConfig.debug and name not in program._uniform_map:
-            error_message = "uniform variable '" + name + "' is not defined in following files:\n"
-            all_files = program._get_compiled_files()
-            error_message += "\n".join(all_files)
+            error_message = f"uniform variable '{name}' is not defined in following files:\n"
+            error_message += "\n".join(program.related_files)
             raise NameError(error_message)
 
         for atom in program._uniform_map[name]["atoms"]:

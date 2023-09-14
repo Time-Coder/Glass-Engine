@@ -2,7 +2,7 @@ from .CommonRenderer import CommonRenderer
 from ..Frame import Frame
 
 from glass import \
-    ShaderProgram, GLConfig, FBO, RBO, sampler2DMS, sampler2D, usampler2D, usampler2DMS
+    ShaderProgram, GLConfig, FBO, sampler2DMS, sampler2D, usampler2D, usampler2DMS
 
 from OpenGL import GL
 import glm

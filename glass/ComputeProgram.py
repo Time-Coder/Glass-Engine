@@ -118,5 +118,6 @@ class ComputeProgram(GPUProgram):
 	def work_group_size(self)->tuple[int]:
 		return self._work_group_size
 
-	def _get_compiled_files(self)->list[str]:
+	@property
+	def related_files(self)->list[str]:
 		return [self.compute_shader._file_name]
