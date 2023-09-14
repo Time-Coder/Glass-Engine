@@ -25,6 +25,10 @@ class PostProcessEffect(ABC):
     def draw_to_active(self, screen_image:sampler2D)->None:
         pass
 
+    @abstractmethod
+    def need_pos_info(self)->bool:
+        return False
+
     @property
     def enabled(self)->bool:
         return self._enabled

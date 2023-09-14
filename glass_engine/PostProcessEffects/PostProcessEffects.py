@@ -1,6 +1,6 @@
 from glass import sampler2D
 from glass.DictList import DictList
-from glass.utils import checktype
+from .PostProcessEffect import PostProcessEffect
 
 from ..Frame import Frame
 
@@ -17,7 +17,7 @@ class PostProcessEffects(DictList):
         self.depth_map = None
 
     @property
-    def has_valid(self):
+    def has_valid(self)->bool:
         for effect in self:
             if effect.enabled:
                 return True
@@ -25,7 +25,15 @@ class PostProcessEffects(DictList):
         return False
     
     @property
-    def last_valid(self):
+    def need_pos_info(self)->bool:
+        for effect in self:
+            if effect.enabled and effect.need_pos_info():
+                return True
+            
+        return False
+
+    @property
+    def last_valid(self)->PostProcessEffect:
         for i in range(len(self)-1, -1, -1):
             effect = self[i]
             if effect.enabled:
@@ -51,7 +59,7 @@ class PostProcessEffects(DictList):
         return screen_image
     
     @property
-    def should_update(self):
+    def should_update(self)->bool:
         return self._should_update
 
     def draw_to_active(self, screen_image:sampler2D)->bool:
@@ -95,12 +103,11 @@ class PostProcessEffects(DictList):
         return should_update
     
     @property
-    def screen_update_time(self):
+    def screen_update_time(self)->float:
         return self._screen_update_time
     
     @screen_update_time.setter
-    @checktype
-    def screen_update_time(self, screen_update_time:float):
+    def screen_update_time(self, screen_update_time:float)->None:
         self._screen_update_time = screen_update_time
         for effect in self:
             effect.screen_update_time = screen_update_time

@@ -27,6 +27,9 @@ class BloomEffect(PostProcessEffect):
         self.threshold:float = 1
         self.blur_times:int = 6
 
+    def need_pos_info(self)->bool:
+        return False
+
     @property
     def down_program(self):
         if self._down_program is None:

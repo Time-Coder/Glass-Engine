@@ -56,6 +56,9 @@ class FXAA(PostProcessEffect):
             self._cube_fbo.attach(0, samplerCube, self._internal_format)
         return self._cube_fbo
 
+    def need_pos_info(self) -> bool:
+        return False
+
     def apply(self, screen_image:(sampler2D,samplerCube,sampler2DArray))->(sampler2D,samplerCube,sampler2DArray):
         if isinstance(screen_image, sampler2D):
             self.fbo.resize(screen_image.width, screen_image.height)

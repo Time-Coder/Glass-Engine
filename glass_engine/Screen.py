@@ -499,6 +499,10 @@ class Screen(QOpenGLWidget):
         self.unsetCursor()
 
     def show(self)->None:
+        if Screen.__app is not None and \
+           not Screen.__has_exec:
+            self.setWindowTitle("glass_engine")
+            
         QOpenGLWidget.show(self)
         if Screen.__app is not None and \
            not Screen.__has_exec:
@@ -506,7 +510,7 @@ class Screen(QOpenGLWidget):
             Screen.__has_exec = True
 
     @property
-    def post_process_effects(self):
+    def post_process_effects(self)->PostProcessEffects:
         return self._post_process_effects
 
     @property

@@ -164,9 +164,13 @@ class ShaderEffect(PostProcessEffect):
         return (self._should_update or self._dynamic)
     
     @should_update.setter
-    @checktype
     def should_update(self, flag:bool):
         self._should_update = flag
+
+    def need_pos_info(self)->bool:
+        return (self.program["view_pos_map"].location >= 0 or \
+                self.program["view_normal_map"].location >= 0 or \
+                self.program["depth_map"].location >= 0)
 
     @staticmethod
     def __template(file_name):

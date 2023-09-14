@@ -973,7 +973,7 @@ class CommonRenderer(Renderer):
             self.OIT_blend_program["reveal_map"] = reveal_map
             self.OIT_blend_program.draw_triangles(Frame.vertices, Frame.indices)
 
-        if self.camera.screen.post_process_effects.has_valid:
+        if self.camera.screen.post_process_effects.need_pos_info:
             used_fbo = None
             if self.__class__.__name__ == "ForwardRenderer":
                 used_fbo = self.OIT_fbo
