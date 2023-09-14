@@ -293,7 +293,7 @@ class Screen(QOpenGLWidget):
             screen_image.fbo.draw_to_active(0)
 
             if self._paint_times > 0:
-                fps = 60
+                fps = 24
                 if self.smooth_fps != 0:
                     fps = self.smooth_fps
                 view_port = GLConfig.buffered_viewport
