@@ -41,6 +41,9 @@ class SSAOEffect(PostProcessEffect):
         self._mul_filter["filter_channels"] = 1
         return self._mul_filter.apply(screen_image)
     
+    def need_pos_info(self) -> bool:
+        return True
+
     def draw_to_active(self, screen_image:sampler2D):
         self._ssao_visibility.camera = self.camera
         self._ssao_visibility.view_pos_map = self.view_pos_map

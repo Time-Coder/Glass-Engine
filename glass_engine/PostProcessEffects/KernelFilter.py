@@ -54,6 +54,9 @@ class KernelFilter(PostProcessEffect):
         self._cube_fbo = None
         self.__array_programs = {}
 
+    def need_pos_info(self) -> bool:
+        return False
+
     @property
     def program(self):
         if self._program is None:

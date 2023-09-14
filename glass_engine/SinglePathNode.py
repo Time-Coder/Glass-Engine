@@ -1,4 +1,5 @@
 from .SceneNode import SceneNode
+import glm
 
 class SinglePathNode(SceneNode):
 
@@ -6,7 +7,7 @@ class SinglePathNode(SceneNode):
         SceneNode.__init__(self, name)
 
     @property
-    def parent(self):
+    def parent(self)->SceneNode:
         for parent in self._parents:
             return parent
     
@@ -16,19 +17,19 @@ class SinglePathNode(SceneNode):
             return scene
         
     @property
-    def abs_scale(self):
+    def abs_scale(self)->glm.vec3:
         return SinglePathNode.__abs_scale(self)
     
     @property
-    def abs_orientation(self):
+    def abs_orientation(self)->glm.quat:
         return SinglePathNode.__abs_orientation(self)
     
     @property
-    def abs_position(self):
+    def abs_position(self)->glm.vec3:
         return SinglePathNode.__abs_position(self)
 
     @property
-    def path(self):
+    def path(self)->list[SceneNode]:
         if self.parent is None:
             return [self]
         
@@ -37,7 +38,7 @@ class SinglePathNode(SceneNode):
         return path
     
     @property
-    def path_str(self):
+    def path_str(self)->str:
         if self.parent is None:
             return "/" + self.name
         
@@ -45,7 +46,7 @@ class SinglePathNode(SceneNode):
         return path_str + "/" + self.name
 
     @staticmethod
-    def __abs_orientation(node):
+    def __abs_orientation(node:SceneNode)->glm.quat:
         try:
             parent = node.parents[0]
         except IndexError:
@@ -55,7 +56,7 @@ class SinglePathNode(SceneNode):
         return parent_abs_orientation * node._orientation.flat
 
     @staticmethod
-    def __abs_position(node):
+    def __abs_position(node:SceneNode)->glm.vec3:
         try:
             parent = node.parents[0]
         except:
@@ -68,7 +69,7 @@ class SinglePathNode(SceneNode):
         return parent_abs_orientation * (parent_abs_scale * node._position.flat) + parent_abs_position
 
     @staticmethod
-    def __abs_scale(node):
+    def __abs_scale(node:SceneNode)->glm.vec3:
         try:
             parent = node.parents[0]
         except:
@@ -77,7 +78,7 @@ class SinglePathNode(SceneNode):
         parent_abs_scale = SinglePathNode.__abs_scale(parent)
         return parent_abs_scale * node._scale.flat
 
-    def _add_as_child_callback(self):
+    def _add_as_child_callback(self)->None:
         len_parents = len(self._parents)
         i = 0
         for parent in self._parents:

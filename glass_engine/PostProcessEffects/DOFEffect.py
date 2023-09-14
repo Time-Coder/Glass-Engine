@@ -34,6 +34,9 @@ class DOFEffect(PostProcessEffect):
         self._vertical_fbo = None
         self._program = None
 
+    def need_pos_info(self) -> bool:
+        return True
+
     @property
     def horizontal_fbo(self):
         if self._horizontal_fbo is None:

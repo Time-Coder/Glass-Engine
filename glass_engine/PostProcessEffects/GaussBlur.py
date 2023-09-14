@@ -58,6 +58,9 @@ class GaussBlur(PostProcessEffect):
         self._horizontal_cube_fbo = None
         self._vertical_cube_fbo = None
 
+    def need_pos_info(self):
+        return False
+
     @property
     def horizontal_fbo(self):
         if self._horizontal_fbo is None:
