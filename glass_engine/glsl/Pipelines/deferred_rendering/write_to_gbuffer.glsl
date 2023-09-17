@@ -61,8 +61,8 @@ void write_to_gbuffer(
     env_center_and_mixed_value.xyz = env_center;
     env_center_and_mixed_value.w =
         internal_material.refractive_index + 
-        10 * internal_material.Toon_diffuse_bands + 
-        100 * internal_material.Toon_specular_bands;
+        10 * internal_material.diffuse_bands + 
+        100 * internal_material.specular_bands;
 
     mixed_uint.x = env_map_handle.x;
     mixed_uint.y = env_map_handle.y;

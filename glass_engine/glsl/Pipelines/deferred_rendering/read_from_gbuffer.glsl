@@ -55,10 +55,10 @@ PostShadingInfo read_from_gbuffer(
     float mixed_value = env_center_and_mixed_value.w;
     uint Toon_bands = uint(mixed_value/10.0);
     shading_info.material.refractive_index = mixed_value - 10*Toon_bands;
-    shading_info.material.Toon_diffuse_bands = get_digit(Toon_bands, 1);
-    shading_info.material.Toon_specular_bands = get_digit(Toon_bands, 10);
-    shading_info.material.Toon_diffuse_softness = 0.05;
-    shading_info.material.Toon_specular_softness = 0.02;
+    shading_info.material.diffuse_bands = get_digit(Toon_bands, 1);
+    shading_info.material.specular_bands = get_digit(Toon_bands, 10);
+    shading_info.material.diffuse_softness = 0.05;
+    shading_info.material.specular_softness = 0.02;
 
     shading_info.material.emission = vec3(view_normal_and_emission_r.a, ambient_and_emission_g.a, diffuse_or_base_color_and_emission_b.a);
     shading_info.material.opacity = view_pos_and_alpha.a;

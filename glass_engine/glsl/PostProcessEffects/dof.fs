@@ -46,7 +46,7 @@ void main()
     }
     else if (abs(target_focus - _current_focus) > 1E-6)
     {
-        if(_current_focus != 0)
+        if(_current_focus != 0 && camera.lens.focus_change_time > 1E-6)
         {
             float sgn = sign(target_focus - _current_focus);
             float a = 0.02/camera.lens.focus_change_time;
