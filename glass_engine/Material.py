@@ -55,57 +55,56 @@ class Material:
             self.ch_name = ch_name
 
     def __init__(self, name:str=""):
-        self._name = name
-        self._ambient = 0.1 * glm.vec3(0.396, 0.74151, 0.69102)
-        self._diffuse = glm.vec3(0.396, 0.74151, 0.69102)
-        self._specular = glm.vec3(0.3)
-        self._shininess = 0.6*128
-        self._shininess_strength = 1
-        self._emission = glm.vec3(0)
-        self._reflection = glm.vec4(0)
-        self._refractive_index = 0
-        self._opacity = 0
-        self._height_scale = 0.05
-        self._env_mix_diffuse = True
-        self._base_color = glm.vec3(0.5, 0.5, 0.5)
-        self._metallic = 0.5
-        self._roughness = 0
-        self._recv_shadows = True
-        self._cast_shadows = True
-        self._Toon_diffuse_bands = 2
-        self._Toon_specular_bands = 2
-        self._Toon_diffuse_softness = 0.05
-        self._Toon_specular_softness = 0.02
-        self._rim_power = 0.2
-        self._fog = True
+        self._name:str = name
+        self._shading_model:Material.ShadingModel = Material.ShadingModel.PhongBlinn
 
-        self._ambient_map = None
-        self._diffuse_map = None
-        self._specular_map = None
-        self._shininess_map = None
-        self._glossiness_map = None
-        self._emission_map = None
-        self._normal_map = None
-        self._height_map = None
-        self._opacity_map = None
-        self._ao_map = None
-        self._reflection_map = None
-        self._base_color_map = None
-        self._metallic_map = None
-        self._roughness_map = None
-        self._arm_map = None
+        self._ambient:glm.vec3 = 0.1 * glm.vec3(0.396, 0.74151, 0.69102)
+        self._diffuse:glm.vec3 = glm.vec3(0.396, 0.74151, 0.69102)
+        self._specular:glm.vec3 = glm.vec3(0.3)
+        self._shininess:float = 0.6*128
+        self._shininess_strength:float = 1
+        self._emission:glm.vec3 = glm.vec3(0)
+        self._opacity:float = 0
+        self._height_scale:float = 0.05
+        self._base_color:glm.vec3 = glm.vec3(0.5, 0.5, 0.5)
+        self._metallic:float = 0.5
+        self._roughness:float = 0
+        self._recv_shadows:bool = True
+        self._cast_shadows:bool = True
+        self._diffuse_bands:int = 2
+        self._specular_bands:int = 2
+        self._diffuse_softness:float = 0.05
+        self._specular_softness:float = 0.02
+        self._rim_power:float = 0.2
+        self._fog:bool = True
+        self._reflection:glm.vec4 = glm.vec4(0)
+        self._refractive_index:float = 0
+        self._env_mix_diffuse:bool = True
+        self._env_max_bake_times:int = 2
+        self._dynamic_env_mapping:bool = False
+        self._auto_update_env_map:bool = False
 
-        self._shading_model = Material.ShadingModel.PhongBlinn
+        self._ambient_map:sampler2D = None
+        self._diffuse_map:sampler2D = None
+        self._specular_map:sampler2D = None
+        self._shininess_map:sampler2D = None
+        self._glossiness_map:sampler2D = None
+        self._emission_map:sampler2D = None
+        self._normal_map:sampler2D = None
+        self._height_map:sampler2D = None
+        self._opacity_map:sampler2D = None
+        self._ao_map:sampler2D = None
+        self._reflection_map:sampler2D = None
+        self._base_color_map:sampler2D = None
+        self._metallic_map:sampler2D = None
+        self._roughness_map:sampler2D = None
+        self._arm_map:sampler2D = None
 
-        self._opacity_user_set = False
-        self._reflection_user_set = False
-        self._env_max_bake_times = 2
-        self._dynamic_env_mapping = False
-        self._auto_update_env_map = False
-        self._has_transparent = True
-        self._has_opaque = False
-
-        self._parent_meshes = WeakSet()
+        self._opacity_user_set:bool = False
+        self._reflection_user_set:bool = False
+        self._has_transparent:bool = True
+        self._has_opaque:bool = False
+        self._parent_meshes:WeakSet = WeakSet()
 
     @property
     def name(self)->str:
@@ -189,40 +188,40 @@ class Material:
         self._fog = fog
 
     @property
-    def Toon_diffuse_bands(self)->int:
-        return self._Toon_diffuse_bands
+    def diffuse_bands(self)->int:
+        return self._diffuse_bands
     
-    @Toon_diffuse_bands.setter
+    @diffuse_bands.setter
     @param_setter
-    def Toon_diffuse_bands(self, bands:int):
-        self._Toon_diffuse_bands = bands
+    def diffuse_bands(self, bands:int):
+        self._diffuse_bands = bands
 
     @property
-    def Toon_specular_bands(self)->int:
-        return self._Toon_specular_bands
+    def specular_bands(self)->int:
+        return self._specular_bands
     
-    @Toon_specular_bands.setter
+    @specular_bands.setter
     @param_setter
-    def Toon_specular_bands(self, bands:int):
-        self._Toon_specular_bands = bands
+    def specular_bands(self, bands:int):
+        self._specular_bands = bands
 
     @property
-    def Toon_diffuse_softness(self)->float:
-        return self._Toon_diffuse_softness
+    def diffuse_softness(self)->float:
+        return self._diffuse_softness
     
-    @Toon_diffuse_softness.setter
+    @diffuse_softness.setter
     @param_setter
-    def Toon_diffuse_softness(self, softness:float):
-        self._Toon_diffuse_softness = softness
+    def diffuse_softness(self, softness:float):
+        self._diffuse_softness = softness
 
     @property
-    def Toon_specular_softness(self)->float:
-        return self._Toon_specular_softness
+    def specular_softness(self)->float:
+        return self._specular_softness
     
-    @Toon_specular_softness.setter
+    @specular_softness.setter
     @param_setter
-    def Toon_specular_softness(self, softness:float):
-        self._Toon_specular_softness = softness
+    def specular_softness(self, softness:float):
+        self._specular_softness = softness
 
     @property
     def rim_power(self)->float:

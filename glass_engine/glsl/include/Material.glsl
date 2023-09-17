@@ -32,10 +32,10 @@ struct Material
 	vec3 base_color;
 	float metallic;
 	float roughness;
-    int Toon_diffuse_bands;
-    int Toon_specular_bands;
-    float Toon_diffuse_softness;
-    float Toon_specular_softness;
+    int diffuse_bands;
+    int specular_bands;
+    float diffuse_softness;
+    float specular_softness;
     float rim_power;
     bool fog;
     bool env_mix_diffuse;
@@ -74,10 +74,10 @@ struct InternalMaterial
     float ao;
 	float roughness;
 	float metallic;
-    uint Toon_diffuse_bands;
-    uint Toon_specular_bands;
-    float Toon_diffuse_softness;
-    float Toon_specular_softness;
+    uint diffuse_bands;
+    uint specular_bands;
+    float diffuse_softness;
+    float specular_softness;
     float rim_power;
     float light_rim_power;
     float shadow_visibility;
@@ -89,10 +89,10 @@ InternalMaterial fetch_internal_material(vec4 frag_color, Material material, vec
     InternalMaterial internal_material;
     internal_material.shading_model = material.shading_model;
     internal_material.recv_shadows = material.recv_shadows;
-    internal_material.Toon_diffuse_bands = material.Toon_diffuse_bands;
-    internal_material.Toon_specular_bands = material.Toon_specular_bands;
-    internal_material.Toon_diffuse_softness = material.Toon_diffuse_softness;
-    internal_material.Toon_specular_softness = material.Toon_specular_softness;
+    internal_material.diffuse_bands = material.diffuse_bands;
+    internal_material.specular_bands = material.specular_bands;
+    internal_material.diffuse_softness = material.diffuse_softness;
+    internal_material.specular_softness = material.specular_softness;
     internal_material.rim_power = material.rim_power;
     internal_material.fog = material.fog;
 
@@ -153,12 +153,12 @@ InternalMaterial fetch_internal_material(vec4 frag_color, Material material, vec
     internal_material.shininess = material.shininess;
     if (textureValid(material.shininess_map))
     {
-        internal_material.shininess = textureColor(material.shininess_map, tex_coord).r;
+        internal_material.shininess = 256 * textureColor(material.shininess_map, tex_coord).r;
     }
     else if (textureValid(material.glossiness_map))
     {
         float glossiness = textureColor(material.glossiness_map, tex_coord).r;
-        internal_material.shininess = glossiness * glossiness;
+        internal_material.shininess = 256 * glossiness * glossiness;
     }
 
     // 自发光颜色
