@@ -96,7 +96,7 @@ vec4 sphere_reflect_refract_color(
                 reflect_out_dir, material.roughness,
                 skybox_map, skydome_map, env_map
             );
-            vec3 specular_color = get_specular(material, CSM_camera, reflect_out_dir, frag_pos, frag_normal);
+            vec3 specular_color = get_specular_color(material, CSM_camera, reflect_out_dir, frag_pos, frag_normal);
             reflection_color += reflection_factor*specular_color;
         }
 
@@ -128,7 +128,7 @@ vec4 sphere_reflect_refract_color(
                     {
                         material.recv_shadows = false;
                     }
-                    vec3 specular_color = get_specular(material, CSM_camera, refract_out_dir, frag_pos, frag_normal);
+                    vec3 specular_color = get_specular_color(material, CSM_camera, refract_out_dir, frag_pos, frag_normal);
                     refraction_color += refraction_factor*specular_color;
 
                     refraction_factor *= reflection_factor;
@@ -166,7 +166,7 @@ vec4 sphere_reflect_refract_color(
                 {
                     material.recv_shadows = false;
                 }
-                vec3 specular_color = get_specular(material, CSM_camera, refract_out_dir, frag_pos, frag_normal);
+                vec3 specular_color = get_specular_color(material, CSM_camera, refract_out_dir, frag_pos, frag_normal);
                 refraction_color += refraction_factor*specular_color;
 
                 refraction_factor *= reflection_factor;
@@ -181,8 +181,8 @@ vec4 sphere_reflect_refract_color(
     env_color.a = reflection.a;
     if (material.roughness > 1E-6)
     {
-        vec3 ambient_diffuse_factor = get_ambient_diffuse(recv_shadows, CSM_camera, frag_pos, frag_normal);
-        env_color.rgb *= mix(vec3(1), ambient_diffuse_factor, material.roughness);
+        vec3 diffuse_color = get_diffuse_color(material, CSM_camera, view_dir, frag_pos, frag_normal);        
+        env_color.rgb *= mix(vec3(1), diffuse_color, material.roughness);
     }
     
     return env_color;
@@ -246,7 +246,7 @@ vec4 reflect_refract_color(
             reflect_out_dir, material.roughness,
             skybox_map, skydome_map, env_map
         );
-        vec3 specular_color = get_specular(material, CSM_camera, reflect_out_dir, frag_pos, frag_normal);
+        vec3 specular_color = get_specular_color(material, CSM_camera, reflect_out_dir, frag_pos, frag_normal);
         reflection_color += reflection_factor * specular_color;
     }
 
@@ -264,7 +264,7 @@ vec4 reflect_refract_color(
             refract_out_dir, material.roughness,
             skybox_map, skydome_map, env_map
         );
-        vec3 specular_color = get_specular(material, CSM_camera, refract_out_dir, frag_pos, frag_normal);
+        vec3 specular_color = get_specular_color(material, CSM_camera, refract_out_dir, frag_pos, frag_normal);
         refraction_color += (1 - reflection_factor) * specular_color;
     }
 
@@ -273,8 +273,8 @@ vec4 reflect_refract_color(
     env_color.a = reflection.a;
     if (material.roughness > 1E-6)
     {
-        vec3 ambient_diffuse_factor = get_ambient_diffuse(recv_shadows, CSM_camera, frag_pos, frag_normal);
-        env_color.rgb *= mix(vec3(1), ambient_diffuse_factor, material.roughness);
+        vec3 diffuse_color = get_diffuse_color(material, CSM_camera, view_dir, frag_pos, frag_normal);        
+        env_color.rgb *= mix(vec3(1), diffuse_color, material.roughness);
     }
     
     return env_color;

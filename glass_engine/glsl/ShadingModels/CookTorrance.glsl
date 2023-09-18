@@ -34,7 +34,7 @@ vec3 CookTorrance_lighting(vec3 to_light, vec3 to_camera, vec3 normal, InternalM
     vec3 F = FresnelEquation(cos_to_camera, material.base_color, material.metallic);
     vec3 kd = (1 - F)*(1 - material.metallic);
     vec3 Lo = kd * material.base_color * cos_to_light + D*G*F / (4*cos_to_camera + 0.001);
-    return material.ambient + material.shadow_visibility * Lo;
+    return material.shadow_visibility * Lo;
 }
 
 #endif

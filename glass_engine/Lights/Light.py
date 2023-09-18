@@ -8,14 +8,11 @@ class Light(SceneNode):
 
     def __init__(self, name:str=""):
         SceneNode.__init__(self, name)
-        self._color = SceneNode.vec3(1, 1, 1, callback=self._update_color)
-        self._brightness = 1.0
-        self._ambient = SceneNode.vec3(1, 1, 1, callback=self._update_ambient)
-        self._diffuse = SceneNode.vec3(1, 1, 1, callback=self._update_diffuse)
-        self._specular = SceneNode.vec3(1, 1, 1, callback=self._update_specular)
-        self._generate_shadows = True
-        self._rim_power = 0.2
-        self._flats = set()
+        self._color:SceneNode.vec3 = SceneNode.vec3(1, 1, 1, callback=self._update_color)
+        self._intensity:float = 1.0
+        self._generate_shadows:bool = True
+        self._rim_power:float = 0.2
+        self._flats:set = set()
 
     def _set_transform_dirty(self, scenes):
         self._transform_dirty.update(scenes)
@@ -36,60 +33,18 @@ class Light(SceneNode):
         self._color.b = color.b
 
     @property
-    def ambient(self):
-        return self._ambient
-    
-    @ambient.setter
-    @checktype
-    def ambient(self, ambient:glm.vec3):
-        if self._ambient == ambient:
-            return
-        
-        self._ambient.r = ambient.r
-        self._ambient.g = ambient.g
-        self._ambient.b = ambient.b
+    def intensity(self):
+        return self._intensity
 
-    @property
-    def diffuse(self):
-        return self._diffuse
-    
-    @diffuse.setter
+    @intensity.setter
     @checktype
-    def diffuse(self, diffuse:glm.vec3):
-        if self._diffuse == diffuse:
-            return
-        
-        self._diffuse.r = diffuse.r
-        self._diffuse.g = diffuse.g
-        self._diffuse.b = diffuse.b
-
-    @property
-    def specular(self):
-        return self._specular
-    
-    @specular.setter
-    @checktype
-    def specular(self, specular:glm.vec3):
-        if self._specular == specular:
-            return
-        
-        self._specular.r = specular.r
-        self._specular.g = specular.g
-        self._specular.b = specular.b
-
-    @property
-    def brightness(self):
-        return self._brightness
-
-    @brightness.setter
-    @checktype
-    def brightness(self, brightness:float):
-        if self._brightness == brightness:
+    def intensity(self, intensity:float):
+        if self._intensity == intensity:
             return
 
-        self._brightness = brightness
+        self._intensity = intensity
         for flat in self._flats:
-            flat.brightness = brightness
+            flat.intensity = intensity
 
         self._update_scene_lights()
 
@@ -134,24 +89,6 @@ class Light(SceneNode):
 
         self._update_scene_lights()
 
-    def _update_diffuse(self):
-        for flat in self._flats:
-            flat.diffuse = self._diffuse
-
-        self._update_scene_lights()
-
-    def _update_specular(self):
-        for flat in self._flats:
-            flat.specular = self._specular
-
-        self._update_scene_lights()
-
-    def _update_ambient(self):
-        for flat in self._flats:
-            flat.ambient = self._ambient
-
-        self._update_scene_lights()
-
     def _update_generate_shadows(self):
         for flat in self._flats:
             flat.generate_shadows = self._generate_shadows
@@ -175,11 +112,7 @@ class FlatLight:
         self.depth_fbo_map[GLConfig.buffered_current_context] = fbo
 
     def update(self, light:Light):
-        self.color = light._color.flat
-        self.brightness = light._brightness
-        self.ambient = light._ambient.flat
-        self.diffuse = light._diffuse.flat
-        self.specular = light._specular.flat
+        self.color = light._intensity * light._color.flat
         self.generate_shadows = light._generate_shadows
         self.rim_power = light._rim_power
         

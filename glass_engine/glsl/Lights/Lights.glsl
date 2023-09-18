@@ -23,59 +23,59 @@ buffer SpotLights
     SpotLight spot_lights[];
 };
 
-vec3 get_ambient_diffuse(bool recv_shadows, Camera CSM_camera, vec3 frag_pos, vec3 frag_normal)
+vec3 get_diffuse_color(InternalMaterial internal_material, Camera CSM_camera, vec3 view_dir, vec3 frag_pos, vec3 frag_normal)
 {
-    vec3 factor = vec3(0.2);
+    vec3 diffuse_color = vec3(0.1);
 
     // 点光源
     for(int i = 0; i < n_point_lights; i++)
     {
-        factor += get_ambient_diffuse(point_lights[i], recv_shadows, frag_pos, frag_normal);
+        diffuse_color += get_diffuse_color(point_lights[i], internal_material, view_dir, frag_pos, frag_normal);
     }
 
     // 平行光
     for(int i = 0; i < n_dir_lights; i++)
     {
-        factor += get_ambient_diffuse(dir_lights[i], recv_shadows, CSM_camera, frag_pos, frag_normal);
+        diffuse_color += get_diffuse_color(dir_lights[i], internal_material, CSM_camera, view_dir, frag_pos, frag_normal);
     }
 
     // 聚光
     for(int i = 0; i < n_spot_lights; i++)
     {
-        factor += get_ambient_diffuse(spot_lights[i], recv_shadows, frag_pos, frag_normal);
+        diffuse_color += get_diffuse_color(spot_lights[i], internal_material, view_dir, frag_pos, frag_normal);
     }
 
-    return soft_min(2*factor, vec3(1,1,1), 0.1);
+    return soft_min(2*diffuse_color, vec3(1), 0.1);
 }
 
-vec3 get_specular(InternalMaterial internal_material, Camera CSM_camera, vec3 view_dir, vec3 frag_pos, vec3 frag_normal)
+vec3 get_specular_color(InternalMaterial internal_material, Camera CSM_camera, vec3 out_dir, vec3 frag_pos, vec3 frag_normal)
 {
     vec3 specular_color = vec3(0);
 
     // 平行光
     for(int i = 0; i < n_dir_lights; i++)
     {
-        specular_color += get_specular(
+        specular_color += get_specular_color(
             dir_lights[i], internal_material, CSM_camera,
-            view_dir, frag_pos, frag_normal
+            out_dir, frag_pos, frag_normal
         );
     }
 
     // 点光源
     for(int i = 0; i < n_point_lights; i++)
     {
-        specular_color += get_specular(
+        specular_color += get_specular_color(
             point_lights[i], internal_material,
-            view_dir, frag_pos, frag_normal
+            out_dir, frag_pos, frag_normal
         );
     }
 
     // 聚光
     for(int i = 0; i < n_spot_lights; i++)
     {
-        specular_color += get_specular(
+        specular_color += get_specular_color(
             spot_lights[i], internal_material,
-            view_dir, frag_pos, frag_normal
+            out_dir, frag_pos, frag_normal
         );
     }
 

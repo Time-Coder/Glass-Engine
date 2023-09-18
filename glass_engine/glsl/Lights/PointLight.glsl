@@ -10,10 +10,6 @@ struct PointLight
 {
     // 内参数
     vec3 color;
-    float brightness;
-    vec3 ambient;
-    vec3 diffuse;
-    vec3 specular;
     float rim_power;
 
     float K1; // 一次衰减系数
@@ -42,11 +38,7 @@ vec3 lighting(
     to_light /= d;
     vec3 to_camera = normalize(camera_pos - frag_pos);
 
-    material.ambient = light.ambient * material.ambient;
-    material.diffuse = light.diffuse * material.diffuse;
-    material.specular = light.specular * material.specular;
     material.light_rim_power = 0.2;
-
     material.shadow_visibility = 1;
     if (light.generate_shadows && material.recv_shadows &&
         (light.depth_map_handle.x > 0 || light.depth_map_handle.y > 0))
@@ -57,36 +49,10 @@ vec3 lighting(
     vec3 lighting_color = lighting(to_light, to_camera, frag_normal, material);
     float attenuation = 1.0 / (1 + light.K1 * d +  light.K2 * d2);
 
-    return light.brightness * light.color * attenuation * lighting_color;
+    return attenuation * light.color * lighting_color;
 }
 
-vec3 get_ambient_diffuse(
-    PointLight light, bool recv_shadows,
-    vec3 frag_pos, vec3 frag_normal)
-{
-    // 基础向量
-    vec3 to_light = light.abs_position - frag_pos;
-    float d2 = dot(to_light, to_light);
-    if (d2 > light.coverage*light.coverage)
-    {
-        return vec3(0);
-    }
-    float d = sqrt(d2);
-    to_light = to_light / d;
-
-    vec3 factor = Lambert_diffuse(to_light, frag_normal)*light.diffuse + 0.2 * light.ambient;
-    float attenuation = 1.0 / (1 + light.K1 * d +  light.K2 * d2);
-    float shadow_visibility = 1;
-    if (light.generate_shadows && recv_shadows &&
-        (light.depth_map_handle.x > 0 || light.depth_map_handle.y > 0))
-    {
-        shadow_visibility = PCF(light, frag_pos, frag_normal);
-    }
-
-    return shadow_visibility * factor * light.brightness * light.color * attenuation;
-}
-
-vec3 get_specular(
+vec3 get_diffuse_color(
     PointLight light, InternalMaterial material,
     vec3 view_dir, vec3 frag_pos, vec3 frag_normal)
 {
@@ -99,7 +65,35 @@ vec3 get_specular(
     }
     float d = sqrt(d2);
     to_light = to_light / d;
-    vec3 to_camera = normalize(reflect(-view_dir, frag_normal));
+    vec3 to_camera = -view_dir;
+
+    float attenuation = 1.0 / (1 + light.K1 * d +  light.K2 * d2);
+    float shadow_visibility = 1;
+    if (light.generate_shadows && material.recv_shadows &&
+        (light.depth_map_handle.x > 0 || light.depth_map_handle.y > 0))
+    {
+        shadow_visibility = PCF(light, frag_pos, frag_normal);
+    }
+    float diffuse_factor = Lambert_diffuse(to_light, frag_normal);
+    float rim_factor = rim(to_light, to_camera, frag_normal, light.rim_power, material.rim_power);
+
+    return attenuation * (shadow_visibility*diffuse_factor + rim_factor) * light.color;
+}
+
+vec3 get_specular_color(
+    PointLight light, InternalMaterial material,
+    vec3 out_dir, vec3 frag_pos, vec3 frag_normal)
+{
+    // 基础向量
+    vec3 to_light = light.abs_position - frag_pos;
+    float d2 = dot(to_light, to_light);
+    if (d2 > light.coverage*light.coverage)
+    {
+        return vec3(0);
+    }
+    float d = sqrt(d2);
+    to_light = to_light / d;
+    vec3 to_camera = normalize(reflect(-out_dir, frag_normal));
     
     float specular_factor = 0;
     if (material.shading_model == SHADING_MODEL_PHONG)
@@ -119,7 +113,7 @@ vec3 get_specular(
         shadow_visibility = PCF(light, frag_pos, frag_normal);
     }
 
-    return shadow_visibility * specular_factor * light.brightness * light.color * light.specular * attenuation;
+    return shadow_visibility * attenuation * specular_factor * light.color;
 }
 
 #endif
