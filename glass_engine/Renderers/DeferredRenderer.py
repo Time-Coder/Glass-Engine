@@ -227,8 +227,7 @@ class DeferredRenderer(CommonRenderer):
             self.deferred_render_program["reflection_map"] = reflection_map
             self.deferred_render_program["env_center_and_mixed_value_map"] = env_center_and_mixed_value_map
             self.deferred_render_program["mixed_uint_map"] = mixed_uint_map
-            self.deferred_render_program["skydome_map"] = self.scene.skydome.skydome_map
-            self.deferred_render_program["skybox_map"] = self.scene.skybox.skybox_map
+            self.deferred_render_program["background"] = self.scene.background
             self.deferred_render_program["fog"] = self.scene.fog
             self.deferred_render_program.draw_triangles(Frame.vertices, Frame.indices)
 

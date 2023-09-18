@@ -22,10 +22,7 @@ layout(location=0) out vec4 out_color;
 layout(location=1) out vec4 accum;
 layout(location=2) out float reveal;
 
-#include "../../include/Camera.glsl"
-#include "../../include/Material.glsl"
 #include "../../include/OIT.glsl"
-#include "../../include/fog.glsl"
 #include "../../include/shading_all.glsl"
 
 uniform vec3 view_center;
@@ -36,8 +33,7 @@ uniform bool is_opaque_pass;
 uniform bool is_sphere;
 uniform Camera CSM_camera;
 uniform Fog fog;
-uniform samplerCube skybox_map;
-uniform sampler2D skydome_map;
+uniform Background background;
 
 void main()
 {
@@ -52,13 +48,12 @@ void main()
         (gl_FrontFacing ? preshading_color : preshading_back_color),
         (gl_FrontFacing ? material : back_material),
         
-        skybox_map,
-        skydome_map,
+        background,
         sampler2D(env_map_handle),
+        fog,
         is_opaque_pass,
         is_sphere,
-
-        fog,
+        
         fs_in.view_TBN,
         fs_in.view_pos,
         fs_in.tex_coord.st,

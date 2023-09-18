@@ -18,7 +18,7 @@ vec4 post_shading_all(Camera camera, Camera CSM_camera, PostShadingInfo shading_
         vec4 final_color = vec4(shading_info.material.emission, shading_info.material.opacity);
         if (shading_info.material.fog)
         {
-            final_color.rgb = fog_apply(shading_info.fog, final_color.rgb, camera.abs_position, shading_info.world_pos);
+            final_color.rgb = fog_apply(shading_info.fog, final_color.rgb, length(camera.abs_position-shading_info.world_pos));
         }
         return final_color;
     }
@@ -34,8 +34,8 @@ vec4 post_shading_all(Camera camera, Camera CSM_camera, PostShadingInfo shading_
             shading_info.env_center, view_dir,
             shading_info.world_pos, shading_info.world_normal,
 
-            shading_info.skybox_map,
-            shading_info.skydome_map,
+            shading_info.background,
+            shading_info.fog,
             shading_info.env_map
         );
     }
@@ -47,8 +47,8 @@ vec4 post_shading_all(Camera camera, Camera CSM_camera, PostShadingInfo shading_
             shading_info.env_center, view_dir,
             shading_info.world_pos, shading_info.world_normal,
 
-            shading_info.skybox_map,
-            shading_info.skydome_map,
+            shading_info.background,
+            shading_info.fog,
             shading_info.env_map
         );
     }
@@ -57,7 +57,7 @@ vec4 post_shading_all(Camera camera, Camera CSM_camera, PostShadingInfo shading_
         vec4 final_color = vec4(env_color.rgb+shading_info.material.emission, shading_info.material.opacity);
         if (shading_info.material.fog)
         {
-            final_color.rgb = fog_apply(shading_info.fog, final_color.rgb, camera.abs_position, shading_info.world_pos);
+            final_color.rgb = fog_apply(shading_info.fog, final_color.rgb, length(camera.abs_position-shading_info.world_pos));
         }
         return final_color;
     }
@@ -87,7 +87,7 @@ vec4 post_shading_all(Camera camera, Camera CSM_camera, PostShadingInfo shading_
     // 雾
     if (shading_info.material.fog)
     {
-        out_color3 = fog_apply(shading_info.fog, out_color3, camera.abs_position, shading_info.world_pos);
+        out_color3 = fog_apply(shading_info.fog, out_color3, length(camera.abs_position-shading_info.world_pos));
     }
 
     // 最终颜色
@@ -137,11 +137,10 @@ vec4 shading_all(Camera camera, Camera CSM_camera, inout ShadingInfo shading_inf
     PostShadingInfo post_shading_info = PostShadingInfo(
         internal_material,
 
-        shading_info.skybox_map,
-        shading_info.skydome_map,
+        shading_info.background,
         shading_info.env_map,
-        shading_info.is_sphere,
         shading_info.fog,
+        shading_info.is_sphere,
 
         world_pos,
         world_normal,

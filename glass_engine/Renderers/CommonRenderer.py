@@ -671,11 +671,11 @@ class CommonRenderer(Renderer):
         instance.user_data[key] += 1
 
     def prepare_gen_env_map_draw_mesh(self, view_center:glm.vec3, is_opaque_pass:bool):
-        self.gen_env_map_program["CSM_camera"] = self.camera
+        camera = self.camera
+        self.gen_env_map_program["CSM_camera"] = camera
         self.gen_env_map_program["view_center"] = view_center
         self.gen_env_map_program["is_opaque_pass"] = is_opaque_pass
-        self.gen_env_map_program["skybox_map"] = self.scene.skybox.skybox_map
-        self.gen_env_map_program["skydome_map"] = self.scene.skydome.skydome_map
+        self.gen_env_map_program["background"] = self.scene.background
         self.gen_env_map_program["fog"] = self.scene.fog
 
     def gen_env_map_draw_mesh(self, mesh, instances):
@@ -687,11 +687,11 @@ class CommonRenderer(Renderer):
         mesh.draw(self.gen_env_map_program, instances)
 
     def prepare_gen_env_map_draw_lines(self, view_center:glm.vec3, is_opaque_pass:bool):
-        self.gen_env_map_lines_program["CSM_camera"] = self.camera
+        camera = self.camera
+        self.gen_env_map_lines_program["CSM_camera"] = camera
         self.gen_env_map_lines_program["view_center"] = view_center
         self.gen_env_map_lines_program["is_opaque_pass"] = is_opaque_pass
-        self.gen_env_map_lines_program["skybox_map"] = self.scene.skybox.skybox_map
-        self.gen_env_map_lines_program["skydome_map"] = self.scene.skydome.skydome_map
+        self.gen_env_map_lines_program["background"] = self.scene.background
         self.gen_env_map_lines_program["fog"] = self.scene.fog
 
     def gen_env_map_draw_lines(self, mesh, instances):
@@ -700,11 +700,11 @@ class CommonRenderer(Renderer):
         mesh.draw(self.gen_env_map_lines_program, instances)
 
     def prepare_gen_env_map_draw_points(self, view_center:glm.vec3, is_opaque_pass:bool):
-        self.gen_env_map_points_program["CSM_camera"] = self.camera
+        camera = self.camera
+        self.gen_env_map_points_program["CSM_camera"] = camera
         self.gen_env_map_points_program["view_center"] = view_center
         self.gen_env_map_points_program["is_opaque_pass"] = is_opaque_pass
-        self.gen_env_map_points_program["skybox_map"] = self.scene.skybox.skybox_map
-        self.gen_env_map_points_program["skydome_map"] = self.scene.skydome.skydome_map
+        self.gen_env_map_points_program["background"] = self.scene.background
         self.gen_env_map_points_program["fog"] = self.scene.fog
 
     def gen_env_map_draw_points(self, mesh, instances):
@@ -809,10 +809,10 @@ class CommonRenderer(Renderer):
                 self._should_update = True
 
     def prepare_forward_draw_mesh(self, is_opaque_pass:bool):
-        self.forward_program["camera"] = self.camera
+        camera = self.camera
+        self.forward_program["camera"] = camera
         self.forward_program["is_opaque_pass"] = is_opaque_pass
-        self.forward_program["skybox_map"] = self.scene.skybox.skybox_map
-        self.forward_program["skydome_map"] = self.scene.skydome.skydome_map
+        self.forward_program["background"] = self.scene.background
         self.forward_program["fog"] = self.scene.fog
 
     def forward_draw_mesh(self, mesh, instances):
@@ -829,8 +829,7 @@ class CommonRenderer(Renderer):
     def prepare_forward_draw_lines(self, is_opaque_pass:bool):
         self.forward_lines_program["camera"] = self.camera
         self.forward_lines_program["is_opaque_pass"] = is_opaque_pass
-        self.forward_lines_program["skybox_map"] = self.scene.skybox.skybox_map
-        self.forward_lines_program["skydome_map"] = self.scene.skydome.skydome_map
+        self.forward_lines_program["background"] = self.scene.background
         self.forward_lines_program["fog"] = self.scene.fog
 
     def forward_draw_lines(self, mesh, instances):
@@ -844,8 +843,7 @@ class CommonRenderer(Renderer):
     def prepare_forward_draw_points(self, is_opaque_pass:bool):
         self.forward_points_program["camera"] = self.camera
         self.forward_points_program["is_opaque_pass"] = is_opaque_pass
-        self.forward_points_program["skybox_map"] = self.scene.skybox.skybox_map
-        self.forward_points_program["skydome_map"] = self.scene.skydome.skydome_map
+        self.forward_points_program["background"] = self.scene.background
         self.forward_points_program["fog"] = self.scene.fog
 
     def forward_draw_points(self, mesh, instances):

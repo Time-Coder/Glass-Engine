@@ -4,18 +4,18 @@ from .Lights.PointLight import PointLights, PointLight, FlatPointLight
 from .Lights.DirLight import DirLights, DirLight, FlatDirLight
 from .Lights.SpotLight import SpotLights, SpotLight, FlatSpotLight
 from .AffineTransform import AffineTransform
-from .SkyBox import SkyBox
-from .SkyDome import SkyDome
-from .Fog import Fog
 
-from glass.utils import checktype, quat_to_mat4, scale_to_mat4, translate_to_mat4
-from glass import Instances, samplerCube
+from .Fog import Fog
+from .Background import Background
+
+from glass.utils import quat_to_mat4, scale_to_mat4, translate_to_mat4
+from glass import Instances
 
 import glm
-import numpy as np
 import time
 
 class Scene:
+
     def __init__(self):
         self._root = SceneNode("root")
         self._root._scenes.add(self)
@@ -25,8 +25,7 @@ class Scene:
         self._last_generated_meshes = set()
 
         self._fog = Fog()
-        self._skybox = SkyBox()
-        self._skydome = SkyDome()
+        self._background = Background()
         self._dir_lights = DirLights()
         self._point_lights = PointLights()
         self._spot_lights = SpotLights()
@@ -46,21 +45,24 @@ class Scene:
         return self._root
 
     @property
+    def background(self)->Background:
+        return self._background
+
+    @property
     def skybox(self):
-        return self._skybox
+        return self._background.skybox
     
     @skybox.setter
-    def skybox(self, skybox_map:samplerCube):
-        self._skybox.skybox_map = skybox_map
-    
+    def skybox(self, skybox):
+        self._background.skybox = skybox
+
     @property
     def skydome(self):
-        return self._skydome
+        return self._background.skydome
     
     @skydome.setter
-    @checktype
-    def skydome(self, image:(str,np.ndarray)):
-        self._skydome.skydome_map = image
+    def skydome(self, skydome):
+        self._background.skydome = skydome
 
     @property
     def fog(self):

@@ -2,7 +2,8 @@
 #define _SHADING_INFO_GLSL__
 
 #include "Material.glsl"
-#include "Fog.glsl"
+#include "fog.glsl"
+#include "background.glsl"
 
 struct ShadingInfo
 {
@@ -10,12 +11,11 @@ struct ShadingInfo
     vec3 preshading_color;
     Material material;
 
-    samplerCube skybox_map;
-    sampler2D skydome_map;
+    Background background;
     sampler2D env_map;
+    Fog fog;
     bool is_opaque_pass;
     bool is_sphere;
-    Fog fog;
 
     mat3 view_TBN;
     vec3 view_pos;
@@ -28,11 +28,10 @@ struct PostShadingInfo
 {
     InternalMaterial material;
 
-    samplerCube skybox_map;
-    sampler2D skydome_map;
+    Background background;
     sampler2D env_map;
-    bool is_sphere;
     Fog fog;
+    bool is_sphere;
 
     vec3 world_pos;
     vec3 world_normal;
@@ -43,15 +42,20 @@ PostShadingInfo PostShadingInfo_create()
 {
     InternalMaterial _internal_material;
     Fog _fog;
+    Background _background = Background(
+        samplerCube(uvec2(0)),
+        sampler2D(uvec2(0)),
+        vec4(0),
+        float(0.0)
+    );
 
     return PostShadingInfo(
         _internal_material,
 
-        samplerCube(uvec2(0)),
+        _background,
         sampler2D(uvec2(0)),
-        sampler2D(uvec2(0)),
-        false,
         _fog,
+        false,
 
         vec3(0),
         vec3(0),

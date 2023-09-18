@@ -23,8 +23,7 @@ uniform sampler2D env_center_and_mixed_value_map;
 uniform usampler2D mixed_uint_map;
 
 uniform Camera camera;
-uniform sampler2D skydome_map;
-uniform samplerCube skybox_map;
+uniform Background background;
 uniform Fog fog;
 
 void main()
@@ -42,8 +41,7 @@ void main()
         fs_in.tex_coord
     );
 
-    shading_info.skybox_map = skybox_map;
-    shading_info.skydome_map = skydome_map;
+    shading_info.background = background;
     shading_info.fog = fog;
     out_color = post_shading_all(camera, camera, shading_info);
 }
