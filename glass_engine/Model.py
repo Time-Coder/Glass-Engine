@@ -223,7 +223,7 @@ class Model(SceneNode):
                                 threshold = 127
 
                             if image.max() > threshold:
-                                image = (0.1*image).astype(image_dtype)
+                                image = (0.2*image).astype(image_dtype)
 
                             material.ambient_map = sampler2D(image)
                         else:

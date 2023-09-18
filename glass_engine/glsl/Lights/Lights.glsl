@@ -25,7 +25,7 @@ buffer SpotLights
 
 vec3 get_diffuse_color(InternalMaterial internal_material, Camera CSM_camera, vec3 view_dir, vec3 frag_pos, vec3 frag_normal)
 {
-    vec3 diffuse_color = vec3(0.1);
+    vec3 diffuse_color = vec3(0.2);
 
     // 点光源
     for(int i = 0; i < n_point_lights; i++)
@@ -79,7 +79,7 @@ vec3 get_specular_color(InternalMaterial internal_material, Camera CSM_camera, v
         );
     }
 
-    return 3*specular_color;
+    return specular_color;
 }
 
 vec3 lighting(InternalMaterial internal_material, Camera CSM_camera, vec3 camera_pos, vec3 frag_pos, vec3 frag_normal)

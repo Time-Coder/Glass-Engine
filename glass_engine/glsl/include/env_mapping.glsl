@@ -56,8 +56,8 @@ vec4 sphere_reflect_refract_color(
     }
 
     bool recv_shadows = material.recv_shadows;
-    bool use_reflection = (reflection.a > 1E-6);
-    bool use_refraction = (refractive_index > 1E-6);
+    bool use_reflection = (length(reflection.rgb*reflection.a) > 1E-6);
+    bool use_refraction = (use_reflection && refractive_index > 1E-6);
     if (!use_reflection && !use_refraction)
     {
         return vec4(0);
@@ -207,8 +207,8 @@ vec4 reflect_refract_color(
     }
 
     bool recv_shadows = material.recv_shadows;
-    bool use_reflection = (reflection.a > 1E-6);
-    bool use_refraction = (refractive_index > 1E-6);
+    bool use_reflection = (length(reflection.rgb*reflection.a) > 1E-6);
+    bool use_refraction = (use_reflection && refractive_index > 1E-6);
     if (!use_reflection && !use_refraction)
     {
         return vec4(0);
