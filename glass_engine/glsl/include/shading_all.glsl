@@ -61,7 +61,7 @@ vec4 post_shading_all(Camera camera, Camera CSM_camera, PostShadingInfo shading_
         }
         return final_color;
     }
-    if (length(shading_info.material.reflection) > 0)
+    if (shading_info.material.reflection.a > 1-1E-6)
     {
         return env_color;
     }

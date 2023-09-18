@@ -2,6 +2,7 @@ from glass.utils import checktype
 from glass import sampler2D
 from glass.ImageLoader import ImageLoader
 from glass.WeakSet import WeakSet
+from .callback_vec import callback_vec3, callback_vec4
 
 import glm
 from enum import Enum
@@ -58,15 +59,15 @@ class Material:
         self._name:str = name
         self._shading_model:Material.ShadingModel = Material.ShadingModel.PhongBlinn
 
-        self._ambient:glm.vec3 = 0.1 * glm.vec3(0.396, 0.74151, 0.69102)
-        self._diffuse:glm.vec3 = glm.vec3(0.396, 0.74151, 0.69102)
-        self._specular:glm.vec3 = glm.vec3(0.3)
+        self._ambient:callback_vec3 = callback_vec3(0.2*0.396, 0.2*0.74151, 0.2*0.69102, self._color_change_callback)
+        self._diffuse:callback_vec3 = callback_vec3(0.396, 0.74151, 0.69102, self._color_change_callback)
+        self._specular:callback_vec3 = callback_vec3(0.3, 0.3, 0.3, self._color_change_callback)
         self._shininess:float = 0.6*128
         self._shininess_strength:float = 1
-        self._emission:glm.vec3 = glm.vec3(0)
+        self._emission:callback_vec3 = callback_vec3(0, 0, 0, self._color_change_callback)
         self._opacity:float = 0
         self._height_scale:float = 0.05
-        self._base_color:glm.vec3 = glm.vec3(0.5, 0.5, 0.5)
+        self._base_color:callback_vec3 = callback_vec3(0.5, 0.5, 0.5, self._color_change_callback)
         self._metallic:float = 0.5
         self._roughness:float = 0
         self._recv_shadows:bool = True
@@ -77,7 +78,7 @@ class Material:
         self._specular_softness:float = 0.02
         self._rim_power:float = 0.2
         self._fog:bool = True
-        self._reflection:glm.vec4 = glm.vec4(0)
+        self._reflection:callback_vec4 = callback_vec4(1, 1, 1, 0, self._color_change_callback)
         self._refractive_index:float = 0
         self._env_mix_diffuse:bool = True
         self._env_max_bake_times:int = 2
@@ -114,6 +115,29 @@ class Material:
     def name(self, name:str):
         self._name = name
 
+    def _color_change_callback(self):
+        if not self._opacity_user_set and self._opacity == 0:
+            self._opacity = 1
+            if len(self._parent_meshes) == 1:
+                for mesh in self._parent_meshes:
+                    colors = None
+                    if mesh.material is self:
+                        if "color" in mesh.vertices:
+                            colors = mesh.vertices["color"].ndarray.reshape(-1, 4)
+                            
+                    elif mesh._back_material is self:
+                        if "back_color" in mesh.vertices:
+                            colors = mesh.vertices["back_color"].ndarray.reshape(-1, 4)
+
+                    if colors is not None and np.all(colors == colors[0, :]):
+                        used_color = glm.vec4(colors[0, 0], colors[0, 1], colors[0, 2], colors[0, 3])
+                        self._diffuse = used_color
+                        self._base_color = used_color
+                        self._ambient = 0.2 * used_color
+
+        self._update_all_env_maps()
+        self._test_transparent()
+
     @staticmethod
     def param_setter(func):
         @wraps(func)
@@ -123,13 +147,8 @@ class Material:
 
             should_test_transparent = False
             if func.__name__ in \
-               ["diffuse", "diffuse_map",
-                "ambient", "ambient_map",
-                "specular", "specular_map",
-                "emission", "emission_map",
-                "reflection", "reflection_map",
-                "refractive_index",
-                "base_color", "base_color_map"] and \
+               ["diffuse_map", "ambient_map", "specular_map", "emission_map",
+                "reflection_map", "refractive_index", "base_color_map"] and \
                not self._opacity_user_set and self._opacity == 0:
                 self._opacity = 1
                 should_test_transparent = True
@@ -149,7 +168,7 @@ class Material:
                             used_color = glm.vec4(colors[0, 0], colors[0, 1], colors[0, 2], colors[0, 3])
                             self._diffuse = used_color
                             self._base_color = used_color
-                            self._ambient = 0.1 * used_color
+                            self._ambient = 0.2 * used_color
             
             equal = False
             try:
@@ -265,7 +284,7 @@ class Material:
 
         has_reflection = False
         if self._reflection_map is None:
-            has_reflection = (glm.length(self._reflection) > 0)
+            has_reflection = (glm.length(self._reflection.rgb*self._reflection.a) > 1E-6)
         else:
             has_reflection = True
 
@@ -318,43 +337,37 @@ class Material:
         self._shading_model = shading_model
 
     @property
-    def ambient(self):
+    def ambient(self)->callback_vec3:
         return self._ambient
     
     @ambient.setter
-    @param_setter
-    def ambient(self, ambient:(glm.vec3,float)):
-        if not isinstance(ambient, glm.vec3):
-            ambient = glm.vec3(ambient)
-
-        if glm.length(ambient) < 1E-6:
-            ambient = glm.vec3(0.00001)
-
-        self._ambient = ambient
+    @checktype
+    def ambient(self, ambient:glm.vec3)->None:
+        self._ambient.r = ambient.r
+        self._ambient.g = ambient.g
+        self._ambient.b = ambient.b
 
     @property
-    def diffuse(self):
+    def diffuse(self)->callback_vec3:
         return self._diffuse
     
     @diffuse.setter
-    @param_setter
-    def diffuse(self, diffuse:(glm.vec3,float)):
-        if isinstance(diffuse, glm.vec3):
-            self._diffuse = diffuse
-        elif isinstance(diffuse, (float,int)):
-            self._diffuse = glm.vec3(diffuse, diffuse, diffuse)
+    @checktype
+    def diffuse(self, diffuse:glm.vec3)->None:
+        self._diffuse.r = diffuse.r
+        self._diffuse.g = diffuse.g
+        self._diffuse.b = diffuse.b
 
     @property
-    def specular(self):
+    def specular(self)->callback_vec3:
         return self._specular
     
     @specular.setter
-    @param_setter
-    def specular(self, specular:(glm.vec3,float)):
-        if isinstance(specular, glm.vec3):
-            self._specular = specular
-        elif isinstance(specular, (float,int)):
-            self._specular = glm.vec3(specular, specular, specular)
+    @checktype
+    def specular(self, specular:glm.vec3)->None:
+        self._specular.r = specular.r
+        self._specular.g = specular.g
+        self._specular.b = specular.b
 
     @property
     def glossiness(self):
@@ -400,13 +413,15 @@ class Material:
         self._test_transparent()
 
     @property
-    def emission(self):
+    def emission(self)->callback_vec3:
         return self._emission
     
     @emission.setter
     @param_setter
-    def emission(self, emission:glm.vec3):
-        self._emission = emission
+    def emission(self, emission:glm.vec3)->None:
+        self._emission.r = emission.r
+        self._emission.g = emission.g
+        self._emission.b = emission.b
 
     @property
     def env_mix_diffuse(self):
@@ -418,18 +433,22 @@ class Material:
         self._env_mix_diffuse = flag
 
     @property
-    def reflection(self):
+    def reflection(self)->callback_vec4:
         return self._reflection
     
     @reflection.setter
-    @param_setter
-    def reflection(self, reflection:(glm.vec4,glm.vec3,float)):
+    @checktype
+    def reflection(self, reflection:(glm.vec4,glm.vec3,float))->None:
         if isinstance(reflection, glm.vec3):
             reflection = glm.vec4(reflection, 1)
         if isinstance(reflection, (float,int)):
             reflection = glm.vec4(1,1,1,reflection)
 
-        self._reflection = reflection
+        self._reflection.r = reflection.r
+        self._reflection.g = reflection.g
+        self._reflection.b = reflection.b
+        self._reflection.a = reflection.a
+
         self._reflection_user_set = True
 
     @property
@@ -454,13 +473,15 @@ class Material:
         self._height_scale = distance
 
     @property
-    def base_color(self):
+    def base_color(self)->callback_vec3:
         return self._base_color
     
     @base_color.setter
-    @param_setter
-    def base_color(self, base_color:glm.vec3):
-        self._base_color = base_color
+    @checktype
+    def base_color(self, base_color:glm.vec3)->None:
+        self._base_color.r = base_color.r
+        self._base_color.g = base_color.g
+        self._base_color.b = base_color.b
 
     @property
     def roughness(self):
@@ -497,7 +518,7 @@ class Material:
             if "int" in str(image_dtype):
                 threshold = 127
             if ambient_map.max() > threshold:
-                ambient_map = (0.1 * ambient_map).astype(image_dtype)
+                ambient_map = (0.2 * ambient_map).astype(image_dtype)
             self._ambient_map = sampler2D(ambient_map)
 
     @property

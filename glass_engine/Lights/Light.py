@@ -1,4 +1,6 @@
 from ..SceneNode import SceneNode
+from ..callback_vec import callback_vec3
+
 from glass.utils import checktype, di
 from glass import GLConfig
 
@@ -8,7 +10,7 @@ class Light(SceneNode):
 
     def __init__(self, name:str=""):
         SceneNode.__init__(self, name)
-        self._color:SceneNode.vec3 = SceneNode.vec3(1, 1, 1, callback=self._update_color)
+        self._color:callback_vec3 = callback_vec3(1, 1, 1, callback=self._update_color)
         self._intensity:float = 1.0
         self._generate_shadows:bool = True
         self._rim_power:float = 0.2
