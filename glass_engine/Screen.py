@@ -99,7 +99,6 @@ class Screen(QOpenGLWidget):
         self._is_gl_init = False
         self._before_PPE_image = None
         self._video_recorders = []
-        self._background_color = glm.vec4(0)
         
         self._camera_id = id(camera)
 
@@ -126,17 +125,6 @@ class Screen(QOpenGLWidget):
         self._post_process_effects["explosure_adaptor"].enabled = False
         self._post_process_effects["tone_mapper"].enabled = False
         self._post_process_effects["FXAA"].enabled = False
-
-    @property
-    def background_color(self)->glm.vec4:
-        return self._background_color
-        
-    @background_color.setter
-    def background_color(self, color:glm.vec4|glm.vec3)->None:
-        if isinstance(color, glm.vec3):
-            color = glm.vec4(color, 1)
-
-        self._background_color = color
 
     def update(self)->None:
         self._before_PPE_image = None
@@ -259,7 +247,8 @@ class Screen(QOpenGLWidget):
     def _draw_to_before_PPE(self, should_update_scene:bool)->bool:
         if self._before_PPE_image is None or should_update_scene:
             with self._before_PPE_fbo:
-                clear_color = self.camera.scene.fog.apply(self.background_color, glm.vec3(0), glm.vec3(0,self.camera.far,0))
+                scene = self.camera.scene
+                clear_color = scene.fog.apply(scene.background.color, glm.vec3(0), glm.vec3(0,self.camera.far,0))
                 with GLConfig.LocalConfig(clear_color=clear_color):
                     with self.render_hint:
                         should_update_scene = self.renderer.render() or should_update_scene
@@ -282,7 +271,10 @@ class Screen(QOpenGLWidget):
         self.frame_started.emit()
         self.__mark_draw_calls()
 
-        should_update_scene = self.camera.scene.generate_meshes()
+        camera = self.camera
+        scene = camera.scene
+
+        should_update_scene = scene.generate_meshes()
         should_update_PPEs = False
         
         if self._video_recorders:
@@ -302,7 +294,7 @@ class Screen(QOpenGLWidget):
             self._assign_values_to_PPEs()
             should_update_PPEs = self._post_process_effects.draw_to_active(self._before_PPE_image)
         else:
-            clear_color = self.camera.scene.fog.apply(self.background_color, glm.vec3(0), glm.vec3(0,self.camera.far,0))
+            clear_color = scene.fog.apply(scene.background.color, glm.vec3(0), glm.vec3(0,self.camera.far,0))
             with GLConfig.LocalConfig(clear_color=clear_color):
                 with self.render_hint:
                     should_update_scene = self.renderer.render() or should_update_scene
@@ -580,7 +572,8 @@ class Screen(QOpenGLWidget):
     def capture(self, save_path:str|None=None, viewport:tuple[int]|None=None)->np.ndarray:
         self.makeCurrent()
         with self._before_PPE_fbo:
-            clear_color = self.camera.scene.fog.apply(self.background_color, glm.vec3(0), glm.vec3(0,self.camera.far,0))
+            scene = self.camera.scene
+            clear_color = scene.fog.apply(scene.background.color, glm.vec3(0), glm.vec3(0,self.camera.far,0))
             with GLConfig.LocalConfig(clear_color=clear_color):
                 with self.render_hint:
                     self.renderer.render()

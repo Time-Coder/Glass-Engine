@@ -25,9 +25,7 @@ layout(location=2) out float reveal;
 layout(location=3) out vec3 view_pos;
 layout(location=4) out vec3 view_normal;
 
-#include "../../include/Material.glsl"
 #include "../../include/OIT.glsl"
-#include "../../include/fog.glsl"
 #include "../../include/shading_all.glsl"
 
 uniform Material material;
@@ -37,8 +35,7 @@ uniform bool is_opaque_pass;
 uniform bool is_sphere;
 uniform vec3 mesh_center;
 uniform Fog fog;
-uniform samplerCube skybox_map;
-uniform sampler2D skydome_map;
+uniform Background background;
 
 void main()
 {
@@ -52,13 +49,12 @@ void main()
         (gl_FrontFacing ? preshading_color : preshading_back_color),
         (gl_FrontFacing ? material : back_material),
         
-        skybox_map,
-        skydome_map,
+        background,
         sampler2D(env_map_handle),
+        fog,
         is_opaque_pass,
         is_sphere,
-
-        fog,
+        
         fs_in.view_TBN,
         fs_in.view_pos,
         fs_in.tex_coord.st,
