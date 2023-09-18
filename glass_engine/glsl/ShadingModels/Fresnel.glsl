@@ -11,8 +11,7 @@ vec3 Fresnel_lighting(
     vec3 to_light, vec3 to_camera, vec3 normal,
     InternalMaterial material)
 {
-    vec3 fresnel_color = material.diffuse * Fresnel_diffuse(to_camera, normal, material.rim_power);
-    return material.ambient + fresnel_color;
+    return material.diffuse * Fresnel_diffuse(to_camera, normal, material.rim_power);
 }
 
 #endif
