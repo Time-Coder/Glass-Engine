@@ -14,3 +14,4 @@ from .Frame import Frame
 from .Fog import Fog
 
 import glm
+from OpenGL import GL

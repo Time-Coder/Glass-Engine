@@ -7,7 +7,7 @@ from glass.utils import extname, di
 from .VideoRecorder import VideoRecorder, convert_to_image
 
 from PyQt6.QtOpenGLWidgets import QOpenGLWidget
-from PyQt6.QtGui import QMouseEvent, QKeyEvent, QCursor, QWheelEvent, QSurfaceFormat, QCloseEvent
+from PyQt6.QtGui import QMouseEvent, QKeyEvent, QCursor, QWheelEvent, QSurfaceFormat, QCloseEvent, QIcon
 from PyQt6.QtCore import Qt, QPointF, QPoint, QTimerEvent, pyqtSignal, QSize
 from PyQt6.QtWidgets import QApplication, QWidget
 
@@ -493,7 +493,9 @@ class Screen(QOpenGLWidget):
     def show(self)->None:
         if Screen.__app is not None and \
            not Screen.__has_exec:
-            self.setWindowTitle("glass_engine")
+            self.setWindowTitle("Glass Engine")
+            self_folder = os.path.dirname(os.path.abspath(__file__))
+            self.setWindowIcon(QIcon(self_folder + "/glass_engine_logo64.png"))
             
         QOpenGLWidget.show(self)
         if Screen.__app is not None and \
