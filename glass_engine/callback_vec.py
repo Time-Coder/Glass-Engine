@@ -17,11 +17,9 @@ class callback_vec3(glm.vec3):
         return glm.vec3(self.x, self.y, self.z)
 
     def __setattr__(self, name:str, value):
-        if name in "xyzrgbstp":
-            if self._callback is not None:
-                self._callback()
-
         super().__setattr__(name, value)
+        if name in "xyzrgbstp" and self._callback is not None:
+            self._callback()
 
     def __rmul__(self, other):
         return other * self.flat
@@ -43,11 +41,9 @@ class callback_vec4(glm.vec4):
         return glm.vec4(self.x, self.y, self.z, self.w)
 
     def __setattr__(self, name:str, value):
-        if name in "xyzwrgbastpq":
-            if self._callback is not None:
-                self._callback()
-
         super().__setattr__(name, value)
+        if name in "xyzwrgbastpq" and self._callback is not None:
+            self._callback()
 
     def __rmul__(self, other):
         return other * self.flat
@@ -68,14 +64,13 @@ class callback_quat(glm.quat):
         return self.flat
 
     def __setattr__(self, name:str, value):
-        if name in "wxyz":                
-            if self._callback is not None:
-                self._callback()
-            
         super().__setattr__(name, value)
+        if name in "wxyz" and self._callback is not None:               
+            self._callback()
 
     def __mul__(self, other):
         return self.flat * other
     
     def __rmul__(self, other):
         return other * self.flat
+    

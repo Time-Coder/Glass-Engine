@@ -158,7 +158,6 @@ class Mesh(SceneNode):
         return self._color
     
     @color.setter
-    @checktype
     def color(self, color:(glm.vec3,glm.vec4)):
         if isinstance(color, glm.vec3):
             color = glm.vec4(color, 1)

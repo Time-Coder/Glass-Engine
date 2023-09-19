@@ -59,7 +59,7 @@ class Material:
         self._name:str = name
         self._shading_model:Material.ShadingModel = Material.ShadingModel.PhongBlinn
 
-        self._ambient:callback_vec3 = callback_vec3(0.2*0.396, 0.2*0.74151, 0.2*0.69102, self._color_change_callback)
+        self._ambient:callback_vec3 = callback_vec3(0, 0, 0, self._color_change_callback)
         self._diffuse:callback_vec3 = callback_vec3(0.396, 0.74151, 0.69102, self._color_change_callback)
         self._specular:callback_vec3 = callback_vec3(0.3, 0.3, 0.3, self._color_change_callback)
         self._shininess:float = 0.6*128
@@ -106,6 +106,8 @@ class Material:
         self._has_transparent:bool = True
         self._has_opaque:bool = False
         self._parent_meshes:WeakSet = WeakSet()
+        self._should_callback:bool = True
+        self._prop_name:str = ""
 
     @property
     def name(self)->str:
@@ -116,27 +118,42 @@ class Material:
         self._name = name
 
     def _color_change_callback(self):
+        if not self._should_callback:
+            return
+
+        old_should_callback = self._should_callback
+        self._should_callback = False
+
+        if self._prop_name == "ambient":
+            if glm.length(self._ambient) < 1E-6:
+                self.ambient = glm.vec3(1E-6)
+
         if not self._opacity_user_set and self._opacity == 0:
             self._opacity = 1
-            if len(self._parent_meshes) == 1:
-                for mesh in self._parent_meshes:
-                    colors = None
-                    if mesh.material is self:
-                        if "color" in mesh.vertices:
-                            colors = mesh.vertices["color"].ndarray.reshape(-1, 4)
-                            
-                    elif mesh._back_material is self:
-                        if "back_color" in mesh.vertices:
-                            colors = mesh.vertices["back_color"].ndarray.reshape(-1, 4)
+            for mesh in self._parent_meshes:
+                colors = None
+                if mesh.material is self:
+                    if "color" in mesh.vertices:
+                        colors = mesh.vertices["color"].ndarray.reshape(-1, 4)
+                        
+                elif mesh._back_material is self:
+                    if "back_color" in mesh.vertices:
+                        colors = mesh.vertices["back_color"].ndarray.reshape(-1, 4)
 
-                    if colors is not None and np.all(colors == colors[0, :]):
-                        used_color = glm.vec4(colors[0, 0], colors[0, 1], colors[0, 2], colors[0, 3])
-                        self._diffuse = used_color
-                        self._base_color = used_color
-                        self._ambient = 0.2 * used_color
+                if colors is not None and np.all(colors == colors[0, :]):
+                    used_color = glm.vec3(colors[0, 0], colors[0, 1], colors[0, 2])
+                    if self._prop_name != "diffuse":
+                        self.diffuse = used_color
 
+                    if self._prop_name != "base_color":
+                        self.base_color = used_color
+
+                break
+                        
         self._update_all_env_maps()
         self._test_transparent()
+
+        self._should_callback = old_should_callback
 
     @staticmethod
     def param_setter(func):
@@ -153,22 +170,26 @@ class Material:
                 self._opacity = 1
                 should_test_transparent = True
 
-                if len(self._parent_meshes) == 1:
-                    for mesh in self._parent_meshes:
-                        colors = None
-                        if mesh.material is self:
-                            if "color" in mesh.vertices:
-                                colors = mesh.vertices["color"].ndarray.reshape(-1, 4)
-                                
-                        elif mesh._back_material is self:
-                            if "back_color" in mesh.vertices:
-                                colors = mesh.vertices["back_color"].ndarray.reshape(-1, 4)
+                for mesh in self._parent_meshes:
+                    colors = None
+                    if mesh.material is self:
+                        if "color" in mesh.vertices:
+                            colors = mesh.vertices["color"].ndarray.reshape(-1, 4)
+                            
+                    elif mesh._back_material is self:
+                        if "back_color" in mesh.vertices:
+                            colors = mesh.vertices["back_color"].ndarray.reshape(-1, 4)
 
-                        if colors is not None and np.all(colors == colors[0, :]):
-                            used_color = glm.vec4(colors[0, 0], colors[0, 1], colors[0, 2], colors[0, 3])
-                            self._diffuse = used_color
-                            self._base_color = used_color
-                            self._ambient = 0.2 * used_color
+                    if colors is not None and np.all(colors == colors[0, :]):
+                        used_color = glm.vec3(colors[0, 0], colors[0, 1], colors[0, 2])
+                        
+                        old_should_callback = self._should_callback
+                        self._should_callback = False
+                        self.diffuse = used_color
+                        self.base_color = used_color
+                        self._should_callback = old_should_callback
+
+                    break
             
             equal = False
             try:
@@ -341,8 +362,12 @@ class Material:
         return self._ambient
     
     @ambient.setter
-    @checktype
     def ambient(self, ambient:glm.vec3)->None:
+        self._prop_name = "ambient"
+
+        if glm.length(ambient) < 1E-6:
+            ambient = glm.vec3(1E-6)
+
         self._ambient.r = ambient.r
         self._ambient.g = ambient.g
         self._ambient.b = ambient.b
@@ -352,8 +377,8 @@ class Material:
         return self._diffuse
     
     @diffuse.setter
-    @checktype
     def diffuse(self, diffuse:glm.vec3)->None:
+        self._prop_name = "diffuse"
         self._diffuse.r = diffuse.r
         self._diffuse.g = diffuse.g
         self._diffuse.b = diffuse.b
@@ -363,8 +388,8 @@ class Material:
         return self._specular
     
     @specular.setter
-    @checktype
     def specular(self, specular:glm.vec3)->None:
+        self._prop_name = "specular"
         self._specular.r = specular.r
         self._specular.g = specular.g
         self._specular.b = specular.b
@@ -417,8 +442,8 @@ class Material:
         return self._emission
     
     @emission.setter
-    @param_setter
     def emission(self, emission:glm.vec3)->None:
+        self._prop_name = "emission"
         self._emission.r = emission.r
         self._emission.g = emission.g
         self._emission.b = emission.b
@@ -477,8 +502,8 @@ class Material:
         return self._base_color
     
     @base_color.setter
-    @checktype
     def base_color(self, base_color:glm.vec3)->None:
+        self._prop_name = "base_color"
         self._base_color.r = base_color.r
         self._base_color.g = base_color.g
         self._base_color.b = base_color.b
@@ -891,11 +916,11 @@ class Material:
                     self._has_transparent = np.any(image < 255)
                     self._has_opaque = np.any(image >= 255)
                 else:
-                    self._has_transparent = np.any((1E-6 < image) & (image < 1-1E-6))
+                    self._has_transparent = np.any(image < 1-1E-6)
                     self._has_opaque = np.any(image >= 1-1E-6)
         else:
-            self._has_transparent = self.opacity < 1-1E-6
-            self._has_opaque = self.opacity >= 1-1E-6
+            self._has_transparent = (self.opacity < 1-1E-6)
+            self._has_opaque = (self.opacity >= 1-1E-6)
 
         if self.diffuse_map is not None:
             image = self.diffuse_map.image
@@ -907,7 +932,7 @@ class Material:
                     self._has_transparent = (np.any(image[:,:,3] < 255) or self._has_transparent)
                     self._has_opaque = (np.any(image[:,:,3] >= 255) and self._has_opaque)
                 else:
-                    self._has_transparent = (np.any((1E-6 < image[:,:,3]) & (image[:,:,3] < 1-1E-6)) or self._has_transparent)
+                    self._has_transparent = (np.any(image[:,:,3] < 1-1E-6) or self._has_transparent)
                     self._has_opaque = (np.any(image[:,:,3] >= 1-1E-6) and self._has_opaque)
 
         for mesh in self._parent_meshes:
