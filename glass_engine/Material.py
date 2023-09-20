@@ -440,10 +440,6 @@ class Material:
         self._shininess_strength = shininess_strength
 
     @property
-    def opacity_user_set(self):
-        return self._opacity_user_set
-
-    @property
     def opacity(self):
         return self._opacity
     

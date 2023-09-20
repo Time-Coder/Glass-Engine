@@ -56,6 +56,7 @@ class SameTypeList:
         self._list = _list
         self._list_ndarray = None
         self._list_dirty = True
+        self._should_retest = True
         self._data_list = []
 
         self._dtype = dtype
@@ -95,6 +96,7 @@ class SameTypeList:
     @ndarray.setter
     def ndarray(self, array:np.ndarray):
         self._list_dirty = False
+        self._should_retest = True
         self._list_ndarray = array
         self._list = array
 
@@ -139,6 +141,7 @@ class SameTypeList:
             self._increment.append(value)
 
         self._list_dirty = True
+        self._should_retest = True
 
     def extend(self, _list):
         self._change_to_list()
@@ -154,6 +157,7 @@ class SameTypeList:
             self._increment.append(_list)
 
         self._list_dirty = True
+        self._should_retest = True
 
     def insert(self, index, value):
         self._change_to_list()
@@ -168,6 +172,7 @@ class SameTypeList:
             self._increment.insert(index, value)
 
         self._list_dirty = True
+        self._should_retest = True
 
     def remove(self, value):
         self._change_to_list()
@@ -181,6 +186,7 @@ class SameTypeList:
             self._increment.delete(index)
 
         self._list_dirty = True
+        self._should_retest = True
 
     def pop(self, index:int):
         self._change_to_list()
@@ -192,6 +198,7 @@ class SameTypeList:
             self._increment.delete(index)
 
         self._list_dirty = True
+        self._should_retest = True
 
         return value
 
@@ -203,6 +210,7 @@ class SameTypeList:
             self._increment.clear()
 
         self._list_dirty = True
+        self._should_retest = True
 
     def update(self, _list):
         len_list = len(_list)
@@ -217,6 +225,7 @@ class SameTypeList:
             self.extend(_list[len_self:])
 
         self._list_dirty = True
+        self._should_retest = True
 
     def __len__(self):
         if isinstance(self._list, np.ndarray):
@@ -235,6 +244,7 @@ class SameTypeList:
             if index >= len_list:
                 self.extend([value]*(index+1-len_list))
                 self._list_dirty = True
+                self._should_retest = True
                 return True
             
             if self.const_get(index) == value:
@@ -252,6 +262,7 @@ class SameTypeList:
             self._increment.update(index, value)
 
         self._list_dirty = True
+        self._should_retest = True
         return True
 
     def __getitem__(self, index:(int,slice)):
@@ -266,6 +277,7 @@ class SameTypeList:
                     self._checked_out_items[index] = copy.deepcopy(self.const_get(index))
 
         self._list_dirty = True
+        self._should_retest = True
         return self.const_get(index)
     
     def const_get(self, index):
@@ -313,6 +325,7 @@ class SameTypeList:
                 self._increment.delete(index)
 
         self._list_dirty = True
+        self._should_retest = True
 
     def __process_slice(self, index):
         len_self = len(self._list)
@@ -339,10 +352,6 @@ class SameTypeList:
     @property
     def capacity(self):
         return capacity_of(len(self._list))
-
-    @property
-    def is_changed(self):
-        return (self._increment is None or self._increment.is_changed)
     
     @property
     def dtype(self):
@@ -361,3 +370,4 @@ class SameTypeList:
         
         self._dtype = dtype
         self._list_dirty = True
+        self._should_retest = True
