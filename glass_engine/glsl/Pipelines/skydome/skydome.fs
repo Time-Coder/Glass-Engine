@@ -1,6 +1,7 @@
 #version 460 core
 
 in vec2 frag_tex_coord;
+in vec3 view_dir;
 
 layout(location=0) out vec4 frag_color;
 layout(location=3) out vec3 view_pos;
@@ -20,6 +21,6 @@ void main()
     frag_color = textureColorLod(skydome_map, frag_tex_coord, 0);
     frag_color.rgb = fog_apply(fog, frag_color.rgb, sky_distance);
 
-    view_pos = vec3(0);
+    view_pos = sky_distance * normalize(view_dir);
     view_normal = vec3(0);
 }

@@ -134,13 +134,15 @@ class Material:
                 colors = None
                 if mesh.material is self:
                     if "color" in mesh.vertices:
-                        colors = mesh.vertices["color"].ndarray.reshape(-1, 4)
-                        
+                        colors = mesh.vertices["color"].ndarray
                 elif mesh._back_material is self:
                     if "back_color" in mesh.vertices:
-                        colors = mesh.vertices["back_color"].ndarray.reshape(-1, 4)
+                        colors = mesh.vertices["back_color"].ndarray
 
-                if colors is not None and np.all(colors == colors[0, :]):
+                if colors is not None and (len(colors.shape) != 2 or colors.shape[1] != 4):
+                    colors = colors.reshape(-1, 4)
+
+                if colors is not None and colors.size > 0 and np.all(colors == colors[0, :]):
                     used_color = glm.vec3(colors[0, 0], colors[0, 1], colors[0, 2])
                     if self._prop_name != "diffuse":
                         self.diffuse = used_color
@@ -174,13 +176,15 @@ class Material:
                     colors = None
                     if mesh.material is self:
                         if "color" in mesh.vertices:
-                            colors = mesh.vertices["color"].ndarray.reshape(-1, 4)
-                            
+                            colors = mesh.vertices["color"].ndarray
                     elif mesh._back_material is self:
                         if "back_color" in mesh.vertices:
-                            colors = mesh.vertices["back_color"].ndarray.reshape(-1, 4)
+                            colors = mesh.vertices["back_color"].ndarray
 
-                    if colors is not None and np.all(colors == colors[0, :]):
+                    if colors is not None and (len(colors.shape) != 2 or colors.shape[1] != 4):
+                        colors = colors.reshape(-1, 4)
+                    
+                    if colors is not None and colors.size > 0 and np.all(colors == colors[0, :]):
                         used_color = glm.vec3(colors[0, 0], colors[0, 1], colors[0, 2])
                         
                         old_should_callback = self._should_callback
@@ -368,8 +372,12 @@ class Material:
         if glm.length(ambient) < 1E-6:
             ambient = glm.vec3(1E-6)
 
+        old_should_callback = self._should_callback
+        self._should_callback = False
         self._ambient.r = ambient.r
         self._ambient.g = ambient.g
+        self._should_callback = old_should_callback
+
         self._ambient.b = ambient.b
 
     @property
@@ -379,8 +387,13 @@ class Material:
     @diffuse.setter
     def diffuse(self, diffuse:glm.vec3)->None:
         self._prop_name = "diffuse"
+
+        old_should_callback = self._should_callback
+        self._should_callback = False
         self._diffuse.r = diffuse.r
         self._diffuse.g = diffuse.g
+        self._should_callback = old_should_callback
+
         self._diffuse.b = diffuse.b
 
     @property
@@ -390,8 +403,13 @@ class Material:
     @specular.setter
     def specular(self, specular:glm.vec3)->None:
         self._prop_name = "specular"
+
+        old_should_callback = self._should_callback
+        self._should_callback = False
         self._specular.r = specular.r
         self._specular.g = specular.g
+        self._should_callback = old_should_callback
+
         self._specular.b = specular.b
 
     @property
@@ -444,8 +462,13 @@ class Material:
     @emission.setter
     def emission(self, emission:glm.vec3)->None:
         self._prop_name = "emission"
+
+        old_should_callback = self._should_callback
+        self._should_callback = False
         self._emission.r = emission.r
         self._emission.g = emission.g
+        self._should_callback = old_should_callback
+
         self._emission.b = emission.b
 
     @property
@@ -462,19 +485,23 @@ class Material:
         return self._reflection
     
     @reflection.setter
-    @checktype
-    def reflection(self, reflection:(glm.vec4,glm.vec3,float))->None:
+    def reflection(self, reflection:glm.vec4|glm.vec3|float)->None:
         if isinstance(reflection, glm.vec3):
             reflection = glm.vec4(reflection, 1)
         if isinstance(reflection, (float,int)):
             reflection = glm.vec4(1,1,1,reflection)
 
+        self._prop_name = "reflection"
+        self._reflection_user_set = True
+
+        old_should_callback = self._should_callback
+        self._should_callback = False
         self._reflection.r = reflection.r
         self._reflection.g = reflection.g
         self._reflection.b = reflection.b
-        self._reflection.a = reflection.a
+        self._should_callback = old_should_callback
 
-        self._reflection_user_set = True
+        self._reflection.a = reflection.a
 
     @property
     def refractive_index(self):
@@ -504,8 +531,13 @@ class Material:
     @base_color.setter
     def base_color(self, base_color:glm.vec3)->None:
         self._prop_name = "base_color"
+
+        old_should_callback = self._should_callback
+        self._should_callback = False
         self._base_color.r = base_color.r
         self._base_color.g = base_color.g
+        self._should_callback = old_should_callback
+        
         self._base_color.b = base_color.b
 
     @property
