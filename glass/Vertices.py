@@ -65,7 +65,7 @@ class Vertex(dict):
         for id_parent_array, index_set in self._array_index_map.items():
             parent_array = di(id_parent_array)
             if name not in parent_array._attr_list_map:
-                parent_array._attr_list_map[name] = AttrList()
+                parent_array._attr_list_map[name] = AttrList(dtype=type(value))
 
             for index in index_set:
                 parent_array._attr_list_map[name][index] = value
@@ -74,8 +74,8 @@ class Vertex(dict):
         for id_parent_array, index_set in self._array_index_map.items():
             parent_array = di(id_parent_array)
             if name not in parent_array._attr_list_map:
-                parent_array._attr_list_map[name] = AttrList()
                 value = dict.__getitem__(self, name)
+                parent_array._attr_list_map[name] = AttrList(dtype=type(value))
                 for index in index_set:
                     parent_array._attr_list_map[name][index] = value
 
@@ -233,7 +233,7 @@ class Vertices:
         len_self = len(self)
         for key in set.union(set(vertex.keys()), set(self._attr_list_map.keys())):
             if key not in self._attr_list_map:
-                self._attr_list_map[key] = AttrList()
+                self._attr_list_map[key] = AttrList(dtype=type(vertex[key]))
             if key not in vertex:
                 vertex[key] = self._attr_list_map[key].dtype()
 
@@ -296,7 +296,7 @@ class Vertices:
     def __setitem__(self, index:(int,slice), value:Vertex):
         for key in set.union(set(value.keys()), set(self._attr_list_map.keys())):
             if key not in self._attr_list_map:
-                self._attr_list_map[key] = AttrList()
+                self._attr_list_map[key] = AttrList(dtype=type(value[key]))
             if key not in value:
                 if len(self._attr_list_map[key]) == 0:
                     value[key] = self._attr_list_map[key].dtype()
@@ -401,7 +401,7 @@ class Vertices:
 
             vertex_attr = vertex[key]
             if key not in self._attr_list_map:
-                self._attr_list_map[key] = AttrList()
+                self._attr_list_map[key] = AttrList(dtype=type(vertex_attr))
                 delta_len = len(self) - len(self._attr_list_map[key])
                 self._attr_list_map[key].extend([vertex_attr] * delta_len)
             else:

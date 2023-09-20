@@ -1,6 +1,7 @@
 from .SceneNode import SceneNode
 from .Material import Material
 from .algorithm import generate_auto_TBN, generate_smooth_TBN
+from .callback_vec import callback_vec4
 
 from glass import ShaderProgram, Instances, Vertices, Indices, GLInfo, RenderHint
 from glass.utils import checktype, md5s
@@ -43,10 +44,15 @@ class Mesh(SceneNode):
         if isinstance(back_color, glm.vec3):
             back_color = glm.vec4(back_color, 1)
 
-        self._color = color
+        self._color = callback_vec4(color.r, color.g, color.b, color.a, self._color_change_callback)
         self._back_color_user_set = (back_color is not None)
-        self._back_color = back_color if self._back_color_user_set else color
+        if self._back_color_user_set:
+            self._back_color = callback_vec4(back_color.r, back_color.g, back_color.b, back_color.a, self._back_color_change_callback)
+        else:
+            self._back_color = callback_vec4(color.r, color.g, color.b, color.a, self._back_color_change_callback)
+        
         self._should_add_color = True
+        self._should_callback = True
         
         self._material = Material()
         self._material._opacity = 0
@@ -139,66 +145,152 @@ class Mesh(SceneNode):
             self._test_transparent()
             return
 
+        color_array = np.dot(np.ones((len(self.vertices), 1), dtype=np.float32),
+                             np.array([[self._color.r, self._color.g, self._color.b, self._color.a]], dtype=np.float32))
         if "color" not in self.vertices._attr_list_map:
-            self.vertices._attr_list_map["color"] = AttrList()
+            self.vertices._attr_list_map["color"] = AttrList(color_array, dtype=glm.vec4)
+        else:
+            self.vertices._attr_list_map["color"].ndarray = color_array
 
+        back_color_array = np.dot(np.ones((len(self.vertices), 1), dtype=np.float32),
+                                  np.array([[self._back_color.r, self._back_color.g, self._back_color.b, self._back_color.a]], dtype=np.float32))
         if "back_color" not in self.vertices._attr_list_map:
-            self.vertices._attr_list_map["back_color"] = AttrList()
-
-        for i in range(len(self.vertices)):
-            self.vertices._attr_list_map["color"][i] = self.color
-
-        for i in range(len(self.vertices)):
-            self.vertices._attr_list_map["back_color"][i] = self.back_color
+            self.vertices._attr_list_map["back_color"] = AttrList(back_color_array, dtype=glm.vec4)
+        else:
+            self.vertices._attr_list_map["back_color"].ndarray = back_color_array
 
         self._test_transparent()
 
+    def _color_change_callback(self):
+        if not self._should_callback:
+            return
+        
+        self._should_callback = False
+
+        color_array = np.dot(np.ones((len(self.vertices), 1), dtype=np.float32),
+                             np.array([[self._color.r, self._color.g, self._color.b, self._color.a]], dtype=np.float32))
+        if "color" not in self.vertices._attr_list_map:
+            self.vertices._attr_list_map["color"] = AttrList(color_array, dtype=glm.vec4)
+        else:
+            self.vertices._attr_list_map["color"].ndarray = color_array
+
+        if not self._back_color_user_set:
+            if "back_color" not in self.vertices._attr_list_map:
+                self.vertices._attr_list_map["back_color"] = AttrList(color_array, dtype=glm.vec4)
+            else:
+                self.vertices._attr_list_map["back_color"].ndarray = color_array
+
+        self._test_transparent()
+
+        self._should_callback = True
+
     @property
-    def color(self):
+    def color(self)->callback_vec4:
+        old_should_callback = self._should_callback
+        self._should_callback = False
+        if "color" not in self.vertices._attr_list_map:
+            self._color.r = 0
+            self._color.g = 0
+            self._color.b = 0
+            self._color.a = 0
+        else:
+            color_array = self.vertices._attr_list_map["color"].ndarray
+            if len(color_array.shape) != 2 or color_array.shape[1] != 4:
+                color_array = color_array.reshape(-1, 4)
+
+            if color_array.size > 0 and np.all(color_array == color_array[0, :]):
+                self._color.r = color_array[0, 0]
+                self._color.g = color_array[0, 1]
+                self._color.b = color_array[0, 2]
+                self._color.a = color_array[0, 3]
+            else:
+                self._color.r = 0
+                self._color.g = 0
+                self._color.b = 0
+                self._color.a = 0
+        self._should_callback = old_should_callback
+
         return self._color
     
     @color.setter
-    def color(self, color:(glm.vec3,glm.vec4)):
+    def color(self, color:glm.vec3|glm.vec4):
         if isinstance(color, glm.vec3):
             color = glm.vec4(color, 1)
 
-        self._color = color
+        color_array = np.dot(np.ones((len(self.vertices), 1), dtype=np.float32),
+                             np.array([[color.r, color.g, color.b, color.a]], dtype=np.float32))
         if "color" not in self.vertices._attr_list_map:
-            self.vertices._attr_list_map["color"] = AttrList()
-
-        if "back_color" not in self.vertices._attr_list_map:
-            self.vertices._attr_list_map["back_color"] = AttrList()
-
-        for i in range(len(self.vertices)):
-            self.vertices._attr_list_map["color"][i] = self._color
+            self.vertices._attr_list_map["color"] = AttrList(color_array, dtype=glm.vec4)
+        else:
+            self.vertices._attr_list_map["color"].ndarray = color_array
 
         if not self._back_color_user_set:
-            for i in range(len(self.vertices)):
-                self.vertices._attr_list_map["back_color"][i] = self._color
+            if "back_color" not in self.vertices._attr_list_map:
+                self.vertices._attr_list_map["back_color"] = AttrList(color_array)
+            else:
+                self.vertices._attr_list_map["back_color"].ndarray = color_array
 
         self._test_transparent()
 
+    def _back_color_change_callback(self):
+        if not self._should_callback:
+            return
+
+        self._should_callback = False
+
+        self._back_color_user_set = True
+
+        color_array = np.dot(np.ones((len(self.vertices), 1), dtype=np.float32),
+                             np.array([[self._back_color.r, self._back_color.g, self._back_color.b, self._back_color.a]], dtype=np.float32))
+        if "back_color" not in self.vertices._attr_list_map:
+            self.vertices._attr_list_map["back_color"] = AttrList(color_array, dtype=glm.vec4)
+        else:
+            self.vertices._attr_list_map["back_color"].ndarray = color_array
+
+        self._test_transparent()
+
+        self._should_callback = True
+
     @property
-    def back_color(self):
+    def back_color(self)->callback_vec4:
+        old_should_callback = self._should_callback
+        self._should_callback = False
+        if "back_color" not in self.vertices._attr_list_map:
+            self._back_color.r = 0
+            self._back_color.g = 0
+            self._back_color.b = 0
+            self._back_color.a = 0
+        else:
+            color_array = self.vertices._attr_list_map["back_color"].ndarray
+            if len(color_array.shape) != 2 or color_array.shape[1] != 4:
+                color_array = color_array.reshape(-1, 4)
+
+            if color_array.size > 0 and np.all(color_array == color_array[0, :]):
+                self._back_color.r = color_array[0, 0]
+                self._back_color.g = color_array[0, 1]
+                self._back_color.b = color_array[0, 2]
+                self._back_color.a = color_array[0, 3]
+            else:
+                self._back_color.r = 0
+                self._back_color.g = 0
+                self._back_color.b = 0
+                self._back_color.a = 0
+        self._should_callback = old_should_callback
+
         return self._back_color
     
     @back_color.setter
-    @checktype
-    def back_color(self, color:(glm.vec3,glm.vec4)):
+    def back_color(self, color:glm.vec3|glm.vec4):
         if isinstance(color, glm.vec3):
             color = glm.vec4(color, 1)
 
         self._back_color_user_set = True
-        self._back_color = color
-
-        if "color" not in self.vertices._attr_list_map:
-            self.vertices._attr_list_map["color"] = AttrList()
-
+        color_array = np.dot(np.ones((len(self.vertices), 1), dtype=np.float32),
+                             np.array([[color.r, color.g, color.b, color.a]], dtype=np.float32))
         if "back_color" not in self.vertices._attr_list_map:
-            self.vertices._attr_list_map["back_color"] = AttrList()
-
-        for i in range(len(self.vertices)):
-            self.vertices._attr_list_map["back_color"][i] = self._back_color
+            self.vertices._attr_list_map["back_color"] = AttrList(color_array, dtype=glm.vec4)
+        else:
+            self.vertices._attr_list_map["back_color"].ndarray = color_array
 
         self._test_transparent()
 
@@ -700,16 +792,13 @@ class Mesh(SceneNode):
             return
 
         if "tangent" not in vertices._attr_list_map:
-            vertices._attr_list_map["tangent"] = AttrList(dtype=glm.vec3)
-            vertices["tangent"].ndarray = np.zeros_like(vertices["position"].ndarray)
+            vertices._attr_list_map["tangent"] = AttrList(np.zeros_like(vertices["position"].ndarray), dtype=glm.vec3)
 
         if "bitangent" not in vertices._attr_list_map:
-            vertices._attr_list_map["bitangent"] = AttrList(dtype=glm.vec3)
-            vertices["bitangent"].ndarray = np.zeros_like(vertices["position"].ndarray)
+            vertices._attr_list_map["bitangent"] = AttrList(np.zeros_like(vertices["position"].ndarray), dtype=glm.vec3)
 
         if "normal" not in vertices._attr_list_map:
-            vertices._attr_list_map["normal"] = AttrList(dtype=glm.vec3)
-            vertices["normal"].ndarray = np.zeros_like(vertices["position"].ndarray)
+            vertices._attr_list_map["normal"] = AttrList(np.zeros_like(vertices["position"].ndarray), dtype=glm.vec3)
 
         if self.__surf_type == Mesh.SurfType.Auto:
             generate_auto_TBN(vertices, indices, not self.self_calculated_normal)

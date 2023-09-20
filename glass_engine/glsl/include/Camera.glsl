@@ -146,13 +146,13 @@ vec4 Camera_project_skybox(Camera camera, vec3 world_coord)
 	world_coord = quat_apply(quat(cos45, -sin45, 0, 0), world_coord);
 	vec3 view_coord = world_dir_to_view(camera, world_coord);
 	
-	return view_to_NDC(camera, view_coord, 0);
+	return view_to_NDC(camera, view_coord, CAMERA_PROJECTION_PERSPECTIVE);
 }
 
 vec4 Camera_project_skydome(Camera camera, vec3 world_coord)
 {
 	vec3 view_coord = world_dir_to_view(camera, world_coord);
-	return view_to_NDC(camera, view_coord, 0);
+	return view_to_NDC(camera, view_coord, CAMERA_PROJECTION_PERSPECTIVE);
 }
 
 float PSSM(Camera camera, int i)

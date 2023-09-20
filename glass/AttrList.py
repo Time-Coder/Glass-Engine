@@ -9,7 +9,7 @@ import numpy as np
 
 class AttrList(SameTypeList):
 
-    def __init__(self, _list:list|None=None, draw_type:GLInfo.draw_types_literal=GL.GL_STATIC_DRAW, dtype:GLInfo.attr_types_literal=None):
+    def __init__(self, _list:list|np.ndarray|None=None, draw_type:GLInfo.draw_types_literal=GL.GL_STATIC_DRAW, dtype:GLInfo.attr_types_literal=None):
         SameTypeList.__init__(self, _list, dtype)
 
         self._draw_type = draw_type

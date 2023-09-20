@@ -27,7 +27,7 @@ void main()
     float target_focus = camera.lens.focus;
     if (camera.lens.auto_focus)
     {
-        vec3 clear_view_pos = texture(view_pos_map, camera.lens.focus_tex_coord).xyz;
+        vec3 clear_view_pos = textureLod(view_pos_map, camera.lens.focus_tex_coord, 0).xyz;
         float clear_distance = clear_view_pos.y;
         if (length(clear_view_pos) > 1E-6)
         {
@@ -51,7 +51,6 @@ void main()
             float sgn = sign(target_focus - _current_focus);
             float a = 0.02/camera.lens.focus_change_time;
             focus = _current_focus + a * sgn / fps;
-            // focus = _current_focus + a * (target_focus - _current_focus) / fps;
             if (sgn == sign(focus - target_focus))
             {
                 focus = target_focus;

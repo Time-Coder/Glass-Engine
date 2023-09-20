@@ -103,7 +103,7 @@ class SameTypeList:
             self._increment.reset(_list)
 
     @classmethod
-    def frombuffer(cls, buffer:(bytes,bytearray), dtype):
+    def frombuffer(cls, buffer:bytes|bytearray, dtype):
         np_dtype = GLInfo.np_dtype_map[dtype]
         np_array = np.frombuffer(buffer, dtype=np_dtype).reshape((-1, nitems(dtype)))
         result = cls(np_array, dtype=dtype)
