@@ -436,10 +436,11 @@ class Vertices:
 
     def _test_front_transparent(self):
         if "color" in self._attr_list_map:
-            if not self._tested_front_transparent or self._attr_list_map["color"]._list_dirty:
+            if not self._tested_front_transparent or self._attr_list_map["color"]._should_retest:
                 front_alpha = self._attr_list_map["color"].ndarray[:,3]
                 self._front_has_transparent = np.any(front_alpha < 1-1E-6)
                 self._front_has_opaque = np.any(front_alpha >= 1-1E-6)
+                self._attr_list_map["color"]._should_retest = False
         else:
             self._front_has_transparent = False
             self._front_has_opaque = True
@@ -448,10 +449,11 @@ class Vertices:
 
     def _test_back_transparent(self):
         if "back_color" in self._attr_list_map:
-            if not self._tested_back_transparent or self._attr_list_map["back_color"]._list_dirty:
+            if not self._tested_back_transparent or self._attr_list_map["back_color"]._should_retest:
                 back_alpha = self._attr_list_map["back_color"].ndarray[:,3]
                 self._back_has_transparent = np.any(back_alpha < 1-1E-6)
                 self._back_has_opaque = np.any(back_alpha >= 1-1E-6)
+                self._attr_list_map["back_color"]._should_retest = False
         else:
             self._back_has_transparent = False
             self._back_has_opaque = True

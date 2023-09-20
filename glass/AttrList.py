@@ -43,6 +43,7 @@ class AttrList(SameTypeList):
         
         self._dtype = dtype
         self._list_dirty = True
+        self._should_retest = True
         self.stride = sizeof(dtype)
 
     def _apply(self)->None:
