@@ -5,7 +5,7 @@
 #define H(P) fract(sin(dot(P,vec2(127.1,311.7)))*43758.545)
 #define pR(a) mat2(cos(a),sin(a),-sin(a),cos(a))
 
-vec4 getColor(sampler2D screen_image, vec2 tex_coord)
+vec4 post_process(sampler2D screen_image, vec2 tex_coord)
 {
     float t = iTime * 0.6;
     vec4 frag_color = textureColor(screen_image, tex_coord);

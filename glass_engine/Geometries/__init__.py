@@ -62,7 +62,6 @@ from .Extruder import Extruder
 
 # 特殊几何体
 from .Floor import Floor
-from .Flower import Flower
 from .Torus import Torus
 from .TrefoilKnot import TrefoilKnot
 from .CoordSys import CoordSys

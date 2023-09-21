@@ -35,7 +35,7 @@ class Material:
         Turquoise = "绿松石"
         Brass = "黄铜"
         Bronze = "青铜"
-        Chrome = "铬合金"
+        Chrome = "铬"
         Copper = "铜"
         Gold = "金"
         Silver = "银"
