@@ -25,7 +25,7 @@ camera.screen.show() # 相机显示屏显示渲染结果
 
 运行上述程序，你将得到下图所示结果：
 
-![简单场景](start.png){scale=50%}
+![简单场景](start.png)
 
 你可以通过鼠标右键拖动以旋转视角，还可通过键盘按键 :kbd:`W` :kbd:`A` :kbd:`S` :kbd:`D` :kbd:`E` :kbd:`C` 来在场景中漫游：
 
