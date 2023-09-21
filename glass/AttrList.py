@@ -6,6 +6,7 @@ from .Increment import Increment
 
 from OpenGL import GL
 import numpy as np
+import glm
 
 class AttrList(SameTypeList):
 
@@ -38,6 +39,14 @@ class AttrList(SameTypeList):
     
     @dtype.setter
     def dtype(self, dtype:GLInfo.attr_types_literal):
+        str_dtype = str(dtype)
+        if str_dtype == "callback_vec3":
+            dtype = glm.vec3
+        elif str_dtype == "callback_vec4":
+            dtype = glm.vec4
+        elif str_dtype == "callback_quat":
+            dtype = glm.quat
+
         if self._dtype == dtype:
             return
         
@@ -66,6 +75,7 @@ class AttrList(SameTypeList):
 
         value_array = self.ndarray
         self._vbo.bufferSubData(0, value_array.nbytes, value_array)
+
         self.is_new_vbo = True
 
     def __apply_increment(self)->None:

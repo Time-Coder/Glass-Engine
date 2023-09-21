@@ -15,7 +15,7 @@ vec3 OrenNayar_diffuse(vec3 to_light, vec3 to_camera, vec3 normal, float roughne
     float alpha = max(theta_r, theta_i);
     float beta =  min(theta_r, theta_i);
 
-    float sigma = 100*roughness*roughness;
+    float sigma = 0.5*acos(-1)*roughness;
     float sigma2 = sigma*sigma;
     float C1 = 1 - 0.5 * sigma2 / (sigma2 + 0.33);
     float C2 = 0.45 * sigma2 / (sigma2 + 0.09);

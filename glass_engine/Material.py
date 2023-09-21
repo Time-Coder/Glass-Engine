@@ -76,7 +76,7 @@ class Material:
         self._specular_bands:int = 2
         self._diffuse_softness:float = 0.05
         self._specular_softness:float = 0.02
-        self._rim_power:float = 0.2
+        self._rim_power:float = 0.3
         self._fog:bool = True
         self._reflection:callback_vec4 = callback_vec4(1, 1, 1, 0, self._color_change_callback)
         self._refractive_index:float = 0
@@ -256,7 +256,7 @@ class Material:
     @diffuse_softness.setter
     @param_setter
     def diffuse_softness(self, softness:float):
-        self._diffuse_softness = softness
+        self._diffuse_softness = max(softness, 1E-5)
 
     @property
     def specular_softness(self)->float:
@@ -265,7 +265,7 @@ class Material:
     @specular_softness.setter
     @param_setter
     def specular_softness(self, softness:float):
-        self._specular_softness = softness
+        self._specular_softness = max(softness, 1E-5)
 
     @property
     def rim_power(self)->float:

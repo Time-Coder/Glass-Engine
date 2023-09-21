@@ -177,13 +177,10 @@ InternalMaterial fetch_internal_material(vec4 frag_color, Material material, vec
             internal_material.opacity = 1 - (1-frag_color.a)*(1-material_emission4.a*material_opacity);
         }
     }
-    if (material.shading_model != SHADING_MODEL_UNLIT)
+    internal_material.emission = mix(vec3(0), internal_material.emission, material_opacity);
+    if (material.shading_model == SHADING_MODEL_UNLIT && length(internal_material.emission) < 1E-6)
     {
-        internal_material.emission = mix(vec3(0), internal_material.emission, material_opacity);
-    }
-    else
-    {
-        internal_material.emission = mix(reduce_frag_color, internal_material.emission, material_opacity);
+        internal_material.emission = internal_material.diffuse;
     }
 
     // 反射
