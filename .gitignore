@@ -3,7 +3,6 @@ __glcache__
 workspace
 temp_shaders
 *.txt
-*.png
 *.c
 *.pyd/*
 build
