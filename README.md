@@ -1,10 +1,8 @@
 # Glass Engine -- 易用的 Python 实时 3D 渲染引擎
 
-**Glass Engine** 是一个相当易用的 Python 实时 3D 渲染引擎，完全免费开源。使用 **Glass Engine** 你可以轻松地在你的 Python 界面程序中嵌入可交互的 3D 画面。
+![glass_engine_logo](glass_engine/glass_engine_logo411.png){scale=100%}
 
-<div style="text-align:center;">
-    ![简单场景](glass_engine/glass_engine_logo411.png){scale=100%}
-</div>
+**Glass Engine** 是一个相当易用的 Python 实时 3D 渲染引擎，完全免费开源。使用 **Glass Engine** 你可以轻松地在你的 Python 界面程序中嵌入可交互的 3D 画面。
 
 一条命令 ``pip install glass_engine`` 即可完成对 **Glass Engine** 的安装，接下来，让我们通过一个简单例子来直观感受一下 **Glass Engine** 的使用过程：
 
@@ -27,9 +25,7 @@ camera.screen.show() # 相机显示屏显示渲染结果
 
 运行上述程序，你将得到下图所示结果：
 
-<div style="text-align:center;">
-    ![简单场景](start.png){scale=50%}
-</div>
+![简单场景](start.png){scale=50%}
 
 你可以通过鼠标右键拖动以旋转视角，还可通过键盘按键 :kbd:`W` :kbd:`A` :kbd:`S` :kbd:`D` :kbd:`E` :kbd:`C` 来在场景中漫游：
 
