@@ -1,5 +1,6 @@
 import copy
 import numpy as np
+import glm
 
 from .utils import capacity_of
 from .helper import nitems
@@ -58,6 +59,14 @@ class SameTypeList:
         self._list_dirty = True
         self._should_retest = True
         self._data_list = []
+
+        str_dtype = str(dtype)
+        if str_dtype == "callback_vec3":
+            dtype = glm.vec3
+        elif str_dtype == "callback_vec4":
+            dtype = glm.vec4
+        elif str_dtype == "callback_quat":
+            dtype = glm.quat
 
         self._dtype = dtype
         if dtype is None and _list:
@@ -365,6 +374,14 @@ class SameTypeList:
 
     @dtype.setter
     def dtype(self, dtype):
+        str_dtype = str(dtype)
+        if str_dtype == "callback_vec3":
+            dtype = glm.vec3
+        elif str_dtype == "callback_vec4":
+            dtype = glm.vec4
+        elif str_dtype == "callback_quat":
+            dtype = glm.quat
+
         if self._dtype == dtype:
             return
         

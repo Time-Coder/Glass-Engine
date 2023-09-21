@@ -198,7 +198,22 @@ float max4(vec4 v)
 float soft_abs(float value, float softness)
 {
     float abs_value = abs(value);
+    if (softness < 1E-6)
+    {
+        return abs_value;
+    }
+
     return ((abs_value < softness) ? 0.5*(value*value/softness + softness) : abs_value);
+}
+
+float soft_sign(float value, float softness)
+{
+    float soft_abs_value = soft_abs(value, softness);
+    if (soft_abs_value < 1E-6)
+    {
+        return sign(value);
+    }
+    return value / soft_abs_value;
 }
 
 vec2 soft_abs(vec2 value, float softness)
@@ -228,7 +243,33 @@ vec4 soft_abs(vec4 value, float softness)
     return result;
 }
 
-#define soft_sign(value, softness) ((value) / soft_abs((value), (softness)))
+vec2 soft_sign(vec2 value, float softness)
+{
+    vec2 result;
+    result.x = soft_sign(value.x, softness);
+    result.y = soft_sign(value.y, softness);
+    return result;
+}
+
+vec3 soft_sign(vec3 value, float softness)
+{
+    vec3 result;
+    result.x = soft_sign(value.x, softness);
+    result.y = soft_sign(value.y, softness);
+    result.z = soft_sign(value.z, softness);
+    return result;
+}
+
+vec4 soft_sign(vec4 value, float softness)
+{
+    vec4 result;
+    result.x = soft_sign(value.x, softness);
+    result.y = soft_sign(value.y, softness);
+    result.z = soft_sign(value.z, softness);
+    result.w = soft_sign(value.w, softness);
+    return result;
+}
+
 #define soft_step(value, softness) (0.5*(soft_sign((value), (softness)) + 1.0))
 #define soft_max(value1, value2, softness) (0.5 * ((value1) + (value2) + soft_abs((value1) - (value2), (softness))))
 #define soft_min(value1, value2, softness) (0.5 * ((value1) + (value2) - soft_abs((value1) - (value2), (softness))))

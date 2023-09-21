@@ -13,7 +13,7 @@ class Light(SceneNode):
         self._color:callback_vec3 = callback_vec3(1, 1, 1, callback=self._update_color)
         self._intensity:float = 1.0
         self._generate_shadows:bool = True
-        self._rim_power:float = 0.2
+        self._rim_power:float = 0.3
         self._flats:set = set()
 
     def _set_transform_dirty(self, scenes):

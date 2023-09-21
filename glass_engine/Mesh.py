@@ -198,16 +198,27 @@ class Mesh(SceneNode):
             if len(color_array.shape) != 2 or color_array.shape[1] != 4:
                 color_array = color_array.reshape(-1, 4)
 
-            if color_array.size > 0 and np.all(color_array == color_array[0, :]):
-                self._color.r = color_array[0, 0]
-                self._color.g = color_array[0, 1]
-                self._color.b = color_array[0, 2]
-                self._color.a = color_array[0, 3]
-            else:
-                self._color.r = 0
-                self._color.g = 0
-                self._color.b = 0
-                self._color.a = 0
+            if color_array.size > 0:
+                if np.all(color_array[:, 0] == color_array[0, 0]):
+                    self._color.r = color_array[0, 0]
+                else:
+                    self._color.r = 0
+
+                if np.all(color_array[:, 1] == color_array[0, 1]):
+                    self._color.g = color_array[0, 1]
+                else:
+                    self._color.g = 0
+
+                if np.all(color_array[:, 2] == color_array[0, 2]):
+                    self._color.b = color_array[0, 2]
+                else:
+                    self._color.b = 0
+
+                if np.all(color_array[:, 3] == color_array[0, 3]):
+                    self._color.a = color_array[0, 3]
+                else:
+                    self._color.a = 0
+
         self._should_callback = old_should_callback
 
         return self._color
@@ -226,7 +237,7 @@ class Mesh(SceneNode):
 
         if not self._back_color_user_set:
             if "back_color" not in self.vertices._attr_list_map:
-                self.vertices._attr_list_map["back_color"] = AttrList(color_array)
+                self.vertices._attr_list_map["back_color"] = AttrList(color_array, dtype=glm.vec4)
             else:
                 self.vertices._attr_list_map["back_color"].ndarray = color_array
 
@@ -265,11 +276,26 @@ class Mesh(SceneNode):
             if len(color_array.shape) != 2 or color_array.shape[1] != 4:
                 color_array = color_array.reshape(-1, 4)
 
-            if color_array.size > 0 and np.all(color_array == color_array[0, :]):
-                self._back_color.r = color_array[0, 0]
-                self._back_color.g = color_array[0, 1]
-                self._back_color.b = color_array[0, 2]
-                self._back_color.a = color_array[0, 3]
+            if color_array.size > 0:
+                if np.all(color_array[:, 0] == color_array[0, 0]):
+                    self._back_color.r = color_array[0, 0]
+                else:
+                    self._back_color.r = 0
+
+                if np.all(color_array[:, 1] == color_array[0, 1]):
+                    self._back_color.g = color_array[0, 1]
+                else:
+                    self._back_color.g = 0
+
+                if np.all(color_array[:, 2] == color_array[0, 2]):
+                    self._back_color.b = color_array[0, 2]
+                else:
+                    self._back_color.b = 0
+
+                if np.all(color_array[:, 3] == color_array[0, 3]):
+                    self._back_color.a = color_array[0, 3]
+                else:
+                    self._back_color.a = 0
             else:
                 self._back_color.r = 0
                 self._back_color.g = 0
@@ -725,22 +751,6 @@ class Mesh(SceneNode):
         self.__primitive = primitive_type
 
     def generate_temp_TBN(self, vertex0, vertex1, vertex2):
-        if self.should_add_color:
-            if "color" not in vertex0:
-                vertex0.color = self.color
-            if "back_color" not in vertex0:
-                vertex0.back_color = self.back_color
-
-            if "color" not in vertex1:
-                vertex1.color = self.color
-            if "back_color" not in vertex1:
-                vertex1.back_color = self.back_color
-
-            if "color" not in vertex2:
-                vertex2.color = self.color
-            if "back_color" not in vertex2:
-                vertex2.back_color = self.back_color
-
         v01 = vertex1.position - vertex0.position
         v02 = vertex2.position - vertex0.position
 
