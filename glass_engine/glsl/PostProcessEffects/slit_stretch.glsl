@@ -5,7 +5,7 @@ float triWave(float x)
     return(abs(mod(x-10.0, 20.0)-10.0)+1.0);
 }
 
-vec4 getColor(sampler2D screen_image, vec2 tex_coord)
+vec4 post_process(sampler2D screen_image, vec2 tex_coord)
 {
     vec2 uv = 2.0*(tex_coord-0.5);
 

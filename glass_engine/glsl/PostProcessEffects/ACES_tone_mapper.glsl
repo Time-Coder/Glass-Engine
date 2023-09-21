@@ -48,7 +48,7 @@ vec3 ACESFitted(vec3 color)
     return color;
 }
 
-vec4 getColor(sampler2D screen_image, vec2 tex_coord)
+vec4 post_process(sampler2D screen_image, vec2 tex_coord)
 {
 	vec4 result = max(textureLod(screen_image, tex_coord, 0), 0.0);
     result.rgb = ACESFitted(result.rgb);

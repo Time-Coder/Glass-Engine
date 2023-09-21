@@ -7,7 +7,7 @@ buffer CurrentLuma
     float current_luma;
 };
 
-vec4 getColor(sampler2D screen_image, vec2 tex_coord)
+vec4 post_process(sampler2D screen_image, vec2 tex_coord)
 {
     vec4 color = max(textureLod(screen_image, tex_coord, 0), 0.0);
     ivec2 frag_coord = ivec2(gl_FragCoord.xy);

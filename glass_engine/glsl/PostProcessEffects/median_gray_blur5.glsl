@@ -1,6 +1,6 @@
 #define KERNEL_WIDTH 5
 
-vec4 getColor(sampler2D screen_image, vec2 tex_coord)
+vec4 post_process(sampler2D screen_image, vec2 tex_coord)
 {
     float values[KERNEL_WIDTH*KERNEL_WIDTH];
     vec2 tex_offset = 1.0 / textureSize(screen_image, 0);

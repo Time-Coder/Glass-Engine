@@ -81,5 +81,5 @@ vec2 world_pos_to_tex_coord(vec3 world_pos)
 
 void main()
 { 
-    frag_color = getColor(screen_image, fs_in.tex_coord);
+    frag_color = post_process(screen_image, fs_in.tex_coord);
 }

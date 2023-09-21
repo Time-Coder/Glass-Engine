@@ -1,7 +1,7 @@
 uniform sampler2D LUT;
 uniform float contribute;
 
-vec4 getColor(sampler2D screen_image, vec2 tex_coord)
+vec4 post_process(sampler2D screen_image, vec2 tex_coord)
 {
     ivec2 LUT_size = textureSize(LUT, 0);
     int block_width = 0;

@@ -2,7 +2,7 @@ uniform float radius;
 uniform int samples;
 uniform float power;
 
-vec4 getColor(sampler2D screen_image, vec2 tex_coord)
+vec4 post_process(sampler2D screen_image, vec2 tex_coord)
 {
     if (radius <= 1E-4 || samples <= 0 || power <= 1E-6)
     {
