@@ -1,4 +1,4 @@
-# Glass Engine -- 易用的 Python 实时 3D 渲染引擎
+# Glass Engine -- 易用的 Python 3D 渲染引擎
 
 ![glass_engine_logo](glass_engine/glass_engine_logo256.png)
 
