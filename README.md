@@ -37,5 +37,5 @@ camera.screen.show() # 相机显示屏显示渲染结果
 
 怎么样，是不是很简单、直观、易用？如果你感兴趣的话，就让我们开始接下来的 3D 渲染之旅吧！
 
-* 文档：
+* 文档：https://glass-engine-doc.readthedocs.io/zh/latest/
 * PyPI 索引：
