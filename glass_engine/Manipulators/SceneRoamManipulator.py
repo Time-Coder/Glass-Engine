@@ -144,7 +144,7 @@ class SceneRoamManipulator(Manipulator):
         
         return False
 
-    def on_key_repeated(self, keys:set[Manipulator.Key])->bool:
+    def on_key_repeated(self, keys:set)->bool:
         if self._is_left_pressed:
             return
 

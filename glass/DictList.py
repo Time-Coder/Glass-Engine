@@ -8,17 +8,17 @@ class ExtendableList:
         else:
             self._list = []
 
-    def __setitem__(self, index:int|slice, value:object)->None:
+    def __setitem__(self, index:(int,slice), value:object)->None:
         len_self = len(self)
         if isinstance(index, int) and index >= len_self:
             self._list.extend([None]*(index-len_self+1))
 
         self._list[index] = value
 
-    def __getitem__(self, index:int|slice)->object:
+    def __getitem__(self, index:(int,slice))->object:
         return self._list[index]
             
-    def __delitem__(self, index:int|slice)->None:
+    def __delitem__(self, index:(int,slice))->None:
         del self._list[index]
         
     def __contains__(self, value:object)->bool:

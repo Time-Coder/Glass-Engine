@@ -480,7 +480,7 @@ class Material:
         return self._reflection
     
     @reflection.setter
-    def reflection(self, reflection:glm.vec4|glm.vec3|float)->None:
+    def reflection(self, reflection:(glm.vec4,glm.vec3,float))->None:
         if isinstance(reflection, glm.vec3):
             reflection = glm.vec4(reflection, 1)
         if isinstance(reflection, (float,int)):

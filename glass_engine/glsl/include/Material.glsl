@@ -95,7 +95,6 @@ InternalMaterial fetch_internal_material(vec4 frag_color, Material material, vec
     internal_material.specular_softness = material.specular_softness;
     internal_material.rim_power = material.rim_power;
     internal_material.fog = material.fog;
-    vec3 reduce_frag_color = frag_color.rgb * frag_color.a;
 
     // 材质不透明度
     float material_opacity = material.opacity;
@@ -122,7 +121,7 @@ InternalMaterial fetch_internal_material(vec4 frag_color, Material material, vec
     {
         internal_material.ambient = 0.2 * material.diffuse;
     }
-    internal_material.ambient = mix(0.2*reduce_frag_color, internal_material.ambient, material_opacity);
+    internal_material.ambient = mix(0.2*frag_color.rgb, internal_material.ambient, material_opacity);
 
     // 漫反射颜色
     internal_material.diffuse = material.diffuse;
@@ -139,7 +138,7 @@ InternalMaterial fetch_internal_material(vec4 frag_color, Material material, vec
         internal_material.diffuse = material_diffuse4.rgb;
         internal_material.opacity = 1 - (1-frag_color.a)*(1-material_diffuse4.a*material_opacity);
     }
-    internal_material.diffuse = mix(reduce_frag_color, internal_material.diffuse, material_opacity);
+    internal_material.diffuse = mix(frag_color.rgb, internal_material.diffuse, material_opacity);
 
     // 镜面高光颜色
     internal_material.specular = material.specular;
@@ -243,7 +242,7 @@ InternalMaterial fetch_internal_material(vec4 frag_color, Material material, vec
     {
         internal_material.base_color = textureColor(material.diffuse_map, tex_coord).rgb;
     }
-    internal_material.base_color = mix(reduce_frag_color, internal_material.base_color, material_opacity);
+    internal_material.base_color = mix(frag_color.rgb, internal_material.base_color, material_opacity);
 
     return internal_material;
 }

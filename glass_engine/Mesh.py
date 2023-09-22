@@ -224,7 +224,7 @@ class Mesh(SceneNode):
         return self._color
     
     @color.setter
-    def color(self, color:glm.vec3|glm.vec4):
+    def color(self, color:(glm.vec3,glm.vec4)):
         if isinstance(color, glm.vec3):
             color = glm.vec4(color, 1)
 
@@ -306,7 +306,7 @@ class Mesh(SceneNode):
         return self._back_color
     
     @back_color.setter
-    def back_color(self, color:glm.vec3|glm.vec4):
+    def back_color(self, color:(glm.vec3,glm.vec4)):
         if isinstance(color, glm.vec3):
             color = glm.vec4(color, 1)
 
