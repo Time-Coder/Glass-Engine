@@ -10,6 +10,70 @@ import numpy as np
 import math
 from functools import wraps
 
+def param_setter(func):
+    @wraps(func)
+    def wrapper(*args, **kwargs):
+        self = args[0]
+        value = args[1]
+
+        should_test_transparent = False
+        if func.__name__ in \
+            ["diffuse_map", "ambient_map", "specular_map", "emission_map",
+            "reflection_map", "refractive_index", "base_color_map"] and \
+            not self._opacity_user_set and self._opacity == 0:
+            self._opacity = 1
+            should_test_transparent = True
+
+            for mesh in self._parent_meshes:
+                colors = None
+                if mesh.material is self:
+                    if "color" in mesh.vertices:
+                        colors = mesh.vertices["color"].ndarray
+                elif mesh._back_material is self:
+                    if "back_color" in mesh.vertices:
+                        colors = mesh.vertices["back_color"].ndarray
+
+                if colors is not None and (len(colors.shape) != 2 or colors.shape[1] != 4):
+                    colors = colors.reshape(-1, 4)
+                
+                if colors is not None and colors.size > 0 and np.all(colors == colors[0, :]):
+                    used_color = glm.vec3(colors[0, 0], colors[0, 1], colors[0, 2])
+                    
+                    old_should_callback = self._should_callback
+                    self._should_callback = False
+                    self.diffuse = used_color
+                    self.base_color = used_color
+                    self._should_callback = old_should_callback
+
+                break
+        
+        equal = False
+        try:
+            lvalue = getattr(self, func.__name__)
+            if type(lvalue) != type(value):
+                equal = False
+            else:
+                equal = bool(getattr(self, func.__name__) == value)
+        except:
+            equal = False
+
+        if equal:
+            return
+
+        safe_func = checktype(func)
+        return_value = safe_func(*args, **kwargs)
+
+        self._update_all_env_maps()
+        if func.__name__ == "generate_shadows":
+            self._update_all_depth_maps()
+
+        if should_test_transparent:
+            self._test_transparent()
+
+        return return_value
+
+    return wrapper
+
 class Material:
 
     class ShadingModel(Enum):
@@ -156,71 +220,6 @@ class Material:
         self._test_transparent()
 
         self._should_callback = old_should_callback
-
-    @staticmethod
-    def param_setter(func):
-        @wraps(func)
-        def wrapper(*args, **kwargs):
-            self = args[0]
-            value = args[1]
-
-            should_test_transparent = False
-            if func.__name__ in \
-               ["diffuse_map", "ambient_map", "specular_map", "emission_map",
-                "reflection_map", "refractive_index", "base_color_map"] and \
-               not self._opacity_user_set and self._opacity == 0:
-                self._opacity = 1
-                should_test_transparent = True
-
-                for mesh in self._parent_meshes:
-                    colors = None
-                    if mesh.material is self:
-                        if "color" in mesh.vertices:
-                            colors = mesh.vertices["color"].ndarray
-                    elif mesh._back_material is self:
-                        if "back_color" in mesh.vertices:
-                            colors = mesh.vertices["back_color"].ndarray
-
-                    if colors is not None and (len(colors.shape) != 2 or colors.shape[1] != 4):
-                        colors = colors.reshape(-1, 4)
-                    
-                    if colors is not None and colors.size > 0 and np.all(colors == colors[0, :]):
-                        used_color = glm.vec3(colors[0, 0], colors[0, 1], colors[0, 2])
-                        
-                        old_should_callback = self._should_callback
-                        self._should_callback = False
-                        self.diffuse = used_color
-                        self.base_color = used_color
-                        self._should_callback = old_should_callback
-
-                    break
-            
-            equal = False
-            try:
-                lvalue = getattr(self, func.__name__)
-                if type(lvalue) != type(value):
-                    equal = False
-                else:
-                    equal = bool(getattr(self, func.__name__) == value)
-            except:
-                equal = False
-
-            if equal:
-                return
-
-            safe_func = checktype(func)
-            return_value = safe_func(*args, **kwargs)
-
-            self._update_all_env_maps()
-            if func.__name__ == "generate_shadows":
-                self._update_all_depth_maps()
-
-            if should_test_transparent:
-                self._test_transparent()
-
-            return return_value
-
-        return wrapper
 
     @property
     def fog(self)->bool:
@@ -913,13 +912,6 @@ class Material:
             self.diffuse = glm.vec3(0.5, 0.5, 0.4)
             self.specular = glm.vec3(0.7, 0.7, 0.04)
             self.shininess = 0.078125*128
-
-    @staticmethod
-    @checktype
-    def create(type:Type):
-        material = Material()
-        material.set_as(type)
-        return material
     
     def _update_all_depth_maps(self):
         for mesh in self._parent_meshes:

@@ -577,9 +577,6 @@ class Uniform:
         if isinstance(value, str):
             value = sampler_type.load(value)
 
-        # if value is None:
-        #     value = sampler2D.empty_sampler()
-
         if value is not None:
             value.bind()
 
