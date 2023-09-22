@@ -11,11 +11,11 @@ class ComputeProgram(GPUProgram):
 	def __init__(self)->None:
 		GPUProgram.__init__(self)
 		self.compute_shader = ComputeShader()
-		self._work_group_size:tuple[int]|None = None
+		self._work_group_size:tuple = None
 		self._should_join:bool = False
 
 	@staticmethod
-	def _check_work_group_size(work_group_size:tuple[int])->None:
+	def _check_work_group_size(work_group_size:tuple)->None:
 		max_work_group_size = GLConfig.max_compute_work_group_size
 		if work_group_size[0] > max_work_group_size[0]:
 			raise ValueError("x-dimension work group size should not be greater than " + str(max_work_group_size[0]) + ", " + str(work_group_size[0]) + " were given")
@@ -30,7 +30,7 @@ class ComputeProgram(GPUProgram):
 			raise ValueError("work group invocation should not be greater than " + str(max_work_group_invocations) + ", " + str(work_group_invocations) + " were given")
 
 	@staticmethod
-	def _check_work_group_count(work_group_count:tuple[int])->None:
+	def _check_work_group_count(work_group_count:tuple)->None:
 		max_work_group_count = GLConfig.max_compute_work_group_count
 		if work_group_count[0] > max_work_group_count[0]:
 			raise ValueError("x-dimension work group size should not be greater than " + str(max_work_group_count[0]) + ", " + str(work_group_count[0]) + " were given")
@@ -115,9 +115,9 @@ class ComputeProgram(GPUProgram):
 		self.join(barrier)
 
 	@property
-	def work_group_size(self)->tuple[int]:
+	def work_group_size(self)->tuple:
 		return self._work_group_size
 
 	@property
-	def related_files(self)->list[str]:
+	def related_files(self)->list:
 		return [self.compute_shader._file_name]

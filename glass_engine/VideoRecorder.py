@@ -7,7 +7,7 @@ import time
 
 from glass.utils import di
 
-def convert_to_image(data:np.ndarray, viewport:tuple[int])->np.ndarray:
+def convert_to_image(data:np.ndarray, viewport:tuple)->np.ndarray:
     if viewport[0] != 0 or \
        viewport[1] != 0 or \
        viewport[2] != data.shape[1] or \
@@ -39,7 +39,7 @@ def convert_to_image(data:np.ndarray, viewport:tuple[int])->np.ndarray:
     return image
 
 class VideoRecorder:
-    def __init__(self, screen, file_name:str, fourcc:list[str], viewport:tuple[int], fps:float|int)->None:
+    def __init__(self, screen, file_name:str, fourcc:list, viewport:tuple, fps:(float,int))->None:
         self._screen_id = id(screen)
 
         self._file_name = file_name

@@ -47,10 +47,10 @@ class SameTypeList:
             self.__current_index = 0
             return self
 
-    def __init__(self, _list:list|np.ndarray|None=None, dtype:type|None=None):
+    def __init__(self, _list:(list,np.ndarray)=None, dtype:type=None):
         self.reset(_list, dtype)
 
-    def reset(self, _list:list|np.ndarray|None=None, dtype:type|None=None):
+    def reset(self, _list:(list,np.ndarray)=None, dtype:type=None):
         if _list is None:
             _list = []
 
@@ -114,7 +114,7 @@ class SameTypeList:
             self._increment.reset(_list)
 
     @classmethod
-    def frombuffer(cls, buffer:bytes|bytearray, dtype):
+    def frombuffer(cls, buffer:(bytes,bytearray), dtype):
         np_dtype = GLInfo.np_dtype_map[dtype]
         np_array = np.frombuffer(buffer, dtype=np_dtype).reshape((-1, nitems(dtype)))
         result = cls(np_array, dtype=dtype)

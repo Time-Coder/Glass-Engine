@@ -535,5 +535,5 @@ class Manipulator:
     def on_key_released(self, key:Key)->bool:
         return False
 
-    def on_key_repeated(self, keys:set[Key])->bool:
+    def on_key_repeated(self, keys:set)->bool:
         return False

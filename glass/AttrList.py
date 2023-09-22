@@ -10,7 +10,7 @@ import glm
 
 class AttrList(SameTypeList):
 
-    def __init__(self, _list:list|np.ndarray|None=None, draw_type:GLInfo.draw_types=GL.GL_STATIC_DRAW, dtype:GLInfo.attr_types=None):
+    def __init__(self, _list:(list,np.ndarray)=None, draw_type:GLInfo.draw_types=GL.GL_STATIC_DRAW, dtype:GLInfo.attr_types=None):
         SameTypeList.__init__(self, _list, dtype)
 
         self._draw_type = draw_type

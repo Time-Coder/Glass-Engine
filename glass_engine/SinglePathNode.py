@@ -29,7 +29,7 @@ class SinglePathNode(SceneNode):
         return SinglePathNode.__abs_position(self)
 
     @property
-    def path(self)->list[SceneNode]:
+    def path(self)->list:
         if self.parent is None:
             return [self]
         

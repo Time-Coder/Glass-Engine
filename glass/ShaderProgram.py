@@ -21,11 +21,11 @@ from .ImageUnits import ImageUnits
 
 class ShaderProgram(GPUProgram):
 
-    __accum_draw_calls:dict[int,int] = {}
-    __accum_draw_points:dict[int,int] = {}
-    __accum_draw_lines:dict[int,int] = {}
-    __accum_draw_meshes:dict[int,int] = {}
-    __accum_draw_patches:dict[int,int] = {}
+    __accum_draw_calls:dict = {}
+    __accum_draw_points:dict = {}
+    __accum_draw_lines:dict = {}
+    __accum_draw_meshes:dict = {}
+    __accum_draw_patches:dict = {}
 
     def __init__(self):
         GPUProgram.__init__(self)

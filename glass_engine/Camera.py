@@ -167,10 +167,10 @@ class Camera(SinglePathNode):
     def CSM_levels(self, levels:int):
         self.__CSM_levels = levels
 
-    def take_photo(self, save_path:str|None=None, viewport:tuple[int]|None=None)->np.ndarray:
+    def take_photo(self, save_path:str=None, viewport:tuple=None)->np.ndarray:
         return self.screen.capture(save_path, viewport)
     
-    def record_video(self, save_path:str, viewport:tuple[int]|None=None, fps:float|int|None=None)->VideoRecorder:
+    def record_video(self, save_path:str, viewport:tuple=None, fps:(float,int)=None)->VideoRecorder:
         return self.screen.capture_video(save_path, viewport, fps)
 
     def project(self, world_coord:glm.vec3)->glm.vec4:

@@ -26,7 +26,7 @@ class SlideAverageFilter:
         self._window_width = window_width
         self._data_list = []
 
-    def __call__(self, new_value:float|int)->float:
+    def __call__(self, new_value:(float,int))->float:
         if len(self._data_list) >= self._window_width:
             old_value = self._data_list.pop(0)
             self._current_sum -= old_value
@@ -67,7 +67,7 @@ class Screen(QOpenGLWidget):
         instance = QOpenGLWidget.__new__(cls, *args, **kwargs)
         return instance
 
-    def __init__(self, camera, parent:QWidget|None=None)->None:
+    def __init__(self, camera, parent:QWidget=None)->None:
         QOpenGLWidget.__init__(self, parent)
 
         self.setFocusPolicy(Qt.FocusPolicy.StrongFocus)
@@ -329,7 +329,7 @@ class Screen(QOpenGLWidget):
             return self.__before_PPE_fbo
         
     @staticmethod
-    def __mouse_parameters(mouse_event:QMouseEvent)->tuple[Manipulator.MouseButton, glm.vec2, glm.vec2]:
+    def __mouse_parameters(mouse_event:QMouseEvent)->tuple:
         button = Manipulator.MouseButton(mouse_event.button().value)
         screen_pos = mouse_event.position()
         screen_pos = glm.vec2(screen_pos.x(), screen_pos.y())
@@ -338,7 +338,7 @@ class Screen(QOpenGLWidget):
         return button, screen_pos, global_pos
     
     @staticmethod
-    def __wheel_parameters(wheel_event:QWheelEvent)->tuple[glm.vec2, glm.vec2, glm.vec2]:
+    def __wheel_parameters(wheel_event:QWheelEvent)->tuple:
         angle = glm.vec2(wheel_event.angleDelta().x(), wheel_event.angleDelta().y())
         screen_pos = wheel_event.position()
         screen_pos = glm.vec2(screen_pos.x(), screen_pos.y())
@@ -432,7 +432,7 @@ class Screen(QOpenGLWidget):
         if should_update:
             self.update()
 
-    def __keyRepeateEvent(self, keys:set[Manipulator.Key])->bool:
+    def __keyRepeateEvent(self, keys:set)->bool:
         self.makeCurrent()
 
         should_update = False
@@ -571,7 +571,7 @@ class Screen(QOpenGLWidget):
             if should_update:
                 self.update()
 
-    def capture(self, save_path:str|None=None, viewport:tuple[int]|None=None)->np.ndarray:
+    def capture(self, save_path:str=None, viewport:tuple=None)->np.ndarray:
         self.makeCurrent()
         with self._before_PPE_fbo:
             scene = self.camera.scene
@@ -604,7 +604,7 @@ class Screen(QOpenGLWidget):
 
         return image
 
-    def capture_video(self, save_path:str, viewport:tuple[int]|None=None, fps:float|int|None=None)->VideoRecorder:
+    def capture_video(self, save_path:str, viewport:tuple=None, fps:(float,int)=None)->VideoRecorder:
         ext_name = extname(save_path)
         if ext_name not in ["mp4", "avi"]:
             raise ValueError(f"not supported video type: .{ext_name}, only support .mp4 and .avi")
