@@ -10,13 +10,13 @@ class BO(GLObject):
 	def __init__(self, context_shared=True)->None:
 		GLObject.__init__(self, context_shared=context_shared)
 		self._nbytes:int = 0
-		self._draw_type:GLInfo.draw_types_literal = GL.GL_STATIC_DRAW
+		self._draw_type:GLInfo.draw_types = GL.GL_STATIC_DRAW
 
 	def delete(self)->None:
 		GLObject.delete(self)
 		self._nbytes = 0
 
-	def bufferData(self, value_array, draw_type:GLInfo.draw_types_literal=GL.GL_STATIC_DRAW)->None:
+	def bufferData(self, value_array, draw_type:GLInfo.draw_types=GL.GL_STATIC_DRAW)->None:
 		if GlassConfig.debug and self.__class__.__name__ in ["FBO", "RBO"]:
 			raise AttributeError("'" + self.__class__.__name__ + "' object has no attribute 'bufferData'")
 
@@ -37,7 +37,7 @@ class BO(GLObject):
 		self._nbytes = array_bytes
 		self._draw_type = draw_type
 
-	def malloc(self, nbytes:int, draw_type:GLInfo.draw_types_literal=GL.GL_STATIC_DRAW)->None:
+	def malloc(self, nbytes:int, draw_type:GLInfo.draw_types=GL.GL_STATIC_DRAW)->None:
 		if GlassConfig.debug:
 			if self.__class__.__name__ in ["FBO", "RBO"]:
 				raise AttributeError("'" + self.__class__.__name__ + "' object has no attribute 'malloc'")
@@ -205,7 +205,7 @@ class BO(GLObject):
 		return (self._nbytes == 0)
 
 	@property
-	def draw_type(self)->GLInfo.draw_types_literal:
+	def draw_type(self)->GLInfo.draw_types:
 		if GlassConfig.debug:
 			if self.__class__.__name__ in ["FBO", "RBO"]:
 				raise AttributeError("'" + self.__class__.__name__ + "' object has no attribute 'draw_type'")
