@@ -10,7 +10,7 @@ import glm
 
 class AttrList(SameTypeList):
 
-    def __init__(self, _list:list|np.ndarray|None=None, draw_type:GLInfo.draw_types_literal=GL.GL_STATIC_DRAW, dtype:GLInfo.attr_types_literal=None):
+    def __init__(self, _list:list|np.ndarray|None=None, draw_type:GLInfo.draw_types=GL.GL_STATIC_DRAW, dtype:GLInfo.attr_types=None):
         SameTypeList.__init__(self, _list, dtype)
 
         self._draw_type = draw_type
@@ -20,15 +20,15 @@ class AttrList(SameTypeList):
         self.is_new_vbo = False
     
     @property
-    def draw_type(self)->GLInfo.draw_types_literal:
+    def draw_type(self)->GLInfo.draw_types:
         return self._draw_type
     
     @draw_type.setter
-    def draw_type(self, draw_type:GLInfo.draw_types_literal):
+    def draw_type(self, draw_type:GLInfo.draw_types):
         self._draw_type = draw_type
 
     @property
-    def dtype(self)->GLInfo.attr_types_literal:
+    def dtype(self)->GLInfo.attr_types:
         if self._dtype is not None:
             return self._dtype
         
@@ -38,7 +38,7 @@ class AttrList(SameTypeList):
         return None
     
     @dtype.setter
-    def dtype(self, dtype:GLInfo.attr_types_literal):
+    def dtype(self, dtype:GLInfo.attr_types):
         str_dtype = str(dtype)
         if str_dtype == "callback_vec3":
             dtype = glm.vec3
