@@ -10,6 +10,7 @@ import hashlib
 import pickle
 import subprocess
 import sys
+import chardet
 from _ctypes import PyObj_FromPtr
 
 from .GlassConfig import GlassConfig
@@ -262,6 +263,14 @@ def find_pair(content, i):
         i += 1
 
     return i
+
+def is_text_file(file_path):
+    try:
+        with open(file_path, 'rb') as f:
+            result = chardet.detect(f.read())
+            return (result['encoding'] is not None)
+    except:
+        return False
 
 def md5s(content):
     md5_hash = hashlib.md5()

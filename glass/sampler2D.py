@@ -10,7 +10,7 @@ from datetime import datetime
 
 from .FBOAttachment import FBOAttachment
 from .GLInfo import GLInfo
-from .utils import checktype, cat, modify_time, md5s, relative_path
+from .utils import checktype, cat, modify_time, md5s, relative_path, is_text_file
 from .helper import get_external_format, width_adapt, get_dtype, get_channels
 from .ImageLoader import ImageLoader
 from .Indices import Indices
@@ -406,8 +406,11 @@ class sampler2D(FBOAttachment):
         if isinstance(image, str):
             try:
                 image = ImageLoader.load(image)
-            except ValueError:
-                is_shadertoy = True
+            except ValueError as e:
+                if is_text_file(image):
+                    is_shadertoy = True
+                else:
+                    raise e
 
         self._shadertoy_program = None
         self._shadertoy_path = None
