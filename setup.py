@@ -65,7 +65,6 @@ setuptools.setup(
     author_email="binghui.wang@foxmail.com",
     description="A very user-friendly 3D rendering engine for Python",
     long_description=long_description,
-    long_description_content_type="text/x-rst",
     url="https://github.com/Time-Coder/Glass-Engine",
     packages=setuptools.find_packages(),
     package_data={
