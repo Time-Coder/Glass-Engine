@@ -1,5 +1,6 @@
 import sys
 import os
+import wget
 
 from PyQt6.QtWidgets import QApplication, QDialog, QHBoxLayout, QVBoxLayout, QWidget, QLabel, QDoubleSpinBox, QSlider
 from PyQt6.QtCore import Qt, pyqtSignal
@@ -210,7 +211,42 @@ class MainWindow(QDialog):
         self.model.scale.z = value
         self.camera.screen.update()
 
+def download_files():
+    self_folder = os.path.dirname(os.path.abspath(__file__)).replace("\\", "/")
+    model_folder = self_folder + "/assets/models/jet"
+    skydome_folder = self_folder + "/assets/skydomes"
+    if not os.path.isdir(model_folder):
+        os.makedirs(model_folder)
+    if not os.path.isdir(skydome_folder):
+        os.makedirs(skydome_folder)
+
+    target_file = model_folder + "/11805_airplane_v2_L2.mtl"
+    if not os.path.isfile(target_file):
+        url = "https://gitee.com/time-coder/Glass-Engine/raw/main/glass_engine/Demos/assets/models/jet/11805_airplane_v2_L2.mtl"
+        wget.download(url, target_file)
+
+    target_file = model_folder + "/11805_airplane_v2_L2.obj"
+    if not os.path.isfile(target_file):
+        url = "https://gitee.com/time-coder/Glass-Engine/raw/main/glass_engine/Demos/assets/models/jet/11805_airplane_v2_L2.obj"
+        wget.download(url, target_file)
+
+    target_file = model_folder + "/airplane_body_diffuse_v1.jpg"
+    if not os.path.isfile(target_file):
+        url = "https://gitee.com/time-coder/Glass-Engine/raw/main/glass_engine/Demos/assets/models/jet/airplane_body_diffuse_v1.jpg"
+        wget.download(url, target_file)
+
+    target_file = model_folder + "/airplane_wings_diffuse_v1.jpg"
+    if not os.path.isfile(target_file):
+        url = "https://gitee.com/time-coder/Glass-Engine/raw/main/glass_engine/Demos/assets/models/jet/airplane_wings_diffuse_v1.jpg"
+        wget.download(url, target_file)
+
+    target_file = skydome_folder + "/puresky.exr"
+    if not os.path.isfile(target_file):
+        url = "https://gitee.com/time-coder/Glass-Engine/raw/main/glass_engine/Demos/assets/skydomes/puresky.exr"
+        wget.download(url, target_file)
+
 def demo_transform():
+    download_files()
     app = QApplication(sys.argv)
     apply_stylesheet(app, theme='dark_amber.xml')
 

@@ -39,20 +39,8 @@ with open("glass_engine/README_PYPI.md", "r", encoding='utf-8') as fh:
 
 glass_engine_extra_files = \
 [
-    "AssimpModelLoader/assimp-vc143-mt.dll",
-    "AssimpModelLoader/AssimpModelLoader.cp37-win_amd64.pyd",
-    "AssimpModelLoader/AssimpModelLoader.cp38-win_amd64.pyd",
-    "AssimpModelLoader/AssimpModelLoader.cp39-win_amd64.pyd",
-    "AssimpModelLoader/AssimpModelLoader.cp310-win_amd64.pyd",
-    "AssimpModelLoader/AssimpModelLoader.cp311-win_amd64.pyd",
     "glass_engine_logo64.png",
     "glass_engine_logo256.png",
-    "glass_engine_logo411.png",
-    "Demos/assets/models/jet/11805_airplane_v2_L2.mtl",
-    "Demos/assets/models/jet/11805_airplane_v2_L2.obj",
-    "Demos/assets/models/jet/airplane_body_diffuse_v1.jpg",
-    "Demos/assets/models/jet/airplane_wings_diffuse_v1.jpg",
-    "Demos/assets/skydomes/puresky.exr",
     "README_PYPI.md"
 ]
 glass_engine_extra_files.extend(find_files("glass_engine", "glass_engine/glsl"))
@@ -60,7 +48,7 @@ glass_extra_files = find_files("glass", "glass/glsl")
 
 setuptools.setup(
     name="glass_engine",
-    version="0.1.0",
+    version="0.1.1",
     author="王炳辉 (BingHui-WANG)",
     author_email="binghui.wang@foxmail.com",
     description="A very user-friendly 3D rendering engine for Python",
@@ -83,7 +71,8 @@ setuptools.setup(
         "PyGLM",
         "numpy",
         "opencv-python",
-        "Pillow"
+        "Pillow",
+        "wget"
     ],
     classifiers=[
         f"Programming Language :: Python :: 3.7",
