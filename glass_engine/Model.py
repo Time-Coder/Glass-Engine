@@ -9,19 +9,46 @@ from glass.ImageLoader import ImageLoader
 
 import os
 import sys
-sys.path.append(os.path.dirname(os.path.abspath(__file__)) + "/AssimpModelLoader")
-import AssimpModelLoader
+import platform
+import wget
+
 import glm
 from OpenGL import GL
 from enum import Flag
+
+ModelLoader = None
+
+def import_AssimpModelLoader():
+    self_folder = os.path.dirname(os.path.abspath(__file__))
+    module_folder = self_folder + "/AssimpModelLoader"
+    if not os.path.isdir(module_folder):
+        os.makedirs(module_folder)
+
+    versions = platform.python_version().split(".")
+    pyd_name = "AssimpModelLoader.cp3" + versions[1] + "-win_amd64.pyd"
+    target_pyd = module_folder + "/" + pyd_name
+    if not os.path.isfile(target_pyd):
+        url = "https://gitee.com/time-coder/Glass-Engine/raw/main/glass_engine/AssimpModelLoader/" + pyd_name
+        wget.download(url, target_pyd)
+
+    dll_name = "assimp-vc143-mt.dll"
+    target_dll = module_folder + "/" + dll_name
+    if not os.path.isfile(target_dll):
+        url = "https://gitee.com/time-coder/Glass-Engine/raw/main/glass_engine/AssimpModelLoader/assimp-vc143-mt.dll"
+        wget.download(url, target_dll)
+
+    if module_folder not in sys.path:
+        sys.path.append(module_folder)
+
+    import AssimpModelLoader
+    return AssimpModelLoader
 
 class AssimpImportError(Exception):
     pass
 
 class ModelMesh(Mesh):
 
-    @checktype
-    def __init__(self, assimp_mesh:AssimpModelLoader.Mesh, shared:bool=False):
+    def __init__(self, assimp_mesh, shared:bool=False):
         Mesh.__init__(self, name=assimp_mesh.name, shared=shared, primitive_type=GLInfo.enum_map[assimp_mesh.primitive_type])
         self.__assimp_mesh = assimp_mesh
         self.start_building()
@@ -127,7 +154,11 @@ class Model(SceneNode):
         self.__materials = []
         self.__meshes = []
 
-        assimp_model = AssimpModelLoader.load(self.__file_name, flags.value)
+        global ModelLoader
+        if ModelLoader is None:
+            ModelLoader = import_AssimpModelLoader()
+
+        assimp_model = ModelLoader.load(self.__file_name, flags.value)
 
         if not assimp_model.success:
             raise AssimpImportError(assimp_model.error_message)
