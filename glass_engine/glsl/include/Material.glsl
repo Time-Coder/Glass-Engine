@@ -103,6 +103,28 @@ InternalMaterial fetch_internal_material(vec4 frag_color, Material material, vec
         material_opacity = textureColor(material.opacity_map, tex_coord).r;
     }
 
+    // 漫反射颜色
+    internal_material.diffuse = material.diffuse;
+    internal_material.opacity = 1 - (1-frag_color.a)*(1-material_opacity);
+    float mix_factor = material_opacity / internal_material.opacity;
+    if (textureValid(material.diffuse_map))
+    {
+        vec4 material_diffuse4 = textureColor(material.diffuse_map, tex_coord);
+        internal_material.diffuse = material_diffuse4.rgb;
+        float diffuse_alpha = material_diffuse4.a*material_opacity;
+        internal_material.opacity = 1 - (1-frag_color.a)*(1-diffuse_alpha);
+        mix_factor = diffuse_alpha / internal_material.opacity;
+    }
+    else if (textureValid(material.base_color_map))
+    {
+        vec4 material_diffuse4 = textureColor(material.base_color_map, tex_coord);
+        internal_material.diffuse = material_diffuse4.rgb;
+        float diffuse_alpha = material_diffuse4.a*material_opacity;
+        internal_material.opacity = 1 - (1-frag_color.a)*(1-diffuse_alpha);
+        mix_factor = diffuse_alpha / internal_material.opacity;
+    }
+    internal_material.diffuse = mix(frag_color.rgb, internal_material.diffuse, mix_factor);
+
     // 环境光颜色
     internal_material.ambient = material.ambient;
     if (textureValid(material.ambient_map))
@@ -121,24 +143,7 @@ InternalMaterial fetch_internal_material(vec4 frag_color, Material material, vec
     {
         internal_material.ambient = 0.2 * material.diffuse;
     }
-    internal_material.ambient = mix(0.2*frag_color.rgb, internal_material.ambient, material_opacity);
-
-    // 漫反射颜色
-    internal_material.diffuse = material.diffuse;
-    internal_material.opacity = 1 - (1-frag_color.a)*(1-material_opacity);
-    if (textureValid(material.diffuse_map))
-    {
-        vec4 material_diffuse4 = textureColor(material.diffuse_map, tex_coord);
-        internal_material.diffuse = material_diffuse4.rgb;
-        internal_material.opacity = 1 - (1-frag_color.a)*(1-material_diffuse4.a*material_opacity);
-    }
-    else if (textureValid(material.base_color_map))
-    {
-        vec4 material_diffuse4 = textureColor(material.base_color_map, tex_coord);
-        internal_material.diffuse = material_diffuse4.rgb;
-        internal_material.opacity = 1 - (1-frag_color.a)*(1-material_diffuse4.a*material_opacity);
-    }
-    internal_material.diffuse = mix(frag_color.rgb, internal_material.diffuse, material_opacity);
+    internal_material.ambient = mix(0.2*frag_color.rgb, internal_material.ambient, mix_factor);
 
     // 镜面高光颜色
     internal_material.specular = material.specular;
@@ -147,7 +152,7 @@ InternalMaterial fetch_internal_material(vec4 frag_color, Material material, vec
         internal_material.specular = textureColor(material.specular_map, tex_coord).rgb;
     }
     internal_material.specular *= material.shininess_strength;
-    internal_material.specular = mix(vec3(0.3), internal_material.specular, material_opacity);
+    internal_material.specular = mix(vec3(0.3), internal_material.specular, mix_factor);
 
     // 闪耀度
     internal_material.shininess = material.shininess;
@@ -176,7 +181,7 @@ InternalMaterial fetch_internal_material(vec4 frag_color, Material material, vec
             internal_material.opacity = 1 - (1-frag_color.a)*(1-material_emission4.a*material_opacity);
         }
     }
-    internal_material.emission = mix(vec3(0), internal_material.emission, material_opacity);
+    internal_material.emission = mix(vec3(0), internal_material.emission, mix_factor);
     if (material.shading_model == SHADING_MODEL_UNLIT && length(internal_material.emission) < 1E-6)
     {
         internal_material.emission = internal_material.diffuse;
@@ -214,7 +219,7 @@ InternalMaterial fetch_internal_material(vec4 frag_color, Material material, vec
     {
         internal_material.ao = textureColor(material.ao_map, tex_coord).r;
     }
-    internal_material.ao = mix(1, internal_material.ao, material_opacity);
+    internal_material.ao = mix(1, internal_material.ao, mix_factor);
 
     // 粗糙度
     if (textureValid(material.roughness_map))
@@ -242,7 +247,7 @@ InternalMaterial fetch_internal_material(vec4 frag_color, Material material, vec
     {
         internal_material.base_color = textureColor(material.diffuse_map, tex_coord).rgb;
     }
-    internal_material.base_color = mix(frag_color.rgb, internal_material.base_color, material_opacity);
+    internal_material.base_color = mix(frag_color.rgb, internal_material.base_color, mix_factor);
 
     return internal_material;
 }
