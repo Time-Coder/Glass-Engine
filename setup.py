@@ -48,7 +48,7 @@ glass_extra_files = find_files("glass", "glass/glsl")
 
 setuptools.setup(
     name="glass_engine",
-    version="0.1.1",
+    version="0.1.2",
     author="王炳辉 (BingHui-WANG)",
     author_email="binghui.wang@foxmail.com",
     description="A very user-friendly 3D rendering engine for Python",
@@ -72,7 +72,8 @@ setuptools.setup(
         "numpy",
         "opencv-python",
         "Pillow",
-        "wget"
+        "wget",
+        "chardet"
     ],
     classifiers=[
         f"Programming Language :: Python :: 3.7",

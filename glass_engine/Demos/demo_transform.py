@@ -1,6 +1,5 @@
 import sys
 import os
-import wget
 
 from PyQt6.QtWidgets import QApplication, QDialog, QHBoxLayout, QVBoxLayout, QWidget, QLabel, QDoubleSpinBox, QSlider
 from PyQt6.QtCore import Qt, pyqtSignal
@@ -10,6 +9,7 @@ from ..Camera import Camera
 from ..Model import Model
 from ..BasicScene import ModelView
 from ..Geometries.CoordSys import CoordSys
+from ..download import download
 
 class ParamControlLine(QWidget):
 
@@ -215,35 +215,35 @@ def download_files():
     self_folder = os.path.dirname(os.path.abspath(__file__)).replace("\\", "/")
     model_folder = self_folder + "/assets/models/jet"
     skydome_folder = self_folder + "/assets/skydomes"
-    if not os.path.isdir(model_folder):
-        os.makedirs(model_folder)
-    if not os.path.isdir(skydome_folder):
-        os.makedirs(skydome_folder)
+
+    md5_map = \
+    {
+        "11805_airplane_v2_L2.mtl": "36059ea10e4a35955dc2ee6b1203f9c8",
+        "11805_airplane_v2_L2.obj": "85bd6ac8fcc6c717ba5a96a7a065c0ec",
+        "airplane_body_diffuse_v1.jpg": "e7b1c3492a69e81959ffc14af0ad8ed7",
+        "airplane_wings_diffuse_v1.jpg": "c4ef09fd0825d5d97a1ba105775e253a",
+        "puresky.exr": "e7e03be8255b76d9d157da1fe3ba5961"
+    }
 
     target_file = model_folder + "/11805_airplane_v2_L2.mtl"
-    if not os.path.isfile(target_file):
-        url = "https://gitee.com/time-coder/Glass-Engine/raw/main/glass_engine/Demos/assets/models/jet/11805_airplane_v2_L2.mtl"
-        wget.download(url, target_file)
+    url = "https://gitee.com/time-coder/Glass-Engine/raw/main/glass_engine/Demos/assets/models/jet/11805_airplane_v2_L2.mtl"
+    download(url, target_file, md5_map["11805_airplane_v2_L2.mtl"])
 
     target_file = model_folder + "/11805_airplane_v2_L2.obj"
-    if not os.path.isfile(target_file):
-        url = "https://gitee.com/time-coder/Glass-Engine/raw/main/glass_engine/Demos/assets/models/jet/11805_airplane_v2_L2.obj"
-        wget.download(url, target_file)
+    url = "https://gitee.com/time-coder/Glass-Engine/raw/main/glass_engine/Demos/assets/models/jet/11805_airplane_v2_L2.obj"
+    download(url, target_file, md5_map["11805_airplane_v2_L2.obj"])
 
     target_file = model_folder + "/airplane_body_diffuse_v1.jpg"
-    if not os.path.isfile(target_file):
-        url = "https://gitee.com/time-coder/Glass-Engine/raw/main/glass_engine/Demos/assets/models/jet/airplane_body_diffuse_v1.jpg"
-        wget.download(url, target_file)
+    url = "https://gitee.com/time-coder/Glass-Engine/raw/main/glass_engine/Demos/assets/models/jet/airplane_body_diffuse_v1.jpg"
+    download(url, target_file, md5_map["airplane_body_diffuse_v1.jpg"])
 
     target_file = model_folder + "/airplane_wings_diffuse_v1.jpg"
-    if not os.path.isfile(target_file):
-        url = "https://gitee.com/time-coder/Glass-Engine/raw/main/glass_engine/Demos/assets/models/jet/airplane_wings_diffuse_v1.jpg"
-        wget.download(url, target_file)
+    url = "https://gitee.com/time-coder/Glass-Engine/raw/main/glass_engine/Demos/assets/models/jet/airplane_wings_diffuse_v1.jpg"
+    download(url, target_file, md5_map["airplane_wings_diffuse_v1.jpg"])
 
     target_file = skydome_folder + "/puresky.exr"
-    if not os.path.isfile(target_file):
-        url = "https://gitee.com/time-coder/Glass-Engine/raw/main/glass_engine/Demos/assets/skydomes/puresky.exr"
-        wget.download(url, target_file)
+    url = "https://gitee.com/time-coder/Glass-Engine/raw/main/glass_engine/Demos/assets/skydomes/puresky.exr"
+    download(url, target_file, md5_map["puresky.exr"])
 
 def demo_transform():
     download_files()

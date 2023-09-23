@@ -1,6 +1,7 @@
 from .SceneNode import SceneNode
 from .Mesh import Mesh
 from .Material import Material
+from .download import download
 
 from glass.utils import checktype
 from glass.AttrList import AttrList
@@ -10,7 +11,6 @@ from glass.ImageLoader import ImageLoader
 import os
 import sys
 import platform
-import wget
 
 import glm
 from OpenGL import GL
@@ -21,21 +21,28 @@ ModelLoader = None
 def import_AssimpModelLoader():
     self_folder = os.path.dirname(os.path.abspath(__file__))
     module_folder = self_folder + "/AssimpModelLoader"
-    if not os.path.isdir(module_folder):
-        os.makedirs(module_folder)
+
+    md5_map = \
+    {
+        "assimp-vc143-mt.dll": "739010c640f5cc8472e9545bbec55215",
+        "AssimpModelLoader.cp36-win_amd64.pyd": "4b88c7af14add7c7a97303257cafcc39",
+        "AssimpModelLoader.cp37-win_amd64.pyd": "1264d2b5c4ba736c0cfc97ea64b0c980",
+        "AssimpModelLoader.cp38-win_amd64.pyd": "24f18a3c43f66af2060cf09a7f2e9fbf",
+        "AssimpModelLoader.cp39-win_amd64.pyd": "0e634908142f44a5995ec761630fdad1",
+        "AssimpModelLoader.cp310-win_amd64.pyd": "e4ac67a9a787f7a6dfb3ff360664f0ca",
+        "AssimpModelLoader.cp311-win_amd64.pyd": "abaf2bf9a2acf2681efdb53abeeeb4af"
+    }
 
     versions = platform.python_version().split(".")
     pyd_name = "AssimpModelLoader.cp3" + versions[1] + "-win_amd64.pyd"
     target_pyd = module_folder + "/" + pyd_name
-    if not os.path.isfile(target_pyd):
-        url = "https://gitee.com/time-coder/Glass-Engine/raw/main/glass_engine/AssimpModelLoader/" + pyd_name
-        wget.download(url, target_pyd)
+    url = "https://gitee.com/time-coder/Glass-Engine/raw/main/glass_engine/AssimpModelLoader/" + pyd_name
+    download(url, target_pyd, md5_map[target_pyd])
 
     dll_name = "assimp-vc143-mt.dll"
     target_dll = module_folder + "/" + dll_name
-    if not os.path.isfile(target_dll):
-        url = "https://gitee.com/time-coder/Glass-Engine/raw/main/glass_engine/AssimpModelLoader/assimp-vc143-mt.dll"
-        wget.download(url, target_dll)
+    url = "https://gitee.com/time-coder/Glass-Engine/raw/main/glass_engine/AssimpModelLoader/assimp-vc143-mt.dll"
+    download(url, target_dll, md5_map[dll_name])
 
     if module_folder not in sys.path:
         sys.path.append(module_folder)
