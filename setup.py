@@ -34,7 +34,7 @@ if os.path.isdir("build"):
 if os.path.isdir("glass_engine.egg-info"):
     shutil.rmtree("glass_engine.egg-info")
 
-with open("glass_engine/README_PYPI.md", "r", encoding='utf-8') as fh:
+with open("glass_engine/README_PYPI.rst", "r", encoding='utf-8') as fh:
     long_description = fh.read()
 
 glass_engine_extra_files = \
@@ -60,12 +60,12 @@ glass_extra_files = find_files("glass", "glass/glsl")
 
 setuptools.setup(
     name="glass_engine",
-    version="0.0.1",
+    version="0.0.2",
     author="王炳辉 (BingHui-WANG)",
     author_email="binghui.wang@foxmail.com",
     description="A very user-friendly 3D rendering engine for Python",
     long_description=long_description,
-    long_description_content_type="text/markdown",
+    long_description_content_type="text/x-rst",
     url="https://github.com/Time-Coder/Glass-Engine",
     packages=setuptools.find_packages(),
     package_data={

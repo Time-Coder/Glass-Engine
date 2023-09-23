@@ -14,3 +14,4 @@ static_check.py
 build.bat
 clear_compilation.py
 compile.py
+.vscode
