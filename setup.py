@@ -34,7 +34,7 @@ if os.path.isdir("build"):
 if os.path.isdir("glass_engine.egg-info"):
     shutil.rmtree("glass_engine.egg-info")
 
-with open("glass_engine/README_PYPI.rst", "r", encoding='utf-8') as fh:
+with open("glass_engine/README_PYPI.md", "r", encoding='utf-8') as fh:
     long_description = fh.read()
 
 glass_engine_extra_files = \
