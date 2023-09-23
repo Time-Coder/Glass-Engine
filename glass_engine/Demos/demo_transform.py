@@ -154,7 +154,7 @@ class MainWindow(QDialog):
         self.scene.add(self.model)
         self.scene.add(coord_sys)
 
-        self.scene.skydome = self_path + "/assets/skydomes/puresky.exr"
+        self.scene.skydome = self_path + "/assets/skydomes/puresky.jpg"
         
         vlayout.addWidget(self.camera.screen)
 
@@ -222,7 +222,7 @@ def download_files():
         "11805_airplane_v2_L2.obj": "85bd6ac8fcc6c717ba5a96a7a065c0ec",
         "airplane_body_diffuse_v1.jpg": "e7b1c3492a69e81959ffc14af0ad8ed7",
         "airplane_wings_diffuse_v1.jpg": "c4ef09fd0825d5d97a1ba105775e253a",
-        "puresky.exr": "e7e03be8255b76d9d157da1fe3ba5961"
+        "puresky.jpg": "be98161b9ba68820ae9cd80a41d37d97"
     }
 
     target_file = model_folder + "/11805_airplane_v2_L2.mtl"
@@ -241,9 +241,9 @@ def download_files():
     url = "https://gitee.com/time-coder/Glass-Engine/raw/main/glass_engine/Demos/assets/models/jet/airplane_wings_diffuse_v1.jpg"
     download(url, target_file, md5_map["airplane_wings_diffuse_v1.jpg"])
 
-    target_file = skydome_folder + "/puresky.exr"
-    url = "https://gitee.com/time-coder/Glass-Engine/raw/main/glass_engine/Demos/assets/skydomes/puresky.exr"
-    download(url, target_file, md5_map["puresky.exr"])
+    target_file = skydome_folder + "/puresky.jpg"
+    url = "https://dl.polyhaven.org/file/ph-assets/HDRIs/extra/Tonemapped%20JPG/industrial_sunset_puresky.jpg"
+    download(url, target_file, md5_map["puresky.jpg"])
 
 def demo_transform():
     download_files()

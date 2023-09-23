@@ -37,7 +37,7 @@ def import_AssimpModelLoader():
     pyd_name = "AssimpModelLoader.cp3" + versions[1] + "-win_amd64.pyd"
     target_pyd = module_folder + "/" + pyd_name
     url = "https://gitee.com/time-coder/Glass-Engine/raw/main/glass_engine/AssimpModelLoader/" + pyd_name
-    download(url, target_pyd, md5_map[target_pyd])
+    download(url, target_pyd, md5_map[pyd_name])
 
     dll_name = "assimp-vc143-mt.dll"
     target_dll = module_folder + "/" + dll_name

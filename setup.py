@@ -1,23 +1,6 @@
 import setuptools
 import os
 import shutil
-import platform
-import sys
-import subprocess
-
-if "-d" in sys.argv:
-    version = ".".join(platform.python_version().split(".")[:2])
-    openexr_urls = \
-    {
-        "3.7": "https://download.lfd.uci.edu/pythonlibs/archived/cp37/OpenEXR-1.3.7-cp37-cp37m-win_amd64.whl",
-        "3.8": "https://download.lfd.uci.edu/pythonlibs/archived/OpenEXR-1.3.8-cp38-cp38-win_amd64.whl",
-        "3.9": "https://download.lfd.uci.edu/pythonlibs/archived/OpenEXR-1.3.8-cp39-cp39-win_amd64.whl",
-        "3.10": "https://download.lfd.uci.edu/pythonlibs/archived/OpenEXR-1.3.8-cp310-cp310-win_amd64.whl",
-        "3.11": "https://download.lfd.uci.edu/pythonlibs/archived/OpenEXR-1.3.8-cp311-cp311-win_amd64.whl"
-    }
-    
-    install_cmd = [sys.executable, "-m", "pip", "install", openexr_urls[version]]
-    subprocess.call(install_cmd)
 
 def find_files(module, directory):
     file_list = []

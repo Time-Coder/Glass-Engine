@@ -1,11 +1,36 @@
 import cv2
 import os
+import platform
+import sys
+import subprocess
 from PIL import Image
-import OpenEXR, Imath
 import numpy as np
 
 from .utils import extname, relative_path
 from .GlassConfig import GlassConfig
+
+_OpenEXR = None
+_Imath = None
+
+def import_OpenEXR():
+    try:
+        import OpenEXR, Imath
+    except:
+        version = ".".join(platform.python_version().split(".")[:2])
+        openexr_urls = \
+        {
+            "3.7": "https://download.lfd.uci.edu/pythonlibs/archived/cp37/OpenEXR-1.3.7-cp37-cp37m-win_amd64.whl",
+            "3.8": "https://download.lfd.uci.edu/pythonlibs/archived/OpenEXR-1.3.8-cp38-cp38-win_amd64.whl",
+            "3.9": "https://download.lfd.uci.edu/pythonlibs/archived/OpenEXR-1.3.8-cp39-cp39-win_amd64.whl",
+            "3.10": "https://download.lfd.uci.edu/pythonlibs/archived/OpenEXR-1.3.8-cp310-cp310-win_amd64.whl",
+            "3.11": "https://download.lfd.uci.edu/pythonlibs/archived/OpenEXR-1.3.8-cp311-cp311-win_amd64.whl"
+        }
+        
+        install_cmd = [sys.executable, "-m", "pip", "install", openexr_urls[version]]
+        subprocess.call(install_cmd)
+        import OpenEXR, Imath
+
+    return OpenEXR, Imath
 
 class ImageLoader:
 
@@ -95,8 +120,13 @@ class ImageLoader:
     @staticmethod
     def OpenEXR_load(file_name):
         try:
-            pt = Imath.PixelType(Imath.PixelType.FLOAT)
-            img_exr = OpenEXR.InputFile(file_name)
+            global _OpenEXR
+            global _Imath
+            if _OpenEXR is None:
+                _OpenEXR, _Imath = import_OpenEXR()
+
+            pt = _Imath.PixelType(_Imath.PixelType.FLOAT)
+            img_exr = _OpenEXR.InputFile(file_name)
 
             dw = img_exr.header()['dataWindow']
             shape = (dw.max.y - dw.min.y + 1, dw.max.x - dw.min.x + 1)
