@@ -224,6 +224,9 @@ class Screen(QOpenGLWidget):
         self._render_hint = hint
 
     def initializeGL(self)->None:
+        if not GLConfig.version.startswith("4.6"):
+            raise RuntimeError(f"Your graphics card({GLConfig.version}) not support OpenGL 4.6. Please update driver or change Python's graphics card.")
+
         self.makeCurrent()
 
         if self.camera.scene is None:
