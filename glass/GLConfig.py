@@ -575,7 +575,7 @@ class _MetaGLConfig(type):
         _MetaGLConfig.__buffered_current_context = context_id
 
     @property
-    def version(cls):
+    def version(cls)->str:
         if _MetaGLConfig.__gl_version is not None:
             return _MetaGLConfig.__gl_version
         
