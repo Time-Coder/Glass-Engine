@@ -2,7 +2,6 @@ import glm
 import math
 import uuid
 
-from glass.utils import checktype
 from glass.DictList import DictList
 from glass.WeakSet import WeakSet
 from glass.WeakDict import WeakDict
@@ -10,7 +9,6 @@ from .callback_vec import callback_quat, callback_vec3
 
 class SceneNode:
 
-    @checktype
     def __init__(self, name:str=""):
         if name:
             self._name = name
@@ -38,7 +36,6 @@ class SceneNode:
         return self.propagation_prop("visible")
     
     @visible.setter
-    @checktype
     def visible(self, visible:bool):
         self.set_propagation_prop("visible", visible)
 
@@ -131,7 +128,7 @@ class SceneNode:
         self._children[node.name] = node
         node._add_as_child_callback()
 
-        node._scenes.update(self._scenes)
+        node._add_scenes(self._scenes)
         self._set_dirty(False, True)
 
     def remove_child(self, child):
@@ -172,7 +169,6 @@ class SceneNode:
     def __hash__(self):
         return id(self)
 
-    @checktype
     def __getitem__(self, name:(str,int)):
         if isinstance(name, str):
             if name not in self._children:
@@ -183,7 +179,6 @@ class SceneNode:
 
         return self._children[name]
 
-    @checktype
     def __setitem__(self, name:str, node):
         if name in self._children:
             if self._children[name] is node:
@@ -193,7 +188,6 @@ class SceneNode:
         node.name = name
         self.add_child(node)
 
-    @checktype
     def __delitem__(self, name:str):
         self.remove_child(name)
 
@@ -211,7 +205,6 @@ class SceneNode:
         return self._name
 
     @name.setter
-    @checktype
     def name(self, name:str):
         if name == self._name:
             return
@@ -265,6 +258,11 @@ class SceneNode:
         self._orientation.y = orientation.y
         self._orientation.z = orientation.z
 
+    def _add_scenes(self, scenes):
+        self._scenes.update(scenes)
+        for child in self._children:
+            child._add_scenes(scenes)
+
     def _update_yaw_pitch_roll(self):
         if not self._should_update_yaw_pitch_roll:
             return
@@ -299,9 +297,8 @@ class SceneNode:
         return self._yaw_pitch_roll[0]
 
     @yaw.setter
-    @checktype
-    def yaw(self, new_yaw:float):
-        self._yaw_pitch_roll[0] = new_yaw
+    def yaw(self, yaw:float):
+        self._yaw_pitch_roll[0] = yaw
         self._update_orientation()
 
     @property
@@ -309,9 +306,8 @@ class SceneNode:
         return self._yaw_pitch_roll[1]
 
     @pitch.setter
-    @checktype
-    def pitch(self, new_pitch:float):
-        self._yaw_pitch_roll[1] = new_pitch
+    def pitch(self, pitch:float):
+        self._yaw_pitch_roll[1] = pitch
         self._update_orientation()
 
     @property
@@ -319,9 +315,8 @@ class SceneNode:
         return self._yaw_pitch_roll[2]
 
     @roll.setter
-    @checktype
-    def roll(self, new_roll:float):
-        self._yaw_pitch_roll[2] = new_roll
+    def roll(self, roll:float):
+        self._yaw_pitch_roll[2] = roll
         self._update_orientation()
 
     @staticmethod

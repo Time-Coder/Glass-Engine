@@ -31,9 +31,8 @@ uniform vec3 mesh_center;
 uniform Material material;
 uniform bool is_opaque_pass;
 uniform Camera CSM_camera;
+uniform Background background;
 uniform Fog fog;
-uniform samplerCube skybox_map;
-uniform sampler2D skydome_map;
 
 void main()
 {
@@ -48,14 +47,12 @@ void main()
         preshading_color,
         material,
         
-        skybox_map,
-        skydome_map,
-        (env_map_handle.x > 0 || env_map_handle.y > 0),
+        background,
         sampler2D(env_map_handle),
+        fog,
         is_opaque_pass,
         false,
-
-        fog,
+        
         fs_in.view_TBN,
         fs_in.view_pos,
         fs_in.tex_coord.st,
