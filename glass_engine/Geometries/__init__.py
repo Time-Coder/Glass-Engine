@@ -4,9 +4,10 @@ from .Points import Points
 
 # 线
 from .Polyline import Polyline
+from .Circle import Circle
 
 # 面
-from .RectangleFace import RectangleFace
+from .RectFace import RectFace
 
 from .RPolygonFace import RPolygonFace
 from .HollowRPolygonFace import HollowRPolygonFace

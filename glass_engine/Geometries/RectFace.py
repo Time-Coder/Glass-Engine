@@ -5,7 +5,7 @@ from glass import Vertex
 
 import glm
 
-class RectangleFace(Mesh):
+class RectFace(Mesh):
 
     @checktype
     def __init__(self, width:float=2, height:float=1,
