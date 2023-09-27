@@ -1,7 +1,7 @@
 Glass Engine -- 易用的 Python 3D 渲染引擎
 ================================================================
 
-.. figure:: glass_engine/glass_engine_logo256.png
+.. figure:: glass_engine/images/glass_engine_logo256.png
    :align: center
    :alt: glass_engine_logo
    :width: 256px
@@ -32,7 +32,7 @@ Glass Engine -- 易用的 Python 3D 渲染引擎
 
 运行上述程序，你将得到下图所示结果：
 
-.. figure:: start.png
+.. figure:: glass_engine/images/start.png
    :alt: glass_engine_simple_scene
    :align: center
    :width: 400px

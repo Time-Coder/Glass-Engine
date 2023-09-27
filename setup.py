@@ -22,8 +22,9 @@ with open("glass_engine/README_PYPI.md", "r", encoding='utf-8') as fh:
 
 glass_engine_extra_files = \
 [
-    "glass_engine_logo64.png",
-    "glass_engine_logo256.png",
+    "images/glass_engine_logo64.png",
+    "images/glass_engine_logo256.png",
+    "images/start.png",
     "README_PYPI.md"
 ]
 glass_engine_extra_files.extend(find_files("glass_engine", "glass_engine/glsl"))
@@ -31,10 +32,10 @@ glass_extra_files = find_files("glass", "glass/glsl")
 
 setuptools.setup(
     name="glass_engine",
-    version="0.1.3",
+    version="0.1.4",
     author="王炳辉 (BingHui-WANG)",
     author_email="binghui.wang@foxmail.com",
-    description="A very user-friendly 3D rendering engine for Python",
+    description="An easy-to-use 3D rendering engine for Python",
     long_description=long_description,
     long_description_content_type="text/markdown",
     url="https://github.com/Time-Coder/Glass-Engine",
@@ -60,7 +61,7 @@ setuptools.setup(
         "chardet"
     ],
     classifiers=[
-        f"Programming Language :: Python :: 3.7",
+        f"Programming Language :: Python :: 3",
         "License :: OSI Approved :: MIT License",
         "Operating System :: Microsoft :: Windows",
     ],

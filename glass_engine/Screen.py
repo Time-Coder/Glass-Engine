@@ -498,7 +498,7 @@ class Screen(QOpenGLWidget):
            not Screen.__has_exec:
             self.setWindowTitle("Glass Engine")
             self_folder = os.path.dirname(os.path.abspath(__file__))
-            self.setWindowIcon(QIcon(self_folder + "/glass_engine_logo64.png"))
+            self.setWindowIcon(QIcon(self_folder + "/images/glass_engine_logo64.png"))
             
         QOpenGLWidget.show(self)
         if Screen.__app is not None and \
