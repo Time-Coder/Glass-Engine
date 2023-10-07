@@ -1,5 +1,5 @@
 from .Renderer import Renderer
-from ..PostProcessEffects import GaussBlur, FXAA
+from ..PostProcessEffects import GaussBlur, FXAAEffect
 from ..Frame import Frame
 
 from glass import ShaderProgram, GLConfig, FBO, sampler2D, sampler2DMS, samplerCube, sampler2DArray, GlassConfig, GLInfo
@@ -797,8 +797,8 @@ class CommonRenderer(Renderer):
             instance.user_data["env_bake_state"] = "baked"
             env_FXAA_fbo = self.env_FXAA_fbo(instance)
             with env_FXAA_fbo:
-                FXAA.program()["screen_image"] = env_map
-                FXAA.program().draw_triangles(Frame.vertices, Frame.indices)
+                FXAAEffect.program()["screen_image"] = env_map
+                FXAAEffect.program().draw_triangles(Frame.vertices, Frame.indices)
             env_map = env_FXAA_fbo.color_attachment(0)
             instance.user_data["env_bake_state"] = "filtered"
             instance.env_map_handle = env_map.handle

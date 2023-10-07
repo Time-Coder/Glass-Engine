@@ -1,5 +1,5 @@
 from .Manipulator import Manipulator
-from glass.RenderHint import RenderHint
+from glass.RenderHints import RenderHints
 
 import glm
 from OpenGL import GL
@@ -116,15 +116,15 @@ class SceneRoamManipulator(Manipulator):
         elif key == Manipulator.Key.Key_Escape:
             self.camera.screen.show_cursor()
         elif key == Manipulator.Key.Key_R:
-            polygon_mode = self.camera.screen.renderer.render_hint.polygon_mode
-            if polygon_mode in [GL.GL_FILL, RenderHint.inherit]:
-                self.camera.screen.renderer.render_hint.polygon_mode = GL.GL_LINE
-                self.camera.screen.renderer.render_hint.line_width = 1
+            polygon_mode = self.camera.screen.render_hints.polygon_mode
+            if polygon_mode in [GL.GL_FILL, RenderHints.inherit]:
+                self.camera.screen.render_hints.polygon_mode = GL.GL_LINE
+                self.camera.screen.render_hints.line_width = 1
             elif polygon_mode == GL.GL_LINE:
-                self.camera.screen.renderer.render_hint.polygon_mode = GL.GL_POINT
-                self.camera.screen.renderer.render_hint.point_size = 1.5
+                self.camera.screen.render_hints.polygon_mode = GL.GL_POINT
+                self.camera.screen.render_hints.point_size = 1.5
             elif polygon_mode == GL.GL_POINT:
-                self.camera.screen.renderer.render_hint.polygon_mode = GL.GL_FILL
+                self.camera.screen.render_hints.polygon_mode = GL.GL_FILL
             return True
         elif key == Manipulator.Key.Key_O:
             self.camera.screen.SSAO.enabled = (not self.camera.screen.SSAO.enabled)

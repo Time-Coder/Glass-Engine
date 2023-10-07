@@ -9,27 +9,37 @@ from .callback_vec import callback_quat, callback_vec3
 
 class SceneNode:
 
-    def __init__(self, name:str=""):
+    def __init__(self, name:str="", unique_path:bool=False):
         if name:
             self._name = name
         else:
             self._name = self.__class__.__name__ + "_" + str(uuid.uuid1())
 
-        self._position = callback_vec3(0, 0, 0, callback=self._set_dirty)
-        self._orientation = callback_quat(1, 0, 0, 0, callback=self._update_yaw_pitch_roll)
-        self._scale = callback_vec3(1, 1, 1, callback=self._set_dirty)
-        self._yaw_pitch_roll = glm.vec3(0, 0, 0)
+        self._unique_path:bool = unique_path
+        self._position:callback_vec3 = callback_vec3(0, 0, 0, callback=self._set_dirty)
+        self._orientation:callback_quat = callback_quat(1, 0, 0, 0, callback=self._update_yaw_pitch_roll)
+        self._scale:callback_vec3 = callback_vec3(1, 1, 1, callback=self._set_dirty)
+        self._yaw_pitch_roll:glm.vec3 = glm.vec3(0, 0, 0)
 
-        self._parents = DictList(weak_ref=True)
-        self._children = DictList()
-        self._scenes = WeakSet()
-        self._transform_dirty = WeakSet()
-        self._children_transform_dirty = WeakDict(weak_ref_keys=True, weak_ref_values=False)
-        self._should_update_yaw_pitch_roll = True
+        self._parents:DictList = DictList(weak_ref=True)
+        self._children:DictList = DictList()
+        self._scenes:WeakSet = WeakSet()
+        self._transform_dirty:WeakSet = WeakSet()
+        self._children_transform_dirty:WeakDict = WeakDict(weak_ref_keys=True, weak_ref_values=False)
+        self._should_update_yaw_pitch_roll:bool = True
 
-        self._propagation_props = {}
-        self._block_propagation = set()
+        self._propagation_props:dict = {}
+        self._block_propagation:set = set()
+
         self._propagation_props["visible"] = True
+
+    @property
+    def unique_path(self)->bool:
+        return self._unique_path
+
+    @unique_path.setter
+    def unique_path(self, flag:bool)->None:
+        self._unique_path = flag
 
     @property
     def visible(self):
@@ -354,10 +364,6 @@ class SceneNode:
             all_paths_str.extend(parent_paths_str)
 
         return all_paths_str
-    
-    def _add_as_child_callback(self):
-        for child in self._children:
-            child._add_as_child_callback()
 
     def _clear_dirty_scenes(self, scenes):
         for scene in scenes:
@@ -412,3 +418,99 @@ class SceneNode:
 
         if upstream and (self_transform_dirty_set or self._children):
             self._set_upstream_dirty(scenes)
+
+    @property
+    def parent(self):
+        for parent in self._parents:
+            return parent
+    
+    @property
+    def scene(self):        
+        for scene in self._scenes:
+            return scene
+        
+    @property
+    def abs_scale(self)->glm.vec3:
+        return SceneNode.__abs_scale(self)
+    
+    @property
+    def abs_orientation(self)->glm.quat:
+        return SceneNode.__abs_orientation(self)
+    
+    @property
+    def abs_position(self)->glm.vec3:
+        return SceneNode.__abs_position(self)
+
+    @property
+    def path(self)->list:
+        if self.parent is None:
+            return [self]
+        
+        path = self.parent.paths[0]
+        path.append(self)
+        return path
+    
+    @property
+    def path_str(self)->str:
+        if self.parent is None:
+            return "/" + self.name
+        
+        path_str = self.parent.paths_str[0]
+        return path_str + "/" + self.name
+
+    @staticmethod
+    def __abs_orientation(node)->glm.quat:
+        try:
+            parent = node.parents[0]
+        except IndexError:
+            return node._orientation.flat
+
+        parent_abs_orientation = SceneNode.__abs_orientation(parent)
+        return parent_abs_orientation * node._orientation.flat
+
+    @staticmethod
+    def __abs_position(node)->glm.vec3:
+        try:
+            parent = node.parents[0]
+        except:
+            return node._position.flat
+
+        parent_abs_orientation = SceneNode.__abs_orientation(parent)
+        parent_abs_scale = SceneNode.__abs_scale(parent)
+        parent_abs_position = SceneNode.__abs_position(parent)
+        
+        return parent_abs_orientation * (parent_abs_scale * node._position.flat) + parent_abs_position
+
+    @staticmethod
+    def __abs_scale(node)->glm.vec3:
+        try:
+            parent = node.parents[0]
+        except:
+            return node._scale.flat
+        
+        parent_abs_scale = SceneNode.__abs_scale(parent)
+        return parent_abs_scale * node._scale.flat
+
+    def _add_as_child_callback(self)->None:
+        if self._unique_path:
+            len_parents = len(self._parents)
+            i = 0
+            for parent in self._parents:
+                if i >= len_parents-1:
+                    break
+
+                parent.remove_child(self)
+                i += 1
+
+            node = self
+            while True:
+                if len(node._parents) > 1:
+                    raise RuntimeError('SceneNode can only have one path to root')
+                
+                try:
+                    node = node._parents[0]
+                except IndexError:
+                    break
+
+        for child in self._children:
+            child._add_as_child_callback()

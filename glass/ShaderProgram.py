@@ -184,8 +184,13 @@ class ShaderProgram(GPUProgram):
             binary_data = in_file.read(binary_length)
             in_file.close()
 
-            GL.glProgramBinary(self._id, binary_format, binary_data, binary_length)
-            status = GL.glGetProgramiv(self._id, GL.GL_LINK_STATUS)
+            status = GL.GL_FALSE
+            try:
+                GL.glProgramBinary(self._id, binary_format, binary_data, binary_length)
+                status = GL.glGetProgramiv(self._id, GL.GL_LINK_STATUS)
+            except:
+                status = GL.GL_FALSE
+                
             if GL.GL_TRUE != status:
                 self._reapply()
         else:

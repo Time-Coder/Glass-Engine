@@ -11,7 +11,7 @@ class Point(Mesh):
     def __init__(self, position:glm.vec3=glm.vec3(0), color:(glm.vec3,glm.vec4)=glm.vec4(0.396, 0.74151, 0.69102, 1), point_size:int=5,
                  name:str=""):
         Mesh.__init__(self, primitive_type=GL.GL_POINTS, color=color, name=name)
-        self.render_hint.point_size = point_size
+        self.render_hints.point_size = point_size
         self.__position = position
         self.start_building()
 
@@ -33,9 +33,9 @@ class Point(Mesh):
 
     @property
     def point_size(self):
-        return self.render_hint.point_size
+        return self.render_hints.point_size
     
     @point_size.setter
     @checktype
     def point_size(self, point_size:int):
-        self.render_hint.point_size = point_size
+        self.render_hints.point_size = point_size

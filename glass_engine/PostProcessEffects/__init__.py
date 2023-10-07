@@ -7,7 +7,7 @@ from .KernelFilter import KernelFilter
 from .BloomEffect import BloomEffect
 from .ACESToneMapper import ACESToneMapper
 from .DOFEffect import DOFEffect
-from .FXAA import FXAA
+from .FXAAEffect import FXAAEffect
 from .LUTEffect import LUTEffect
 from .SSAOEffect import SSAOEffect
 from .MulFilter import MulFilter

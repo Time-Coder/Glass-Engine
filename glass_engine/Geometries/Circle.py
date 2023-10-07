@@ -14,7 +14,7 @@ class Circle(Mesh):
                  color:(glm.vec3,glm.vec4)=glm.vec4(0.396, 0.74151, 0.69102, 1),
                  line_width:int=2, name:str=""):
         Mesh.__init__(self, primitive_type=GL.GL_LINE_STRIP, color=color, name=name)
-        self.render_hint.line_width = line_width
+        self.render_hints.line_width = line_width
         self.__radius:float = radius
         self.__vertical:bool = vertical
         self.__n_points:int = n_points
@@ -45,12 +45,12 @@ class Circle(Mesh):
 
     @property
     def line_width(self)->int:
-        return self.render_hint.line_width
+        return self.render_hints.line_width
     
     @line_width.setter
     @checktype
     def line_width(self, line_width:int)->None:
-        self.render_hint.line_width = line_width
+        self.render_hints.line_width = line_width
 
     @property
     def radius(self)->float:

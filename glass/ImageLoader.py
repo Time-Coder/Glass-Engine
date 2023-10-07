@@ -1,36 +1,12 @@
 import cv2
 import os
-import platform
-import sys
-import subprocess
+import pyroexr
 from PIL import Image
 import numpy as np
 
-from .utils import extname, relative_path
+from .utils import extname, relative_path, is_url, md5s
+from .download import download
 from .GlassConfig import GlassConfig
-
-_OpenEXR = None
-_Imath = None
-
-def import_OpenEXR():
-    try:
-        import OpenEXR, Imath
-    except:
-        version = ".".join(platform.python_version().split(".")[:2])
-        openexr_urls = \
-        {
-            "3.7": "https://download.lfd.uci.edu/pythonlibs/archived/cp37/OpenEXR-1.3.7-cp37-cp37m-win_amd64.whl",
-            "3.8": "https://download.lfd.uci.edu/pythonlibs/archived/OpenEXR-1.3.8-cp38-cp38-win_amd64.whl",
-            "3.9": "https://download.lfd.uci.edu/pythonlibs/archived/OpenEXR-1.3.8-cp39-cp39-win_amd64.whl",
-            "3.10": "https://download.lfd.uci.edu/pythonlibs/archived/OpenEXR-1.3.8-cp310-cp310-win_amd64.whl",
-            "3.11": "https://download.lfd.uci.edu/pythonlibs/archived/OpenEXR-1.3.8-cp311-cp311-win_amd64.whl"
-        }
-        
-        install_cmd = [sys.executable, "-m", "pip", "install", openexr_urls[version]]
-        subprocess.call(install_cmd)
-        import OpenEXR, Imath
-
-    return OpenEXR, Imath
 
 class ImageLoader:
 
@@ -39,7 +15,13 @@ class ImageLoader:
     @staticmethod
     def load(file_name:str):
         if not os.path.isfile(file_name):
-            raise FileNotFoundError("not a valid image file: " + file_name)
+            if is_url(file_name):
+                url = file_name
+                file_name = GlassConfig.cache_folder + "/" + md5s(url) + "/" + os.path.basename(url)
+                if not os.path.isfile(file_name):
+                    download(url, file_name)
+            else:
+                raise FileNotFoundError("not a valid image file: " + file_name)
         
         file_name = os.path.abspath(file_name).replace("\\", "/")
         if file_name in ImageLoader.__image_map:
@@ -52,7 +34,7 @@ class ImageLoader:
             print(f"loading image: {relative_path(file_name)} ", end="", flush=True)
         image = None
         if ext_name == "exr":
-            image = ImageLoader.OpenEXR_load(file_name)
+            image = ImageLoader.exr_load(file_name)
         else:
             image = ImageLoader.PIL_load(file_name)
             if image is None:
@@ -118,29 +100,23 @@ class ImageLoader:
             return None
     
     @staticmethod
-    def OpenEXR_load(file_name):
+    def exr_load(file_name):
         try:
-            global _OpenEXR
-            global _Imath
-            if _OpenEXR is None:
-                _OpenEXR, _Imath = import_OpenEXR()
-
-            pt = _Imath.PixelType(_Imath.PixelType.FLOAT)
-            img_exr = _OpenEXR.InputFile(file_name)
-
-            dw = img_exr.header()['dataWindow']
-            shape = (dw.max.y - dw.min.y + 1, dw.max.x - dw.min.x + 1)
-
-            r_bytes, g_bytes, b_bytes = img_exr.channels('RGB', pt)
-            r = np.frombuffer(r_bytes, dtype=np.float32).reshape(shape)
-            g = np.frombuffer(g_bytes, dtype=np.float32).reshape(shape)
-            b = np.frombuffer(b_bytes, dtype=np.float32).reshape(shape)
-            return cv2.merge((r, g, b))
+            image = pyroexr.load(file_name)
+            r = image.channel("R")
+            g = image.channel("G")
+            b = image.channel("B")
+            if "A" in image.channels():
+                a = image.channel("A")
+                return cv2.merge((r, g, b, a))
+            else:
+                return cv2.merge((r, g, b))
         except:
             return None
     
     @staticmethod
     def tone_mapping(image):
+        image[image < 0] = 0
         gray = np.copy(image)
 
         channels = image.shape[2] if len(image.shape) > 2 else 1
@@ -168,13 +144,14 @@ class ImageLoader:
         L = temp_gray[rows:-rows, cols:-cols]
         L = np.sqrt(L)
 
-        if channels == 3:
+        if channels == 3 or channels == 4:
             L = cv2.merge((L, L, L))
-        elif channels == 4:
-            L = cv2.merge((L, L, L, L))
-
-        image = image/L / (1 + image/L)
-        image /= image.max()
-        image = np.sin(np.pi/2*image)
+            image[:,:,:3] = image[:,:,:3]/L / (1 + image[:,:,:3]/L)
+            image[:,:,:3] /= image[:,:,:3].max()
+            image = np.sin(np.pi/2*image[:,:,:3])
+        else:
+            image = image/L / (1 + image/L)
+            image /= image.max()
+            image = np.sin(np.pi/2*image)
 
         return image
