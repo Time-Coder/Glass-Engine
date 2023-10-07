@@ -44,18 +44,19 @@ setuptools.setup(
         'glass_engine': glass_engine_extra_files,
         'glass': glass_extra_files
     },
-    platforms=["win_amd64"],
-    python_requires=">=3.7, <3.12",
+    platforms=["win_amd64", "win32"],
+    python_requires=">=3.7",
     install_requires=[
         "PyOpenGL",
         "PyOpenGL_accelerate",
-        "PyQt6",
         "MarkupSafe==2.0.1",
-        "qt-material",
         "PyGLM",
+        "qt-material",
         "numpy",
         "opencv-python",
         "Pillow",
+        "pyroexr",
+        "maxminddb-geolite2",
         "wget",
         "requests",
         "chardet"

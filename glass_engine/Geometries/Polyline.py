@@ -13,7 +13,7 @@ class Polyline(Mesh):
                  name:str="", block:bool=True):
         primitive_type = (GL.GL_LINE_STRIP if not loop else GL.GL_LINE_LOOP)
         Mesh.__init__(self, primitive_type=primitive_type, color=color, name=name, block=block, shared=False)
-        self.render_hint.line_width = line_width
+        self.render_hints.line_width = line_width
         self.__points = points
         self.start_building()
 
@@ -46,12 +46,12 @@ class Polyline(Mesh):
 
     @property
     def line_width(self):
-        return self.render_hint.line_width
+        return self.render_hints.line_width
     
     @line_width.setter
     @checktype
     def line_width(self, line_width:int):
-        self.render_hint.line_width = line_width
+        self.render_hints.line_width = line_width
 
     @property
     def loop(self):

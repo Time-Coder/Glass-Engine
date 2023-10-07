@@ -34,4 +34,5 @@ from .Uniform import Uniform
 from .GLConfig import GLConfig
 from .GlassConfig import GlassConfig
 from .GLInfo import GLInfo
-from .RenderHint import RenderHint
+from .RenderHints import RenderHints
+from .download import download

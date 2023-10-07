@@ -11,6 +11,8 @@ import pickle
 import subprocess
 import sys
 import chardet
+import requests
+from geolite2 import geolite2
 from _ctypes import PyObj_FromPtr
 
 from .GlassConfig import GlassConfig
@@ -133,6 +135,28 @@ def checktype(func):
         return return_value
 
     return wrapper
+
+def public_ip():
+    try:
+        response = requests.get('https://httpbin.org/ip')
+        return response.json().get('origin')
+    except:
+        return None
+
+def is_China_ip(ip_address):
+    reader = geolite2.reader()
+    location = reader.get(ip_address)
+    country = location.get('country', {}).get('iso_code') if location else None
+    return country == 'CN'
+
+def pip_install(package_name:str):
+    install_cmd = [sys.executable, "-m", "pip", "install", package_name]
+    if "/" not in package_name and is_China_ip(public_ip()):
+        install_cmd = [sys.executable, "-m", "pip", "install", package_name, "-i", "https://pypi.tuna.tsinghua.edu.cn/simple"]
+    
+    return_code = subprocess.call(install_cmd)
+    if return_code != 0:
+        raise RuntimeError(f"cannot install {package_name}")
 
 def is_overridden(method):
     cls = method.__self__.__class__
@@ -271,6 +295,10 @@ def is_text_file(file_path):
             return (result['encoding'] is not None)
     except:
         return False
+
+def is_url(line:str)->bool:
+    pattern = re.compile(r'http[s]?://(?:[a-zA-Z]|[0-9]|[$-_@.&+]|[!*\\(\\),]|(?:%[0-9a-fA-F][0-9a-fA-F]))+')
+    return bool(pattern.match(line))
 
 def md5s(content):
     md5_hash = hashlib.md5()

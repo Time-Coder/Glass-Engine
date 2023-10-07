@@ -13,8 +13,8 @@ class SkyBox(Mesh):
     @checktype
     def __init__(self, name:str=""):
         Mesh.__init__(self, name=name, block=True)
-        self.render_hint.depth_func = "<="
-        self.render_hint.cull_face = GL.GL_FRONT
+        self.render_hints.depth_func = "<="
+        self.render_hints.cull_face = GL.GL_FRONT
         self.__skybox_map = None
         self.__program = None
         self.should_add_color = False

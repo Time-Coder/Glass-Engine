@@ -3,7 +3,7 @@ from .Material import Material
 from .algorithm import generate_auto_TBN, generate_smooth_TBN
 from .callback_vec import callback_vec4
 
-from glass import ShaderProgram, Instances, Vertices, Indices, GLInfo, RenderHint
+from glass import ShaderProgram, Instances, Vertices, Indices, GLInfo, RenderHints
 from glass.utils import checktype, md5s
 from glass.AttrList import AttrList
 
@@ -59,7 +59,7 @@ class Mesh(SceneNode):
         self._material._parent_meshes.add(self)
         self._back_material = self._material
         self._back_material_user_set = False
-        self._render_hint = RenderHint()
+        self._render_hints = RenderHints()
         
         self._propagation_props["explode_distance"] = 0
 
@@ -344,8 +344,8 @@ class Mesh(SceneNode):
         self._test_transparent()
 
     @property
-    def render_hint(self):
-        return self._render_hint
+    def render_hints(self):
+        return self._render_hints
 
     @staticmethod
     def param_setter(func):
@@ -819,7 +819,7 @@ class Mesh(SceneNode):
         if not self.visible:
             return
 
-        with self.render_hint:
+        with self.render_hints:
             if self.__primitive in GLInfo.triangle_types:
                 program.draw_triangles(self._vertices, self._indices, instances, self.__primitive)
             elif self.__primitive in GLInfo.line_types:

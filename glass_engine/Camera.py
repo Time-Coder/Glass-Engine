@@ -1,5 +1,4 @@
-from .SinglePathNode import SinglePathNode
-from .Screen import Screen
+from .SceneNode import SceneNode
 from .Manipulators.SceneRoamManipulator import SceneRoamManipulator
 from .Renderers.ForwardRenderer import ForwardRenderer
 from .VideoRecorder import VideoRecorder
@@ -10,8 +9,17 @@ import glm
 import math
 from enum import Enum
 import numpy as np
+import sys
 
-class Camera(SinglePathNode):
+Screen = {}
+def import_Screen(gui_system:str)->None:
+    if gui_system not in Screen:
+        cmd = f'from .Screens.{gui_system}Screen import {gui_system}Screen'
+        exec(cmd)
+
+        Screen[gui_system] = eval(f"{gui_system}Screen")
+
+class Camera(SceneNode):
 
     class ProjectionMode(Enum):
         Perspective = 0
@@ -40,8 +48,36 @@ class Camera(SinglePathNode):
             self.focus = 1/(1/self.near + 1/distance)
 
     @checktype
-    def __init__(self, projection_mode:ProjectionMode=ProjectionMode.Perspective, name:str=""):
-        SinglePathNode.__init__(self, name)
+    def __init__(self, gui_system:str="", projection_mode:ProjectionMode=ProjectionMode.Perspective, name:str=""):
+        SceneNode.__init__(self, name, unique_path=True)
+
+        if not isinstance(gui_system, str):
+            gui_system = gui_system.__name__
+
+        if not gui_system:
+            for module_name in sys.modules:
+                if module_name.startswith("PyQt6"):
+                    gui_system = "PyQt6"
+                    break
+
+                if module_name.startswith("PyQt5"):
+                    gui_system = "PyQt5"
+                    break
+
+                if module_name.startswith("PySide6"):
+                    gui_system = "PySide6"
+                    break
+
+                if module_name.startswith("PySide2"):
+                    gui_system = "PySide2"
+                    break
+
+            if not gui_system:
+                gui_system = "PySide6"
+
+        self.__gui_system:str = gui_system.lower().replace("pyside", "PySide").replace("pyqt", "PyQt")
+        import_Screen(self.__gui_system)
+
         self.__projection_mode = projection_mode
 
         self.__fov_deg = 45
@@ -57,13 +93,17 @@ class Camera(SinglePathNode):
 
         self.__lens = Camera.Lens()
 
-        self.__screen = Screen(self)
+        self.__screen = Screen[self.__gui_system](self)
         self.__screen.manipulator = SceneRoamManipulator()
         self.__screen.renderer = ForwardRenderer()
 
     @property
     def lens(self)->Lens:
         return self.__lens
+
+    @property
+    def gui_system(self)->str:
+        return self.__gui_system
     
     @lens.setter
     def lens(self, lens:Lens)->None:
@@ -156,7 +196,7 @@ class Camera(SinglePathNode):
         self.__height = width / self.screen.width() * self.screen.height()
 
     @property
-    def screen(self)->Screen:
+    def screen(self):
         return self.__screen
 
     @property

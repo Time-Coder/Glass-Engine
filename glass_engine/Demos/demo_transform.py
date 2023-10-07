@@ -1,19 +1,26 @@
 import sys
 import os
 
-from PyQt6.QtWidgets import QApplication, QDialog, QHBoxLayout, QVBoxLayout, QWidget, QLabel, QDoubleSpinBox, QSlider
-from PyQt6.QtCore import Qt, pyqtSignal
+from glass.utils import pip_install
+
+try:
+    import PySide6
+except:
+    pip_install("PySide6")
+
+from PySide6.QtWidgets import QApplication, QDialog, QHBoxLayout, QVBoxLayout, QWidget, QLabel, QDoubleSpinBox, QSlider
+from PySide6.QtCore import Qt, Signal
 from qt_material import apply_stylesheet
 
 from ..Camera import Camera
 from ..Model import Model
 from ..BasicScene import ModelView
 from ..Geometries.CoordSys import CoordSys
-from ..download import download
+from glass.download import download
 
 class ParamControlLine(QWidget):
 
-    value_changed = pyqtSignal(float)
+    value_changed = Signal(float)
 
     def __init__(self, prompt:str, range:tuple, default_value:float, unit:str=None, parent:QWidget=None):
         QWidget.__init__(self, parent=parent)
@@ -154,7 +161,7 @@ class MainWindow(QDialog):
         self.scene.add(self.model)
         self.scene.add(coord_sys)
 
-        self.scene.skydome = self_path + "/assets/skydomes/puresky.jpg"
+        self.scene.skydome = "https://dl.polyhaven.org/file/ph-assets/HDRIs/extra/Tonemapped%20JPG/industrial_sunset_puresky.jpg"
         
         vlayout.addWidget(self.camera.screen)
 
@@ -222,7 +229,6 @@ def download_files():
         "11805_airplane_v2_L2.obj": "85bd6ac8fcc6c717ba5a96a7a065c0ec",
         "airplane_body_diffuse_v1.jpg": "e7b1c3492a69e81959ffc14af0ad8ed7",
         "airplane_wings_diffuse_v1.jpg": "c4ef09fd0825d5d97a1ba105775e253a",
-        "puresky.jpg": "be98161b9ba68820ae9cd80a41d37d97"
     }
 
     target_file = model_folder + "/11805_airplane_v2_L2.mtl"
@@ -240,10 +246,6 @@ def download_files():
     target_file = model_folder + "/airplane_wings_diffuse_v1.jpg"
     url = "https://gitee.com/time-coder/Glass-Engine/raw/main/glass_engine/Demos/assets/models/jet/airplane_wings_diffuse_v1.jpg"
     download(url, target_file, md5_map["airplane_wings_diffuse_v1.jpg"])
-
-    target_file = skydome_folder + "/puresky.jpg"
-    url = "https://dl.polyhaven.org/file/ph-assets/HDRIs/extra/Tonemapped%20JPG/industrial_sunset_puresky.jpg"
-    download(url, target_file, md5_map["puresky.jpg"])
 
 def demo_transform():
     download_files()
