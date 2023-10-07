@@ -10,6 +10,7 @@ except:
 
 from PySide6.QtWidgets import QApplication, QDialog, QHBoxLayout, QVBoxLayout, QWidget, QLabel, QDoubleSpinBox, QSlider
 from PySide6.QtCore import Qt, Signal
+from PySide6.QtGui import QIcon
 from qt_material import apply_stylesheet
 
 from ..Camera import Camera
@@ -139,6 +140,9 @@ class MainWindow(QDialog):
         QDialog.__init__(self, parent=parent)
         self.setWindowFlags(Qt.WindowType.WindowMinMaxButtonsHint | Qt.WindowType.WindowCloseButtonHint)
         self.setWindowTitle('glass_engine 空间变换概念演示')
+
+        self_folder = os.path.dirname(os.path.abspath(__file__))
+        self.setWindowIcon(QIcon(self_folder + "/../images/glass_engine_logo64.png"))
 
         vlayout = QVBoxLayout()
 

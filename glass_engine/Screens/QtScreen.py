@@ -469,7 +469,7 @@ def show(self)->None:
         not self.__class__._has_exec:
         self.setWindowTitle("Glass Engine")
         self_folder = os.path.dirname(os.path.abspath(__file__))
-        self.setWindowIcon(self.__class__.qt.QtGui.QIcon(self_folder + "/images/glass_engine_logo64.png"))
+        self.setWindowIcon(self.__class__.qt.QtGui.QIcon(self_folder + "/../images/glass_engine_logo64.png"))
         
     self.__class__.__base__.show(self)
     if self.__class__._app is not None and \
