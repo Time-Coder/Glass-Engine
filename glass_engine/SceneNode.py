@@ -328,14 +328,6 @@ class SceneNode:
     def roll(self, roll:float):
         self._yaw_pitch_roll[2] = roll
         self._update_orientation()
-
-    @staticmethod
-    def path_str(node_path):
-        path = ""
-        for node in node_path:
-            path += ("/" + node.name)
-
-        return path
     
     @property
     def paths(self):
@@ -449,14 +441,6 @@ class SceneNode:
         path = self.parent.paths[0]
         path.append(self)
         return path
-    
-    @property
-    def path_str(self)->str:
-        if self.parent is None:
-            return "/" + self.name
-        
-        path_str = self.parent.paths_str[0]
-        return path_str + "/" + self.name
 
     @staticmethod
     def __abs_orientation(node)->glm.quat:
