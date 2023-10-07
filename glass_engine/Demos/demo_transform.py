@@ -225,7 +225,6 @@ class MainWindow(QDialog):
 def download_files():
     self_folder = os.path.dirname(os.path.abspath(__file__)).replace("\\", "/")
     model_folder = self_folder + "/assets/models/jet"
-    skydome_folder = self_folder + "/assets/skydomes"
 
     md5_map = \
     {
