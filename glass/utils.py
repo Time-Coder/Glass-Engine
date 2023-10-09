@@ -156,7 +156,7 @@ def pip_install(package_name:str):
     
     return_code = subprocess.call(install_cmd)
     if return_code != 0:
-        raise RuntimeError(f"cannot install {package_name}")
+        raise RuntimeError(f"failed to install {package_name}")
 
 def is_overridden(method):
     cls = method.__self__.__class__
