@@ -23,7 +23,7 @@ out VertexOut
     mat3 view_TBN;
     vec3 tex_coord;
     vec4 color;
-    flat bool visible;
+    flat int visible;
     vec3 preshading_color;
     flat uvec2 env_map_handle;
 } vs_out;
@@ -57,7 +57,7 @@ void main()
     vs_out.view_pos = world_to_view(camera, world_pos);
     vs_out.view_TBN = world_TBN_to_view(camera, mat3(world_tangent, world_bitangent, world_normal));
     vs_out.env_map_handle = env_map_handle;
-    vs_out.visible = (visible != 0);
+    vs_out.visible = visible;
 
     gl_Position = view_to_NDC(camera, vs_out.view_pos);
 

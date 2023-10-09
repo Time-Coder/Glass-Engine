@@ -14,7 +14,7 @@ in VertexOut
     vec4 color;
     vec4 back_color;
     flat uvec2 env_map_handle;
-    flat bool visible;
+    flat int visible;
 } gs_in[];
 
 out GeometryOut
@@ -25,7 +25,7 @@ out GeometryOut
     vec3 tex_coord;
     vec4 color;
     vec4 back_color;
-    flat bool visible;
+    flat int visible;
 } gs_out;
 
 out vec3 preshading_color;

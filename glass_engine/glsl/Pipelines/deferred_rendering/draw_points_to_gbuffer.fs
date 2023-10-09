@@ -9,7 +9,7 @@ in VertexOut
     mat3 view_TBN;
     vec3 tex_coord;
     vec4 color;
-    flat bool visible;
+    flat int visible;
     vec3 preshading_color;
     flat uvec2 env_map_handle;
 } fs_in;
@@ -37,7 +37,7 @@ uniform vec3 mesh_center;
 
 void main()
 {
-    if (!fs_in.visible)
+    if (fs_in.visible == 0)
     {
         discard;
     }

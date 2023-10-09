@@ -21,7 +21,7 @@ out VertexOut
     vec3 view_normal;
     vec3 tex_coord;
     vec4 color;
-    flat bool visible;
+    flat int visible;
 } vs_out;
 
 #include "../../include/transform.glsl"
@@ -45,7 +45,7 @@ void main()
     vec3 world_normal = normalize(camera.abs_position - world_pos);
     vs_out.view_pos = world_to_view(camera, world_pos);
     vs_out.view_normal = normalize(-vs_out.view_pos);
-    vs_out.visible = (visible != 0);
+    vs_out.visible = visible;
 
     gl_Position = view_to_NDC(camera, vs_out.view_pos);
 }

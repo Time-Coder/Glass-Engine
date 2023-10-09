@@ -24,7 +24,7 @@ out VertexOut
     vec4 color;
     vec4 back_color;
     flat uvec2 env_map_handle;
-    flat bool visible;
+    flat int visible;
 } vs_out;
 
 #include "../../include/transform.glsl"
@@ -48,5 +48,5 @@ void main()
     mat3 TBN = mat3(tangent, bitangent, normal);
     vs_out.world_TBN = transform_apply_to_TBN(transform, TBN);
     vs_out.env_map_handle = env_map_handle;
-    vs_out.visible = (visible != 0);
+    vs_out.visible = visible;
 }

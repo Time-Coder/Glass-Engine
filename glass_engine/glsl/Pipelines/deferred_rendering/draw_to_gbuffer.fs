@@ -10,7 +10,7 @@ in GeometryOut
     vec3 tex_coord;
     vec4 color;
     vec4 back_color;
-    flat bool visible;
+    flat int visible;
 } fs_in;
 
 in vec3 preshading_color;
@@ -42,7 +42,7 @@ uniform vec3 mesh_center;
 
 void main()
 {
-    if (!fs_in.visible)
+    if (fs_in.visible == 0)
     {
         discard;
     }
