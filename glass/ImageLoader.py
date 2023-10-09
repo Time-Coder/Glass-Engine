@@ -32,11 +32,11 @@ def import_OpenEXR()->None:
             gitee_url = ""
 
             if plat == "x64":
-                github_url = ""
-                gitee_url = ""
+                github_url = "https://raw.githubusercontent.com/Time-Coder/Glass-Engine/main/OpenEXR/OpenEXR-1.3.9-cp312-cp312-win_amd64.whl"
+                gitee_url = "https://gitee.com/time-coder/Glass-Engine/raw/main/OpenEXR/OpenEXR-1.3.9-cp312-cp312-win_amd64.whl"
             else:
-                github_url = ""
-                gitee_url = ""
+                github_url = "https://raw.githubusercontent.com/Time-Coder/Glass-Engine/main/OpenEXR/OpenEXR-1.3.9-cp312-cp312-win32.whl"
+                gitee_url = "https://gitee.com/time-coder/Glass-Engine/raw/main/OpenEXR/OpenEXR-1.3.9-cp312-cp312-win32.whl"
 
             if is_China_ip(public_ip()):
                 pip_install(gitee_url)

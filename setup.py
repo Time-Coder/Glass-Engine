@@ -16,11 +16,11 @@ if "-d" in sys.argv:
         github_url = ""
         
         if plat == "x64":
-            gitee_url = ""
-            github_url = ""
+            gitee_url = "https://gitee.com/time-coder/Glass-Engine/raw/main/PyGLM/PyGLM-2.7.0-cp312-cp312-win_amd64.whl"
+            github_url = "https://raw.githubusercontent.com/Time-Coder/Glass-Engine/main/PyGLM/PyGLM-2.7.0-cp312-cp312-win_amd64.whl"
         else:
-            gitee_url = ""
-            github_url = ""
+            gitee_url = "https://gitee.com/time-coder/Glass-Engine/raw/main/PyGLM/PyGLM-2.7.0-cp312-cp312-win32.whl"
+            github_url = "https://raw.githubusercontent.com/Time-Coder/Glass-Engine/main/PyGLM/PyGLM-2.7.0-cp312-cp312-win32.whl"
 
         return_code = subprocess.call(sys.executable, "-m", "pip", "install", gitee_url)
         if return_code != 0:
@@ -28,7 +28,7 @@ if "-d" in sys.argv:
 
 def find_files(module, directory):
     file_list = []
-    for root, dirs, files in os.walk(directory):
+    for root, _, files in os.walk(directory):
         for file in files:
             file_path = os.path.join(root, file)[(len(module) + 1) :]
             if "__glcache__" not in file_path:
@@ -56,7 +56,7 @@ glass_extra_files = find_files("glass", "glass/glsl")
 
 setuptools.setup(
     name="glass_engine",
-    version="0.1.10",
+    version="0.1.11",
     author="王炳辉 (BingHui-WANG)",
     author_email="binghui.wang@foxmail.com",
     description="An easy-to-use 3D rendering engine for Python",
@@ -69,7 +69,7 @@ setuptools.setup(
         'glass': glass_extra_files
     },
     platforms=["win_amd64", "win32"],
-    python_requires=">=3.7",
+    python_requires=">=3.6",
     install_requires=[
         "PyOpenGL",
         "PyOpenGL_accelerate",
