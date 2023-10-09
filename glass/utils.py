@@ -10,6 +10,7 @@ import hashlib
 import pickle
 import subprocess
 import sys
+import wget
 import chardet
 import requests
 from geolite2 import geolite2
@@ -156,7 +157,15 @@ def pip_install(package_name:str):
     
     return_code = subprocess.call(install_cmd)
     if return_code != 0:
-        raise RuntimeError(f"failed to install {package_name}")
+        if "/" not in package_name:
+            raise RuntimeError(f"failed to install {package_name}")
+
+        target_file = GlassConfig.cache_folder + "/" + os.path.basename(package_name)
+        wget.download(package_name, target_file)
+        install_cmd = [sys.executable, "-m", "pip", "install", target_file]
+        return_code = subprocess.call(install_cmd)
+        if return_code != 0:
+            raise RuntimeError(f"failed to install {package_name}")
 
 def is_overridden(method):
     cls = method.__self__.__class__
