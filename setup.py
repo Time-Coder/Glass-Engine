@@ -11,7 +11,7 @@ if "-d" in sys.argv:
     plat = "x64" if platform.architecture()[0] == "64bit" else "win32"
     version = ".".join(platform.python_version().split(".")[:2])
     if int(version.split(".")[1]) < 12:
-        subprocess.call(sys.executable, "-m", "pip", "install", "PyGLM")
+        subprocess.call([sys.executable, "-m", "pip", "install", "PyGLM"])
     else:
         temp_folder = os.path.dirname(os.path.abspath(__file__))
 
@@ -28,7 +28,7 @@ if "-d" in sys.argv:
             github_url = "https://raw.githubusercontent.com/Time-Coder/Glass-Engine/main/PyGLM/PyGLM-2.7.0-cp312-cp312-win32.whl"
             target_file = temp_folder + "/PyGLM-2.7.0-cp312-cp312-win32.whl"
 
-        subprocess.call(sys.executable, "-m", "pip", "install", "wget")
+        subprocess.call([sys.executable, "-m", "pip", "install", "wget"])
         import wget
 
         try:
@@ -36,7 +36,7 @@ if "-d" in sys.argv:
         except:
             wget.download(github_url, target_file)
 
-        return_code = subprocess.call(sys.executable, "-m", "pip", "install", target_file)
+        return_code = subprocess.call([sys.executable, "-m", "pip", "install", target_file])
         if return_code != 0:
             warnings.warn("Failed to install PyGLM, Please install it manually.")
 
@@ -70,7 +70,7 @@ glass_extra_files = find_files("glass", "glass/glsl")
 
 setuptools.setup(
     name="glass_engine",
-    version="0.1.12",
+    version="0.1.13",
     author="王炳辉 (BingHui-WANG)",
     author_email="binghui.wang@foxmail.com",
     description="An easy-to-use 3D rendering engine for Python",
