@@ -4,6 +4,7 @@ import shutil
 import sys
 import platform
 import subprocess
+import warnings
 
 # install PyGLM
 if "-d" in sys.argv:
@@ -12,19 +13,32 @@ if "-d" in sys.argv:
     if int(version.split(".")[1]) < 12:
         subprocess.call(sys.executable, "-m", "pip", "install", "PyGLM")
     else:
+        temp_folder = os.path.dirname(os.path.abspath(__file__))
+
+        target_file = ""
         gitee_url = ""
         github_url = ""
         
         if plat == "x64":
             gitee_url = "https://gitee.com/time-coder/Glass-Engine/raw/main/PyGLM/PyGLM-2.7.0-cp312-cp312-win_amd64.whl"
             github_url = "https://raw.githubusercontent.com/Time-Coder/Glass-Engine/main/PyGLM/PyGLM-2.7.0-cp312-cp312-win_amd64.whl"
+            target_file = temp_folder + "/PyGLM-2.7.0-cp312-cp312-win_amd64.whl"
         else:
             gitee_url = "https://gitee.com/time-coder/Glass-Engine/raw/main/PyGLM/PyGLM-2.7.0-cp312-cp312-win32.whl"
             github_url = "https://raw.githubusercontent.com/Time-Coder/Glass-Engine/main/PyGLM/PyGLM-2.7.0-cp312-cp312-win32.whl"
+            target_file = temp_folder + "/PyGLM-2.7.0-cp312-cp312-win32.whl"
 
-        return_code = subprocess.call(sys.executable, "-m", "pip", "install", gitee_url)
+        subprocess.call(sys.executable, "-m", "pip", "install", "wget")
+        import wget
+
+        try:
+            wget.download(gitee_url, target_file)
+        except:
+            wget.download(github_url, target_file)
+
+        return_code = subprocess.call(sys.executable, "-m", "pip", "install", target_file)
         if return_code != 0:
-            subprocess.call(sys.executable, "-m", "pip", "install", github_url)
+            warnings.warn("Failed to install PyGLM, Please install it manually.")
 
 def find_files(module, directory):
     file_list = []
@@ -56,7 +70,7 @@ glass_extra_files = find_files("glass", "glass/glsl")
 
 setuptools.setup(
     name="glass_engine",
-    version="0.1.11",
+    version="0.1.12",
     author="王炳辉 (BingHui-WANG)",
     author_email="binghui.wang@foxmail.com",
     description="An easy-to-use 3D rendering engine for Python",
