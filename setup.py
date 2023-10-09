@@ -1,6 +1,30 @@
 import setuptools
 import os
 import shutil
+import sys
+import platform
+import subprocess
+
+# install PyGLM
+if "-d" in sys.argv:
+    plat = "x64" if platform.architecture()[0] == "64bit" else "win32"
+    version = ".".join(platform.python_version().split(".")[:2])
+    if int(version.split(".")[1]) < 12:
+        subprocess.call(sys.executable, "-m", "pip", "install", "PyGLM")
+    else:
+        gitee_url = ""
+        github_url = ""
+        
+        if plat == "x64":
+            gitee_url = ""
+            github_url = ""
+        else:
+            gitee_url = ""
+            github_url = ""
+
+        return_code = subprocess.call(sys.executable, "-m", "pip", "install", gitee_url)
+        if return_code != 0:
+            subprocess.call(sys.executable, "-m", "pip", "install", github_url)
 
 def find_files(module, directory):
     file_list = []
@@ -50,7 +74,6 @@ setuptools.setup(
         "PyOpenGL",
         "PyOpenGL_accelerate",
         "MarkupSafe==2.0.1",
-        "PyGLM",
         "qt-material",
         "numpy",
         "opencv-python",

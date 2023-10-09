@@ -5,8 +5,9 @@ import numpy as np
 import subprocess
 import sys
 import platform
+import zipfile
 
-from .utils import extname, relative_path, is_url, md5s
+from .utils import extname, relative_path, is_url, md5s, is_China_ip, public_ip, pip_install
 from .download import download
 from .GlassConfig import GlassConfig
 
@@ -27,7 +28,21 @@ def import_OpenEXR()->None:
         version = ".".join(platform.python_version().split(".")[:2])
         plat = "x64" if platform.architecture()[0] == "64bit" else "win32"
         if version == "3.12":
-            url = ""
+            github_url = ""
+            gitee_url = ""
+
+            if plat == "x64":
+                github_url = ""
+                gitee_url = ""
+            else:
+                github_url = ""
+                gitee_url = ""
+
+            if is_China_ip(public_ip()):
+                pip_install(gitee_url)
+            else:
+                pip_install(github_url)
+
         else:
             openexr_urls = \
             {
@@ -45,9 +60,7 @@ def import_OpenEXR()->None:
                 ("3.10", "x64"): "https://download.lfd.uci.edu/pythonlibs/archived/OpenEXR-1.3.8-cp310-cp310-win_amd64.whl",
                 ("3.11", "x64"): "https://download.lfd.uci.edu/pythonlibs/archived/OpenEXR-1.3.8-cp311-cp311-win_amd64.whl"
             }
-
-            install_cmd = [sys.executable, "-m", "pip", "install", openexr_urls[(version, plat)]]
-            subprocess.call(install_cmd)
+            pip_install(openexr_urls[(version, plat)])
 
         import OpenEXR, Imath
         _OpenEXR, _Image = OpenEXR, Imath
@@ -78,7 +91,7 @@ class ImageLoader:
             print(f"loading image: {relative_path(file_name)} ", end="", flush=True)
         image = None
         if ext_name == "exr":
-            image = ImageLoader.exr_load(file_name)
+            image = ImageLoader.OpenEXR_load(file_name)
         else:
             image = ImageLoader.PIL_load(file_name)
             if image is None:
@@ -144,7 +157,7 @@ class ImageLoader:
             return None
     
     @staticmethod
-    def exr_load(file_name):
+    def OpenEXR_load(file_name):
         try:
             import_OpenEXR()
             pt = _Imath.PixelType(_Imath.PixelType.FLOAT)

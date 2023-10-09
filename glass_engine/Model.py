@@ -3,7 +3,7 @@ from .Mesh import Mesh
 from .Material import Material
 
 from glass.download import download
-from glass.utils import checktype
+from glass.utils import checktype, public_ip, is_China_ip
 from glass.AttrList import AttrList
 from glass import Vertices, sampler2D, Indices, GLInfo
 from glass.ImageLoader import ImageLoader
@@ -54,21 +54,33 @@ def import_AssimpModelLoader()->None:
 
     pyd_name = "AssimpModelLoader.cp3" + versions[1] + postfix
     target_pyd = module_folder + "/" + pyd_name
-    url = ""
+    gitee_url = ""
+    github_url = ""
     if postfix == "-win_amd64.pyd":
-        url = "https://gitee.com/time-coder/Glass-Engine/raw/main/glass_engine/AssimpModelLoader/" + pyd_name
+        gitee_url = "https://gitee.com/time-coder/Glass-Engine/raw/main/glass_engine/AssimpModelLoader/" + pyd_name
+        github_url = "https://raw.githubusercontent.com/Time-Coder/Glass-Engine/main/glass_engine/AssimpModelLoader/" + pyd_name
     else:
-        url = "https://gitee.com/time-coder/Glass-Engine/raw/main/glass_engine/AssimpModelLoader_win32/" + pyd_name
-
-    download(url, target_pyd, md5_map[pyd_name])
+        gitee_url = "https://gitee.com/time-coder/Glass-Engine/raw/main/glass_engine/AssimpModelLoader_win32/" + pyd_name
+        github_url = "https://raw.githubusercontent.com/Time-Coder/Glass-Engine/main/glass_engine/AssimpModelLoader_win32/" + pyd_name
+    
+    if is_China_ip(public_ip()):
+        download(gitee_url, target_pyd, md5_map[pyd_name])
+    else:
+        download(github_url, target_pyd, md5_map[pyd_name])
 
     dll_name = "assimp-vc143-mt.dll"
     target_dll = module_folder + "/" + dll_name
     if postfix == "-win_amd64.pyd":
-        url = "https://gitee.com/time-coder/Glass-Engine/raw/main/glass_engine/AssimpModelLoader/assimp-vc143-mt.dll"
+        gitee_url = "https://gitee.com/time-coder/Glass-Engine/raw/main/glass_engine/AssimpModelLoader/assimp-vc143-mt.dll"
+        github_url = "https://raw.githubusercontent.com/Time-Coder/Glass-Engine/main/glass_engine/AssimpModelLoader/assimp-vc143-mt.dll"
     else:
-        url = "https://gitee.com/time-coder/Glass-Engine/raw/main/glass_engine/AssimpModelLoader_win32/assimp-vc143-mt.dll"
-    download(url, target_dll, md5_map[dll_name + postfix])
+        gitee_url = "https://gitee.com/time-coder/Glass-Engine/raw/main/glass_engine/AssimpModelLoader_win32/assimp-vc143-mt.dll"
+        github_url = "https://raw.githubusercontent.com/Time-Coder/Glass-Engine/main/glass_engine/AssimpModelLoader_win32/assimp-vc143-mt.dll"
+
+    if is_China_ip(public_ip()):
+        download(gitee_url, target_dll, md5_map[dll_name + postfix])
+    else:
+        download(github_url, target_dll, md5_map[dll_name + postfix])
 
     if module_folder not in sys.path:
         sys.path.append(module_folder)
