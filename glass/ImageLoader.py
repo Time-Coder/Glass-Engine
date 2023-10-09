@@ -1,12 +1,56 @@
 import cv2
 import os
-import pyroexr
 from PIL import Image
 import numpy as np
+import subprocess
+import sys
+import platform
 
 from .utils import extname, relative_path, is_url, md5s
 from .download import download
 from .GlassConfig import GlassConfig
+
+_OpenEXR = None
+_Imath = None
+
+def import_OpenEXR()->None:
+    global _OpenEXR
+    global _Imath
+
+    if _OpenEXR is not None:
+        return
+
+    try:
+        import OpenEXR, Imath
+        _OpenEXR, _Image = OpenEXR, Imath
+    except:
+        version = ".".join(platform.python_version().split(".")[:2])
+        plat = "x64" if platform.architecture()[0] == "64bit" else "win32"
+        if version == "3.12":
+            url = ""
+        else:
+            openexr_urls = \
+            {
+                ("3.6", "win32"): "https://download.lfd.uci.edu/pythonlibs/archived/cp36/OpenEXR-1.3.2-cp36-cp36m-win32.whl",
+                ("3.7", "win32"): "https://download.lfd.uci.edu/pythonlibs/archived/cp37/OpenEXR-1.3.7-cp37-cp37m-win32.whl",
+                ("3.8", "win32"): "https://download.lfd.uci.edu/pythonlibs/archived/OpenEXR-1.3.8-cp38-cp38-win32.whl",
+                ("3.9", "win32"): "https://download.lfd.uci.edu/pythonlibs/archived/OpenEXR-1.3.8-cp39-cp39-win32.whl",
+                ("3.10", "win32"): "https://download.lfd.uci.edu/pythonlibs/archived/OpenEXR-1.3.8-cp310-cp310-win32.whl",
+                ("3.11", "win32"): "https://download.lfd.uci.edu/pythonlibs/archived/OpenEXR-1.3.8-cp311-cp311-win32.whl",
+
+                ("3.6", "x64"): "https://download.lfd.uci.edu/pythonlibs/archived/cp36/OpenEXR-1.3.2-cp36-cp36m-win_amd64.whl",
+                ("3.7", "x64"): "https://download.lfd.uci.edu/pythonlibs/archived/cp37/OpenEXR-1.3.7-cp37-cp37m-win_amd64.whl",
+                ("3.8", "x64"): "https://download.lfd.uci.edu/pythonlibs/archived/OpenEXR-1.3.8-cp38-cp38-win_amd64.whl",
+                ("3.9", "x64"): "https://download.lfd.uci.edu/pythonlibs/archived/OpenEXR-1.3.8-cp39-cp39-win_amd64.whl",
+                ("3.10", "x64"): "https://download.lfd.uci.edu/pythonlibs/archived/OpenEXR-1.3.8-cp310-cp310-win_amd64.whl",
+                ("3.11", "x64"): "https://download.lfd.uci.edu/pythonlibs/archived/OpenEXR-1.3.8-cp311-cp311-win_amd64.whl"
+            }
+
+            install_cmd = [sys.executable, "-m", "pip", "install", openexr_urls[(version, plat)]]
+            subprocess.call(install_cmd)
+
+        import OpenEXR, Imath
+        _OpenEXR, _Image = OpenEXR, Imath
 
 class ImageLoader:
 
@@ -102,15 +146,17 @@ class ImageLoader:
     @staticmethod
     def exr_load(file_name):
         try:
-            image = pyroexr.load(file_name)
-            r = image.channel("R")
-            g = image.channel("G")
-            b = image.channel("B")
-            if "A" in image.channels():
-                a = image.channel("A")
-                return cv2.merge((r, g, b, a))
-            else:
-                return cv2.merge((r, g, b))
+            import_OpenEXR()
+            pt = _Imath.PixelType(_Imath.PixelType.FLOAT)
+            img_exr = _OpenEXR.InputFile(file_name)
+            dw = img_exr.header()['dataWindow']
+            shape = (dw.max.y - dw.min.y + 1, dw.max.x - dw.min.x + 1)
+            r_bytes, g_bytes, b_bytes = img_exr.channels('RGB', pt)
+            r = np.frombuffer(r_bytes, dtype=np.float32).reshape(shape)
+            g = np.frombuffer(g_bytes, dtype=np.float32).reshape(shape)
+            b = np.frombuffer(b_bytes, dtype=np.float32).reshape(shape)
+
+            return cv2.merge((r, g, b))
         except:
             return None
     
