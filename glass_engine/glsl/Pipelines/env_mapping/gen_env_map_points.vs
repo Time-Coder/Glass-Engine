@@ -18,7 +18,7 @@ out VertexOut
     vec3 tex_coord;
     vec4 color;
     flat uvec2 env_map_handle;
-    flat bool visible;
+    flat int visible;
 } vs_out;
 
 #include "../../include/transform.glsl"
@@ -39,5 +39,5 @@ void main()
     vs_out.color = color;
     vs_out.tex_coord = tex_coord;
     vs_out.env_map_handle = env_map_handle;
-    vs_out.visible = (visible != 0);
+    vs_out.visible = visible;
 }

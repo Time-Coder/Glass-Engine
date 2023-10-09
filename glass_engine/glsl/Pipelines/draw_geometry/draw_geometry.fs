@@ -11,7 +11,7 @@ in GeometryOut
     vec3 tex_coord;
     vec4 color;
     vec4 back_color;
-    flat bool visible;
+    flat int visible;
 } fs_in;
 
 layout(location=3) out vec3 view_pos;
@@ -26,7 +26,7 @@ uniform Camera camera;
 
 void main()
 {
-    if (!fs_in.visible)
+    if (fs_in.visible == 0)
     {
         discard;
     }

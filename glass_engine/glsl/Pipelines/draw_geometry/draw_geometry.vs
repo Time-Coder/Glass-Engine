@@ -22,7 +22,7 @@ out VertexOut
     vec3 tex_coord;
     vec4 color;
     vec4 back_color;
-    flat bool visible;
+    flat int visible;
 } vs_out;
 
 #include "../../include/transform.glsl"
@@ -43,7 +43,7 @@ void main()
     vs_out.color = color;
     vs_out.back_color = back_color;
     vs_out.tex_coord = tex_coord;
-    vs_out.visible = (visible != 0);
+    vs_out.visible = visible;
     mat3 world_TBN = mat3(tangent, bitangent, normal);
     world_TBN = transform_apply_to_TBN(transform, world_TBN);
     vs_out.view_TBN = world_TBN_to_view(camera, world_TBN);

@@ -5,7 +5,7 @@ in GeometryOut
     vec4 color;
     vec4 back_color;
     vec3 tex_coord;
-    flat bool visible;
+    flat int visible;
 } fs_in;
 
 #include "../../include/Material.glsl"
@@ -15,7 +15,7 @@ uniform Material back_material;
 
 void main()
 {
-    if (!fs_in.visible)
+    if (fs_in.visible == 0)
     {
         discard;
     }

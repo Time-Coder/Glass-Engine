@@ -11,7 +11,7 @@ in VertexOut
     vec4 color;
     vec4 back_color;
     vec3 tex_coord;
-    flat bool visible;
+    flat int visible;
 } gs_in[];
 
 out GeometryOut
@@ -19,7 +19,7 @@ out GeometryOut
     vec4 color;
     vec4 back_color;
     vec3 tex_coord;
-    flat bool visible;
+    flat int visible;
 } gs_out;
 
 #include "../../Lights/DirLight.glsl"

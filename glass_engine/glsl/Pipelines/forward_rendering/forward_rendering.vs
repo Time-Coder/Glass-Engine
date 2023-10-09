@@ -24,7 +24,7 @@ out VertexOut
     vec4 color;
     vec4 back_color;
     flat uvec2 env_map_handle;
-    flat bool visible;
+    flat int visible;
 } vs_out;
 
 #include "../../include/transform.glsl"
@@ -49,7 +49,7 @@ void main()
     TBN = transform_apply_to_TBN(transform, TBN);
     vs_out.view_TBN = world_TBN_to_view(camera, TBN);
     vs_out.env_map_handle = env_map_handle;
-    vs_out.visible = (visible != 0);
+    vs_out.visible = visible;
 
     vec3 world_pos = transform_apply(transform, position);
     vec3 view_pos = world_to_view(camera, world_pos);

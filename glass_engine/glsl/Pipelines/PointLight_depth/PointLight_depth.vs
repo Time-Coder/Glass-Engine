@@ -18,7 +18,7 @@ out VertexOut
     vec4 color;
     vec4 back_color;
     vec3 tex_coord;
-    flat bool visible;
+    flat int visible;
 } vs_out;
 
 #include "../../include/transform.glsl"
@@ -35,7 +35,7 @@ void main()
     vec3 world_pos = transform_apply(transform, position);
     gl_Position = vec4(world_pos, 1);
 
-    vs_out.visible = bool(visible);
+    vs_out.visible = visible;
     vs_out.color = color;
     vs_out.back_color = back_color;
     vs_out.tex_coord = tex_coord;

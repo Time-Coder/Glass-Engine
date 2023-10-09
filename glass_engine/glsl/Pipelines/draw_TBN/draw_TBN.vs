@@ -21,7 +21,7 @@ out VertexOut
 {
     vec3 view_pos;
     mat3 view_TBN;
-    flat bool visible;
+    flat int visible;
 } vs_out;
 
 #include "../../include/transform.glsl"
@@ -45,5 +45,5 @@ void main()
     mat3 TBN = mat3(tangent, bitangent, normal);
     vs_out.view_pos = vertex_view_pos;
     vs_out.view_TBN = world_TBN_to_view(camera, transform_apply_to_TBN(transform, TBN));
-    vs_out.visible = (visible != 0);
+    vs_out.visible = visible;
 }
