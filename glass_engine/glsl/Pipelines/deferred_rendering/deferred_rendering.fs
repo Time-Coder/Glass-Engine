@@ -1,6 +1,9 @@
-#version 460 core
+#version 430 core
 
+#ifdef USE_BINDLESS_TEXTURE
 #extension GL_ARB_bindless_texture : require
+#endif
+
 #extension GL_EXT_texture_array : require
 
 in TexCoord
@@ -23,7 +26,6 @@ uniform sampler2D env_center_and_mixed_value_map;
 uniform usampler2D mixed_uint_map;
 
 uniform Camera camera;
-uniform Background background;
 uniform Fog fog;
 
 void main()
@@ -41,7 +43,5 @@ void main()
         fs_in.tex_coord
     );
 
-    shading_info.background = background;
-    shading_info.fog = fog;
-    out_color = post_shading_all(camera, camera, shading_info);
+    out_color = post_shading_all(camera, camera, background, fog, shading_info);
 }

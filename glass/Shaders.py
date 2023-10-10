@@ -7,6 +7,7 @@ import warnings
 
 from .utils import delete, md5s, modify_time, load_var, save_var, cat, relative_path
 from .GlassConfig import GlassConfig
+from .GLConfig import GLConfig
 from .GLObject import GLObject
 from .ShaderParser import ShaderParser
 from .GPUProgram import CompileError, CompileWarning
@@ -117,6 +118,10 @@ class BaseShader(GLObject):
 		if GlassConfig.print:
 			print(f"compiling shader: {self.file_name} ", end="", flush=True)
 
+		if "GL_ARB_bindless_texture" in GLConfig.available_extensions:
+			self.predefine("USE_BINDLESS_TEXTURE")
+			self._collect_info(self.file_name)
+
 		GL.glShaderSource(self._id, self._code)
 		GL.glCompileShader(self._id)
 
@@ -211,6 +216,19 @@ class BaseShader(GLObject):
 		elif self._type == GL.GL_COMPUTE_SHADER:
 			self.predefine("COMPUTE_SHADER")
 
+	def _collect_info(self, file_name):
+		abs_name = os.path.abspath(file_name).replace("\\", "/")
+		self._code = cat(abs_name)
+		self.related_files = [abs_name]
+
+		self.add_include_path(".")
+		self._predefine_shader_type()
+		include_path = os.path.dirname(abs_name)
+		if not os.path.isabs(file_name):
+			include_path = relative_path(include_path)
+		self.add_include_path(include_path)
+		self.related_files.extend(self._replace_includes())
+
 	def compile(self, file_name):
 		if self.is_compiled and not self._compiled_but_not_applied:
 			raise RuntimeError("compiled shader cannot compile other files")
@@ -223,18 +241,10 @@ class BaseShader(GLObject):
 		used_name = rel_name if len(rel_name) < len(abs_name) else abs_name
 		self._file_name = used_name
 		base_name = os.path.basename(abs_name)
-		self._meta_file_name = GlassConfig.cache_folder + "/" + base_name + "_" + md5s(abs_name) + ".meta"
+		self._meta_file_name = GlassConfig.cache_folder + "/" + base_name + "_" + md5s(GLConfig.renderer + "/" + abs_name) + ".meta"
 
 		if self._test_should_recompile():
-			self._code = cat(file_name)
-			self.related_files = [abs_name]
-			self.add_include_path(".")
-			self._predefine_shader_type()
-			include_path = os.path.dirname(abs_name)
-			if not os.path.isabs(file_name):
-				include_path = relative_path(include_path)
-			self.add_include_path(include_path)
-			self.related_files.extend(self._replace_includes())
+			self._collect_info(file_name)
 
 			self._clean_code = ShaderParser.delete_C_comments(self._code)
 			self.attributes_info = {}
@@ -245,8 +255,6 @@ class BaseShader(GLObject):
 			self.structs_info = {}
 			self.outs_info = {}
 			self.work_group_size = tuple()
-
-			
 
 			self.uniforms_info = ShaderParser.find_uniforms(self._clean_code)
 			self.uniform_blocks_info = ShaderParser.find_uniform_blocks(self._clean_code)

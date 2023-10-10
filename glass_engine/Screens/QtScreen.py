@@ -4,7 +4,7 @@ from ..PostProcessEffects import PostProcessEffects, BloomEffect, ACESToneMapper
 from ..SlideAverageFilter import SlideAverageFilter
 from ..VideoRecorder import VideoRecorder, convert_to_image
 
-from glass import ShaderProgram, GLConfig, FBO, RBO, sampler2DMS, sampler2D, RenderHints, SSBO, UBO, VAO
+from glass import ShaderProgram, GLConfig, GlassConfig, FBO, RBO, sampler2DMS, sampler2D, RenderHints, SSBO, UBO, VAO
 from glass.utils import extname, di
 
 import time
@@ -14,6 +14,7 @@ from OpenGL import GL
 import numpy as np
 import os
 import cv2
+import warnings
 
 def __new__(cls, *args, **kwargs):
     if cls.qt.QtWidgets.QApplication.instance() is None:
@@ -180,8 +181,19 @@ def render_hints(self, hint:RenderHints)->None:
     self._render_hints = hint
 
 def initializeGL(self)->None:
-    if not GLConfig.version.startswith("4.6"):
-        raise RuntimeError(f"Your graphics card({GLConfig.version}) not support OpenGL 4.6. Please update driver or change Python's graphics card.")
+    if GLConfig.major_version < 4:
+        raise RuntimeError(f"Current OpenGL version ({GLConfig.version}) is lower than minimum version require (OpenGL 4.3)")
+
+    if GLConfig.minor_version < 3:
+        raise RuntimeError(f"Current OpenGL version ({GLConfig.version}) is lower than minimum version require (OpenGL 4.3)")
+
+    if GlassConfig.warning and "GL_ARB_bindless_texture" not in GLConfig.available_extensions:
+        warning_message = """
+Extension GL_ARB_bindless_texture is not available.
+Shadows and dynamic environment mapping will be disabled.
+Try to change default graphics card of python.exe to high performance one.
+"""
+        warnings.warn(warning_message)
 
     self.makeCurrent()
 

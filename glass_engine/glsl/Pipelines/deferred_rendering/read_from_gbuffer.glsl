@@ -44,8 +44,10 @@ PostShadingInfo read_from_gbuffer(
     shading_info.world_normal = view_dir_to_world(camera, view_normal);
     shading_info.env_center = env_center_and_mixed_value.xyz;
 
+#ifdef USE_BINDLESS_TEXTURE
     uvec2 env_map_handle = mixed_uint.xy;
     shading_info.env_map = sampler2D(env_map_handle);
+#endif
 
     shading_info.material.shading_model = uint((mixed_uint.z >> 3) & 0xF);
     shading_info.material.fog = bool((mixed_uint.z >> 2) & 0x1);

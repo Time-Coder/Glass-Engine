@@ -13,7 +13,11 @@ vec4 world_to_lightNDC(DirLight light, Camera CSM_camera, int level, vec3 world_
         back_offset = dot(center, -light.direction) - dot(bounding_sphere.center, -light.direction) - bounding_sphere.radius;
     }
 
+#ifdef USE_BINDLESS_TEXTURE
     vec2 meters_per_pixel = 2*bounding_sphere.radius / textureSize(sampler2DArray(light.depth_map_handle), 0).xy;
+#else
+    vec2 meters_per_pixel = 2*bounding_sphere.radius / vec2(1024, 1024);
+#endif
     quat light_quat = quat_conj(light.abs_orientation);
     vec3 center_view = quat_apply(light_quat, center);
     center_view.xz = round(center_view.xz / meters_per_pixel)*meters_per_pixel;
@@ -37,6 +41,7 @@ vec4 world_to_lightNDC(DirLight light, Camera CSM_camera, int level, vec3 world_
 
 float SSM(DirLight light, Camera CSM_camera, vec3 frag_pos, vec3 frag_normal)
 {
+#ifdef USE_BINDLESS_TEXTURE
     int level = locate_CSM_leveli(CSM_camera, frag_pos);
     float depth_length = 0;
     vec4 light_NDC = world_to_lightNDC(light, CSM_camera, level, frag_pos, depth_length);
@@ -56,10 +61,14 @@ float SSM(DirLight light, Camera CSM_camera, vec3 frag_pos, vec3 frag_normal)
     float visibility = ((sample_depth > self_depth-bias) ? 1 : 0);
 
     return visibility;
+#else
+    return 1.0;
+#endif
 }
 
 float _get_PCF_value(DirLight light, Camera CSM_camera, int level, vec3 frag_pos, vec3 frag_normal, float PCF_width, out int total_count, inout int rand_seed)
 {
+#ifdef USE_BINDLESS_TEXTURE
     float depth_length = 0;
     vec4 light_NDC = world_to_lightNDC(light, CSM_camera, level, frag_pos, depth_length);
     float self_depth = (light_NDC.z / light_NDC.w + 1) / 2;
@@ -102,12 +111,15 @@ float _get_PCF_value(DirLight light, Camera CSM_camera, int level, vec3 frag_pos
     {
         visibility = 1.0*not_occ_count/total_count;
     }
-
     return visibility;
+#else
+    return 1.0;
+#endif
 }
 
 float PCF(DirLight light, Camera CSM_camera, vec3 frag_pos, vec3 frag_normal)
 {
+#ifdef USE_BINDLESS_TEXTURE
     float level = locate_CSM_level(CSM_camera, frag_pos);
     int leveli = int(level);
     float level_rear = level - leveli;
@@ -131,6 +143,9 @@ float PCF(DirLight light, Camera CSM_camera, vec3 frag_pos, vec3 frag_normal)
     }
     
     return visibility;
+#else
+    return 1.0;
+#endif
 }
 
 #endif

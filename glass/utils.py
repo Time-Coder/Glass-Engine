@@ -13,6 +13,7 @@ import sys
 import wget
 import chardet
 import requests
+import moderngl
 from geolite2 import geolite2
 from _ctypes import PyObj_FromPtr
 

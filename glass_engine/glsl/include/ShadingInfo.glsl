@@ -9,11 +9,10 @@ struct ShadingInfo
 {
     vec4 color;
     vec3 preshading_color;
-    Material material;
 
-    Background background;
+#ifdef USE_BINDLESS_TEXTURE
     sampler2D env_map;
-    Fog fog;
+#endif
     bool is_opaque_pass;
     bool is_sphere;
 
@@ -28,9 +27,9 @@ struct PostShadingInfo
 {
     InternalMaterial material;
 
-    Background background;
+#ifdef USE_BINDLESS_TEXTURE
     sampler2D env_map;
-    Fog fog;
+#endif
     bool is_sphere;
 
     vec3 world_pos;
@@ -41,20 +40,13 @@ struct PostShadingInfo
 PostShadingInfo PostShadingInfo_create()
 {
     InternalMaterial _internal_material;
-    Fog _fog;
-    Background _background = Background(
-        samplerCube(uvec2(0)),
-        sampler2D(uvec2(0)),
-        vec4(0),
-        float(0.0)
-    );
 
     return PostShadingInfo(
         _internal_material,
 
-        _background,
+#ifdef USE_BINDLESS_TEXTURE
         sampler2D(uvec2(0)),
-        _fog,
+#endif
         false,
 
         vec3(0),

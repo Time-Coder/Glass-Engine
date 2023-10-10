@@ -3,6 +3,7 @@
 
 float SSM(PointLight light, vec3 frag_pos, vec3 frag_normal)
 {
+#ifdef USE_BINDLESS_TEXTURE
     vec3 depth_map_tex_coord = frag_pos - light.abs_position;
     float self_depth = length(depth_map_tex_coord);
     if (self_depth < 0.1)
@@ -22,10 +23,14 @@ float SSM(PointLight light, vec3 frag_pos, vec3 frag_normal)
 
     float visibility = ((sample_depth > self_depth) ? 1.0 : 0.0);
     return visibility;
+#else
+    return 1.0;
+#endif
 }
 
 float PCF(PointLight light, vec3 frag_pos, vec3 frag_normal)
 {
+#ifdef USE_BINDLESS_TEXTURE
     vec3 depth_map_tex_coord = frag_pos - light.abs_position;
     float self_depth = length(depth_map_tex_coord);
     if (self_depth < 0.1)
@@ -57,6 +62,9 @@ float PCF(PointLight light, vec3 frag_pos, vec3 frag_normal)
     }
     float visibility = 1.0*not_occ_count/total_count;
     return visibility;
+#else
+    return 1.0;
+#endif
 }
 
 #endif

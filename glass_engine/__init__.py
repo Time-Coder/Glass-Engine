@@ -13,3 +13,4 @@ from .Fog import Fog
 
 import glm
 from OpenGL import GL
+from glass import GlassConfig

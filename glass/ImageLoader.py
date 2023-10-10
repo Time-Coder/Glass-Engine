@@ -23,7 +23,7 @@ def import_OpenEXR()->None:
 
     try:
         import OpenEXR, Imath
-        _OpenEXR, _Image = OpenEXR, Imath
+        _OpenEXR, _Imath = OpenEXR, Imath
     except:
         version = ".".join(platform.python_version().split(".")[:2])
         plat = "x64" if platform.architecture()[0] == "64bit" else "win32"
@@ -63,7 +63,7 @@ def import_OpenEXR()->None:
             pip_install(openexr_urls[(version, plat)])
 
         import OpenEXR, Imath
-        _OpenEXR, _Image = OpenEXR, Imath
+        _OpenEXR, _Imath = OpenEXR, Imath
 
 class ImageLoader:
 

@@ -235,7 +235,7 @@ class ShaderProgram(GPUProgram):
         if self.fragment_shader._max_modify_time > max_modify_time:
             max_modify_time = self.fragment_shader._max_modify_time
 
-        base = GlassConfig.cache_folder + "/" + binary_name + "_" + md5s(abs_file_names)
+        base = GlassConfig.cache_folder + "/" + binary_name + "_" + md5s(GLConfig.renderer + "/" + abs_file_names)
         self._binary_file_name = base + ".bin"
         self._meta_file_name = base + ".meta"
 
@@ -459,8 +459,8 @@ class ShaderProgram(GPUProgram):
 
         not_set_uniforms = []
         for name, uniform_info in self._uniform_map.items():
-            if name not in self._uniform._atom_value_map and \
-            "location" not in uniform_info:
+            if not uniform_info["atoms"] and "location" not in uniform_info and \
+               name not in self._uniform._atom_value_map:
                 location = GL.glGetUniformLocation(self._id, name)
                 uniform_info["location"] = location
                 if location != -1:

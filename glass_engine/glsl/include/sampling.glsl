@@ -125,7 +125,7 @@ vec2 textureQueryLodSeamless(sampler2D image, vec2 tex_coord)
 
     return result;
 #else
-    return textureQueryLod(image, tex_coord);
+    return 0;
 #endif
 }
 
