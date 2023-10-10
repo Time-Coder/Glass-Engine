@@ -1,6 +1,9 @@
-#version 460 core
+#version 430 core
 
+#ifdef USE_BINDLESS_TEXTURE
 #extension GL_ARB_bindless_texture : require
+#endif
+
 #extension GL_EXT_texture_array : require
 
 in GeometryOut
@@ -46,11 +49,10 @@ void main()
     ShadingInfo shading_info = ShadingInfo(
         (gl_FrontFacing ? fs_in.color : fs_in.back_color),
         (gl_FrontFacing ? preshading_color : preshading_back_color),
-        (gl_FrontFacing ? material : back_material),
-        
-        background,
+
+#ifdef USE_BINDLESS_TEXTURE
         sampler2D(env_map_handle),
-        fog,
+#endif
         is_opaque_pass,
         is_sphere,
         
@@ -60,7 +62,10 @@ void main()
         fs_in.affine_transform,
         mesh_center
     );
-    out_color = shading_all(camera, CSM_camera, shading_info);
+    out_color = shading_all(
+        camera, CSM_camera, background,
+        (gl_FrontFacing ? material : back_material), fog, shading_info
+    );
 
     // OIT
     if (!is_opaque_pass && out_color.a < 1)

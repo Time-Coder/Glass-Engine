@@ -51,6 +51,9 @@ class sampler2DMS(FBOAttachment):
 
 	@property
 	def handle(self):
+		if not bt.glGetTextureHandleARB:
+			return 0
+
 		if self._id == 0:
 			return 0
 		

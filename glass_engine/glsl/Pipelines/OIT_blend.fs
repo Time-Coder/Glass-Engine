@@ -1,5 +1,4 @@
-
-#version 460 core
+#version 430 core
 
 in TexCoord
 {

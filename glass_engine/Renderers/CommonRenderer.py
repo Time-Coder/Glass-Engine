@@ -291,6 +291,9 @@ class CommonRenderer(Renderer):
                     self._opaque_points.append(mesh_tuple)
 
     def update_spot_lights_depth(self):
+        if "GL_ARB_bindless_texture" not in GLConfig.available_extensions:
+            return
+        
         if not self._meshes_cast_shadows and \
            not self._lines_cast_shadows and \
            not self._points_cast_shadows:
@@ -338,6 +341,9 @@ class CommonRenderer(Renderer):
             spot_light.need_update_depth_map = False
 
     def update_point_lights_depth(self):
+        if "GL_ARB_bindless_texture" not in GLConfig.available_extensions:
+            return
+        
         if not self._meshes_cast_shadows and \
            not self._lines_cast_shadows and \
            not self._points_cast_shadows:
@@ -385,6 +391,9 @@ class CommonRenderer(Renderer):
             point_light.need_update_depth_map = False
 
     def update_dir_lights_depth(self):
+        if "GL_ARB_bindless_texture" not in GLConfig.available_extensions:
+            return
+        
         if not self._meshes_cast_shadows and \
            not self._lines_cast_shadows and \
            not self._points_cast_shadows:
@@ -713,6 +722,9 @@ class CommonRenderer(Renderer):
         mesh.draw(self.gen_env_map_points_program, instances)
 
     def gen_env_map(self, mesh, instances):
+        if "GL_ARB_bindless_texture" not in GLConfig.available_extensions:
+            return
+
         max_bake_times = max(mesh.material.env_max_bake_times, mesh._back_material.env_max_bake_times)
         mesh_center = mesh.center
         for instance in instances:

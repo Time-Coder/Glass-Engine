@@ -4,13 +4,13 @@ import os
 from glass.utils import pip_install, is_China_ip, public_ip
 
 try:
-    import PySide6
+    import PyQt6
 except:
-    pip_install("PySide6")
+    pip_install("PyQt6")
 
-from PySide6.QtWidgets import QApplication, QDialog, QHBoxLayout, QVBoxLayout, QWidget, QLabel, QDoubleSpinBox, QSlider
-from PySide6.QtCore import Qt, Signal
-from PySide6.QtGui import QIcon
+from PyQt6.QtWidgets import QApplication, QDialog, QHBoxLayout, QVBoxLayout, QWidget, QLabel, QDoubleSpinBox, QSlider
+from PyQt6.QtCore import Qt, pyqtSignal
+from PyQt6.QtGui import QIcon
 from qt_material import apply_stylesheet
 
 from ..Camera import Camera
@@ -21,7 +21,7 @@ from glass.download import download
 
 class ParamControlLine(QWidget):
 
-    value_changed = Signal(float)
+    value_changed = pyqtSignal(float)
 
     def __init__(self, prompt:str, range:tuple, default_value:float, unit:str=None, parent:QWidget=None):
         QWidget.__init__(self, parent=parent)

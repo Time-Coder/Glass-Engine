@@ -11,14 +11,17 @@
 #include "env_mapping.glsl"
 #include "../Lights/Lights.glsl"
 
-vec4 post_shading_all(Camera camera, Camera CSM_camera, PostShadingInfo shading_info)
+vec4 post_shading_all(
+    in Camera camera, in Camera CSM_camera,
+    in Background background, in Fog fog,
+    in PostShadingInfo shading_info)
 {
     if (shading_info.material.shading_model == SHADING_MODEL_UNLIT)
     {
         vec4 final_color = vec4(shading_info.material.emission, shading_info.material.opacity);
         if (shading_info.material.fog)
         {
-            final_color.rgb = fog_apply(shading_info.fog, final_color.rgb, length(camera.abs_position-shading_info.world_pos));
+            final_color.rgb = fog_apply(fog, final_color.rgb, length(camera.abs_position-shading_info.world_pos));
         }
         return final_color;
     }
@@ -34,9 +37,11 @@ vec4 post_shading_all(Camera camera, Camera CSM_camera, PostShadingInfo shading_
             shading_info.env_center, view_dir,
             shading_info.world_pos, shading_info.world_normal,
 
-            shading_info.background,
-            shading_info.fog,
-            shading_info.env_map
+            background,
+            fog
+#ifdef USE_BINDLESS_TEXTURE
+            , shading_info.env_map
+#endif
         );
     }
     else
@@ -47,9 +52,11 @@ vec4 post_shading_all(Camera camera, Camera CSM_camera, PostShadingInfo shading_
             shading_info.env_center, view_dir,
             shading_info.world_pos, shading_info.world_normal,
 
-            shading_info.background,
-            shading_info.fog,
-            shading_info.env_map
+            background,
+            fog
+#ifdef USE_BINDLESS_TEXTURE
+            , shading_info.env_map
+#endif
         );
     }
     if (env_color.a >= 1-1E-6)
@@ -57,7 +64,7 @@ vec4 post_shading_all(Camera camera, Camera CSM_camera, PostShadingInfo shading_
         vec4 final_color = vec4(env_color.rgb+shading_info.material.emission, shading_info.material.opacity);
         if (shading_info.material.fog)
         {
-            final_color.rgb = fog_apply(shading_info.fog, final_color.rgb, length(camera.abs_position-shading_info.world_pos));
+            final_color.rgb = fog_apply(fog, final_color.rgb, length(camera.abs_position-shading_info.world_pos));
         }
         return final_color;
     }
@@ -87,17 +94,20 @@ vec4 post_shading_all(Camera camera, Camera CSM_camera, PostShadingInfo shading_
     // 雾
     if (shading_info.material.fog)
     {
-        out_color3 = fog_apply(shading_info.fog, out_color3, length(camera.abs_position-shading_info.world_pos));
+        out_color3 = fog_apply(fog, out_color3, length(camera.abs_position-shading_info.world_pos));
     }
 
     // 最终颜色
     return vec4(out_color3, shading_info.material.opacity);
 }
 
-vec4 shading_all(Camera camera, Camera CSM_camera, inout ShadingInfo shading_info)
+vec4 shading_all(
+    in Camera camera, in Camera CSM_camera,
+    in Background background, in Material material, in Fog fog,
+    inout ShadingInfo shading_info)
 {
     // 高度贴图和法线贴图改变几何信息
-    change_geometry(shading_info.material, shading_info.tex_coord, shading_info.view_TBN, shading_info.view_pos);
+    change_geometry(material, shading_info.tex_coord, shading_info.view_TBN, shading_info.view_pos);
     if (hasnan(shading_info.view_TBN[2]) || length(shading_info.view_TBN[2]) < 1E-6)
     {
         discard;
@@ -105,7 +115,7 @@ vec4 shading_all(Camera camera, Camera CSM_camera, inout ShadingInfo shading_inf
 
     // 实际使用的材质
     InternalMaterial internal_material = fetch_internal_material(
-        shading_info.color, shading_info.material, shading_info.tex_coord
+        shading_info.color, material, shading_info.tex_coord
     );
 
     // 透明度过低丢弃
@@ -137,9 +147,9 @@ vec4 shading_all(Camera camera, Camera CSM_camera, inout ShadingInfo shading_inf
     PostShadingInfo post_shading_info = PostShadingInfo(
         internal_material,
 
-        shading_info.background,
+#ifdef USE_BINDLESS_TEXTURE
         shading_info.env_map,
-        shading_info.fog,
+#endif
         shading_info.is_sphere,
 
         world_pos,
@@ -147,12 +157,14 @@ vec4 shading_all(Camera camera, Camera CSM_camera, inout ShadingInfo shading_inf
         env_center
     );
 
-    return post_shading_all(camera, CSM_camera, post_shading_info);
+    return post_shading_all(camera, CSM_camera, background, fog, post_shading_info);
 }
 
-vec4 shading_all(Camera camera, inout ShadingInfo shading_info)
+vec4 shading_all(
+    in Camera camera, in Background background, in Material material, in Fog fog,
+    inout ShadingInfo shading_info)
 {
-    return shading_all(camera, camera, shading_info);
+    return shading_all(camera, camera, background, material, fog, shading_info);
 }
 
 #endif

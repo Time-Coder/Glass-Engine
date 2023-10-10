@@ -1,7 +1,10 @@
-#version 460 core
+#version 430 core
+
+#ifdef USE_BINDLESS_TEXTURE
+#extension GL_ARB_bindless_texture : require
+#endif
 
 #extension GL_EXT_texture_array : require
-#extension GL_ARB_bindless_texture : require
 
 layout (points, invocations={CSM_levels}) in;
 layout (points, max_vertices=1) out;

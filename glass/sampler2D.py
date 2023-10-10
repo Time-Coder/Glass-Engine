@@ -139,6 +139,9 @@ class sampler2D(FBOAttachment):
 
     @property
     def handle(self):
+        if not bt.glGetTextureHandleARB:
+            return 0
+        
         self.bind()
         if self._handle == 0:
             self._handle = bt.glGetTextureHandleARB(self._id)

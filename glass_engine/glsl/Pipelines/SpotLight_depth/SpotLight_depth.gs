@@ -1,6 +1,8 @@
-#version 460 core
+#version 430 core
 
-#extension GL_ARB_bindless_texture : enable
+#ifdef USE_BINDLESS_TEXTURE
+#extension GL_ARB_bindless_texture : require
+#endif
 
 layout (triangles, invocations=6) in;
 layout (triangle_strip, max_vertices=3) out;

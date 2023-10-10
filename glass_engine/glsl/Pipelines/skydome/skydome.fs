@@ -1,4 +1,4 @@
-#version 460 core
+#version 430 core
 
 in vec2 frag_tex_coord;
 in vec3 view_dir;

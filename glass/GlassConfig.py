@@ -1,4 +1,5 @@
 import os
+import shutil
 
 class GlassConfig:
 
@@ -25,6 +26,10 @@ class GlassConfig:
     @cache_folder.setter
     def cache_folder(self, folder_path:str):
         self.__cache_folder = folder_path
+
+    def clear_cache(self):
+        if os.path.isdir(self.__cache_folder):
+            shutil.rmtree(self.__cache_folder)
 
     @property
     def debug(self):

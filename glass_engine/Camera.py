@@ -48,9 +48,26 @@ class Camera(SceneNode):
             self.focus = 1/(1/self.near + 1/distance)
 
     @checktype
-    def __init__(self, gui_system:str="", projection_mode:ProjectionMode=ProjectionMode.Perspective, name:str=""):
+    def __init__(self, gui_system="", projection_mode:ProjectionMode=ProjectionMode.Perspective, name:str=""):
         SceneNode.__init__(self, name, unique_path=True)
+        self.__projection_mode:Camera.ProjectionMode = projection_mode
+        self.__gui_system:str = ""
 
+        self.__fov_deg:float = 45
+        self.__fov_rad:float = math.pi/4
+        half_fov = self.__fov_rad/2
+        self.__tan_half_fov:float = math.tan(half_fov)
+        self.__sin_half_fov:float = math.sin(half_fov)
+        self.__far:float = 100
+        self.__near:float = 0.1
+        self.__clip:float = self.__far - self.__near
+        self.__height:float = 40*2*self.__near*self.__tan_half_fov
+        self.__CSM_levels:int = 5
+        self.__lens:Camera.Lens = Camera.Lens()
+
+        self._set_screen(gui_system)
+
+    def _set_screen(self, gui_system)->None:
         if not isinstance(gui_system, str):
             gui_system = gui_system.__name__
 
@@ -72,26 +89,40 @@ class Camera(SceneNode):
                     gui_system = "PySide2"
                     break
 
-            if not gui_system:
-                gui_system = "PySide6"
+        if gui_system:
+            self.__gui_system = gui_system.lower().replace("pyside", "PySide").replace("pyqt", "PyQt")
+            import_Screen(self.__gui_system)
 
-        self.__gui_system:str = gui_system.lower().replace("pyside", "PySide").replace("pyqt", "PyQt")
-        import_Screen(self.__gui_system)
+        if not self.__gui_system:
+            try:
+                import_Screen("PyQt6")
+                self.__gui_system = "PyQt6"
+            except:
+                self.__gui_system = ""
 
-        self.__projection_mode = projection_mode
+        if not self.__gui_system:
+            try:
+                import_Screen("PyQt5")
+                self.__gui_system = "PyQt5"
+            except:
+                self.__gui_system = ""
 
-        self.__fov_deg = 45
-        self.__fov_rad = math.pi/4
-        half_fov = self.__fov_rad/2
-        self.__tan_half_fov = math.tan(half_fov)
-        self.__sin_half_fov = math.sin(half_fov)
-        self.__far = 100
-        self.__near = 0.1
-        self.__clip = self.__far - self.__near
-        self.__height = 40*2*self.__near*self.__tan_half_fov
-        self.__CSM_levels = 5
+        if not self.__gui_system:
+            try:
+                import_Screen("PySide6")
+                self.__gui_system = "PySide6"
+            except:
+                self.__gui_system = ""
 
-        self.__lens = Camera.Lens()
+        if not self.__gui_system:
+            try:
+                import_Screen("PySide2")
+                self.__gui_system = "PySide2"
+            except:
+                self.__gui_system = ""
+
+        if not self.__gui_system:
+            raise RuntimeError("all GUI systems failed to init")
 
         self.__screen = Screen[self.__gui_system](self)
         self.__screen.manipulator = SceneRoamManipulator()

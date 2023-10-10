@@ -8,15 +8,21 @@
 
 vec3 fetch_env_color(
     vec3 out_dir, float roughness,
-    Background background, Fog fog, sampler2D env_map)
+    Background background, Fog fog
+#ifdef USE_BINDLESS_TEXTURE
+    , sampler2D env_map
+#endif
+)
 {
     vec4 env_color = vec4(0);
     float bias = 0.7*roughness;
 
+#ifdef USE_BINDLESS_TEXTURE
     if (textureValid(env_map))
     {
         env_color = textureColorSphere(env_map, out_dir, bias);
     }
+#endif
     
     vec3 background_color = background.color.rgb;
     if (textureValid(background.skybox_map))
@@ -37,7 +43,11 @@ vec3 fetch_env_color(
 vec4 sphere_reflect_refract_color(
     InternalMaterial material, Camera CSM_camera,
     vec3 env_center, vec3 view_dir, vec3 frag_pos, vec3 frag_normal,
-    Background background, Fog fog, sampler2D env_map)
+    Background background, Fog fog
+#ifdef USE_BINDLESS_TEXTURE
+    , sampler2D env_map
+#endif
+)
 {
     vec4 reflection = material.reflection;
     float refractive_index = material.refractive_index;
@@ -86,7 +96,10 @@ vec4 sphere_reflect_refract_color(
         {
             reflection_color = reflection_factor * fetch_env_color(
                 reflect_out_dir, material.roughness,
-                background, fog, env_map
+                background, fog
+#ifdef USE_BINDLESS_TEXTURE
+                , env_map
+#endif
             );
             vec3 specular_color = get_specular_color(material, CSM_camera, reflect_out_dir, frag_pos, frag_normal);
             reflection_color += reflection_factor*specular_color;
@@ -114,7 +127,10 @@ vec4 sphere_reflect_refract_color(
                 {
                     refraction_color += refraction_factor * fetch_env_color(
                         refract_out_dir, material.roughness,
-                        background, fog, env_map
+                        background, fog
+#ifdef USE_BINDLESS_TEXTURE
+                        , env_map
+#endif
                     );
                     if (i >= 1)
                     {
@@ -152,7 +168,10 @@ vec4 sphere_reflect_refract_color(
             {
                 refraction_color += refraction_factor * fetch_env_color(
                     refract_out_dir, material.roughness,
-                    background, fog, env_map
+                    background, fog
+#ifdef USE_BINDLESS_TEXTURE
+                    , env_map
+#endif
                 );
                 if (i >= 1)
                 {
@@ -183,7 +202,11 @@ vec4 sphere_reflect_refract_color(
 vec4 reflect_refract_color(
     InternalMaterial material, Camera CSM_camera,
     vec3 env_center, vec3 view_dir, vec3 frag_pos, vec3 frag_normal,
-    Background background, Fog fog, sampler2D env_map)
+    Background background, Fog fog
+#ifdef USE_BINDLESS_TEXTURE
+    , sampler2D env_map
+#endif
+)
 {
     vec4 reflection = material.reflection;
     float refractive_index = material.refractive_index;
@@ -231,7 +254,10 @@ vec4 reflect_refract_color(
         vec3 reflect_out_dir = normalize(reflect(view_dir, frag_normal));
         reflection_color = reflection_factor * fetch_env_color(
             reflect_out_dir, material.roughness,
-            background, fog, env_map
+            background, fog
+#ifdef USE_BINDLESS_TEXTURE
+            , env_map
+#endif
         );
         vec3 specular_color = get_specular_color(material, CSM_camera, reflect_out_dir, frag_pos, frag_normal);
         reflection_color += reflection_factor * specular_color;
@@ -249,7 +275,10 @@ vec4 reflect_refract_color(
         vec3 refract_out_dir = normalize(refract(view_dir, frag_normal, refractive_index));
         refraction_color = (1-reflection_factor)*fetch_env_color(
             refract_out_dir, material.roughness,
-            background, fog, env_map
+            background, fog
+#ifdef USE_BINDLESS_TEXTURE
+            , env_map
+#endif
         );
         vec3 specular_color = get_specular_color(material, CSM_camera, refract_out_dir, frag_pos, frag_normal);
         refraction_color += (1 - reflection_factor) * specular_color;
