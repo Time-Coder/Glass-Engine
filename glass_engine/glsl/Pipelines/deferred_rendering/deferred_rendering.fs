@@ -26,6 +26,7 @@ uniform sampler2D env_center_and_mixed_value_map;
 uniform usampler2D mixed_uint_map;
 
 uniform Camera camera;
+uniform Background background;
 uniform Fog fog;
 
 void main()
