@@ -2,8 +2,8 @@ from .SceneNode import SceneNode
 from .Mesh import Mesh
 from .Material import Material
 
-from glass.download import download
-from glass.utils import checktype, public_ip, is_China_ip
+from glass.download import download, is_China_user
+from glass.utils import checktype
 from glass.AttrList import AttrList
 from glass import Vertices, sampler2D, Indices, GLInfo
 from glass.ImageLoader import ImageLoader
@@ -63,7 +63,7 @@ def import_AssimpModelLoader()->None:
         gitee_url = "https://gitee.com/time-coder/Glass-Engine/raw/main/glass_engine/AssimpModelLoader_win32/" + pyd_name
         github_url = "https://raw.githubusercontent.com/Time-Coder/Glass-Engine/main/glass_engine/AssimpModelLoader_win32/" + pyd_name
     
-    if is_China_ip(public_ip()):
+    if is_China_user():
         download(gitee_url, target_pyd, md5_map[pyd_name])
     else:
         download(github_url, target_pyd, md5_map[pyd_name])
@@ -77,7 +77,7 @@ def import_AssimpModelLoader()->None:
         gitee_url = "https://gitee.com/time-coder/Glass-Engine/raw/main/glass_engine/AssimpModelLoader_win32/assimp-vc143-mt.dll"
         github_url = "https://raw.githubusercontent.com/Time-Coder/Glass-Engine/main/glass_engine/AssimpModelLoader_win32/assimp-vc143-mt.dll"
 
-    if is_China_ip(public_ip()):
+    if is_China_user():
         download(gitee_url, target_dll, md5_map[dll_name + postfix])
     else:
         download(github_url, target_dll, md5_map[dll_name + postfix])

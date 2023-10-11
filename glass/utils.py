@@ -10,10 +10,7 @@ import hashlib
 import pickle
 import subprocess
 import sys
-import wget
 import chardet
-import requests
-from geolite2 import geolite2
 from _ctypes import PyObj_FromPtr
 
 from .GlassConfig import GlassConfig
@@ -136,36 +133,6 @@ def checktype(func):
         return return_value
 
     return wrapper
-
-def public_ip():
-    try:
-        response = requests.get('https://httpbin.org/ip')
-        return response.json().get('origin')
-    except:
-        return None
-
-def is_China_ip(ip_address):
-    reader = geolite2.reader()
-    location = reader.get(ip_address)
-    country = location.get('country', {}).get('iso_code') if location else None
-    return country == 'CN'
-
-def pip_install(package_name:str):
-    install_cmd = [sys.executable, "-m", "pip", "install", package_name]
-    if "/" not in package_name and is_China_ip(public_ip()):
-        install_cmd = [sys.executable, "-m", "pip", "install", package_name, "-i", "https://pypi.tuna.tsinghua.edu.cn/simple"]
-    
-    return_code = subprocess.call(install_cmd)
-    if return_code != 0:
-        if "/" not in package_name:
-            raise RuntimeError(f"failed to install {package_name}")
-
-        target_file = GlassConfig.cache_folder + "/" + os.path.basename(package_name)
-        wget.download(package_name, target_file)
-        install_cmd = [sys.executable, "-m", "pip", "install", target_file]
-        return_code = subprocess.call(install_cmd)
-        if return_code != 0:
-            raise RuntimeError(f"failed to install {package_name}")
 
 def is_overridden(method):
     cls = method.__self__.__class__
@@ -298,6 +265,9 @@ def find_pair(content, i):
     return i
 
 def is_text_file(file_path):
+    if extname(file_path) in ["exr", "hdr"]:
+        return False
+    
     try:
         with open(file_path, 'rb') as f:
             result = chardet.detect(f.read())

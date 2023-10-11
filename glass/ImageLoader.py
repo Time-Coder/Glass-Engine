@@ -3,24 +3,25 @@ import os
 from PIL import Image
 import numpy as np
 import platform
+import importlib
 
-from .utils import extname, printable_path, is_url, md5s, is_China_ip, public_ip, pip_install
-from .download import download
+from .utils import extname, printable_path, is_url, md5s
+from .download import is_China_user, pip_install, download
 from .GlassConfig import GlassConfig
 
-_OpenEXR = None
-_Imath = None
+OpenEXR = None
+Imath = None
 
 def import_OpenEXR()->None:
-    global _OpenEXR
-    global _Imath
+    global OpenEXR
+    global Imath
 
-    if _OpenEXR is not None:
+    if OpenEXR is not None:
         return
 
     try:
-        import OpenEXR, Imath
-        _OpenEXR, _Imath = OpenEXR, Imath
+        OpenEXR = importlib.import_module("OpenEXR")
+        Imath = importlib.import_module("Imath")
     except:
         version = ".".join(platform.python_version().split(".")[:2])
         plat = "x64" if platform.architecture()[0] == "64bit" else "win32"
@@ -35,11 +36,10 @@ def import_OpenEXR()->None:
                 github_url = "https://raw.githubusercontent.com/Time-Coder/Glass-Engine/main/OpenEXR/OpenEXR-1.3.9-cp312-cp312-win32.whl"
                 gitee_url = "https://gitee.com/time-coder/Glass-Engine/raw/main/OpenEXR/OpenEXR-1.3.9-cp312-cp312-win32.whl"
 
-            if is_China_ip(public_ip()):
+            if is_China_user():
                 pip_install(gitee_url)
             else:
                 pip_install(github_url)
-
         else:
             openexr_urls = \
             {
@@ -58,9 +58,9 @@ def import_OpenEXR()->None:
                 ("3.11", "x64"): "https://download.lfd.uci.edu/pythonlibs/archived/OpenEXR-1.3.8-cp311-cp311-win_amd64.whl"
             }
             pip_install(openexr_urls[(version, plat)])
-
-        import OpenEXR, Imath
-        _OpenEXR, _Imath = OpenEXR, Imath
+        
+        OpenEXR = importlib.import_module("OpenEXR")
+        Imath = importlib.import_module("Imath")
 
 class ImageLoader:
 
@@ -155,20 +155,17 @@ class ImageLoader:
     
     @staticmethod
     def OpenEXR_load(file_name):
-        try:
-            import_OpenEXR()
-            pt = _Imath.PixelType(_Imath.PixelType.FLOAT)
-            img_exr = _OpenEXR.InputFile(file_name)
-            dw = img_exr.header()['dataWindow']
-            shape = (dw.max.y - dw.min.y + 1, dw.max.x - dw.min.x + 1)
-            r_bytes, g_bytes, b_bytes = img_exr.channels('RGB', pt)
-            r = np.frombuffer(r_bytes, dtype=np.float32).reshape(shape)
-            g = np.frombuffer(g_bytes, dtype=np.float32).reshape(shape)
-            b = np.frombuffer(b_bytes, dtype=np.float32).reshape(shape)
+        import_OpenEXR()
+        pt = Imath.PixelType(Imath.PixelType.FLOAT)
+        img_exr = OpenEXR.InputFile(file_name)
+        dw = img_exr.header()['dataWindow']
+        shape = (dw.max.y - dw.min.y + 1, dw.max.x - dw.min.x + 1)
+        r_bytes, g_bytes, b_bytes = img_exr.channels('RGB', pt)
+        r = np.frombuffer(r_bytes, dtype=np.float32).reshape(shape)
+        g = np.frombuffer(g_bytes, dtype=np.float32).reshape(shape)
+        b = np.frombuffer(b_bytes, dtype=np.float32).reshape(shape)
 
-            return cv2.merge((r, g, b))
-        except:
-            return None
+        return cv2.merge((r, g, b))
     
     @staticmethod
     def tone_mapping(image):
