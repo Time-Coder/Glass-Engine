@@ -13,7 +13,6 @@ import sys
 import wget
 import chardet
 import requests
-import moderngl
 from geolite2 import geolite2
 from _ctypes import PyObj_FromPtr
 
@@ -332,6 +331,16 @@ def relative_path(file_name, start_path="."):
         return os.path.relpath(file_name, start_path).replace("\\", "/")
     except:
         return os.path.abspath(file_name).replace("\\", "/")
+
+def printable_path(file_name):
+    site_packages = os.path.abspath(os.path.dirname(os.path.abspath(__file__)) + "/../").replace("\\", "/")
+    name1 = relative_path(file_name, site_packages)
+    name2 = relative_path(file_name)
+    name3 = os.path.abspath(file_name).replace("\\", "/")
+
+    result = (name1 if len(name1) < len(name2) else name2)
+    result = (result if len(result) < len(name3) else name3)
+    return result
 
 def save_var(var, file_path):
     with open(file_path, 'wb') as file:

@@ -5,7 +5,7 @@ import re
 import copy
 import warnings
 
-from .utils import delete, md5s, modify_time, load_var, save_var, cat, relative_path
+from .utils import delete, md5s, modify_time, load_var, save_var, cat, relative_path, printable_path
 from .GlassConfig import GlassConfig
 from .GLConfig import GLConfig
 from .GLObject import GLObject
@@ -116,7 +116,7 @@ class BaseShader(GLObject):
 				raise MemoryError("Failed to create Shader!")
 			
 		if GlassConfig.print:
-			print(f"compiling shader: {self.file_name} ", end="", flush=True)
+			print(f"compiling shader: {printable_path(self.file_name)} ", end="", flush=True)
 
 		if "GL_ARB_bindless_texture" in GLConfig.available_extensions:
 			self.predefine("USE_BINDLESS_TEXTURE")
