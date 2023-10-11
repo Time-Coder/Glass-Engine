@@ -1,7 +1,7 @@
 import sys
 import os
 
-from glass.utils import pip_install, is_China_ip, public_ip
+from glass.download import pip_install, is_China_user
 
 try:
     import PyQt6
@@ -238,7 +238,7 @@ def download_files():
     gitee_url = "https://gitee.com/time-coder/Glass-Engine/raw/main/glass_engine/Demos/assets/models/jet/11805_airplane_v2_L2.mtl"
     github_url = "https://raw.githubusercontent.com/Time-Coder/Glass-Engine/main/glass_engine/Demos/assets/models/jet/11805_airplane_v2_L2.mtl"
 
-    if is_China_ip(public_ip()):
+    if is_China_user():
         download(gitee_url, target_file, md5_map["11805_airplane_v2_L2.mtl"])
     else:
         download(github_url, target_file, md5_map["11805_airplane_v2_L2.mtl"])
@@ -247,7 +247,7 @@ def download_files():
     gitee_url = "https://gitee.com/time-coder/Glass-Engine/raw/main/glass_engine/Demos/assets/models/jet/11805_airplane_v2_L2.obj"
     github_url = "https://raw.githubusercontent.com/Time-Coder/Glass-Engine/main/glass_engine/Demos/assets/models/jet/11805_airplane_v2_L2.obj"
 
-    if is_China_ip(public_ip()):
+    if is_China_user():
         download(gitee_url, target_file, md5_map["11805_airplane_v2_L2.obj"])
     else:
         download(github_url, target_file, md5_map["11805_airplane_v2_L2.obj"])
@@ -256,7 +256,7 @@ def download_files():
     gitee_url = "https://gitee.com/time-coder/Glass-Engine/raw/main/glass_engine/Demos/assets/models/jet/airplane_body_diffuse_v1.jpg"
     github_url = "https://raw.githubusercontent.com/Time-Coder/Glass-Engine/main/glass_engine/Demos/assets/models/jet/airplane_body_diffuse_v1.jpg"
 
-    if is_China_ip(public_ip()):
+    if is_China_user():
         download(gitee_url, target_file, md5_map["airplane_body_diffuse_v1.jpg"])
     else:
         download(github_url, target_file, md5_map["airplane_body_diffuse_v1.jpg"])
@@ -265,7 +265,7 @@ def download_files():
     gitee_url = "https://gitee.com/time-coder/Glass-Engine/raw/main/glass_engine/Demos/assets/models/jet/airplane_wings_diffuse_v1.jpg"
     github_url = "https://raw.githubusercontent.com/Time-Coder/Glass-Engine/main/glass_engine/Demos/assets/models/jet/airplane_wings_diffuse_v1.jpg"
 
-    if is_China_ip(public_ip()):
+    if is_China_user():
         download(gitee_url, target_file, md5_map["airplane_wings_diffuse_v1.jpg"])
     else:
         download(github_url, target_file, md5_map["airplane_wings_diffuse_v1.jpg"])

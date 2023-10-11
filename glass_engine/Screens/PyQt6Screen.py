@@ -1,4 +1,4 @@
-from glass.utils import pip_install
+from glass.download import pip_install
 from .QtScreen import init_QtScreen
 from ..Manipulators.Manipulator import Manipulator
 

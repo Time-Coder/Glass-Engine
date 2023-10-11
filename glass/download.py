@@ -3,6 +3,10 @@ import hashlib
 import os
 import time
 import requests
+from geolite2 import geolite2
+import sys
+import subprocess
+from .GlassConfig import GlassConfig
 
 def md5(file_name):
     if not os.path.isfile(file_name):
@@ -56,3 +60,33 @@ def download(url, target_file, md5_str:str=""):
             raise RuntimeError(f"download {url} to {target_file} retry over times")
         else:
             print("download failed, retry...")
+
+def public_ip():
+    response = requests.get('https://httpbin.org/ip')
+    return response.json().get('origin')
+
+def is_China_ip(ip_address):
+    reader = geolite2.reader()
+    location = reader.get(ip_address)
+    country = location.get('country', {}).get('iso_code') if location else None
+    return country == 'CN'
+
+def is_China_user():
+    return is_China_ip(public_ip())
+
+def pip_install(package_name:str):
+    if "/" not in package_name:
+        install_cmd = [sys.executable, "-m", "pip", "install", package_name]
+        if is_China_user():
+            install_cmd = [sys.executable, "-m", "pip", "install", package_name, "-i", "https://pypi.tuna.tsinghua.edu.cn/simple"]
+        
+        return_code = subprocess.call(install_cmd)
+        if return_code != 0:
+            raise RuntimeError(f"failed to install {package_name}")
+    else:
+        target_file = GlassConfig.cache_folder + "/" + os.path.basename(package_name)
+        download(package_name, target_file)
+        install_cmd = [sys.executable, "-m", "pip", "install", target_file]
+        return_code = subprocess.call(install_cmd)
+        if return_code != 0:
+            raise RuntimeError(f"failed to install {package_name}")
