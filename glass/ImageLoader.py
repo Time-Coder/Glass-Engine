@@ -2,12 +2,9 @@ import cv2
 import os
 from PIL import Image
 import numpy as np
-import subprocess
-import sys
 import platform
-import zipfile
 
-from .utils import extname, relative_path, is_url, md5s, is_China_ip, public_ip, pip_install
+from .utils import extname, printable_path, is_url, md5s, is_China_ip, public_ip, pip_install
 from .download import download
 from .GlassConfig import GlassConfig
 
@@ -88,7 +85,7 @@ class ImageLoader:
             raise ValueError(f"not supported image format: '{file_name}'")
         
         if GlassConfig.print:
-            print(f"loading image: {relative_path(file_name)} ", end="", flush=True)
+            print(f"loading image: {printable_path(file_name)} ", end="", flush=True)
         image = None
         if ext_name == "exr":
             image = ImageLoader.OpenEXR_load(file_name)

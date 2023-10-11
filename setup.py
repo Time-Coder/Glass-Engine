@@ -8,6 +8,9 @@ import warnings
 
 # install PyGLM
 if "-d" in sys.argv:
+    if platform.system() != 'Windows':
+        raise RuntimeError("This package is for Windows only and cannot be installed on other operating system.")
+
     plat = "x64" if platform.architecture()[0] == "64bit" else "win32"
     version = ".".join(platform.python_version().split(".")[:2])
     if int(version.split(".")[1]) < 12:
@@ -70,7 +73,7 @@ glass_extra_files = find_files("glass", "glass/glsl")
 
 setuptools.setup(
     name="glass_engine",
-    version="0.1.17",
+    version="0.1.18",
     author="王炳辉 (BingHui-WANG)",
     author_email="binghui.wang@foxmail.com",
     description="An easy-to-use 3D rendering engine for Python",

@@ -12,7 +12,7 @@ from .Shaders import VertexShader, FragmentShader, GeometryShader, TessControlSh
 from .Vertices import Vertices
 from .Indices import Indices
 from .Instances import Instances
-from .utils import checktype, subscript, md5s, modify_time, save_var, load_var
+from .utils import checktype, subscript, md5s, modify_time, save_var, load_var, printable_path
 from .GLInfo import GLInfo
 from .GLConfig import GLConfig
 from .GlassConfig import GlassConfig
@@ -110,7 +110,7 @@ class ShaderProgram(GPUProgram):
             GL.glAttachShader(self._id, self.tess_eval_shader._id)
         GL.glAttachShader(self._id, self.fragment_shader._id)
 
-        related_files = "\n  " + "\n  ".join(self.related_files)
+        related_files = "\n  " + "\n  ".join([printable_path(file_name) for file_name in self.related_files])
         if GlassConfig.print:
             print(f"linking program: {related_files}")
 
