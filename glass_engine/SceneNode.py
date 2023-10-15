@@ -1,6 +1,7 @@
 import glm
 import math
 import uuid
+import numpy as np
 
 from glass.DictList import DictList
 from glass.WeakSet import WeakSet
@@ -282,7 +283,7 @@ class SceneNode:
         q2 = self._orientation.y
         q3 = self._orientation.z
         self._yaw_pitch_roll[0] = math.atan2(2 * (q0*q3 - q1*q2), 1 - 2 * (q1*q1 + q3*q3))/math.pi*180
-        self._yaw_pitch_roll[1] = math.asin(2 * (q0*q1 + q2*q3))/math.pi*180
+        self._yaw_pitch_roll[1] = math.asin(np.clip(2 * (q0*q1 + q2*q3), -1, 1))/math.pi*180
         self._yaw_pitch_roll[2] = math.atan2(2 * (q0*q2 - q1*q3), 1 - 2 * (q1*q1 + q2*q2))/math.pi*180
 
         self._set_dirty()

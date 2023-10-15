@@ -157,7 +157,7 @@ vec4 Camera_project_skydome(Camera camera, vec3 world_coord)
 
 float PSSM(Camera camera, int i)
 {
-	float k = 1.0*i/camera.CSM_levels;
+	float k = float(i)/float(camera.CSM_levels);
 	return mix(camera.near + (camera.far - camera.near)*k,
 	           camera.near * pow(camera.far / camera.near, k), 0.75);
 }
