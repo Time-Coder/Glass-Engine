@@ -12,6 +12,7 @@ uniform float threshold;
 uniform int mip_level;
 
 #include "../include/math.glsl"
+#include "../include/soft.glsl"
 
 vec4 textureFirst(sampler2D image, vec2 tex_coord)
 {
