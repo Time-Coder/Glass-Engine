@@ -31,7 +31,7 @@ layout(location=5) out vec4 reflection;
 layout(location=6) out vec4 env_center_and_mixed_value;
 layout(location=7) out uvec4 mixed_uint;
 
-#include "../../include/Material.glsl"
+#include "../../include/InternalMaterial.glsl"
 #include "../../include/parallax_mapping.glsl"
 #include "../../include/math.glsl"
 #include "../../include/transform.glsl"

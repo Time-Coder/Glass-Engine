@@ -19,7 +19,7 @@ in VertexOut
 layout(location=3) out vec3 view_pos;
 layout(location=4) out vec3 view_normal;
 
-#include "../../include/Material.glsl"
+#include "../../include/InternalMaterial.glsl"
 
 uniform Material material;
 uniform Camera camera;

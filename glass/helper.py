@@ -5,13 +5,22 @@ import struct
 
 from .GLInfo import GLInfo
 
+def glGetInt(gl_constant:constant.IntConstant)->int:
+	value = GL.glGetIntegerv(gl_constant)
+	try:
+		value = value[0]
+	except:
+		pass
+
+	value = int(value)
+	return value
+
 def glGetEnum(gl_constant:constant.IntConstant):
-	value = GL.GLint()
-	GL.glGetIntegerv(gl_constant, value)
-	if value.value in GLInfo.enum_map:
-		return GLInfo.enum_map[value.value]
+	value = glGetInt(gl_constant)
+	if value in GLInfo.enum_map:
+		return GLInfo.enum_map[value]
 	else:
-		return value.value
+		return value
 	
 def glGetEnumi(gl_constant:constant.IntConstant, index:int):
 	value = int(GL.glGetIntegeri_v(gl_constant, index))

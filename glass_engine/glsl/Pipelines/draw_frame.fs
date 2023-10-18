@@ -9,8 +9,6 @@ in TexCoord
 
 out vec4 frag_color;
 
-#include "../include/sampling.glsl"
-
 uniform sampler2D screen_image;
 uniform sampler2DArray screen_image_array;
 uniform int layer;
@@ -23,11 +21,11 @@ void main()
 { 
     if (layer < 0)
     {
-        frag_color = textureColor(screen_image, fs_in.tex_coord);
+        frag_color = max(texture(screen_image, fs_in.tex_coord), 0.0);
     }
     else
     {
-        frag_color = textureColor(screen_image_array, vec3(fs_in.tex_coord, layer));
+        frag_color = max(texture(screen_image_array, vec3(fs_in.tex_coord, layer)), 0.0);
     }
     
     if (gray)

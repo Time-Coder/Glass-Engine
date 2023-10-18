@@ -14,7 +14,7 @@ in GeometryOut
 } fs_in;
 
 #include "../../Lights/PointLight.glsl"
-#include "../../include/Material.glsl"
+#include "../../include/InternalMaterial.glsl"
 
 uniform PointLight point_light;
 uniform Material material;

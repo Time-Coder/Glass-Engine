@@ -15,5 +15,5 @@ uniform sampler2DArray screen_image;
 
 void main()
 {
-    frag_color = textureColorFXAA(screen_image, vec3(fs_in.tex_coord, gl_Layer));
+    frag_color = textureFXAA(screen_image, vec3(fs_in.tex_coord, gl_Layer));
 }

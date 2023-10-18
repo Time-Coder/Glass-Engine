@@ -264,6 +264,27 @@ def find_pair(content, i):
 
     return i
 
+def printable_size(content):
+    len_content = len(content)
+    KB = 1024
+    MB = 1024 * KB
+    GB = 1024 * MB
+    TB = 1024 * GB
+    PB = 1024 * TB
+
+    if len_content < KB:
+        return f"{len_content}B"
+    elif len_content < MB:
+        return f"{round(len_content/KB, 2)}KB"
+    elif len_content < GB:
+        return f"{round(len_content/MB, 2)}MB"
+    elif len_content < TB:
+        return f"{round(len_content/GB, 2)}GB"
+    elif len_content < PB:
+        return f"{round(len_content/TB, 2)}TB"
+    else:
+        return f"{round(len_content/PB, 2)}PB"
+
 def is_text_file(file_path):
     if extname(file_path) in ["exr", "hdr"]:
         return False

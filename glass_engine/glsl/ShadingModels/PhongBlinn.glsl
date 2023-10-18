@@ -1,7 +1,6 @@
 #ifndef _PHONG_BLINN_GLSL__
 #define _PHONG_BLINN_GLSL__
 
-#include "Material.glsl"
 #include "Lambert.glsl"
 
 float PhongBlinn_specular(vec3 to_light, vec3 to_camera, vec3 normal, float shininess)

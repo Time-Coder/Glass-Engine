@@ -1,5 +1,3 @@
-#include "../include/sampling.glsl"
-
 float triWave(float x)
 {
     return(abs(mod(x-10.0, 20.0)-10.0)+1.0);
@@ -17,9 +15,9 @@ vec4 post_process(sampler2D screen_image, vec2 tex_coord)
     uvG = uvG/2.0 + 0.5;
     uvB = uvB/2.0 + 0.5;
 
-    float R = textureColor(screen_image, uvR).r;
-    float G = textureColor(screen_image, uvG).g;
-    float B = textureColor(screen_image, uvB).b;
+    float R = max(texture(screen_image, uvR).r, 0.0);
+    float G = max(texture(screen_image, uvG).g, 0.0);
+    float B = max(texture(screen_image, uvB).b, 0.0);
 
     return vec4(R, G, B, 1.0);
 }

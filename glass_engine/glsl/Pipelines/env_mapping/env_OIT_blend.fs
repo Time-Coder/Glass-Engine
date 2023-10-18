@@ -9,7 +9,8 @@ in TexCoord
 out vec4 frag_color;
 
 #include "../../include/OIT.glsl"
-#include "../../include/sampling.glsl"
+#include "../../include/math.glsl"
+#include "../../include/quat.glsl"
 
 uniform samplerCube opaque_color_map;
 uniform samplerCube accum_map;
@@ -26,7 +27,7 @@ void main()
     cube_tex_coord.z = sin(phi);
     cube_tex_coord = quat_apply(quat(cos45, sin45, 0, 0), cube_tex_coord);
 
-    vec4 opaque_color = textureColor(opaque_color_map, cube_tex_coord);
+    vec4 opaque_color = max(texture(opaque_color_map, cube_tex_coord), 0.0);
     vec4 accum = texture(accum_map, cube_tex_coord);
     float reveal = texture(reveal_map, cube_tex_coord).r;
     if (hasinf(accum.rgb))

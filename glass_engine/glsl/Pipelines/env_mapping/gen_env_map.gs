@@ -37,9 +37,9 @@ out flat uvec2 env_map_handle;
 
 #include "../../include/transform.glsl"
 #include "../../include/Camera.glsl"
-#include "../../include/Material.glsl"
-#include "../../Lights/Lights.glsl"
-#include "../../include/sampling.glsl"
+#include "../../include/InternalMaterial.glsl"
+#include "../../Lights/Lights_lighting.glsl"
+#include "../../include/limits.glsl"
 
 uniform float explode_distance;
 uniform vec3 view_center;

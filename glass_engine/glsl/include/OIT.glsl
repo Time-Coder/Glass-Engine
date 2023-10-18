@@ -1,7 +1,7 @@
 #ifndef _OIT_GLSL__
 #define _OIT_GLSL__
 
-#include "math.glsl"
+#include "limits.glsl"
 
 float blend_weight1(float depth, float alpha)
 {

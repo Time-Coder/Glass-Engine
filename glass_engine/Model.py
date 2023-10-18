@@ -93,8 +93,8 @@ class AssimpImportError(Exception):
 
 class ModelMesh(Mesh):
 
-    def __init__(self, assimp_mesh, shared:bool=False):
-        Mesh.__init__(self, name=assimp_mesh.name, shared=shared, primitive_type=GLInfo.enum_map[assimp_mesh.primitive_type])
+    def __init__(self, assimp_mesh):
+        Mesh.__init__(self, name=assimp_mesh.name, primitive_type=GLInfo.enum_map[assimp_mesh.primitive_type])
         self.__assimp_mesh = assimp_mesh
         self.start_building()
 
@@ -157,17 +157,23 @@ class Model(SceneNode):
         DropNormals = 0x40000000
         GenBoundingBoxes = 0x80000000
 
-    __model_map = {}
+        default = (SortByPType |
+                   ValidateDataStructure |
+                   SplitLargeMeshes |
+                   JoinIdenticalVertices |
+                   Triangulate |
+                   CalcTangentSpace |
+                   GenNormals |
+                   GenBoundingBoxes)
 
     @checktype
-    def __init__(self, file_name:str="", flags:PostProcessSteps=(PostProcessSteps.SortByPType | PostProcessSteps.ValidateDataStructure | PostProcessSteps.SplitLargeMeshes | PostProcessSteps.JoinIdenticalVertices | PostProcessSteps.Triangulate | PostProcessSteps.CalcTangentSpace | PostProcessSteps.GenNormals | PostProcessSteps.GenBoundingBoxes), extra_flags:PostProcessSteps=PostProcessSteps.Nothing, exclude_flags:PostProcessSteps=PostProcessSteps.Nothing, shared:bool=True):
-        self.__shared = shared
+    def __init__(self, file_name:str="", flags:PostProcessSteps=PostProcessSteps.default, extra_flags:PostProcessSteps=PostProcessSteps.Nothing, exclude_flags:PostProcessSteps=PostProcessSteps.Nothing):
         self.__flags = ((flags | extra_flags) & (~exclude_flags))
 
         if file_name:
             name = os.path.basename(file_name)
             SceneNode.__init__(self, name)
-            self.load(file_name, flags=self.__flags, shared=shared)
+            self.load(file_name, flags=self.__flags)
         else:
             SceneNode.__init__(self, "")
     
@@ -175,27 +181,16 @@ class Model(SceneNode):
     def flags(self):
         return self.__flags
 
-    @property
-    def shared(self):
-        return self.__shared
-
     @checktype
-    def load(self, file_name:str, flags:PostProcessSteps=(PostProcessSteps.SplitLargeMeshes | PostProcessSteps.JoinIdenticalVertices | PostProcessSteps.Triangulate | PostProcessSteps.CalcTangentSpace | PostProcessSteps.GenNormals | PostProcessSteps.GenBoundingBoxes), extra_flags:PostProcessSteps=PostProcessSteps.Nothing, exclude_flags:PostProcessSteps=PostProcessSteps.Nothing, shared=False):
+    def load(self, file_name:str, flags:PostProcessSteps=PostProcessSteps.default, extra_flags:PostProcessSteps=PostProcessSteps.Nothing, exclude_flags:PostProcessSteps=PostProcessSteps.Nothing):
         if not os.path.isfile(file_name):
             raise FileNotFoundError(file_name)
         
-        self.__shared = shared
         self.__flags = ((flags | extra_flags) & (~exclude_flags))
         self.__file_name = os.path.abspath(file_name)
         self.__dir_name = os.path.dirname(file_name)
 
         self["root"].clear_children()
-        if self.__shared and (self.__file_name, self.__flags) in Model.__model_map:
-            loaded_model_root = Model.__model_map[self.__file_name, self.__flags]
-            for child in loaded_model_root.children.values():
-                self["root"].add_child(child)
-            return
-
         self.__materials = []
         self.__meshes = []
 
@@ -306,7 +301,7 @@ class Model(SceneNode):
 
         len_materials = len(self.__materials)
         for assimp_mesh in assimp_model.meshes:
-            mesh = ModelMesh(assimp_mesh=assimp_mesh, shared=self.__shared)
+            mesh = ModelMesh(assimp_mesh=assimp_mesh)
             material_index = assimp_mesh.material_index
             if 0 <= material_index < len_materials:
                 mesh.material = self.__materials[material_index]
@@ -320,8 +315,6 @@ class Model(SceneNode):
             self.__meshes.append(mesh)
 
         self.__load_node(assimp_model.nodes[0], assimp_model, self["root"])
-        if self.__shared:
-            Model.__model_map[self.__file_name, self.__flags] = self["root"]
     
     def __load_node(self, assimp_node, assimp_model, parent_node=None):
         node = parent_node

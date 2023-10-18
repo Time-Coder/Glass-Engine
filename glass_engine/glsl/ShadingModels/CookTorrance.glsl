@@ -1,7 +1,7 @@
 #ifndef _COOKTORRANCE_LIGHTING_GLSL__
 #define _COOKTORRANCE_LIGHTING_GLSL__
 
-#include "Material.glsl"
+#include "../include/Material.glsl"
 
 float NormalDistributionFunction(vec3 halfway_vec, vec3 normal, float roughness)
 {

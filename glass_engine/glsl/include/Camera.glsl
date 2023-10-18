@@ -2,6 +2,8 @@
 #define _CAMERA_GLSL_
 
 #include "math.glsl"
+#include "soft.glsl"
+#include "quat.glsl"
 
 #define CAMERA_PROJECTION_PERSPECTIVE 0
 #define CAMERA_PROJECTION_ORTHOGRAPHIC 1

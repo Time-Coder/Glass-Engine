@@ -8,7 +8,7 @@ in GeometryOut
     flat int visible;
 } fs_in;
 
-#include "../../include/Material.glsl"
+#include "../../include/InternalMaterial.glsl"
 
 uniform Material material;
 uniform Material back_material;

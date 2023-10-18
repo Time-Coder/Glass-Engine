@@ -2,7 +2,7 @@
 #define _MINNAERT_GLSL__
 
 #include "rim.glsl"
-#include "../include/math.glsl"
+#include "../include/Material.glsl"
 
 // refer to https://www.researchgate.net/publication/247923568_The_Lambertian_Assumption_and_Landsat_Data
 // Smith J A , Lin T L , Ranson K J .The Lambertian Assumption and Landsat Data[J].Photogrammetric Engineering & Remote Sensing, 1980, 46(9).DOI: https://doi.org/10.1016/0031-0182(80)90065-6.

@@ -14,7 +14,7 @@ in GeometryOut
 } fs_in;
 
 #include "../../Lights/SpotLight.glsl"
-#include "../../include/Material.glsl"
+#include "../../include/InternalMaterial.glsl"
 
 uniform SpotLight spot_light;
 uniform Material material;

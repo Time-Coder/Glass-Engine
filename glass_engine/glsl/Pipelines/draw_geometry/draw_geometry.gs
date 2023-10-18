@@ -33,7 +33,6 @@ out GeometryOut
 #include "../../include/Camera.glsl"
 #include "../../include/Material.glsl"
 #include "../../Lights/Lights.glsl"
-#include "../../include/sampling.glsl"
 
 uniform float explode_distance;
 uniform Camera camera;

@@ -1,5 +1,3 @@
-#include "../include/sampling.glsl"
-
 #define PI acos(-1)
 
 #define H(P) fract(sin(dot(P,vec2(127.1,311.7)))*43758.545)
@@ -8,7 +6,7 @@
 vec4 post_process(sampler2D screen_image, vec2 tex_coord)
 {
     float t = iTime * 0.6;
-    vec4 frag_color = textureColor(screen_image, tex_coord);
+    vec4 frag_color = max(texture(screen_image, tex_coord), 0.0);
  
     vec2 uv  = (tex_coord-0.5) * 3.0;
 

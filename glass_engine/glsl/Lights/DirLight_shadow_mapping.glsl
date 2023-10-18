@@ -1,6 +1,10 @@
 #ifndef _DIR_LIGHT_SHADOW_MAPPING_GLSL__
 #define _DIR_LIGHT_SHADOW_MAPPING_GLSL__
 
+#include "DirLight.glsl"
+#include "../include/Camera.glsl"
+#include "../include/random.glsl"
+
 vec4 world_to_lightNDC(DirLight light, Camera CSM_camera, int level, vec3 world_coord, out float depth_length)
 {
     BoundingSphere bounding_sphere = Frustum_bounding_sphere(CSM_camera, level);
@@ -57,7 +61,7 @@ float SSM(DirLight light, Camera CSM_camera, vec3 frag_pos, vec3 frag_normal)
     bias /= depth_length;
     self_depth -= bias;
 
-    float sample_depth = textureColor(sampler2DArray(light.depth_map_handle), depth_map_tex_coord).r;
+    float sample_depth = max(texture(sampler2DArray(light.depth_map_handle), depth_map_tex_coord).r, 0.0);
     float visibility = ((sample_depth > self_depth-bias) ? 1 : 0);
 
     return visibility;
@@ -101,7 +105,7 @@ float _get_PCF_value(DirLight light, Camera CSM_camera, int level, vec3 frag_pos
             continue;
         }
 
-        float sample_depth = textureColor(sampler2DArray(light.depth_map_handle), vec3(s, t, level)).r;
+        float sample_depth = max(texture(sampler2DArray(light.depth_map_handle), vec3(s, t, level)).r, 0.0);
         not_occ_count += (sample_depth > self_depth ? 1 : 0);
         total_count += 1;
     }

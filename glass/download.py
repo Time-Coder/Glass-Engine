@@ -62,10 +62,16 @@ def download(url, target_file, md5_str:str=""):
             print("download failed, retry...")
 
 def public_ip():
-    response = requests.get('https://httpbin.org/ip')
-    return response.json().get('origin')
+    try:
+        response = requests.get('https://httpbin.org/ip')
+        return response.json().get('origin')
+    except:
+        return "127.0.0.1"
 
 def is_China_ip(ip_address):
+    if ip_address == "127.0.0.1":
+        return True
+
     reader = geolite2.reader()
     location = reader.get(ip_address)
     country = location.get('country', {}).get('iso_code') if location else None

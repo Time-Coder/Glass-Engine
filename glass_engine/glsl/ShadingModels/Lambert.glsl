@@ -2,6 +2,7 @@
 #define _LAMBERT_GLSL__
 
 #include "rim.glsl"
+#include "../include/Material.glsl"
 
 float Lambert_diffuse(vec3 to_light, vec3 normal)
 {

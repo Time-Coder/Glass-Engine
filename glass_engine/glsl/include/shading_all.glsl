@@ -2,14 +2,13 @@
 #define _SHADING_ALL_GLSL__
 
 #include "Camera.glsl"
-#include "sampling.glsl"
-#include "Material.glsl"
+#include "InternalMaterial.glsl"
 #include "parallax_mapping.glsl"
 #include "transform.glsl"
 #include "ShadingInfo.glsl"
 #include "fog.glsl"
 #include "env_mapping.glsl"
-#include "../Lights/Lights.glsl"
+#include "../Lights/Lights_lighting.glsl"
 
 vec4 post_shading_all(
     in Camera camera, in Camera CSM_camera,

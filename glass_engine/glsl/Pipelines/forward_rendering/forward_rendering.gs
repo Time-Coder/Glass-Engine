@@ -36,9 +36,10 @@ out vec3 preshading_back_color;
 out flat uvec2 env_map_handle;
 
 #include "../../include/Camera.glsl"
-#include "../../include/Material.glsl"
-#include "../../Lights/Lights.glsl"
+#include "../../include/InternalMaterial.glsl"
+#include "../../Lights/Lights_lighting.glsl"
 #include "../../include/sampling.glsl"
+#include "../../include/limits.glsl"
 
 uniform float explode_distance;
 uniform Camera camera;
