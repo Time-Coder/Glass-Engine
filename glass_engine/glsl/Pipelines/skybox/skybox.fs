@@ -8,7 +8,6 @@ in vec3 tex_coord;
 in vec3 view_dir;
 
 #include "../../include/fog.glsl"
-#include "../../include/sampling.glsl"
 #include "../../include/Camera.glsl"
 
 uniform samplerCube skybox_map;
@@ -18,7 +17,7 @@ uniform Fog fog;
 
 void main()
 {
-    frag_color = textureColor(skybox_map, tex_coord);
+    frag_color = max(texture(skybox_map, tex_coord), 0.0);
     frag_color.rgb = fog_apply(fog, frag_color.rgb, sky_distance);
 
     view_pos = sky_distance * normalize(view_dir);

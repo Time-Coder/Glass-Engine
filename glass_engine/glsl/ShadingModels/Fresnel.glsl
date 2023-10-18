@@ -1,6 +1,8 @@
 #ifndef _FRESNEL_GLSL__
 #define _FRESNEL_GLSL__
 
+#include "../include/Material.glsl"
+
 float Fresnel_diffuse(vec3 to_camera, vec3 normal, float rim_power)
 {
     float cos_to_camera = max(0, dot(to_camera, normal));

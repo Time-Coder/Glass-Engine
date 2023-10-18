@@ -5,7 +5,7 @@ import re
 import copy
 import warnings
 
-from .utils import delete, md5s, modify_time, load_var, save_var, cat, relative_path, printable_path
+from .utils import delete, md5s, modify_time, load_var, save_var, cat, relative_path, printable_path, printable_size
 from .GlassConfig import GlassConfig
 from .GLConfig import GLConfig
 from .GLObject import GLObject
@@ -116,11 +116,11 @@ class BaseShader(GLObject):
 				raise MemoryError("Failed to create Shader!")
 			
 		if GlassConfig.print:
-			print(f"compiling shader: {printable_path(self.file_name)} ", end="", flush=True)
+			print(f"compiling shader: {printable_path(self.file_name)} {printable_size(self._code)} ", end="", flush=True)
 
 		if "GL_ARB_bindless_texture" in GLConfig.available_extensions:
-			self.predefine("USE_BINDLESS_TEXTURE")
-			self._collect_info(self.file_name)
+			if self.predefine("USE_BINDLESS_TEXTURE"):
+				self._collect_info(self.file_name)
 
 		GL.glShaderSource(self._id, self._code)
 		GL.glCompileShader(self._id)
@@ -278,8 +278,12 @@ class BaseShader(GLObject):
 	def add_include_path(self, include_path):
 		self._include_paths.insert(0, include_path)
 
-	def predefine(self, name:str, value=None):
+	def predefine(self, name:str, value=None)->bool:
+		if name in self._predefines and self._predefines[name] == value:
+			return False
+		
 		self._predefines[name] = value
+		return True
 
 	def _find_comments(self):
 		self._comments_set.clear()

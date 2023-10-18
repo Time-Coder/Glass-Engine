@@ -8,7 +8,6 @@ layout(location=3) out vec3 view_pos;
 layout(location=4) out vec3 view_normal;
 
 #include "../../include/fog.glsl"
-#include "../../include/sampling.glsl"
 #include "../../include/Camera.glsl"
 
 uniform sampler2D skydome_map;
@@ -18,7 +17,7 @@ uniform Fog fog;
 
 void main()
 {
-    frag_color = textureColorLod(skydome_map, frag_tex_coord, 0);
+    frag_color = max(textureLod(skydome_map, frag_tex_coord, 0), 0.0);
     frag_color.rgb = fog_apply(fog, frag_color.rgb, sky_distance);
 
     view_pos = sky_distance * normalize(view_dir);

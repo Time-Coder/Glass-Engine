@@ -24,8 +24,8 @@ out GeometryOut
     flat int visible;
 } gs_out;
 
-#include "../../include/Camera.glsl"
 #include "../../Lights/PointLight.glsl"
+#include "../../include/Camera.glsl"
 
 uniform PointLight point_light;
 

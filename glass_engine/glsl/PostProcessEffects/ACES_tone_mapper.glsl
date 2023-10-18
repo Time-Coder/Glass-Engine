@@ -43,7 +43,7 @@ vec3 ACESFitted(vec3 color)
     color = ACESOutputMat * color;
 
     // Clamp to [0, 1]
-    color = saturate(color);
+    color = clamp(color, 0.0, 1.0);
 
     return color;
 }

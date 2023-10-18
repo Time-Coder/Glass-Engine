@@ -2,12 +2,7 @@
 #define _SAMPLING_GLSL__
 
 #include "math.glsl"
-
-#define textureColor(image, tex_coord) \
-max(texture(image, tex_coord), 0.0)
-
-#define textureColorLod(image, tex_coord, lod) \
-max(textureLod(image, tex_coord, lod), 0.0)
+#include "quat.glsl"
 
 #define textureValid(image) (length(max(textureSize(image, 0)-1, 0)) > 1E-6)
 #define textureEmpty(image) (length(max(textureSize(image, 0)-1, 0)) <= 1E-6)
@@ -69,29 +64,10 @@ vec3 vec2_to_cube_tex_coord(vec2 tex_coord, int face_id)
     return cube_tex_coord;
 }
 
-vec4 textureHQ(sampler2D image, vec2 tex_coord)
-{
-    vec2 tex_size = textureSize(image, 0);
-
-    vec2 uv_scaled = tex_coord * tex_size + 0.5;
-    vec2 uv_int = floor(uv_scaled);
-    vec2 uv_frac = fract(uv_scaled);
-    uv_frac = smoothstep(0, 1, uv_frac);
-    vec2 uv = (uv_int + uv_frac - 0.5) / tex_size;
-
-    return texture(image, uv);
-}
-
 vec4 textureCubeFace(samplerCube cube_image, vec2 tex_coord, int face_id)
 {
     vec3 cube_tex_coord = vec2_to_cube_tex_coord(tex_coord, face_id);
     return texture(cube_image, cube_tex_coord);
-}
-
-vec4 textureColorCubeFace(samplerCube cube_image, vec2 tex_coord, int face_id)
-{
-    vec3 cube_tex_coord = vec2_to_cube_tex_coord(tex_coord, face_id);
-    return textureColor(cube_image, cube_tex_coord);
 }
 
 vec2 textureQueryLodSeamless(sampler2D image, vec2 tex_coord)
@@ -158,16 +134,6 @@ vec4 textureSphere(sampler2D image, vec3 sphecial_tex_coord, float bias)
 vec4 textureSphere(sampler2D image, vec3 sphecial_tex_coord)
 {
     return textureSphere(image, sphecial_tex_coord, 0);
-}
-
-vec4 textureColorSphere(sampler2D image, vec3 sphecial_tex_coord, float bias)
-{
-    return max(textureSphere(image, sphecial_tex_coord, bias), 0.0);
-}
-
-vec4 textureColorSphere(sampler2D image, vec3 sphecial_tex_coord)
-{
-    return textureColorSphere(image, sphecial_tex_coord, 0);
 }
 
 #endif

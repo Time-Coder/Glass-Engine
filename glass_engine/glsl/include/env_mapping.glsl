@@ -3,7 +3,7 @@
 
 #include "sampling.glsl"
 #include "FresnelRefract.glsl"
-#include "../Lights/Lights.glsl"
+#include "../Lights/Lights_lighting.glsl"
 #include "background.glsl"
 
 vec3 fetch_env_color(
@@ -20,7 +20,7 @@ vec3 fetch_env_color(
 #ifdef USE_BINDLESS_TEXTURE
     if (textureValid(env_map))
     {
-        env_color = textureColorSphere(env_map, out_dir, bias);
+        env_color = max(textureSphere(env_map, out_dir, bias), 0.0);
     }
 #endif
     

@@ -25,7 +25,8 @@ out GeometryOut
     flat int visible;
 } gs_out;
 
-#include "../../Lights/DirLight.glsl"
+#include "../../Lights/DirLight_shadow_mapping.glsl"
+#include "../../include/Camera.glsl"
 
 uniform DirLight dir_light;
 uniform Camera camera;

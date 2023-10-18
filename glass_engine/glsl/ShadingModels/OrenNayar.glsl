@@ -2,6 +2,7 @@
 #define _OREN_NAYAR_GLSL__
 
 #include "rim.glsl"
+#include "../include/Material.glsl"
 
 // refer to https://dl.acm.org/doi/10.1145/192161.192213
 // Michael Oren and Shree K. Nayar. 1994. Generalization of Lambert's reflectance model. In Proceedings of the 21st annual conference on Computer graphics and interactive techniques (SIGGRAPH '94). Association for Computing Machinery, New York, NY, USA, 239–246. https://doi.org/10.1145/192161.192213

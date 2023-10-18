@@ -8,7 +8,6 @@ in TexCoord
 out vec4 frag_color;
 
 #include "../include/Camera.glsl"
-#include "../include/sampling.glsl"
 
 uniform sampler2D screen_image;
 uniform sampler2D view_pos_map;
@@ -78,7 +77,7 @@ void main()
     float coc_in_pixel = pixel_per_meter * abs(camera.lens.aperture*(1-camera.near*factor));
     if (coc_in_pixel <= 1)
     {
-        frag_color = textureColor(screen_image, fs_in.tex_coord);
+        frag_color = max(texture(screen_image, fs_in.tex_coord), 0.0);
         return;
     }
 
@@ -95,7 +94,7 @@ void main()
             float ds = dj*tex_offset.x;
             float s = fs_in.tex_coord.s + ds;
             float weight = exp(-dj*dj/double_sigma2);
-            frag_color += weight * textureColor(screen_image, vec2(s, t));
+            frag_color += weight * max(texture(screen_image, vec2(s, t)), 0.0);
             weight_sum += weight;
         }
         frag_color = frag_color / weight_sum;
@@ -110,7 +109,7 @@ void main()
             float dt = di*tex_offset.t;
             float t = fs_in.tex_coord.t + dt;
             float weight = exp(-di*di/double_sigma2);
-            frag_color += weight * textureColor(screen_image, vec2(s, t));
+            frag_color += weight * max(texture(screen_image, vec2(s, t)), 0.0);
             weight_sum += weight;
         }
         frag_color = frag_color / weight_sum;

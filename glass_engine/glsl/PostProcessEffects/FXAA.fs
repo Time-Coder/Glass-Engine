@@ -15,5 +15,5 @@ uniform sampler2D screen_image;
 
 void main()
 {
-    frag_color = textureColorFXAA(screen_image, fs_in.tex_coord);
+    frag_color = textureFXAA(screen_image, fs_in.tex_coord);
 }
