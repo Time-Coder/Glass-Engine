@@ -52,3 +52,8 @@ camera.screen.show() # 相机显示屏显示渲染结果
 * Github 项目主页：<https://github.com/Time-Coder/Glass-Engine>
 * Gitee 项目主页：<https://gitee.com/time-coder/Glass-Engine>
 * 文档：<https://glass-engine-doc.readthedocs.io/zh/latest/>
+
+## version 0.1.21 说明
+
+* 支持了 Python 3.12
+* 若发生 PyGLM 安装失败的情况，请到 [github](https://github.com/Time-Coder/Glass-Engine/tree/main/PyGLM) 或 [gitee](https://gitee.com/time-coder/Glass-Engine/tree/main/PyGLM) 手动下载 PyGLM for Python 3.12 的 wheel 包并使用 pip install 安装
