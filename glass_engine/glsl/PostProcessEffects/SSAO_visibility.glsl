@@ -1,3 +1,6 @@
+#include "../include/random.glsl"
+#include "../include/limits.glsl"
+
 uniform float radius;
 uniform int samples;
 uniform float power;
