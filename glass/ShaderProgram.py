@@ -5,6 +5,7 @@ import pathlib
 import warnings
 import struct
 import copy
+import ctypes
 
 from .Uniform import Uniform
 from .GPUProgram import GPUProgram, LinkError, LinkWarning
@@ -138,12 +139,12 @@ class ShaderProgram(GPUProgram):
             raise LinkError(message)
             
         binary_length = int(GL.glGetProgramiv(self._id, GL.GL_PROGRAM_BINARY_LENGTH))
-        length = GL.GLsizei()
-        binary_format = GL.GLenum()
+        length = ctypes.pointer(GL.GLsizei())
+        binary_format = ctypes.pointer(GL.GLenum())
         binary_data = bytearray(binary_length)
         GL.glGetProgramBinary(self._id, binary_length, length, binary_format, binary_data)
         out_file = open(self._binary_file_name, "wb")
-        out_file.write(struct.pack('i', int(binary_format.value)))
+        out_file.write(struct.pack('i', binary_format.contents.value))
         out_file.write(struct.pack('i', binary_length))
         out_file.write(binary_data)
         out_file.close()
