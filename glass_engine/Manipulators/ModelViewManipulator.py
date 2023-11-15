@@ -109,6 +109,15 @@ class ModelViewManipulator(Manipulator):
     def on_mouse_released(self, button:Manipulator.MouseButton, screen_pos:glm.vec2, global_pos:glm.vec2):
         if button == Manipulator.MouseButton.LeftButton:
             self.__is_left_pressed = False
+            if self.__left_press_global_posF == global_pos:
+                x = screen_pos.x
+                y = screen_pos.y
+                width = self.camera.screen.width()
+                height = self.camera.screen.height()
+                s = x/(width-1)
+                t = 1 - y/(height-1)
+                self.camera.lens.focus_tex_coord = glm.vec2(s, t)
+                return True
         elif button == Manipulator.MouseButton.RightButton:
             self.__is_right_pressed = False
 
@@ -182,6 +191,12 @@ class ModelViewManipulator(Manipulator):
             now = datetime.datetime.now()
             file_name = "capture_" + now.strftime("%Y-%m-%d_%H-%M-%S") + ".png"
             self.camera.screen.capture(file_name)
+        elif key == Manipulator.Key.Key_O:
+            self.camera.screen.SSAO.enabled = (not self.camera.screen.SSAO.enabled)
+            return True
+        elif key == Manipulator.Key.Key_M:
+            self.camera.screen.DOF.enabled = (not self.camera.screen.DOF.enabled)
+            return True
         
     def on_key_repeated(self, keys)->bool:
         should_update = False

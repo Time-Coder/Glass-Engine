@@ -24,6 +24,7 @@ struct Material
 	vec4 reflection;
 	float shininess;
     float shininess_strength;
+	float emission_strength;
 	float opacity;
 	float height_scale;
 	float refractive_index;
@@ -37,7 +38,7 @@ struct Material
     float rim_power;
     bool fog;
     bool env_mix_diffuse;
-
+	bool dynamic_env_mapping;
 	sampler2D ambient_map;
 	sampler2D diffuse_map;
 	sampler2D specular_map;
@@ -80,6 +81,7 @@ struct InternalMaterial
     float light_rim_power;
     float shadow_visibility;
     bool fog;
+	bool dynamic_env_mapping;
 };
 
 #endif

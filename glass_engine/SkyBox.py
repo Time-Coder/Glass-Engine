@@ -125,8 +125,9 @@ class SkyBox(Mesh):
     def program(self):
         if self.__program is None:
             self.__program = ShaderProgram()
-            self.__program.compile(os.path.dirname(os.path.abspath(__file__)) + "/glsl/Pipelines/skybox/skybox.vs")
-            self.__program.compile(os.path.dirname(os.path.abspath(__file__)) + "/glsl/Pipelines/skybox/skybox.fs")
+            self_folder = os.path.dirname(os.path.abspath(__file__))
+            self.__program.compile(self_folder + "/glsl/Pipelines/skybox/skybox.vs")
+            self.__program.compile(self_folder + "/glsl/Pipelines/skybox/skybox.fs")
 
         return self.__program
     

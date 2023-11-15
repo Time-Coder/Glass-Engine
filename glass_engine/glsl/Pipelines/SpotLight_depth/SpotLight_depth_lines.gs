@@ -1,8 +1,6 @@
 #version 430 core
 
-#ifdef USE_BINDLESS_TEXTURE
 #extension GL_ARB_bindless_texture : require
-#endif
 
 layout (lines, invocations=6) in;
 layout (line_strip, max_vertices=2) out;

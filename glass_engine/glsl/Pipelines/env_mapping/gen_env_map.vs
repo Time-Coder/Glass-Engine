@@ -1,6 +1,5 @@
 #version 430 core
 
-// vertex
 layout (location = 0) in vec3 position;
 layout (location = 1) in vec3 tangent;
 layout (location = 2) in vec3 bitangent;
@@ -8,8 +7,6 @@ layout (location = 3) in vec3 normal;
 layout (location = 4) in vec3 tex_coord;
 layout (location = 5) in vec4 color;
 layout (location = 6) in vec4 back_color;
-
-// instance
 layout (location = 7) in vec4 affine_transform_row0;
 layout (location = 8) in vec4 affine_transform_row1;
 layout (location = 9) in vec4 affine_transform_row2;

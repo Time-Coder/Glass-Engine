@@ -28,7 +28,7 @@ vec4 post_process(sampler2D screen_image, vec2 tex_coord)
         float _current_luma = current_luma;
         if (abs(target_luma-current_luma) > 1E-6)
         {
-            if(_current_luma != 0 && camera.lens.explosure_adapt_time > 1E-6)
+            if (_current_luma != 0 && camera.lens.explosure_adapt_time > 1E-6)
             {
                 float sgn = sign(target_luma - _current_luma);
                 float a = log(10)/camera.lens.explosure_adapt_time;

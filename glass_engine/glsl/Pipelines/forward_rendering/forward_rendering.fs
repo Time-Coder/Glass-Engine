@@ -1,9 +1,6 @@
 #version 430 core
 
-#ifdef USE_BINDLESS_TEXTURE
 #extension GL_ARB_bindless_texture : require
-#endif
-
 #extension GL_EXT_texture_array : require
 
 in GeometryOut
@@ -24,7 +21,6 @@ in flat uvec2 env_map_handle;
 layout(location=0) out vec4 out_color;
 layout(location=1) out vec4 accum;
 layout(location=2) out float reveal;
-
 layout(location=3) out vec3 view_pos;
 layout(location=4) out vec3 view_normal;
 
@@ -43,38 +39,19 @@ uniform Background background;
 void main()
 {
     if (fs_in.visible == 0)
-    {
         discard;
-    }
-
     ShadingInfo shading_info = ShadingInfo(
         (gl_FrontFacing ? fs_in.color : fs_in.back_color),
         (gl_FrontFacing ? preshading_color : preshading_back_color),
-
-#ifdef USE_BINDLESS_TEXTURE
-        sampler2D(env_map_handle),
-#endif
-        is_opaque_pass,
-        is_sphere,
-        
-        fs_in.view_TBN,
-        fs_in.view_pos,
-        fs_in.tex_coord.st,
-        fs_in.affine_transform,
-        mesh_center
-    );
-    out_color = shading_all(
-        camera, background,
-        (gl_FrontFacing ? material : back_material), fog, shading_info
-    );
-
+        sampler2D(env_map_handle), is_opaque_pass, is_sphere, fs_in.view_TBN,
+        fs_in.view_pos, fs_in.tex_coord.st, fs_in.affine_transform, mesh_center);
+    
+    out_color = shading_all(camera, background, (gl_FrontFacing ? material : back_material), fog, shading_info);
     if (is_opaque_pass)
     {
         view_pos = shading_info.view_pos;
         view_normal = shading_info.view_TBN[2];
     }
-
-    // OIT
     if (!is_opaque_pass && out_color.a < 1)
     {
         get_OIT_info(out_color, accum, reveal);

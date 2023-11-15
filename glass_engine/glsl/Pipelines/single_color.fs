@@ -12,7 +12,5 @@ void main()
 {
     out_color = color;
     if (out_color.a < 1)
-    {
         get_OIT_info(out_color, accum, reveal);
-    }
 }

@@ -94,13 +94,13 @@ class ShaderProgram(GPUProgram):
 
     def _reapply(self):
         self.vertex_shader._apply()
-        self.fragment_shader._apply()
         if self.geometry_shader.is_compiled:
             self.geometry_shader._apply()
         if self.tess_ctrl_shader.is_compiled:
             self.tess_ctrl_shader._apply()
         if self.tess_eval_shader.is_compiled:
             self.tess_eval_shader._apply()
+        self.fragment_shader._apply()
 
         GL.glAttachShader(self._id, self.vertex_shader._id)
         if self.geometry_shader.is_compiled:

@@ -15,7 +15,6 @@ struct CameraLens
 	bool auto_focus;
 	vec2 focus_tex_coord;
 	float focus_change_time;
-
 	float explosure;
 	bool auto_explosure;
 	bool local_explosure;
@@ -24,28 +23,17 @@ struct CameraLens
 
 struct Camera
 {
-	// 内参数
-	// 共有
 	float near;
 	float far;
 	uint projection_mode;
-
-	// 透视投影专有
 	float tan_half_fov;
 	float sin_half_fov;
 	float aspect;
-
-	// 正射投影专有
 	float height;
 	float width;
-
-	// 外参数
 	quat abs_orientation;
 	vec3 abs_position;
-
-	// CSM 阴影使用参数
 	uint CSM_levels;
-
 	CameraLens lens;
 };
 
@@ -87,17 +75,16 @@ mat3 world_TBN_to_view(Camera camera, mat3 TBN)
 
 vec4 view_to_NDC(Camera camera, vec3 view_coord, uint projection_mode)
 {
-	// 标准设备坐标
 	vec4 NDC_coord;
 	float clip = camera.far - camera.near;
-	if(projection_mode == CAMERA_PROJECTION_PERSPECTIVE) // 透视投影
+	if (projection_mode == CAMERA_PROJECTION_PERSPECTIVE)
 	{
 		NDC_coord.x = view_coord.x / (camera.aspect * camera.tan_half_fov);
 		NDC_coord.y = view_coord.z / camera.tan_half_fov;
 		NDC_coord.z = 2*camera.far*(view_coord.y-camera.near)/clip-view_coord.y;
 		NDC_coord.w = view_coord.y;
 	}
-	else // 正射投影
+	else
 	{
 		NDC_coord.x = 2*view_coord.x / camera.width;
 		NDC_coord.y = 2*view_coord.z / camera.height;
@@ -160,25 +147,20 @@ vec4 Camera_project_skydome(Camera camera, vec3 world_coord)
 float PSSM(Camera camera, int i)
 {
 	float k = float(i)/float(camera.CSM_levels);
-	return mix(camera.near + (camera.far - camera.near)*k,
-	           camera.near * pow(camera.far / camera.near, k), 0.75);
+	return mix(camera.near + (camera.far - camera.near)*k, camera.near * pow(camera.far / camera.near, k), 0.75);
 }
 
 int locate_CSM_leveli(Camera camera, vec3 world_pos)
 {
 	vec3 view_pos = world_to_view(camera, world_pos);
 	if (view_pos.y < PSSM(camera, 0))
-	{
 		return 0;
-	}
 	for (int i = 0; i < camera.CSM_levels; i++)
 	{
 		float z0 = PSSM(camera, i);
 		float z1 = PSSM(camera, i+1);
 		if (z0 <= view_pos.y && view_pos.y <= z1)
-		{
 			return i;
-		}
 	}
 	return int(camera.CSM_levels-1);
 }
@@ -187,9 +169,7 @@ float locate_CSM_level(Camera camera, vec3 world_pos)
 {
 	vec3 view_pos = world_to_view(camera, world_pos);
 	if (view_pos.y < PSSM(camera, 0))
-	{
 		return 0;
-	}
 
 	float level = camera.CSM_levels-1;
 	for (int i = 0; i < camera.CSM_levels; i++)
@@ -198,7 +178,6 @@ float locate_CSM_level(Camera camera, vec3 world_pos)
 		float z1 = PSSM(camera, i+1);
 		if (z0 <= view_pos.y && view_pos.y <= z1)
 		{
-			// level = i + (view_pos.y - z0) / (z1 - z0);
 			level = soft_floor(i + (view_pos.y - z0) / (z1 - z0), 0.5);
 			break;
 		}
@@ -211,7 +190,7 @@ BoundingSphere Frustum_bounding_sphere(Camera camera, int i)
 	float z0 = PSSM(camera, i);
 	float z1 = PSSM(camera, i+1);
 	float clip = z1 - z0;
-	if(i+1 < camera.CSM_levels) z1 += 0.5*clip;
+	if (i+1 < camera.CSM_levels) z1 += 0.5*clip;
 
 	float ratio = camera.tan_half_fov * sqrt(1 + camera.aspect*camera.aspect);
 	float R0 = z0 * ratio;
@@ -244,12 +223,12 @@ Camera cube_camera(int face_id, vec3 center_pos, float near, float far)
 	camera.projection_mode = CAMERA_PROJECTION_PERSPECTIVE;
 	switch(face_id)
 	{
-	case 0: camera.abs_orientation = quat(cos45, 0, 0, -sin45); break; // right
-	case 1: camera.abs_orientation = quat(cos45, 0, 0, sin45); break; // left
-	case 2: camera.abs_orientation = quat(cos45, -sin45, 0, 0); break; // bottom
-	case 3: camera.abs_orientation = quat(cos45, sin45, 0, 0); break; // top
-	case 4: camera.abs_orientation = quat(1, 0, 0, 0); break; // front
-	case 5: camera.abs_orientation = quat(0, 0, 0, 1); break; // back
+	case 0: camera.abs_orientation = quat(cos45, 0, 0, -sin45); break;
+	case 1: camera.abs_orientation = quat(cos45, 0, 0, sin45); break;
+	case 2: camera.abs_orientation = quat(cos45, -sin45, 0, 0); break;
+	case 3: camera.abs_orientation = quat(cos45, sin45, 0, 0); break;
+	case 4: camera.abs_orientation = quat(1, 0, 0, 0); break;
+	case 5: camera.abs_orientation = quat(0, 0, 0, 1); break;
 	}
 	return camera;
 }

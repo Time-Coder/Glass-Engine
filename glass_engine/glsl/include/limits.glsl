@@ -88,7 +88,7 @@ bool hasnan(mat##rows##x##cols A)\
     {\
         for (int j = 0; j < cols; j++)\
         {\
-            if(isnan(A[j][i]))\
+            if (isnan(A[j][i]))\
             {\
                 return true;\
             }\
@@ -102,7 +102,7 @@ bool hasnan(dmat##rows##x##cols A)\
     {\
         for (int j = 0; j < cols; j++)\
         {\
-            if(isnan(A[j][i]))\
+            if (isnan(A[j][i]))\
             {\
                 return true;\
             }\
@@ -116,7 +116,7 @@ bool hasinf(mat##rows##x##cols A)\
     {\
         for (int j = 0; j < cols; j++)\
         {\
-            if(isinf(A[j][i]))\
+            if (isinf(A[j][i]))\
             {\
                 return true;\
             }\
@@ -130,7 +130,7 @@ bool hasinf(dmat##rows##x##cols A)\
     {\
         for (int j = 0; j < cols; j++)\
         {\
-            if(isinf(A[j][i]))\
+            if (isinf(A[j][i]))\
             {\
                 return true;\
             }\

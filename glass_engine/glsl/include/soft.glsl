@@ -5,9 +5,7 @@ float soft_abs(float value, float softness)
 {
     float abs_value = abs(value);
     if (softness < 1E-6)
-    {
         return abs_value;
-    }
 
     return ((abs_value < softness) ? 0.5*(value*value/softness + softness) : abs_value);
 }
@@ -16,9 +14,7 @@ float soft_sign(float value, float softness)
 {
     float soft_abs_value = soft_abs(value, softness);
     if (soft_abs_value < 1E-6)
-    {
         return sign(value);
-    }
     return value / soft_abs_value;
 }
 
@@ -87,17 +83,11 @@ float soft_floor(float x, float t)
     float floor_x = floor(x);
     float fract_x = x - floor_x;
     if (fract_x < 0.5)
-    {
         return floor_x - 1 + soft_step(fract_x, t);
-    }
     else if (fract_x > 0.5)
-    {
         return floor_x + soft_step(fract_x - 1, t);
-    }
     else
-    {
         return floor_x;
-    }
 }
 
 vec2 soft_floor(vec2 value, float softness)

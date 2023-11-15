@@ -26,7 +26,6 @@ float blend_weight4(float depth, float alpha)
 void get_OIT_info(vec4 out_color, out vec4 accum, out float reveal)
 {
     float weight = blend_weight2(gl_FragCoord.z, out_color.a);
-
     accum = vec4(out_color.rgb * out_color.a, out_color.a) * weight;
     reveal = log(1-out_color.a);
 }
@@ -34,9 +33,7 @@ void get_OIT_info(vec4 out_color, out vec4 accum, out float reveal)
 vec4 blend_composite(vec4 accum, float reveal)
 {
     if (hasinf(accum.rgb))
-    {
         accum.rgb = vec3(accum.a);
-    }
     vec3 average_color = accum.rgb / max(accum.a, 1E-6);
     return vec4(average_color, exp(reveal));
 }

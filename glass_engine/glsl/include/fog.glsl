@@ -18,9 +18,7 @@ struct Fog
 vec3 fog_apply(Fog fog, vec3 color, float distance)
 {
     if (fog.extinction_density < 1E-6 && fog.inscattering_density < 1E-6)
-    {
         return color;
-    }
 
     float extinction = 1;
     float inscattering = 1;
