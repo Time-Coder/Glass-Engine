@@ -1,8 +1,5 @@
-import typing
-from PyQt6 import QtGui
-from PyQt6.QtWidgets import QWidget, QFileDialog, QHBoxLayout, QLabel, QComboBox
-from PyQt6.QtGui import QColor, QPalette, QMouseEvent, QPaintEvent, QPainter, QPixmap
-from PyQt6.QtCore import pyqtSignal, QRect, Qt
+from PyQt6.QtWidgets import QWidget, QHBoxLayout, QLabel, QComboBox
+from PyQt6.QtCore import pyqtSignal, Qt
 
 from .SliderInput import SliderInput
 from .ImageChooser import ImageChooser
