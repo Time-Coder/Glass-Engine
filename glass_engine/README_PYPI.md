@@ -53,7 +53,16 @@ camera.screen.show() # 相机显示屏显示渲染结果
 * Gitee 项目主页：<https://gitee.com/time-coder/Glass-Engine>
 * 文档：<https://glass-engine-doc.readthedocs.io/zh/latest/>
 
+## 说明
+* 若发生 PyOpenGL-accelerate 安装失败的情况，请到 [github](https://github.com/Time-Coder/Glass-Engine/tree/main/PyOpenGL-accelerate) 或 [gitee](https://gitee.com/time-coder/Glass-Engine/tree/main/PyOpenGL-accelerate) 手动下载 PyOpenGL-accelerate for Python 3.12 的 wheel 包并使用 pip install 安装；
+* 若发生 moderngl 安装失败的情况，请到 [github](https://github.com/Time-Coder/Glass-Engine/tree/main/moderngl) 或 [gitee](https://gitee.com/time-coder/Glass-Engine/tree/main/moderngl) 手动下载 moderngl for Python 3.12 的 wheel 包并使用 pip install 安装。
+
 ## Release note
+
+* version 0.1.24:
+    * 修复 OSError: 0x000000010 bug
+    * 解决 dynamic_env_map 开启再关闭失效 bug
+    * 解决 cast_shadows 开启再关闭失效 bug
 
 * version 0.1.23:
     * 修复后处理 bug
@@ -61,4 +70,3 @@ camera.screen.show() # 相机显示屏显示渲染结果
 
 * version 0.1.22:
     * 支持了 Python 3.12
-    * 若发生 PyGLM 安装失败的情况，请到 [github](https://github.com/Time-Coder/Glass-Engine/tree/main/PyGLM) 或 [gitee](https://gitee.com/time-coder/Glass-Engine/tree/main/PyGLM) 手动下载 PyGLM for Python 3.12 的 wheel 包并使用 pip install 安装
