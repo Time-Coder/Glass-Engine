@@ -1,11 +1,17 @@
-from PyQt6.QtWidgets import QSplitter, QDialog, QCheckBox, QWidget, QColorDialog, QVBoxLayout, QApplication, QGroupBox, QHBoxLayout, QScrollArea, QSpinBox
-from PyQt6.QtGui import QColor, QIcon
+from glass.download import pip_install
+
+try:
+    import PyQt6
+except:
+    pip_install("PyQt6")
+
+from PyQt6.QtWidgets import QSplitter, QDialog, QCheckBox, QWidget, QVBoxLayout, QApplication, QHBoxLayout, QScrollArea
+from PyQt6.QtGui import QIcon
 from PyQt6.QtCore import pyqtSignal, Qt
 from qt_material import apply_stylesheet
 
-from .QtComponents import IntInput, ColorInput, ComboboxInput, MapInput, SliderInput, ColorImageInput, ValueImageInput, ColorImageChooser
+from .QtComponents import IntInput, ComboboxInput, MapInput, SliderInput, ColorImageInput, ValueImageInput, ColorImageChooser
 
-from ..Camera import Camera
 from ..Model import Model
 from ..BasicScene import ModelView
 from ..Geometries.Floor import Floor

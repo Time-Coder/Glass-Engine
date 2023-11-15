@@ -1,7 +1,5 @@
-import typing
-from PyQt6 import QtGui
 from PyQt6.QtWidgets import QWidget, QColorDialog, QHBoxLayout, QLabel
-from PyQt6.QtGui import QColor, QPalette, QMouseEvent, QPaintEvent, QPainter
+from PyQt6.QtGui import QColor, QMouseEvent, QPaintEvent, QPainter
 from PyQt6.QtCore import pyqtSignal, Qt
 
 import glm

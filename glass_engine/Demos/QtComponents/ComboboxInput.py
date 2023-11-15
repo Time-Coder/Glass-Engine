@@ -1,4 +1,4 @@
-from PyQt6.QtWidgets import QWidget, QHBoxLayout, QLabel, QDoubleSpinBox, QSlider, QComboBox
+from PyQt6.QtWidgets import QWidget, QHBoxLayout, QLabel, QComboBox
 from PyQt6.QtCore import pyqtSignal, Qt
 
 class ComboboxInput(QWidget):
