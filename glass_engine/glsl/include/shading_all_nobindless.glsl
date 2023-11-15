@@ -7,7 +7,7 @@
 #include "transform.glsl"
 #include "ShadingInfo_nobindless.glsl"
 #include "env_mapping_nobindless.glsl"
-#include "../Lights/Lights_lighting.glsl"
+#include "../Lights/Lights_lighting_nobindless.glsl"
 
 vec4 post_shading_all(
     in Camera camera, in Camera CSM_camera,
