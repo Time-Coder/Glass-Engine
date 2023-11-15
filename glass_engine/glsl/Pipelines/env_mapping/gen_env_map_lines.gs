@@ -1,9 +1,6 @@
 #version 430 core
 
-#ifdef USE_BINDLESS_TEXTURE
 #extension GL_ARB_bindless_texture : require
-#endif
-
 #extension GL_EXT_texture_array : require
 
 layout (lines, invocations=6) in;
@@ -61,7 +58,6 @@ void main()
         env_map_handle = gs_in[i].env_map_handle;
         preshading_color = vec3(0);
 
-        // pre shading
         if (material.shading_model == SHADING_MODEL_FLAT ||
             material.shading_model == SHADING_MODEL_GOURAUD)
         {

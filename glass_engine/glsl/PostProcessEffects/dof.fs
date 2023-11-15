@@ -45,7 +45,7 @@ void main()
     }
     else if (abs(target_focus - _current_focus) > 1E-6)
     {
-        if(_current_focus != 0 && camera.lens.focus_change_time > 1E-6)
+        if (_current_focus != 0 && camera.lens.focus_change_time > 1E-6)
         {
             float sgn = sign(target_focus - _current_focus);
             float a = 0.02/camera.lens.focus_change_time;
@@ -84,7 +84,7 @@ void main()
     float sigma = ((coc_in_pixel-1)*0.5 - 1)/3.0;
     
     float double_sigma2 = 2*sigma*sigma;
-    if(horizontal)
+    if (horizontal)
     {
         float t = fs_in.tex_coord.t;
         float weight_sum = 0;

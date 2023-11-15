@@ -1,9 +1,6 @@
 #version 430 core
 
-#ifdef USE_BINDLESS_TEXTURE
 #extension GL_ARB_bindless_texture : require
-#endif
-
 #extension GL_EXT_texture_array : require
 
 layout (triangles, invocations=6) in;
@@ -53,21 +50,15 @@ mat3 choose_good_TBN(int index, mat3 backup_TBN)
         length(gs_in[index].world_TBN[0]) > 1E-6 &&
         length(gs_in[index].world_TBN[1]) > 1E-6 &&
         length(gs_in[index].world_TBN[2]) > 1E-6)
-    {
         return gs_in[index].world_TBN;
-    }
 
     for (int i = 0; i < 3; i++)
-    {
         if (i != index &&
             !hasnan(gs_in[i].world_TBN) &&
             length(gs_in[i].world_TBN[0]) > 1E-6 &&
             length(gs_in[i].world_TBN[1]) > 1E-6 &&
             length(gs_in[i].world_TBN[2]) > 1E-6)
-        {
             return gs_in[i].world_TBN;
-        }
-    }
 
     return backup_TBN;
 }
@@ -109,13 +100,9 @@ void main()
         gs_out.view_pos = world_to_view(camera, vertex_world_pos) + explode_distance * face_view_normal;
         mat3 backup_TBN = mat3(face_world_tangent, face_world_bitangent, face_world_normal);
         if (material.shading_model == SHADING_MODEL_FLAT)
-        {
             gs_out.view_TBN = world_TBN_to_view(camera, backup_TBN);
-        }
         else
-        {
             gs_out.view_TBN = world_TBN_to_view(camera, choose_good_TBN(i, backup_TBN));
-        }
         
         gs_out.tex_coord = gs_in[i].tex_coord;
         gs_out.color = gs_in[i].color;
@@ -126,21 +113,18 @@ void main()
         preshading_color = vec3(0);
         preshading_back_color = vec3(0);
 
-        // pre shading
         if (material.shading_model == SHADING_MODEL_FLAT)
         {
             InternalMaterial internal_material = fetch_internal_material(face_color, material, face_tex_coord);
             preshading_color = lighting(internal_material, CSM_camera, camera.abs_position, face_world_pos, face_world_normal);
         }
-
         if (back_material.shading_model == SHADING_MODEL_FLAT)
         {
             InternalMaterial internal_material = fetch_internal_material(face_back_color, back_material, face_tex_coord);
             preshading_back_color = lighting(internal_material, CSM_camera, camera.abs_position, face_world_pos, -face_world_normal);
         }
 
-        if (material.shading_model == SHADING_MODEL_GOURAUD || 
-            back_material.shading_model == SHADING_MODEL_GOURAUD)
+        if (material.shading_model == SHADING_MODEL_GOURAUD ||  back_material.shading_model == SHADING_MODEL_GOURAUD)
         {
             vec3 vertex_world_normal = normalize(gs_in[i].world_TBN[2]);
             

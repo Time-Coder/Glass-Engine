@@ -21,7 +21,7 @@ void main()
     vec2 tex_offset = 1.0 / textureSize(screen_image, 0).xy;
     frag_color = vec4(0);
     
-    if(horizontal)
+    if (horizontal)
     {
         float double_sigma_x2 = 2*sigma.x*sigma.x;
         float t = fs_in.tex_coord.t;

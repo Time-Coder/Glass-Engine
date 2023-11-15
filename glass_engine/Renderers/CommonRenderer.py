@@ -105,10 +105,11 @@ class CommonRenderer(Renderer):
             return self.programs[key]
         
         program = ShaderProgram()
-        program.add_include_path(os.path.dirname(os.path.abspath(__file__)) + "/../glsl/Pipelines/DirLight_depth")
-        program.compile(os.path.dirname(os.path.abspath(__file__)) + "/../glsl/Pipelines/DirLight_depth/DirLight_depth.vs")
+        self_folder = os.path.dirname(os.path.abspath(__file__))
+        program.add_include_path(self_folder + "/../glsl/Pipelines/DirLight_depth")
+        program.compile(self_folder + "/../glsl/Pipelines/DirLight_depth/DirLight_depth.vs")
         program.compile(self.dir_light_depth_geo_shader_path)
-        program.compile(os.path.dirname(os.path.abspath(__file__)) + "/../glsl/Pipelines/DirLight_depth/DirLight_depth.fs")
+        program.compile(self_folder + "/../glsl/Pipelines/DirLight_depth/DirLight_depth.fs")
 
         self.programs[key] = program
 
@@ -394,10 +395,10 @@ class CommonRenderer(Renderer):
         if "GL_ARB_bindless_texture" not in GLConfig.available_extensions:
             return
         
-        if not self._meshes_cast_shadows and \
-           not self._lines_cast_shadows and \
-           not self._points_cast_shadows:
-            return
+        # if not self._meshes_cast_shadows and \
+        #    not self._lines_cast_shadows and \
+        #    not self._points_cast_shadows:
+        #     return
         
         for dir_light in self.scene.dir_lights:
             if not dir_light.generate_shadows:
@@ -434,12 +435,9 @@ class CommonRenderer(Renderer):
             if dir_light.depth_fbo is None:
                 dir_light.depth_fbo = FBO(1024, 1024, layers=self.camera.CSM_levels)
                 dir_light.depth_fbo.attach(GL.GL_DEPTH_ATTACHMENT, sampler2DArray)
-
                 dir_light.depth_fbo.depth_attachment.wrap_s = GL.GL_CLAMP_TO_BORDER
                 dir_light.depth_fbo.depth_attachment.wrap_t = GL.GL_CLAMP_TO_BORDER
                 dir_light.depth_fbo.depth_attachment.border_color = glm.vec4(1, 1, 1, 1)
-
-                dir_light.depth_filter = GaussBlur(5)
             
             with GLConfig.LocalConfig(clear_color=glm.vec4(1,1,1,1), depth_test=True, blend=False, cull_face=None, polygon_mode=GL.GL_FILL):
                 with dir_light.depth_fbo:
@@ -482,8 +480,12 @@ class CommonRenderer(Renderer):
         self_folder = os.path.dirname(os.path.abspath(__file__))
         program = ShaderProgram()
         program.compile(self_folder + "/../glsl/Pipelines/forward_rendering/forward_rendering.vs")
-        program.compile(self_folder + "/../glsl/Pipelines/forward_rendering/forward_rendering.gs")
-        program.compile(self_folder + "/../glsl/Pipelines/forward_rendering/forward_rendering.fs")
+        if "GL_ARB_bindless_texture" in GLConfig.available_extensions:
+            program.compile(self_folder + "/../glsl/Pipelines/forward_rendering/forward_rendering.gs")
+            program.compile(self_folder + "/../glsl/Pipelines/forward_rendering/forward_rendering.fs")
+        else:
+            program.compile(self_folder + "/../glsl/Pipelines/forward_rendering/forward_rendering_nobindless.gs")
+            program.compile(self_folder + "/../glsl/Pipelines/forward_rendering/forward_rendering_nobindless.fs")
 
         program["PointLights"].bind(self.scene.point_lights)
         program["DirLights"].bind(self.scene.dir_lights)
@@ -500,8 +502,12 @@ class CommonRenderer(Renderer):
         
         self_folder = os.path.dirname(os.path.abspath(__file__))
         program = ShaderProgram()
-        program.compile(self_folder + "/../glsl/Pipelines/forward_rendering/forward_draw_lines.vs")
-        program.compile(self_folder + "/../glsl/Pipelines/forward_rendering/forward_draw_points.fs")
+        if "GL_ARB_bindless_texture" in GLConfig.available_extensions:
+            program.compile(self_folder + "/../glsl/Pipelines/forward_rendering/forward_draw_lines.vs")
+            program.compile(self_folder + "/../glsl/Pipelines/forward_rendering/forward_draw_points.fs")
+        else:
+            program.compile(self_folder + "/../glsl/Pipelines/forward_rendering/forward_draw_lines_nobindless.vs")
+            program.compile(self_folder + "/../glsl/Pipelines/forward_rendering/forward_draw_points_nobindless.fs")
 
         program["PointLights"].bind(self.scene.point_lights)
         program["DirLights"].bind(self.scene.dir_lights)
@@ -518,8 +524,12 @@ class CommonRenderer(Renderer):
         
         self_folder = os.path.dirname(os.path.abspath(__file__))
         program = ShaderProgram()
-        program.compile(self_folder + "/../glsl/Pipelines/forward_rendering/forward_draw_points.vs")
-        program.compile(self_folder + "/../glsl/Pipelines/forward_rendering/forward_draw_points.fs")
+        if "GL_ARB_bindless_texture" in GLConfig.available_extensions:
+            program.compile(self_folder + "/../glsl/Pipelines/forward_rendering/forward_draw_points.vs")
+            program.compile(self_folder + "/../glsl/Pipelines/forward_rendering/forward_draw_points.fs")
+        else:
+            program.compile(self_folder + "/../glsl/Pipelines/forward_rendering/forward_draw_points_nobindless.vs")
+            program.compile(self_folder + "/../glsl/Pipelines/forward_rendering/forward_draw_points_nobindless.fs")
 
         program["PointLights"].bind(self.scene.point_lights)
         program["DirLights"].bind(self.scene.dir_lights)
@@ -887,8 +897,13 @@ class CommonRenderer(Renderer):
         self_folder = os.path.dirname(os.path.abspath(__file__))
         program = ShaderProgram()
         program.compile(self_folder + "/../glsl/Pipelines/draw_geometry/draw_geometry.vs")
-        program.compile(self_folder + "/../glsl/Pipelines/draw_geometry/draw_geometry.gs")
-        program.compile(self_folder + "/../glsl/Pipelines/draw_geometry/draw_geometry.fs")
+        if "GL_ARB_bindless_texture" in GLConfig.available_extensions:
+            program.compile(self_folder + "/../glsl/Pipelines/draw_geometry/draw_geometry.gs")
+            program.compile(self_folder + "/../glsl/Pipelines/draw_geometry/draw_geometry.fs")
+        else:
+            program.compile(self_folder + "/../glsl/Pipelines/draw_geometry/draw_geometry_nobindless.gs")
+            program.compile(self_folder + "/../glsl/Pipelines/draw_geometry/draw_geometry_nobindless.fs")
+
         self.programs["draw_geometry"] = program
 
         return program

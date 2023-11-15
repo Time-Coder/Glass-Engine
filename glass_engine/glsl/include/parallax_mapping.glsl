@@ -36,16 +36,14 @@ void parallax_mapping(sampler2D height_map, float height_scale, mat3 view_TBN, i
     {
         lower_d = upper_d;
         upper_d += delta_d;
-        if(upper_d > max_d)
+        if (upper_d > max_d)
         {
             upper_d = max_d;
             should_break = true;
         }
-
         z_line = -upper_d*cos_theta;
         tex_coord = frag_tex_coord + upper_d*view_dir_in_tbn.st;
         z_bump = height_scale * (texture(height_map, tex_coord).r-0.5);
-
         z_line_upper = z_line;
         z_bump_upper = z_bump;
     }
@@ -54,12 +52,7 @@ void parallax_mapping(sampler2D height_map, float height_scale, mat3 view_TBN, i
     float middle_d;
     while (upper_d - lower_d > 1E-6 && times < 20)
     {
-        // (lower_d, z_line_lower) -> (upper_d, z_line_upper)
-        // (lower_d, z_bump_lower) -> (upper_d, z_bump_upper)
-
         middle_d = (lower_d*(z_bump_upper - z_line_upper) + upper_d*(z_line_lower - z_bump_lower)) / (z_bump_upper -  z_line_upper + z_line_lower - z_bump_lower);
-        // middle_d = 0.5*(lower_d + upper_d);
-
         z_line = -middle_d*cos_theta;
         tex_coord = frag_tex_coord + middle_d*view_dir_in_tbn.st;
         z_bump = height_scale * (texture(height_map, tex_coord).r-0.5);
@@ -75,7 +68,6 @@ void parallax_mapping(sampler2D height_map, float height_scale, mat3 view_TBN, i
             z_line_upper = z_line;
             z_bump_upper = z_bump;
         }
-        
         times++;
     }
 
@@ -85,38 +77,22 @@ void parallax_mapping(sampler2D height_map, float height_scale, mat3 view_TBN, i
 
 void change_geometry(Material material, inout vec2 tex_coord, inout mat3 view_TBN, inout vec3 view_pos)
 {
-    // 正反面法向量翻转
     view_TBN[2] = normalize(view_TBN[2]);
     if (!gl_FrontFacing)
-    {
         view_TBN[2] = -view_TBN[2];
-    }
-
     if (hasnan(view_TBN))
-    {
         return;
-    }
-
-    // 视差贴图
     if (textureValid(material.height_map))
-    {
-        parallax_mapping(
-            material.height_map, material.height_scale, view_TBN,
-            view_pos, tex_coord);
-    }
-
-    // 法向量贴图
+        parallax_mapping(material.height_map, material.height_scale, view_TBN, view_pos, tex_coord);
     if (textureValid(material.normal_map))
     {
         vec3 normal_in_tbn = 2*texture(material.normal_map, tex_coord).rgb-1;
         float len_normal = length(normal_in_tbn);
         if (len_normal < 1E-6) normal_in_tbn = vec3(0);
         else normal_in_tbn /= len_normal;
-        
         view_TBN[0] = material.height_scale/0.05 * view_TBN[0]/dot(view_TBN[0], view_TBN[0]);
         view_TBN[1] = material.height_scale/0.05 * view_TBN[1]/dot(view_TBN[1], view_TBN[1]);
         view_TBN[2] = view_TBN * normal_in_tbn;
-
         len_normal = length(view_TBN[2]);
         if (len_normal < 1E-6) view_TBN[2] = vec3(0);
         else view_TBN[2] /= len_normal;

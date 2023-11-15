@@ -1,9 +1,6 @@
 #version 430 core
 
-#ifdef USE_BINDLESS_TEXTURE
 #extension GL_ARB_bindless_texture : require
-#endif
-
 #extension GL_EXT_texture_array : require
 
 in VertexOut
@@ -27,20 +24,12 @@ uniform Camera camera;
 void main()
 {
     if (fs_in.visible == 0)
-    {
         discard;
-    }
 
-    // 实际使用的材质
-    InternalMaterial internal_material = fetch_internal_material(
-        fs_in.color,
-        material,
-        fs_in.tex_coord.st
-    );
+    InternalMaterial internal_material =
+        fetch_internal_material(fs_in.color, material, fs_in.tex_coord.st);
     if (internal_material.opacity < 1E-6)
-    {
         discard;
-    }
     view_pos = fs_in.view_pos;
     view_normal = fs_in.view_normal;
 }

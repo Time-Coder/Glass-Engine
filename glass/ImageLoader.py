@@ -90,9 +90,9 @@ class ImageLoader:
         if ext_name == "exr":
             image = ImageLoader.OpenEXR_load(file_name)
         else:
-            image = ImageLoader.PIL_load(file_name)
+            image = ImageLoader.cv2_load(file_name)
             if image is None:
-                image = ImageLoader.cv2_load(file_name)
+                image = ImageLoader.PIL_load(file_name)
 
         if image is None:
             if GlassConfig.print:

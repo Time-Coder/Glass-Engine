@@ -118,10 +118,6 @@ class BaseShader(GLObject):
 		if GlassConfig.print:
 			print(f"compiling shader: {printable_path(self.file_name)} {printable_size(self._code)} ", end="", flush=True)
 
-		if "GL_ARB_bindless_texture" in GLConfig.available_extensions:
-			if self.predefine("USE_BINDLESS_TEXTURE"):
-				self._collect_info(self.file_name)
-
 		GL.glShaderSource(self._id, self._code)
 		GL.glCompileShader(self._id)
 

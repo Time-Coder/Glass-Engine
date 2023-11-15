@@ -63,7 +63,7 @@ vec4 post_process(sampler2D screen_image, vec2 tex_coord)
         }
         float depth_of_same_tex_coord = view_pos_of_same_tex_coord.y;
 
-        if(sample_depth > depth_of_same_tex_coord)
+        if (sample_depth > depth_of_same_tex_coord)
         {
             occlulated_samples += soft_step(length(sample_view_pos - view_pos)/length(view_pos_of_same_tex_coord - sample_view_pos)-0.9, 0.1);
         }

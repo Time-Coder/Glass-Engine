@@ -45,6 +45,7 @@ class sampler2D(FBOAttachment):
         FBOAttachment.__init__(self)
         
         self._handle = 0
+        self._file_name = ""
         self._image = None
         self._width = 0
         self._height = 0
@@ -394,6 +395,10 @@ class sampler2D(FBOAttachment):
         self._border_color_changed = True
 
     @property
+    def file_name(self):
+        return self._file_name
+
+    @property
     def image(self):
         if self._fbo_image_changed:
             self._image = self._fbo.data(self._fbo_attach_point)
@@ -405,6 +410,11 @@ class sampler2D(FBOAttachment):
     @image.setter
     @FBOAttachment.param_setter
     def image(self, image:(np.ndarray,str)):
+        if isinstance(image, str):
+            self._file_name = os.path.abspath(image).replace("\\", "/")
+        else:
+            self._file_name = ""
+
         is_shadertoy = False
         if isinstance(image, str):
             try:

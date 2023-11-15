@@ -129,6 +129,9 @@ class SceneRoamManipulator(Manipulator):
         elif key == Manipulator.Key.Key_O:
             self.camera.screen.SSAO.enabled = (not self.camera.screen.SSAO.enabled)
             return True
+        elif key == Manipulator.Key.Key_M:
+            self.camera.screen.DOF.enabled = (not self.camera.screen.DOF.enabled)
+            return True
         elif key == Manipulator.Key.Key_P:
             now = datetime.datetime.now()
             file_name = "capture_" + now.strftime("%Y-%m-%d_%H-%M-%S") + ".png"

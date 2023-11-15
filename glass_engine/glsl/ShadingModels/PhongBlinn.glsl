@@ -10,9 +10,7 @@ float PhongBlinn_specular(vec3 to_light, vec3 to_camera, vec3 normal, float shin
     return pow(cos_out, shininess);
 }
 
-vec3 PhongBlinn_lighting(
-    vec3 to_light, vec3 to_camera, vec3 normal,
-    InternalMaterial material)
+vec3 PhongBlinn_lighting(vec3 to_light, vec3 to_camera, vec3 normal, InternalMaterial material)
 {
     vec3 diffuse_color = material.diffuse * Lambert_diffuse(to_light, normal);
     vec3 specular_color = material.specular * PhongBlinn_specular(to_light, to_camera, normal, material.shininess);

@@ -1,9 +1,6 @@
 #version 430 core
 
-#ifdef USE_BINDLESS_TEXTURE
 #extension GL_ARB_bindless_texture : require
-#endif
-
 #extension GL_EXT_texture_array : require
 
 in TexCoord
@@ -24,24 +21,17 @@ uniform sampler2D specular_or_preshading_and_shininess_map;
 uniform sampler2D reflection_map;
 uniform sampler2D env_center_and_mixed_value_map;
 uniform usampler2D mixed_uint_map;
-
 uniform Camera camera;
 uniform Background background;
 uniform Fog fog;
 
 void main()
 {
-    PostShadingInfo shading_info = read_from_gbuffer(
-        camera,
-        view_pos_and_alpha_map,
-        view_normal_and_emission_r_map,
-        ambient_and_emission_g_map,
-        diffuse_or_base_color_and_emission_b_map,
-        specular_or_preshading_and_shininess_map,
-        reflection_map,
-        env_center_and_mixed_value_map,
-        mixed_uint_map,
-        fs_in.tex_coord
+    PostShadingInfo shading_info = read_from_gbuffer(camera,
+        view_pos_and_alpha_map, view_normal_and_emission_r_map,
+        ambient_and_emission_g_map, diffuse_or_base_color_and_emission_b_map,
+        specular_or_preshading_and_shininess_map, reflection_map,
+        env_center_and_mixed_value_map, mixed_uint_map, fs_in.tex_coord
     );
 
     out_color = post_shading_all(camera, camera, background, fog, shading_info);

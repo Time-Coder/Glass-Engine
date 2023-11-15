@@ -1,91 +1,24 @@
 import sys
 import os
 
-from glass.download import pip_install, is_China_user
+from glass.download import pip_install, is_China_user, download
 
 try:
     import PyQt6
 except:
     pip_install("PyQt6")
 
-from PyQt6.QtWidgets import QApplication, QDialog, QHBoxLayout, QVBoxLayout, QWidget, QLabel, QDoubleSpinBox, QSlider
-from PyQt6.QtCore import Qt, pyqtSignal
+from PyQt6.QtWidgets import QApplication, QDialog, QHBoxLayout, QVBoxLayout, QWidget
+from PyQt6.QtCore import Qt
 from PyQt6.QtGui import QIcon
 from qt_material import apply_stylesheet
+
+from .QtComponents import SliderInput
 
 from ..Camera import Camera
 from ..Model import Model
 from ..BasicScene import ModelView
 from ..Geometries.CoordSys import CoordSys
-from glass.download import download
-
-class ParamControlLine(QWidget):
-
-    value_changed = pyqtSignal(float)
-
-    def __init__(self, prompt:str, range:tuple, default_value:float, unit:str=None, parent:QWidget=None):
-        QWidget.__init__(self, parent=parent)
-        self.should_call_slot = True
-
-        hlayout = QHBoxLayout()
-
-        self.label = QLabel(prompt, parent=self)
-        hlayout.addWidget(self.label)
-
-        self.spinbox = QDoubleSpinBox(parent=self)
-        if unit:
-            self.spinbox.setSuffix(unit)
-        self.spinbox.setRange(range[0], range[1])
-        hlayout.addWidget(self.spinbox)
-
-        self.slider = QSlider(Qt.Orientation.Horizontal, parent=self)
-        self.slider.setRange(0, 1000)
-        hlayout.addWidget(self.slider)
-
-        hlayout.setContentsMargins(0, 0, 0, 0)
-        self.setLayout(hlayout)
-
-        self.spinbox.setValue(default_value)
-        default_tick = self.value_to_tick(default_value)
-        self.slider.setValue(default_tick)
-
-        self.spinbox.valueChanged.connect(self.spinbox_value_changed)
-        self.slider.valueChanged.connect(self.slider_tick_changed)
-
-    def value_to_tick(self, value:float):
-        return int((value - self.spinbox.minimum()) / (self.spinbox.maximum() - self.spinbox.minimum()) * (self.slider.maximum() - self.slider.minimum())) + self.slider.minimum()
-
-    def tick_to_value(self, tick:int):
-        return (tick - self.slider.minimum()) / (self.slider.maximum() - self.slider.minimum()) * (self.spinbox.maximum() - self.spinbox.minimum()) + self.spinbox.minimum()
-
-    def spinbox_value_changed(self, value:float):
-        if not self.should_call_slot:
-            return
-        
-        old_should_call_slot = self.should_call_slot
-        self.should_call_slot = False
-
-        tick = self.value_to_tick(value)
-        self.slider.setValue(tick)
-
-        self.should_call_slot = old_should_call_slot
-
-        self.value_changed.emit(value)
-
-    def slider_tick_changed(self):
-        if not self.should_call_slot:
-            return
-        
-        old_should_call_slot = self.should_call_slot
-        self.should_call_slot = False
-
-        tick = self.slider.value()
-        value = self.tick_to_value(tick)
-        self.spinbox.setValue(value)
-
-        self.should_call_slot = old_should_call_slot
-
-        self.value_changed.emit(value)
 
 class TransformControlPanel(QWidget):
 
@@ -94,39 +27,39 @@ class TransformControlPanel(QWidget):
         hlayout = QHBoxLayout()
 
         vlayout = QVBoxLayout()
-        self.position_x_line = ParamControlLine("position.x", (-5, 5), 0, "m", self)
+        self.position_x_line = SliderInput("position.x", (-5, 5), 0, "m", self)
         vlayout.addWidget(self.position_x_line)
 
-        self.position_y_line = ParamControlLine("position.y", (-5, 5), 0, "m", self)
+        self.position_y_line = SliderInput("position.y", (-5, 5), 0, "m", self)
         vlayout.addWidget(self.position_y_line)
 
-        self.position_z_line = ParamControlLine("position.z", (-5, 5), 0, "m", self)
+        self.position_z_line = SliderInput("position.z", (-5, 5), 0, "m", self)
         vlayout.addWidget(self.position_z_line)
         vlayout.addStretch()
 
         hlayout.addLayout(vlayout)
 
         vlayout = QVBoxLayout()
-        self.yaw_line = ParamControlLine("偏航角 (yaw)", (-180, 180), 0, "°", self)
+        self.yaw_line = SliderInput("偏航角 (yaw)", (-180, 180), 0, "°", self)
         vlayout.addWidget(self.yaw_line)
 
-        self.pitch_line = ParamControlLine("俯仰角 (pitch)", (-90, 90), 0, "°", self)
+        self.pitch_line = SliderInput("俯仰角 (pitch)", (-90, 90), 0, "°", self)
         vlayout.addWidget(self.pitch_line)
 
-        self.roll_line = ParamControlLine("翻滚角 (roll)", (-180, 180), 0, "°", self)
+        self.roll_line = SliderInput("翻滚角 (roll)", (-180, 180), 0, "°", self)
         vlayout.addWidget(self.roll_line)
         vlayout.addStretch()
 
         hlayout.addLayout(vlayout)
 
         vlayout = QVBoxLayout()
-        self.scale_x_line = ParamControlLine("scale.x", (-2, 2), 1, "", self)
+        self.scale_x_line = SliderInput("scale.x", (-2, 2), 1, "", self)
         vlayout.addWidget(self.scale_x_line)
 
-        self.scale_y_line = ParamControlLine("scale.y", (-2, 2), 1, "", self)
+        self.scale_y_line = SliderInput("scale.y", (-2, 2), 1, "", self)
         vlayout.addWidget(self.scale_y_line)
 
-        self.scale_z_line = ParamControlLine("scale.z", (-2, 2), 1, "", self)
+        self.scale_z_line = SliderInput("scale.z", (-2, 2), 1, "", self)
         vlayout.addWidget(self.scale_z_line)
         vlayout.addStretch()
 

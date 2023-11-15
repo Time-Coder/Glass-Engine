@@ -129,6 +129,7 @@ class Material:
         self._shininess:float = 0.6*128
         self._shininess_strength:float = 1
         self._emission:callback_vec3 = callback_vec3(0, 0, 0, self._color_change_callback)
+        self._emission_strength:float = 1
         self._opacity:float = 0
         self._height_scale:float = 0.05
         self._base_color:callback_vec3 = callback_vec3(0.5, 0.5, 0.5, self._color_change_callback)
@@ -187,6 +188,9 @@ class Material:
 
         old_should_callback = self._should_callback
         self._should_callback = False
+
+        if self._prop_name == "reflection":
+            self._reflection_user_set = True
 
         if self._prop_name == "ambient":
             if glm.length(self._ambient) < 1E-6:
@@ -362,6 +366,8 @@ class Material:
 
     @property
     def ambient(self)->callback_vec3:
+        self._prop_name = "ambient"
+
         return self._ambient
     
     @ambient.setter
@@ -381,6 +387,8 @@ class Material:
 
     @property
     def diffuse(self)->callback_vec3:
+        self._prop_name = "diffuse"
+
         return self._diffuse
     
     @diffuse.setter
@@ -397,6 +405,8 @@ class Material:
 
     @property
     def specular(self)->callback_vec3:
+        self._prop_name = "specular"
+
         return self._specular
     
     @specular.setter
@@ -430,6 +440,15 @@ class Material:
         self._shininess = shininess
 
     @property
+    def emission_strength(self)->float:
+        return self._emission_strength
+    
+    @emission_strength.setter
+    @param_setter
+    def emission_strength(self, emission_strength:float)->None:
+        self._emission_strength = emission_strength
+
+    @property
     def shininess_strength(self):
         return self._shininess_strength
     
@@ -452,6 +471,8 @@ class Material:
 
     @property
     def emission(self)->callback_vec3:
+        self._prop_name = "emission"
+
         return self._emission
     
     @emission.setter
@@ -477,6 +498,7 @@ class Material:
 
     @property
     def reflection(self)->callback_vec4:
+        self._prop_name = "reflection"
         return self._reflection
     
     @reflection.setter
@@ -521,6 +543,7 @@ class Material:
 
     @property
     def base_color(self)->callback_vec3:
+        self._prop_name = "base_color"
         return self._base_color
     
     @base_color.setter
