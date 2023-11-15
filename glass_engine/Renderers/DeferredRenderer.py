@@ -27,7 +27,11 @@ class DeferredRenderer(CommonRenderer):
         
         program = ShaderProgram()
         program.compile(Frame.draw_frame_vs)
-        program.compile(os.path.dirname(os.path.abspath(__file__)) + "/../glsl/Pipelines/deferred_rendering/deferred_rendering.fs")
+        if "GL_ARB_bindless_texture" in GLConfig.available_extensions:
+            program.compile(os.path.dirname(os.path.abspath(__file__)) + "/../glsl/Pipelines/deferred_rendering/deferred_rendering.fs")
+        else:
+            program.compile(os.path.dirname(os.path.abspath(__file__)) + "/../glsl/Pipelines/deferred_rendering/deferred_rendering_nobindless.fs")
+
         program["PointLights"].bind(self.scene.point_lights)
         program["DirLights"].bind(self.scene.dir_lights)
         program["SpotLights"].bind(self.scene.spot_lights)

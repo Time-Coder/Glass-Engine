@@ -29,7 +29,7 @@ out flat uvec2 env_map_handle;
 
 #include "../../include/Camera.glsl"
 #include "../../include/InternalMaterial.glsl"
-#include "../../Lights/Lights_lighting.glsl"
+#include "../../Lights/Lights_lighting_nobindless.glsl"
 
 uniform vec3 view_center;
 uniform Material material;

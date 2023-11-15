@@ -27,7 +27,7 @@ out VertexOut
 #include "../../include/transform.glsl"
 #include "../../include/Camera.glsl"
 #include "../../include/InternalMaterial.glsl"
-#include "../../Lights/Lights_lighting.glsl"
+#include "../../Lights/Lights_lighting_nobindless.glsl"
 
 uniform Camera camera;
 uniform Material material;

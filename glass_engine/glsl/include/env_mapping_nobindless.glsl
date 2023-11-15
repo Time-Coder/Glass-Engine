@@ -3,7 +3,7 @@
 
 #include "sampling.glsl"
 #include "FresnelRefract.glsl"
-#include "../Lights/Lights_lighting.glsl"
+#include "../Lights/Lights_lighting_nobindless.glsl"
 #include "fog.glsl"
 #include "background.glsl"
 
