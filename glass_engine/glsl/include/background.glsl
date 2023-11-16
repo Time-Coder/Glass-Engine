@@ -1,6 +1,3 @@
-#ifndef _BACKGROUND_GLSL__
-#define _BACKGROUND_GLSL__
-
 struct Background
 {
     samplerCube skybox_map;
@@ -8,5 +5,3 @@ struct Background
     vec4 color;
     float distance;
 };
-
-#endif

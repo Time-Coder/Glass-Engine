@@ -1,6 +1,3 @@
-#ifndef _TRANSFORM_GLSL__
-#define _TRANSFORM_GLSL__
-
 #include "quat.glsl"
 
 struct RigidTransform
@@ -87,5 +84,3 @@ mat3 transform_apply_to_TBN(mat4 tran, mat3 TBN)
 	n = transform_apply_to_normal(tran, n);
 	return mat3(t, b, n);
 }
-
-#endif

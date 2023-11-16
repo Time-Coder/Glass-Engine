@@ -53,7 +53,7 @@ class ShaderParser:
 		return result
 
 	@staticmethod
-	def delete_C_comments(content):
+	def delete_C_comments(content:str)->str:
 		result = ""
 		n = len(content)
 		in_str = False

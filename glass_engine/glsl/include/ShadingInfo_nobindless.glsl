@@ -1,6 +1,3 @@
-#ifndef _SHADING_INFO_GLSL__
-#define _SHADING_INFO_GLSL__
-
 #include "Material.glsl"
 #include "fog.glsl"
 #include "background.glsl"
@@ -34,5 +31,3 @@ PostShadingInfo PostShadingInfo_create()
         _internal_material,
         false, vec3(0), vec3(0), vec3(0));
 }
-
-#endif

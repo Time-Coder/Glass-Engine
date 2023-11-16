@@ -1,6 +1,3 @@
-#ifndef _SHADING_ALL_GLSL__
-#define _SHADING_ALL_GLSL__
-
 #include "Camera.glsl"
 #include "InternalMaterial.glsl"
 #include "parallax_mapping.glsl"
@@ -114,5 +111,3 @@ vec4 shading_all(in Camera camera, in Background background,
 {
     return shading_all(camera, camera, background, material, fog, shading_info);
 }
-
-#endif

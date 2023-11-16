@@ -1,6 +1,3 @@
-#ifndef _MATERIAL_GLSL__
-#define _MATERIAL_GLSL__
-
 #define SHADING_MODEL_FLAT 1
 #define SHADING_MODEL_GOURAUD 2
 #define SHADING_MODEL_PHONG 3
@@ -83,5 +80,3 @@ struct InternalMaterial
     bool fog;
 	bool dynamic_env_mapping;
 };
-
-#endif

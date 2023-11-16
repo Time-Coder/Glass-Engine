@@ -1,6 +1,3 @@
-#ifndef _LIGHTS_LIGHTING_GLSL__
-#define _LIGHTS_LIGHTING_GLSL__
-
 #include "Lights.glsl"
 #include "DirLight_lighting_nobindless.glsl"
 #include "PointLight_lighting_nobindless.glsl"
@@ -38,5 +35,3 @@ vec3 lighting(InternalMaterial internal_material, Camera CSM_camera, vec3 camera
         out_color3 += lighting(spot_lights[i], internal_material, camera_pos, frag_pos, frag_normal);
     return out_color3;
 }
-
-#endif

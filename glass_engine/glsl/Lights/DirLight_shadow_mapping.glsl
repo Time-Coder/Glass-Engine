@@ -1,6 +1,3 @@
-#ifndef _DIR_LIGHT_SHADOW_MAPPING_GLSL__
-#define _DIR_LIGHT_SHADOW_MAPPING_GLSL__
-
 #include "DirLight.glsl"
 #include "../include/Camera.glsl"
 #include "../include/random.glsl"
@@ -112,5 +109,3 @@ float PCF(DirLight light, Camera CSM_camera, vec3 frag_pos, vec3 frag_normal)
     
     return visibility;
 }
-
-#endif

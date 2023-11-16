@@ -1,6 +1,3 @@
-#ifndef _DIR_LIGHT_LIGHTING_GLSL__
-#define _DIR_LIGHT_LIGHTING_GLSL__
-
 #include "../include/Material.glsl"
 #include "../include/random.glsl"
 #include "../include/Camera.glsl"
@@ -38,5 +35,3 @@ vec3 get_specular_color(DirLight light, InternalMaterial material, Camera CSM_ca
         specular_factor = PhongBlinn_specular(to_light, to_camera, frag_normal, material.shininess);
     return material.shadow_visibility * specular_factor * light.color;
 }
-
-#endif

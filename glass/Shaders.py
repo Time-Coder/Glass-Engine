@@ -5,6 +5,7 @@ import re
 import copy
 import warnings
 
+from .minifyc import minifyc
 from .utils import delete, md5s, modify_time, load_var, save_var, cat, relative_path, printable_path, printable_size
 from .GlassConfig import GlassConfig
 from .GLConfig import GLConfig
@@ -114,11 +115,18 @@ class BaseShader(GLObject):
 			self._id = GL.glCreateShader(self._type)
 			if self._id == 0:
 				raise MemoryError("Failed to create Shader!")
-			
-		if GlassConfig.print:
-			print(f"compiling shader: {printable_path(self.file_name)} {printable_size(self._code)} ", end="", flush=True)
 
-		GL.glShaderSource(self._id, self._code)
+		used_code = self._code
+		if not GlassConfig.debug:
+			used_code = minifyc(self._code)
+
+		if GlassConfig.print:
+			print(f"compiling shader: {printable_path(self.file_name)} {printable_size(used_code)} ", end="", flush=True)
+
+		if not os.path.isdir("temp_shaders"):
+			os.makedirs("temp_shaders")
+
+		GL.glShaderSource(self._id, used_code)
 		GL.glCompileShader(self._id)
 
 		message_bytes = GL.glGetShaderInfoLog(self._id)
@@ -423,6 +431,8 @@ class BaseShader(GLObject):
 				if abs_name not in included_files:
 					include_content = cat(abs_name)
 					included_files.add(abs_name)
+				else:
+					include_content = " " * (pos_include_end - pos_include_start)
 
 				self._code = self._code[:pos_include_start] + include_content + self._code[pos_include_end:]
 				if include_content:

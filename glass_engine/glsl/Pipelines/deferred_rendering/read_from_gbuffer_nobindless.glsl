@@ -1,6 +1,3 @@
-#ifndef _READ_FROM_GBUFFER_GLSL__
-#define _READ_FROM_GBUFFER_GLSL__
-
 #include "../../include/ShadingInfo_nobindless.glsl"
 
 PostShadingInfo read_from_gbuffer(
@@ -64,5 +61,3 @@ PostShadingInfo read_from_gbuffer(
     shading_info.material.shadow_visibility = 1;
     return shading_info;
 }
-
-#endif
