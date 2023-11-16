@@ -59,6 +59,9 @@ camera.screen.show() # 相机显示屏显示渲染结果
 
 ## Release note
 
+* version 0.1.25:
+    * 添加 minifyc 进一步减小 glsl 代码体积，避免 OSError: 0x000000010 bug
+
 * version 0.1.24:
     * 修复 OSError: 0x000000010 bug
     * 解决 dynamic_env_map 开启再关闭失效 bug
