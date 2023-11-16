@@ -1,6 +1,3 @@
-#ifndef _PHONG_GLSL__
-#define _PHONG_GLSL__
-
 #include "Lambert.glsl"
 
 float Phong_specular(vec3 to_light, vec3 to_camera, vec3 normal, float shininess)
@@ -17,5 +14,3 @@ vec3 Phong_lighting(vec3 to_light, vec3 to_camera, vec3 normal, InternalMaterial
     vec3 rim_color = material.diffuse * rim(to_light, to_camera, normal, material.light_rim_power, material.rim_power);
     return material.shadow_visibility*(diffuse_color + specular_color) + rim_color;
 }
-
-#endif

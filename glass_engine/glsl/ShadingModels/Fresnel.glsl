@@ -1,6 +1,3 @@
-#ifndef _FRESNEL_GLSL__
-#define _FRESNEL_GLSL__
-
 #include "../include/Material.glsl"
 
 float Fresnel_diffuse(vec3 to_camera, vec3 normal, float rim_power)
@@ -13,5 +10,3 @@ vec3 Fresnel_lighting(vec3 to_light, vec3 to_camera, vec3 normal, InternalMateri
 {
     return material.diffuse * Fresnel_diffuse(to_camera, normal, material.rim_power);
 }
-
-#endif

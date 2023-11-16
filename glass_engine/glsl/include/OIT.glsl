@@ -1,6 +1,3 @@
-#ifndef _OIT_GLSL__
-#define _OIT_GLSL__
-
 #include "limits.glsl"
 
 float blend_weight1(float depth, float alpha)
@@ -37,5 +34,3 @@ vec4 blend_composite(vec4 accum, float reveal)
     vec3 average_color = accum.rgb / max(accum.a, 1E-6);
     return vec4(average_color, exp(reveal));
 }
-
-#endif

@@ -3,6 +3,7 @@
 #extension GL_ARB_bindless_texture : require
 #extension GL_EXT_texture_array : require
 
+// 中文注释测试
 in GeometryOut
 {
     mat4 affine_transform;

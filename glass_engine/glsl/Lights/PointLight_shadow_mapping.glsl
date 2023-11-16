@@ -1,6 +1,3 @@
-#ifndef _POINT_LIGHT_SHADOW_MAPPING_GLSL__
-#define _POINT_LIGHT_SHADOW_MAPPING_GLSL__
-
 #include "PointLight.glsl"
 
 float PCF(PointLight light, vec3 frag_pos, vec3 frag_normal)
@@ -32,5 +29,3 @@ float PCF(PointLight light, vec3 frag_pos, vec3 frag_normal)
     }
     return 1.0*not_occ_count/total_count;
 }
-
-#endif

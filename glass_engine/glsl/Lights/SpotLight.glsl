@@ -1,6 +1,3 @@
-#ifndef _SPOT_LIGHT_GLSL__
-#define _SPOT_LIGHT_GLSL__
-
 struct SpotLight
 {
     vec3 color;
@@ -16,5 +13,3 @@ struct SpotLight
     vec3 abs_position;
     vec3 direction;
 };
-
-#endif

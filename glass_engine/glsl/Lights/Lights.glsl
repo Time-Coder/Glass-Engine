@@ -1,6 +1,3 @@
-#ifndef _LIGHTS_GLSL__
-#define _LIGHTS_GLSL__
-
 #include "PointLight.glsl"
 #include "DirLight.glsl"
 #include "SpotLight.glsl"
@@ -22,5 +19,3 @@ buffer SpotLights
     int n_spot_lights;
     SpotLight spot_lights[];
 };
-
-#endif

@@ -1,6 +1,3 @@
-#ifndef _POINT_LIGHT_LIGHTING_GLSL__
-#define _POINT_LIGHT_LIGHTING_GLSL__
-
 #include "../include/Material.glsl"
 #include "../include/random.glsl"
 #include "../include/Camera.glsl"
@@ -50,5 +47,3 @@ vec3 get_specular_color(PointLight light, InternalMaterial material, vec3 out_di
         specular_factor = PhongBlinn_specular(to_light, to_camera, frag_normal, material.shininess);
     return material.shadow_visibility * attenuation * specular_factor * light.color;
 }
-
-#endif

@@ -1,6 +1,3 @@
-#ifndef _INTERNAL_MATERIAL_GLSL__
-#define _INTERNAL_MATERIAL_GLSL__
-
 #include "Material.glsl"
 #include "sampling.glsl"
 
@@ -111,5 +108,3 @@ InternalMaterial fetch_internal_material(vec4 frag_color, Material material, vec
     internal_material.base_color = mix(frag_color.rgb, internal_material.base_color, mix_factor);
     return internal_material;
 }
-
-#endif

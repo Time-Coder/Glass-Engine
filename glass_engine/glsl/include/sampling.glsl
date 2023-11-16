@@ -1,6 +1,3 @@
-#ifndef _SAMPLING_GLSL__
-#define _SAMPLING_GLSL__
-
 #include "math.glsl"
 #include "quat.glsl"
 
@@ -122,5 +119,3 @@ vec4 textureSphere(sampler2D image, vec3 sphecial_tex_coord)
 {
     return textureSphere(image, sphecial_tex_coord, 0);
 }
-
-#endif

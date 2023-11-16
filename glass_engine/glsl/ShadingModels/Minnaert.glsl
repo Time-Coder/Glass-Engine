@@ -1,6 +1,3 @@
-#ifndef _MINNAERT_GLSL__
-#define _MINNAERT_GLSL__
-
 #include "rim.glsl"
 #include "../include/Material.glsl"
 
@@ -17,5 +14,3 @@ vec3 Minnaert_lighting(vec3 to_light, vec3 to_camera, vec3 normal, InternalMater
     vec3 rim_color = material.diffuse * rim(to_light, to_camera, normal, material.light_rim_power, material.rim_power);
     return material.shadow_visibility * diffuse_color + rim_color;
 }
-
-#endif

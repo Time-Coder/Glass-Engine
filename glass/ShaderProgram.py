@@ -137,35 +137,45 @@ class ShaderProgram(GPUProgram):
         status = GL.glGetProgramiv(self._id, GL.GL_LINK_STATUS)
         if status != GL.GL_TRUE:
             raise LinkError(message)
-            
-        binary_length = int(GL.glGetProgramiv(self._id, GL.GL_PROGRAM_BINARY_LENGTH))
-        length = ctypes.pointer(GL.GLsizei())
-        binary_format = ctypes.pointer(GL.GLenum())
-        binary_data = bytearray(binary_length)
-        GL.glGetProgramBinary(self._id, binary_length, length, binary_format, binary_data)
-        out_file = open(self._binary_file_name, "wb")
-        out_file.write(struct.pack('i', binary_format.contents.value))
-        out_file.write(struct.pack('i', binary_length))
-        out_file.write(binary_data)
-        out_file.close()
+        
+        saved = False
+        try:
+            binary_length = int(GL.glGetProgramiv(self._id, GL.GL_PROGRAM_BINARY_LENGTH))
+            length = ctypes.pointer(GL.GLsizei())
+            binary_format = ctypes.pointer(GL.GLenum())
+            binary_data = bytearray(binary_length)
+            GL.glGetProgramBinary(self._id, binary_length, length, binary_format, binary_data)
+            out_file = open(self._binary_file_name, "wb")
+            out_file.write(struct.pack('i', binary_format.contents.value))
+            out_file.write(struct.pack('i', binary_length))
+            out_file.write(binary_data)
+            out_file.close()
+            saved = True
+        except:
+            saved = False
 
         self._apply_uniform_blocks()
         self._apply_shader_storage_blocks()
 
-        meta_info = {}
-        meta_info["attributes_info"] = self._attributes_info
-        meta_info["acceptable_primitives"] = self._acceptable_primitives
-        meta_info["uniforms_info"] = self._uniforms_info
-        meta_info["uniform_blocks_info"] = self._uniform_blocks_info
-        meta_info["shader_storage_blocks_info"] = self._shader_storage_blocks_info
-        meta_info["structs_info"] = self._structs_info
-        meta_info["outs_info"] = self._outs_info
-        meta_info["sampler_map"] = self._sampler_map
-        meta_info["uniform_map"] = self._uniform_map
-        meta_info["uniform_block_map"] = self._uniform_block_map
-        meta_info["shader_storage_block_map"] = self._shader_storage_block_map
-        meta_info["include_paths"] = self._include_paths
-        save_var(meta_info, self._meta_file_name)
+        if saved:
+            try:
+                meta_info = {}
+                meta_info["attributes_info"] = self._attributes_info
+                meta_info["acceptable_primitives"] = self._acceptable_primitives
+                meta_info["uniforms_info"] = self._uniforms_info
+                meta_info["uniform_blocks_info"] = self._uniform_blocks_info
+                meta_info["shader_storage_blocks_info"] = self._shader_storage_blocks_info
+                meta_info["structs_info"] = self._structs_info
+                meta_info["outs_info"] = self._outs_info
+                meta_info["sampler_map"] = self._sampler_map
+                meta_info["uniform_map"] = self._uniform_map
+                meta_info["uniform_block_map"] = self._uniform_block_map
+                meta_info["shader_storage_block_map"] = self._shader_storage_block_map
+                meta_info["include_paths"] = self._include_paths
+                save_var(meta_info, self._meta_file_name)
+            except:
+                pass
+    
         if GlassConfig.print:
             print("done")
 

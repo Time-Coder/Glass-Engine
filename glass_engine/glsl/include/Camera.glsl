@@ -1,6 +1,3 @@
-#ifndef _CAMERA_GLSL_
-#define _CAMERA_GLSL_
-
 #include "math.glsl"
 #include "soft.glsl"
 #include "quat.glsl"
@@ -242,5 +239,3 @@ Camera cube_camera(int face_id)
 {
 	return cube_camera(face_id, vec3(0), 0.1, 100);
 }
-
-#endif

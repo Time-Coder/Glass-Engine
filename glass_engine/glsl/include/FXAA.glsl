@@ -1,5 +1,3 @@
-// FXAA code from: http://www.geeks3d.com/20110405/fxaa-fast-approximate-anti-aliasing-demo-glsl-opengl-test-radeon-geforce/3/
-
 #include "sampling.glsl"
 
 #define FXAA_SPAN_MAX 8.0

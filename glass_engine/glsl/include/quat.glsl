@@ -1,6 +1,3 @@
-#ifndef _QUAT_GLSL__
-#define _QUAT_GLSL__
-
 struct quat
 {
 	float w;
@@ -85,5 +82,3 @@ mat4 quat_to_mat4(quat q)
                 2.0*(q.x*q.z + q.w*q.y), 2.0*(q.y*q.z - q.w*q.x), 1.0-2.0*(q.x*q.x + q.y*q.y), 0.0,
                 0.0,                     0.0,                     0.0,                         1.0);
 }
-
-#endif

@@ -1,6 +1,3 @@
-#ifndef _WRITE_TO_GBUFFER_GLSL__
-#define _WRITE_TO_GBUFFER_GLSL__
-
 #include "../../include/Material.glsl"
 
 void write_to_gbuffer(in InternalMaterial internal_material,
@@ -48,5 +45,3 @@ void write_to_gbuffer(in InternalMaterial internal_material,
         (uint(255 * internal_material.metallic) << 8) | 
          uint(255 * internal_material.rim_power);
 }
-
-#endif

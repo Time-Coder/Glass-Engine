@@ -1,6 +1,3 @@
-#ifndef _LIGHTING_GLSL__
-#define _LIGHTING_GLSL__
-
 #include "Flat.glsl"
 #include "Gouraud.glsl"
 #include "Phong.glsl"
@@ -28,5 +25,3 @@ vec3 lighting(vec3 to_light, vec3 to_camera, vec3 normal, InternalMaterial mater
     default: return vec3(0);
     }
 }
-
-#endif

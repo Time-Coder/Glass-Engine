@@ -12,7 +12,7 @@ class GlassConfig:
         else:
             self.__cache_folder = glass_glsl_folder + "/__glcache__"
 
-        self.__debug = True
+        self.__debug = False
         self.__print = True
         self.__warning = True
 

@@ -1,6 +1,3 @@
-#ifndef _PARALLAX_MAPPING_GLSL__
-#define _PARALLAX_MAPPING_GLSL__
-
 #include "Material.glsl"
 #include "limits.glsl"
 #include "sampling.glsl"
@@ -98,5 +95,3 @@ void change_geometry(Material material, inout vec2 tex_coord, inout mat3 view_TB
         else view_TBN[2] /= len_normal;
     }
 }
-
-#endif
