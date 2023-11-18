@@ -59,6 +59,10 @@ camera.screen.show() # 相机显示屏显示渲染结果
 
 ## Release note
 
+* version 0.1.27:
+    * 禁用滚轮
+    * 修改 Python 3.7 f-string bug
+
 * version 0.1.26:
     * 添加 treeshake 功能，自动删除 glsl 无用函数
     * 添加功能自动剪裁功能，没有用到的功能不参与 glsl 编译
