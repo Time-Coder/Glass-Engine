@@ -1,12 +1,13 @@
 #include "Material.glsl"
-#include "fog.glsl"
 #include "background.glsl"
 
 struct ShadingInfo
 {
     vec4 color;
     vec3 preshading_color;
+#if USE_DYNAMIC_ENV_MAPPING
     sampler2D env_map;
+#endif
     bool is_opaque_pass;
     bool is_sphere;
     mat3 view_TBN;
@@ -19,7 +20,9 @@ struct ShadingInfo
 struct PostShadingInfo
 {
     InternalMaterial material;
+#if USE_DYNAMIC_ENV_MAPPING
     sampler2D env_map;
+#endif
     bool is_sphere;
     vec3 world_pos;
     vec3 world_normal;
@@ -29,6 +32,9 @@ struct PostShadingInfo
 PostShadingInfo PostShadingInfo_create()
 {
     InternalMaterial _internal_material;
-    return PostShadingInfo(_internal_material, sampler2D(uvec2(0)),
-        false, vec3(0), vec3(0), vec3(0));
+    return PostShadingInfo(_internal_material
+#if USE_DYNAMIC_ENV_MAPPING
+    , sampler2D(uvec2(0))
+#endif
+    , false, vec3(0), vec3(0), vec3(0));
 }

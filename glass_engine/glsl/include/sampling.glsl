@@ -104,7 +104,9 @@ vec4 textureSphere(sampler2D image, vec3 sphecial_tex_coord, float bias)
 {
     float len = length(sphecial_tex_coord);
     if (len < 1E-6)
+    {
         return vec4(0);
+    }
     sphecial_tex_coord /= len;
     vec2 tex_coord;
     tex_coord.x = 0.5*(atan(sphecial_tex_coord.x, sphecial_tex_coord.y)/PI + 1);

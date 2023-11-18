@@ -1,3 +1,5 @@
+#if USE_SPOT_LIGHT && USE_SPOT_LIGHT_SHADOW
+
 #include "SpotLight.glsl"
 
 float PCF(SpotLight light, vec3 frag_pos, vec3 frag_normal)
@@ -34,3 +36,5 @@ float PCF(SpotLight light, vec3 frag_pos, vec3 frag_normal)
     }
     return 1.0*not_occ_count/total_count;
 }
+
+#endif

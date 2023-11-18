@@ -6,10 +6,12 @@ import numpy as np
 from glass.DictList import DictList
 from glass.WeakSet import WeakSet
 from glass.WeakDict import WeakDict
+from glass.MetaInstancesRecorder import MetaInstancesRecorder
 from .callback_vec import callback_quat, callback_vec3
 
-class SceneNode:
+class SceneNode(metaclass=MetaInstancesRecorder):
 
+    @MetaInstancesRecorder.init
     def __init__(self, name:str="", unique_path:bool=False):
         if name:
             self._name = name
@@ -33,6 +35,10 @@ class SceneNode:
         self._block_propagation:set = set()
 
         self._propagation_props["visible"] = True
+
+    @MetaInstancesRecorder.delete
+    def __del__(self):
+        pass
 
     @property
     def unique_path(self)->bool:

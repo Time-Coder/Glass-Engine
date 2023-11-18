@@ -13,7 +13,7 @@ from .Shaders import VertexShader, FragmentShader, GeometryShader, TessControlSh
 from .Vertices import Vertices
 from .Indices import Indices
 from .Instances import Instances
-from .utils import checktype, subscript, md5s, modify_time, save_var, load_var, printable_path
+from .utils import defines_key, checktype, subscript, md5s, modify_time, save_var, load_var, printable_path
 from .GLInfo import GLInfo
 from .GLConfig import GLConfig
 from .GlassConfig import GlassConfig
@@ -28,33 +28,146 @@ class ShaderProgram(GPUProgram):
     __accum_draw_meshes:dict = {}
     __accum_draw_patches:dict = {}
 
+    __global_defines:dict = {}
+    __global_include_paths:list = []
+
     def __init__(self):
         GPUProgram.__init__(self)
-        self.vertex_shader = VertexShader()
-        self.fragment_shader = FragmentShader()
-        self.geometry_shader = GeometryShader()
-        self.tess_ctrl_shader = TessControlShader()
-        self.tess_eval_shader = TessEvaluationShader()
-        self._binary_file_name = ""
-        self._meta_file_name = ""
-        self._patch_vertices = 0
-        self._context = 0
-        self._include_paths = []
+        self.vertex_shader:VertexShader = VertexShader(self)
+        self.fragment_shader:FragmentShader = FragmentShader(self)
+        self.geometry_shader:GeometryShader = GeometryShader(self)
+        self.tess_ctrl_shader:TessControlShader = TessControlShader(self)
+        self.tess_eval_shader:TessEvaluationShader = TessEvaluationShader(self)
+
+        self._binary_file_name:str = ""
+        self._meta_file_name:str = ""
+        self._patch_vertices:int = 0
+        self._context:int = 0
+
+        self._include_paths:list = []
+        self._defines:dict = {}
 
     @staticmethod
     def __update_dict(dest_dict, src_dict):
         for key, value in src_dict.items():
             dest_dict[key] = copy.copy(value)
 
-    @checktype
-    def add_include_path(self, include_path:str):
-        self._include_paths.insert(0, include_path)
+    @staticmethod
+    def global_define(name:str, value=None):
+        ShaderProgram.__global_defines[name] = value
 
-    @checktype
-    def compile(self, file_name:str, shader_type:GLInfo.shader_types=None):
-        if self._is_linked:
-            raise RuntimeError("linked shader program cannot compile other shaders")
+    @staticmethod
+    def global_undef(name:str):
+        if name in ShaderProgram.__global_defines:
+            del ShaderProgram.__global_defines[name]
+
+    def define(self, name:str, value=None)->bool:
+        if name in self._defines and self._defines[name] == value:
+            return False
         
+        self._defines[name] = value
+        return True
+
+    def undef(self, name:str)->bool:
+        if name not in self._defines:
+            return False
+        
+        del self._defines[name]
+        return True
+
+    @property
+    def defines(self)->dict:
+        defines = {}
+        defines.update(ShaderProgram.__global_defines)
+        defines.update(self._defines)
+        return defines
+
+    @staticmethod
+    def add_global_include_path(include_path:str):
+        full_name = os.path.abspath(include_path).replace("\\", "/")
+        if ShaderProgram.__global_include_paths and \
+           ShaderProgram.__global_include_paths[0] == full_name:
+            return False
+
+        ShaderProgram.__global_include_paths.insert(0, full_name)
+        return True
+    
+    @staticmethod
+    def remove_global_include_path(include_path:str):
+        full_name = os.path.abspath(include_path).replace("\\", "/")
+        if full_name not in ShaderProgram.__global_include_paths:
+            return False
+
+        while full_name in ShaderProgram.__global_include_paths:
+            ShaderProgram.__global_include_paths.remove(full_name)
+
+        return True
+
+    def add_include_path(self, include_path:str):
+        full_name = os.path.abspath(include_path).replace("\\", "/")
+        if self._include_paths and self._include_paths[0] == full_name:
+            return False
+
+        self._include_paths.insert(0, full_name)
+        return True
+
+    def remove_include_path(self, include_path:str):
+        full_name = os.path.abspath(include_path).replace("\\", "/")
+        if full_name not in self._include_paths:
+            return False
+
+        while full_name in self._include_paths:
+            self._include_paths.remove(full_name)
+
+        return True
+
+    @property
+    def include_paths(self)->list:
+        return self._include_paths + ShaderProgram.__global_include_paths
+
+    def reload(self):
+        is_recompiled = False
+        self._attributes_info.clear()
+        self._uniforms_info.clear()
+        self._uniform_blocks_info.clear()
+        self._shader_storage_blocks_info.clear()
+        self._structs_info.clear()
+        self._outs_info.clear()
+
+        if self.vertex_shader.is_compiled:
+            self.compile(self.vertex_shader.file_name, GL.GL_VERTEX_SHADER)
+            is_recompiled = True
+
+        if self.tess_ctrl_shader.is_compiled:
+            self.compile(self.tess_ctrl_shader.file_name, GL.GL_TESS_CONTROL_SHADER)
+            is_recompiled = True
+
+        if self.tess_eval_shader.is_compiled:
+            self.compile(self.tess_eval_shader.file_name, GL.GL_TESS_EVALUATION_SHADER)
+            is_recompiled = True
+
+        if self.geometry_shader.is_compiled:
+            self.compile(self.geometry_shader.file_name, GL.GL_GEOMETRY_SHADER)
+            is_recompiled = True
+
+        if self.fragment_shader.is_compiled:
+            self.compile(self.fragment_shader.file_name, GL.GL_FRAGMENT_SHADER)
+            is_recompiled = True
+
+        if not is_recompiled:
+            return
+        
+        self._uniform._atoms_to_update = self._uniform._atom_value_map
+        self._uniform._atom_value_map = {}
+        for uniform_var in self._uniform._uniform_var_map.values():
+            bound_var = uniform_var._bound_var
+            if bound_var is None:
+                continue
+
+            uniform_var.unbind()
+            uniform_var.bind(bound_var)
+        
+    def compile(self, file_name:str, shader_type:GLInfo.shader_types=None):        
         if not os.path.isfile(file_name):
             raise FileNotFoundError(file_name)
 
@@ -67,39 +180,39 @@ class ShaderProgram(GPUProgram):
 
         shader = None
         if shader_type == GL.GL_VERTEX_SHADER:
-            shader = VertexShader.load(file_name, include_paths=self._include_paths)
-            self.vertex_shader = shader
-        elif shader_type == GL.GL_FRAGMENT_SHADER:
-            shader = FragmentShader.load(file_name, include_paths=self._include_paths)
-            self.fragment_shader = shader
+            self.vertex_shader.compile(file_name)
+            shader = self.vertex_shader
+        elif shader_type == GL.GL_TESS_CONTROL_SHADER:
+            self.tess_ctrl_shader.compile(file_name)
+            shader = self.tess_ctrl_shader
+        elif shader_type == GL.GL_TESS_EVALUATION_SHADER:
+            self.tess_eval_shader.compile(file_name)
+            shader = self.tess_eval_shader
         elif shader_type == GL.GL_GEOMETRY_SHADER:
-            shader = GeometryShader.load(file_name, include_paths=self._include_paths)
-            self.geometry_shader = shader
+            self.geometry_shader.compile(file_name)
+            shader = self.geometry_shader
             if shader.geometry_in in GLInfo.primitive_type_map:
                 self._acceptable_primitives = GLInfo.primitive_type_map[shader.geometry_in]
-        elif shader_type == GL.GL_TESS_CONTROL_SHADER:
-            shader = TessControlShader.load(file_name, include_paths=self._include_paths)
-            self.tess_ctrl_shader = shader
-        elif shader_type == GL.GL_TESS_EVALUATION_SHADER:
-            shader = TessEvaluationShader.load(file_name, include_paths=self._include_paths)
-            self.tess_eval_shader = shader
+        elif shader_type == GL.GL_FRAGMENT_SHADER:
+            self.fragment_shader.compile(file_name)
+            shader = self.fragment_shader
 
         self._attributes_info.update(shader.attributes_info)
-        self.__update_dict(self._uniforms_info, shader.uniforms_info)
-        self.__update_dict(self._uniform_blocks_info, shader.uniform_blocks_info)
-        self.__update_dict(self._shader_storage_blocks_info, shader.shader_storage_blocks_info)
+        ShaderProgram.__update_dict(self._uniforms_info, shader.uniforms_info)
+        ShaderProgram.__update_dict(self._uniform_blocks_info, shader.uniform_blocks_info)
+        ShaderProgram.__update_dict(self._shader_storage_blocks_info, shader.shader_storage_blocks_info)
         self._structs_info.update(shader.structs_info)
         self._outs_info.update(shader.outs_info)
         self._is_linked = False
 
     def _reapply(self):
         self.vertex_shader._apply()
-        if self.geometry_shader.is_compiled:
-            self.geometry_shader._apply()
         if self.tess_ctrl_shader.is_compiled:
             self.tess_ctrl_shader._apply()
         if self.tess_eval_shader.is_compiled:
             self.tess_eval_shader._apply()
+        if self.geometry_shader.is_compiled:
+            self.geometry_shader._apply()
         self.fragment_shader._apply()
 
         GL.glAttachShader(self._id, self.vertex_shader._id)
@@ -183,10 +296,10 @@ class ShaderProgram(GPUProgram):
         if not self._linked_but_not_applied:
             return
         
+        self.delete()
+        self._id = GL.glCreateProgram()
         if self._id == 0:
-            self._id = GL.glCreateProgram()
-            if self._id == 0:
-                raise MemoryError("failed to create ShaderProgram")
+            raise MemoryError("failed to create ShaderProgram")
 
         if not self._should_relink:
             in_file = open(self._binary_file_name, "rb")
@@ -210,43 +323,49 @@ class ShaderProgram(GPUProgram):
         self._linked_but_not_applied = False
 
     def _test_should_relink(self):
+        if GlassConfig.recompile:
+            self._should_relink = True
+            return True
+
         max_modify_time = 0
         shader_should_recompile = False
 
         binary_name = os.path.basename(self.vertex_shader.file_name)
-        abs_file_names = os.path.abspath(self.vertex_shader.file_name).replace("\\", "/")
+        shaders_key = os.path.abspath(self.vertex_shader.file_name).replace("\\", "/")  + defines_key(self.vertex_shader.defines)
         shader_should_recompile = shader_should_recompile or self.vertex_shader._should_recompile
         if self.vertex_shader._max_modify_time > max_modify_time:
             max_modify_time = self.vertex_shader._max_modify_time
 
-        if self.geometry_shader.is_compiled:
-            binary_name += ("+" + os.path.basename(self.geometry_shader.file_name))
-            abs_file_names += ("+" + os.path.abspath(self.geometry_shader.file_name).replace("\\", "/"))
-            shader_should_recompile = shader_should_recompile or self.geometry_shader._should_recompile
-            if self.geometry_shader._max_modify_time > max_modify_time:
-                max_modify_time = self.geometry_shader._max_modify_time
-
         if self.tess_ctrl_shader.is_compiled:
             binary_name += ("+" + os.path.basename(self.tess_ctrl_shader.file_name))
-            abs_file_names += ("+" + os.path.abspath(self.tess_ctrl_shader.file_name).replace("\\", "/"))
+            shaders_key += ("+" + os.path.abspath(self.tess_ctrl_shader.file_name).replace("\\", "/") + defines_key(self.tess_ctrl_shader.defines))
             shader_should_recompile = shader_should_recompile or self.tess_ctrl_shader._should_recompile
             if self.tess_ctrl_shader._max_modify_time > max_modify_time:
                 max_modify_time = self.tess_ctrl_shader._max_modify_time
 
         if self.tess_eval_shader.is_compiled:
             binary_name += ("+" + os.path.basename(self.tess_eval_shader.file_name))
-            abs_file_names += ("+" + os.path.abspath(self.tess_eval_shader.file_name).replace("\\", "/"))
+            shaders_key += ("+" + os.path.abspath(self.tess_eval_shader.file_name).replace("\\", "/") + defines_key(self.tess_eval_shader.defines))
             shader_should_recompile = shader_should_recompile or self.tess_eval_shader._should_recompile
             if self.tess_eval_shader._max_modify_time > max_modify_time:
                 max_modify_time = self.tess_eval_shader._max_modify_time
 
+        if self.geometry_shader.is_compiled:
+            binary_name += ("+" + os.path.basename(self.geometry_shader.file_name))
+            shaders_key += ("+" + os.path.abspath(self.geometry_shader.file_name).replace("\\", "/") + defines_key(self.geometry_shader.defines))
+            shader_should_recompile = shader_should_recompile or self.geometry_shader._should_recompile
+            if self.geometry_shader._max_modify_time > max_modify_time:
+                max_modify_time = self.geometry_shader._max_modify_time
+
         binary_name += ("+" + os.path.basename(self.fragment_shader.file_name))
-        abs_file_names += ("+" + os.path.abspath(self.fragment_shader.file_name).replace("\\", "/"))
+        shaders_key += ("+" + os.path.abspath(self.fragment_shader.file_name).replace("\\", "/") + defines_key(self.fragment_shader.defines))
         shader_should_recompile = shader_should_recompile or self.fragment_shader._should_recompile
         if self.fragment_shader._max_modify_time > max_modify_time:
             max_modify_time = self.fragment_shader._max_modify_time
 
-        base = GlassConfig.cache_folder + "/" + binary_name + "_" + md5s(GLConfig.renderer + "/" + abs_file_names)
+        md5_key = GLConfig.renderer + "/" + shaders_key
+        md5_value = md5s(md5_key)
+        base = GlassConfig.cache_folder + "/" + binary_name + "_" + md5_value
         self._binary_file_name = base + ".bin"
         self._meta_file_name = base + ".meta"
 
@@ -359,10 +478,13 @@ class ShaderProgram(GPUProgram):
                 atom_value = subscript(var, atom_info["subscript_chain"])
                 self._uniform._set_atom(atom_name, atom_value)
 
-        for atom_name, atom_value in self._uniform._should_update_atoms.items():
-            self._uniform._set_atom(atom_name, atom_value)
+        for atom_name, atom_value in self._uniform._atoms_to_update.items():
+            try:
+                self._uniform._set_atom(atom_name, atom_value)
+            except:
+                pass
 
-        self._uniform._should_update_atoms.clear()
+        self._uniform._atoms_to_update.clear()
 
     def __update_samplers(self):
         self.use()

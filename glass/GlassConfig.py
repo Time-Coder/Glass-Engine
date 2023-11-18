@@ -12,9 +12,10 @@ class GlassConfig:
         else:
             self.__cache_folder = glass_glsl_folder + "/__glcache__"
 
-        self.__debug = False
-        self.__print = True
-        self.__warning = True
+        self.debug:bool = False
+        self.print:bool = True
+        self.warning:bool = True
+        self.recompile:bool = False
 
     @property
     def cache_folder(self)->str:
@@ -30,29 +31,5 @@ class GlassConfig:
     def clear_cache(self):
         if os.path.isdir(self.__cache_folder):
             shutil.rmtree(self.__cache_folder)
-
-    @property
-    def debug(self):
-        return self.__debug
-    
-    @debug.setter
-    def debug(self, flag:bool):
-        self.__debug = flag
-
-    @property
-    def warning(self):
-        return self.__warning
-    
-    @warning.setter
-    def warning(self, flag:bool):
-        self.__warning = flag
-
-    @property
-    def print(self):
-        return self.__print
-    
-    @print.setter
-    def print(self, flag:bool):
-        self.__print = flag
 
 GlassConfig = GlassConfig()

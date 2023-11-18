@@ -1,6 +1,8 @@
 #version 430 core
 
+#if USE_BINDLESS_TEXTURE
 #extension GL_ARB_bindless_texture : require
+#endif
 #extension GL_EXT_texture_array : require
 
 layout (triangles) in;
@@ -41,15 +43,21 @@ mat3 choose_good_TBN(int index, mat3 backup_TBN)
         length(gs_in[index].view_TBN[0]) > 1E-6 &&
         length(gs_in[index].view_TBN[1]) > 1E-6 &&
         length(gs_in[index].view_TBN[2]) > 1E-6)
+    {
         return gs_in[index].view_TBN;
+    }
 
     for (int i = 0; i < 3; i++)
+    {
         if (i != index &&
             !hasnan(gs_in[i].view_TBN) &&
             length(gs_in[i].view_TBN[0]) > 1E-6 &&
             length(gs_in[i].view_TBN[1]) > 1E-6 &&
             length(gs_in[i].view_TBN[2]) > 1E-6)
+        {
             return gs_in[i].view_TBN;
+        }
+    }
 
     return backup_TBN;
 }
@@ -88,9 +96,13 @@ void main()
         gs_out.view_pos = gl_in[i].gl_Position.xyz + explode_distance * face_view_normal;
         mat3 backup_TBN = mat3(face_view_tangent, face_view_bitangent, face_view_normal);
         if (material.shading_model == SHADING_MODEL_FLAT)
+        {
             gs_out.view_TBN = backup_TBN;
+        }
         else
+        {
             gs_out.view_TBN = choose_good_TBN(i, backup_TBN);
+        }
 
         gs_out.color = gs_in[i].color;
         gs_out.back_color = gs_in[i].back_color;

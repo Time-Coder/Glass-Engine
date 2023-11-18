@@ -1,6 +1,8 @@
 #version 430 core
 
+#if USE_BINDLESS_TEXTURE
 #extension GL_ARB_bindless_texture : require
+#endif
 #extension GL_EXT_texture_array : require
 
 layout (lines, invocations={CSM_levels}) in;

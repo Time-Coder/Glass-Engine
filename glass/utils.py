@@ -593,3 +593,32 @@ def translate_to_mat4(t:glm.vec3):
                     0  , 1  , 0  , 0,
                     0  , 0  , 1  , 0,
                     t.x, t.y, t.z, 1)
+
+def defines_key(*args):
+    shader_type_defines = \
+    {
+        "VERTEX_SHADER",
+        "TESS_CONTROL_SHADER",
+        "TESS_EVALUATION_SHADER",
+        "GEOMETRY_SHADER",
+        "FRAGMENT_SHADER",
+        "COMPUTE_SHADER"
+    }
+
+    defines = {}
+    for arg in args:
+        defines.update(arg)
+
+    keys = list(defines.keys())
+    keys.sort()
+    defines_str = ":"
+    for key in keys:
+        if key in shader_type_defines:
+            continue
+
+        part = key
+        if defines[key] is not None:
+            part += f"={defines[key]}"
+        defines_str += (part + ":")
+
+    return defines_str[:-1]

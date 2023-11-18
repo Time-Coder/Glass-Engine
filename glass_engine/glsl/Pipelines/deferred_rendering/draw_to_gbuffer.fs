@@ -1,6 +1,8 @@
 #version 430 core
 
+#if USE_BINDLESS_TEXTURE
 #extension GL_ARB_bindless_texture : require
+#endif
 
 in GeometryOut
 {
@@ -37,6 +39,8 @@ uniform Material back_material;
 uniform bool is_sphere;
 uniform vec3 mesh_center;
 
+#define CUREENT_MATERIAL (gl_FrontFacing ? material : back_material)
+
 void main()
 {
     if (fs_in.visible == 0)
@@ -45,12 +49,18 @@ void main()
     mat3 view_TBN = fs_in.view_TBN;
     vec3 view_pos = fs_in.view_pos;
     vec3 env_center = transform_apply(fs_in.affine_transform, mesh_center);
-    Material current_material = (gl_FrontFacing ? material : back_material);
     vec4 current_color = (gl_FrontFacing ? fs_in.color : fs_in.back_color);
-    change_geometry(current_material, tex_coord, view_TBN, view_pos);
-    InternalMaterial internal_material = fetch_internal_material(current_color, current_material, tex_coord);
-    if (current_material.shading_model == SHADING_MODEL_FLAT || current_material.shading_model == SHADING_MODEL_GOURAUD)
+    change_geometry(CUREENT_MATERIAL, tex_coord, view_TBN, view_pos);
+    InternalMaterial internal_material = fetch_internal_material(current_color, CUREENT_MATERIAL, tex_coord);
+
+#if USE_SHADING_MODEL_FLAT || USE_SHADING_MODEL_GOURAUD
+    if (CUREENT_MATERIAL.shading_model == SHADING_MODEL_FLAT ||
+        CUREENT_MATERIAL.shading_model == SHADING_MODEL_GOURAUD)
+    {
         internal_material.preshading_color = (gl_FrontFacing ? preshading_color : preshading_back_color);
+    }
+#endif
+    
     write_to_gbuffer(
         internal_material, view_pos, view_TBN[2], env_center, env_map_handle, is_sphere,
         view_pos_and_alpha, view_normal_and_emission_r, ambient_and_emission_g,

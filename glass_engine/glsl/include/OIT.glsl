@@ -30,7 +30,9 @@ void get_OIT_info(vec4 out_color, out vec4 accum, out float reveal)
 vec4 blend_composite(vec4 accum, float reveal)
 {
     if (hasinf(accum.rgb))
+    {
         accum.rgb = vec3(accum.a);
+    }
     vec3 average_color = accum.rgb / max(accum.a, 1E-6);
     return vec4(average_color, exp(reveal));
 }

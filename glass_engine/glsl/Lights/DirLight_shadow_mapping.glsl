@@ -1,3 +1,5 @@
+#if USE_DIR_LIGHT && USE_DIR_LIGHT_SHADOW
+
 #include "DirLight.glsl"
 #include "../include/Camera.glsl"
 #include "../include/random.glsl"
@@ -109,3 +111,5 @@ float PCF(DirLight light, Camera CSM_camera, vec3 frag_pos, vec3 frag_normal)
     
     return visibility;
 }
+
+#endif

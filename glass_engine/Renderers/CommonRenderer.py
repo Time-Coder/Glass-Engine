@@ -1,6 +1,7 @@
 from .Renderer import Renderer
 from ..PostProcessEffects import FXAAEffect
 from ..Frame import Frame
+from ..GlassEngineConfig import GlassEngineConfig
 
 from glass import ShaderProgram, GLConfig, FBO, sampler2D, sampler2DMS, samplerCube, sampler2DArray, GlassConfig, GLInfo
 from glass.utils import cat, modify_time
@@ -105,6 +106,7 @@ class CommonRenderer(Renderer):
             return self.programs[key]
         
         program = ShaderProgram()
+        GlassEngineConfig.define_for_program(program)
         self_folder = os.path.dirname(os.path.abspath(__file__))
         program.add_include_path(self_folder + "/../glsl/Pipelines/DirLight_depth")
         program.compile(self_folder + "/../glsl/Pipelines/DirLight_depth/DirLight_depth.vs")
@@ -123,6 +125,7 @@ class CommonRenderer(Renderer):
         
         self_folder = os.path.dirname(os.path.abspath(__file__))
         program = ShaderProgram()
+        GlassEngineConfig.define_for_program(program)
         program.add_include_path(self_folder + "/../glsl/Pipelines/DirLight_depth")
         program.compile(self_folder + "/../glsl/Pipelines/DirLight_depth/DirLight_depth.vs")
         program.compile(self.dir_light_depth_lines_geo_shader_path)
@@ -140,6 +143,7 @@ class CommonRenderer(Renderer):
         
         self_folder = os.path.dirname(os.path.abspath(__file__))
         program = ShaderProgram()
+        GlassEngineConfig.define_for_program(program)
         program.add_include_path(self_folder + "/../glsl/Pipelines/DirLight_depth")
         program.compile(self_folder + "/../glsl/Pipelines/DirLight_depth/DirLight_depth.vs")
         program.compile(self.dir_light_depth_points_geo_shader_path)
@@ -156,6 +160,7 @@ class CommonRenderer(Renderer):
         
         self_folder = os.path.dirname(os.path.abspath(__file__))
         program = ShaderProgram()
+        GlassEngineConfig.define_for_program(program)
         program.compile(self_folder + "/../glsl/Pipelines/PointLight_depth/PointLight_depth.vs")
         program.compile(self_folder + "/../glsl/Pipelines/PointLight_depth/PointLight_depth.gs")
         program.compile(self_folder + "/../glsl/Pipelines/PointLight_depth/PointLight_depth.fs")
@@ -171,6 +176,7 @@ class CommonRenderer(Renderer):
         
         self_folder = os.path.dirname(os.path.abspath(__file__))
         program = ShaderProgram()
+        GlassEngineConfig.define_for_program(program)
         program.compile(self_folder + "/../glsl/Pipelines/PointLight_depth/PointLight_depth.vs")
         program.compile(self_folder + "/../glsl/Pipelines/PointLight_depth/PointLight_depth_lines.gs")
         program.compile(self_folder + "/../glsl/Pipelines/PointLight_depth/PointLight_depth.fs")
@@ -186,6 +192,7 @@ class CommonRenderer(Renderer):
         
         self_folder = os.path.dirname(os.path.abspath(__file__))
         program = ShaderProgram()
+        GlassEngineConfig.define_for_program(program)
         program.compile(self_folder + "/../glsl/Pipelines/PointLight_depth/PointLight_depth.vs")
         program.compile(self_folder + "/../glsl/Pipelines/PointLight_depth/PointLight_depth_points.gs")
         program.compile(self_folder + "/../glsl/Pipelines/PointLight_depth/PointLight_depth.fs")
@@ -201,6 +208,7 @@ class CommonRenderer(Renderer):
         
         self_folder = os.path.dirname(os.path.abspath(__file__))
         program = ShaderProgram()
+        GlassEngineConfig.define_for_program(program)
         program.compile(self_folder + "/../glsl/Pipelines/PointLight_depth/PointLight_depth.vs")
         program.compile(self_folder + "/../glsl/Pipelines/SpotLight_depth/SpotLight_depth.gs")
         program.compile(self_folder + "/../glsl/Pipelines/SpotLight_depth/SpotLight_depth.fs")
@@ -216,6 +224,7 @@ class CommonRenderer(Renderer):
         
         self_folder = os.path.dirname(os.path.abspath(__file__))
         program = ShaderProgram()
+        GlassEngineConfig.define_for_program(program)
         program.compile(self_folder + "/../glsl/Pipelines/PointLight_depth/PointLight_depth.vs")
         program.compile(self_folder + "/../glsl/Pipelines/SpotLight_depth/SpotLight_depth_lines.gs")
         program.compile(self_folder + "/../glsl/Pipelines/SpotLight_depth/SpotLight_depth.fs")
@@ -231,6 +240,7 @@ class CommonRenderer(Renderer):
         
         self_folder = os.path.dirname(os.path.abspath(__file__))
         program = ShaderProgram()
+        GlassEngineConfig.define_for_program(program)
         program.compile(self_folder + "/../glsl/Pipelines/PointLight_depth/PointLight_depth.vs")
         program.compile(self_folder + "/../glsl/Pipelines/SpotLight_depth/SpotLight_depth_points.gs")
         program.compile(self_folder + "/../glsl/Pipelines/SpotLight_depth/SpotLight_depth.fs")
@@ -479,13 +489,10 @@ class CommonRenderer(Renderer):
         
         self_folder = os.path.dirname(os.path.abspath(__file__))
         program = ShaderProgram()
+        GlassEngineConfig.define_for_program(program)
         program.compile(self_folder + "/../glsl/Pipelines/forward_rendering/forward_rendering.vs")
-        if "GL_ARB_bindless_texture" in GLConfig.available_extensions:
-            program.compile(self_folder + "/../glsl/Pipelines/forward_rendering/forward_rendering.gs")
-            program.compile(self_folder + "/../glsl/Pipelines/forward_rendering/forward_rendering.fs")
-        else:
-            program.compile(self_folder + "/../glsl/Pipelines/forward_rendering/forward_rendering_nobindless.gs")
-            program.compile(self_folder + "/../glsl/Pipelines/forward_rendering/forward_rendering_nobindless.fs")
+        program.compile(self_folder + "/../glsl/Pipelines/forward_rendering/forward_rendering.gs")
+        program.compile(self_folder + "/../glsl/Pipelines/forward_rendering/forward_rendering.fs")
 
         program["PointLights"].bind(self.scene.point_lights)
         program["DirLights"].bind(self.scene.dir_lights)
@@ -502,12 +509,9 @@ class CommonRenderer(Renderer):
         
         self_folder = os.path.dirname(os.path.abspath(__file__))
         program = ShaderProgram()
-        if "GL_ARB_bindless_texture" in GLConfig.available_extensions:
-            program.compile(self_folder + "/../glsl/Pipelines/forward_rendering/forward_draw_lines.vs")
-            program.compile(self_folder + "/../glsl/Pipelines/forward_rendering/forward_draw_points.fs")
-        else:
-            program.compile(self_folder + "/../glsl/Pipelines/forward_rendering/forward_draw_lines_nobindless.vs")
-            program.compile(self_folder + "/../glsl/Pipelines/forward_rendering/forward_draw_points_nobindless.fs")
+        GlassEngineConfig.define_for_program(program)
+        program.compile(self_folder + "/../glsl/Pipelines/forward_rendering/forward_draw_lines.vs")
+        program.compile(self_folder + "/../glsl/Pipelines/forward_rendering/forward_draw_points.fs")
 
         program["PointLights"].bind(self.scene.point_lights)
         program["DirLights"].bind(self.scene.dir_lights)
@@ -524,12 +528,9 @@ class CommonRenderer(Renderer):
         
         self_folder = os.path.dirname(os.path.abspath(__file__))
         program = ShaderProgram()
-        if "GL_ARB_bindless_texture" in GLConfig.available_extensions:
-            program.compile(self_folder + "/../glsl/Pipelines/forward_rendering/forward_draw_points.vs")
-            program.compile(self_folder + "/../glsl/Pipelines/forward_rendering/forward_draw_points.fs")
-        else:
-            program.compile(self_folder + "/../glsl/Pipelines/forward_rendering/forward_draw_points_nobindless.vs")
-            program.compile(self_folder + "/../glsl/Pipelines/forward_rendering/forward_draw_points_nobindless.fs")
+        GlassEngineConfig.define_for_program(program)
+        program.compile(self_folder + "/../glsl/Pipelines/forward_rendering/forward_draw_points.vs")
+        program.compile(self_folder + "/../glsl/Pipelines/forward_rendering/forward_draw_points.fs")
 
         program["PointLights"].bind(self.scene.point_lights)
         program["DirLights"].bind(self.scene.dir_lights)
@@ -545,6 +546,7 @@ class CommonRenderer(Renderer):
             return self.programs["OIT_blend"]
         
         program = ShaderProgram()
+        GlassEngineConfig.define_for_program(program)
         program.compile(Frame.draw_frame_vs)
         program.compile(os.path.dirname(os.path.abspath(__file__)) + "/../glsl/Pipelines/OIT_blend.fs")
         self.programs["OIT_blend"] = program
@@ -617,6 +619,7 @@ class CommonRenderer(Renderer):
         if "gen_env_map" not in self.programs:
             self_folder = os.path.dirname(os.path.abspath(__file__))
             program = ShaderProgram()
+            GlassEngineConfig.define_for_program(program)
             program.compile(self_folder + "/../glsl/Pipelines/env_mapping/gen_env_map.vs")
             program.compile(self_folder + "/../glsl/Pipelines/env_mapping/gen_env_map.gs")
             program.compile(self_folder + "/../glsl/Pipelines/env_mapping/gen_env_map.fs")
@@ -633,6 +636,7 @@ class CommonRenderer(Renderer):
         if "gen_env_map_lines" not in self.programs:
             self_folder = os.path.dirname(os.path.abspath(__file__))
             program = ShaderProgram()
+            GlassEngineConfig.define_for_program(program)
             program.compile(self_folder + "/../glsl/Pipelines/env_mapping/gen_env_map_points.vs")
             program.compile(self_folder + "/../glsl/Pipelines/env_mapping/gen_env_map_lines.gs")
             program.compile(self_folder + "/../glsl/Pipelines/env_mapping/gen_env_map_points.fs")
@@ -649,6 +653,7 @@ class CommonRenderer(Renderer):
         if "gen_env_map_points" not in self.programs:
             self_folder = os.path.dirname(os.path.abspath(__file__))
             program = ShaderProgram()
+            GlassEngineConfig.define_for_program(program)
             program.compile(self_folder + "/../glsl/Pipelines/env_mapping/gen_env_map_points.vs")
             program.compile(self_folder + "/../glsl/Pipelines/env_mapping/gen_env_map_points.gs")
             program.compile(self_folder + "/../glsl/Pipelines/env_mapping/gen_env_map_points.fs")
@@ -695,7 +700,8 @@ class CommonRenderer(Renderer):
         self.gen_env_map_program["view_center"] = view_center
         self.gen_env_map_program["is_opaque_pass"] = is_opaque_pass
         self.gen_env_map_program["background"] = self.scene.background
-        self.gen_env_map_program["fog"] = self.scene.fog
+        if GlassEngineConfig["USE_FOG"]:
+            self.gen_env_map_program["fog"] = self.scene.fog
 
     def gen_env_map_draw_mesh(self, mesh, instances):
         self.gen_env_map_program["explode_distance"] = mesh.explode_distance
@@ -711,7 +717,8 @@ class CommonRenderer(Renderer):
         self.gen_env_map_lines_program["view_center"] = view_center
         self.gen_env_map_lines_program["is_opaque_pass"] = is_opaque_pass
         self.gen_env_map_lines_program["background"] = self.scene.background
-        self.gen_env_map_lines_program["fog"] = self.scene.fog
+        if GlassEngineConfig["USE_FOG"]:
+            self.gen_env_map_lines_program["fog"] = self.scene.fog
 
     def gen_env_map_draw_lines(self, mesh, instances):
         self.gen_env_map_lines_program["material"] = mesh.material
@@ -724,7 +731,8 @@ class CommonRenderer(Renderer):
         self.gen_env_map_points_program["view_center"] = view_center
         self.gen_env_map_points_program["is_opaque_pass"] = is_opaque_pass
         self.gen_env_map_points_program["background"] = self.scene.background
-        self.gen_env_map_points_program["fog"] = self.scene.fog
+        if GlassEngineConfig["USE_FOG"]:
+            self.gen_env_map_points_program["fog"] = self.scene.fog
 
     def gen_env_map_draw_points(self, mesh, instances):
         self.gen_env_map_points_program["material"] = mesh.material
@@ -835,7 +843,8 @@ class CommonRenderer(Renderer):
         self.forward_program["camera"] = camera
         self.forward_program["is_opaque_pass"] = is_opaque_pass
         self.forward_program["background"] = self.scene.background
-        self.forward_program["fog"] = self.scene.fog
+        if GlassEngineConfig["USE_FOG"]:
+            self.forward_program["fog"] = self.scene.fog
 
     def forward_draw_mesh(self, mesh, instances):
         if mesh.material.need_env_map or mesh._back_material.need_env_map:
@@ -852,7 +861,8 @@ class CommonRenderer(Renderer):
         self.forward_lines_program["camera"] = self.camera
         self.forward_lines_program["is_opaque_pass"] = is_opaque_pass
         self.forward_lines_program["background"] = self.scene.background
-        self.forward_lines_program["fog"] = self.scene.fog
+        if GlassEngineConfig["USE_FOG"]:
+            self.forward_lines_program["fog"] = self.scene.fog
 
     def forward_draw_lines(self, mesh, instances):
         if mesh.material.need_env_map:
@@ -866,7 +876,9 @@ class CommonRenderer(Renderer):
         self.forward_points_program["camera"] = self.camera
         self.forward_points_program["is_opaque_pass"] = is_opaque_pass
         self.forward_points_program["background"] = self.scene.background
-        self.forward_points_program["fog"] = self.scene.fog
+        
+        if GlassEngineConfig["USE_FOG"]:
+            self.forward_points_program["fog"] = self.scene.fog
 
     def forward_draw_points(self, mesh, instances):
         if mesh.material.need_env_map:
@@ -883,6 +895,7 @@ class CommonRenderer(Renderer):
         
         self_folder = os.path.dirname(os.path.abspath(__file__))
         program = ShaderProgram()
+        GlassEngineConfig.define_for_program(program)
         program.compile(Frame.draw_frame_vs)
         program.compile(self_folder + "/../glsl/Pipelines/env_mapping/env_OIT_blend.fs")
         self.programs["env_OIT_blend"] = program
@@ -896,13 +909,10 @@ class CommonRenderer(Renderer):
         
         self_folder = os.path.dirname(os.path.abspath(__file__))
         program = ShaderProgram()
+        GlassEngineConfig.define_for_program(program)
         program.compile(self_folder + "/../glsl/Pipelines/draw_geometry/draw_geometry.vs")
-        if "GL_ARB_bindless_texture" in GLConfig.available_extensions:
-            program.compile(self_folder + "/../glsl/Pipelines/draw_geometry/draw_geometry.gs")
-            program.compile(self_folder + "/../glsl/Pipelines/draw_geometry/draw_geometry.fs")
-        else:
-            program.compile(self_folder + "/../glsl/Pipelines/draw_geometry/draw_geometry_nobindless.gs")
-            program.compile(self_folder + "/../glsl/Pipelines/draw_geometry/draw_geometry_nobindless.fs")
+        program.compile(self_folder + "/../glsl/Pipelines/draw_geometry/draw_geometry.gs")
+        program.compile(self_folder + "/../glsl/Pipelines/draw_geometry/draw_geometry.fs")
 
         self.programs["draw_geometry"] = program
 
@@ -915,6 +925,7 @@ class CommonRenderer(Renderer):
         
         self_folder = os.path.dirname(os.path.abspath(__file__))
         program = ShaderProgram()
+        GlassEngineConfig.define_for_program(program)
         program.compile(self_folder + "/../glsl/Pipelines/draw_geometry/draw_geometry_lines.vs")
         program.compile(self_folder + "/../glsl/Pipelines/draw_geometry/draw_geometry_points.fs")
         self.programs["draw_geometry_lines"] = program
@@ -928,6 +939,7 @@ class CommonRenderer(Renderer):
         
         self_folder = os.path.dirname(os.path.abspath(__file__))
         program = ShaderProgram()
+        GlassEngineConfig.define_for_program(program)
         program.compile(self_folder + "/../glsl/Pipelines/draw_geometry/draw_geometry_points.vs")
         program.compile(self_folder + "/../glsl/Pipelines/draw_geometry/draw_geometry_points.fs")
         self.programs["draw_geometry_points"] = program
