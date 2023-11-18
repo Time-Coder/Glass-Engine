@@ -161,19 +161,19 @@ class ModelViewManipulator(Manipulator):
 
         return False
 
-    def on_wheel_scrolled(self, angle:glm.vec2, screen_pos:glm.vec2, global_pos:glm.vec2):
-        if self.__is_left_pressed or self.__is_right_pressed:
-            return False
+    # def on_wheel_scrolled(self, angle:glm.vec2, screen_pos:glm.vec2, global_pos:glm.vec2):
+    #     if self.__is_left_pressed or self.__is_right_pressed:
+    #         return False
         
-        n = angle.y/120
-        scale = pow(2, n/6)
-        if self.camera.projection_mode.value == 0:
-            self.camera.fov /= scale
-        else:
-            self.camera.height /= scale
+    #     n = angle.y/120
+    #     scale = pow(2, n/6)
+    #     if self.camera.projection_mode.value == 0:
+    #         self.camera.fov /= scale
+    #     else:
+    #         self.camera.height /= scale
 
-        self.__update_camera()
-        return True
+    #     self.__update_camera()
+    #     return True
 
     def on_key_pressed(self, key:Manipulator.Key)->bool:
         if key == Manipulator.Key.Key_R:
