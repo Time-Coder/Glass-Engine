@@ -6,7 +6,8 @@ import copy
 import warnings
 
 from .minifyc import minifyc
-from .utils import delete, md5s, modify_time, load_var, save_var, cat, relative_path, printable_path, printable_size
+from .treeshake import treeshake, macros_expand
+from .utils import di, defines_key, delete, md5s, modify_time, load_var, save_var, cat, relative_path, printable_path, printable_size
 from .GlassConfig import GlassConfig
 from .GLConfig import GLConfig
 from .GLObject import GLObject
@@ -27,29 +28,32 @@ class BaseShader(GLObject):
 		"binding_type": None,
 		"need_number": False,
 	}
+	_type = None
 
-	def __init__(self, shader_type):
+	def __init__(self, program):
 		GLObject.__init__(self)
-		self._type = shader_type
-		self._code = ""
-		self._clean_code = ""
-		self._comments_set = set()
-		self._line_message_map = {}
-		self._file_name = ""
-		self._include_paths = [""]
-		self._predefines = {}
-		self._compiled_but_not_applied = False
-		self._should_recompile = True
+		self._program_id:int = id(program)
+		self._code:str = ""
+		self._clean_code:str = ""
+		self._comments_set:set = set()
+		self._line_message_map:dict = {}
+		self._file_name:str = ""
+		self._compiled_but_not_applied:bool = False
+		self._should_recompile:bool = True
+		self._max_modify_time:int = 0
 
-		self.attributes_info = {}
-		self.geometry_in = ""
-		self.uniforms_info = {}
-		self.uniform_blocks_info = {}
-		self.shader_storage_blocks_info = {}
-		self.structs_info = {}
-		self.outs_info = {}
-		self.work_group_size = tuple()
-		self.related_files = []
+		self.attributes_info:dict = {}
+		self.geometry_in:str = ""
+		self.uniforms_info:dict = {}
+		self.uniform_blocks_info:dict = {}
+		self.shader_storage_blocks_info:dict = {}
+		self.structs_info:dict = {}
+		self.outs_info:dict = {}
+		self.work_group_size:tuple = tuple()
+		self.related_files:list = []
+
+		self._include_paths:list = [""]
+		self._defines:dict = {}
 
 	@delete
 	def clear(self):
@@ -66,26 +70,6 @@ class BaseShader(GLObject):
 	@delete
 	def is_bound(self):
 		pass
-
-	@classmethod
-	def load(cls, file_name:str, include_paths:list=None):
-		if include_paths is None:
-			include_paths = []
-		
-		if not os.path.isfile(file_name):
-			raise FileNotFoundError(file_name)
-		
-		file_name = os.path.abspath(file_name).replace("\\", "/")
-		if file_name in cls._shader_map:
-			return cls._shader_map[file_name]
-		else:
-			shader = cls()
-			for include_path in include_paths:
-				shader.add_include_path(include_path)
-				
-			shader.compile(file_name)
-			cls._shader_map[file_name] = shader
-			return shader
 
 	@property
 	def type(self):
@@ -118,13 +102,20 @@ class BaseShader(GLObject):
 
 		used_code = self._code
 		if not GlassConfig.debug:
-			used_code = minifyc(self._code)
+			# used_code = self._code
+			# used_code = minifyc(self._code)
+			used_code = minifyc(treeshake(self._code))
 
 		if GlassConfig.print:
 			print(f"compiling shader: {printable_path(self.file_name)} {printable_size(used_code)} ", end="", flush=True)
 
-		if not os.path.isdir("temp_shaders"):
-			os.makedirs("temp_shaders")
+		if GlassConfig.debug:
+			if not os.path.isdir("used_shaders"):
+				os.makedirs("used_shaders")
+
+			out_file = open("used_shaders/" + os.path.basename(self.file_name), "w")
+			out_file.write(self._code)
+			out_file.close()
 
 		GL.glShaderSource(self._id, used_code)
 		GL.glCompileShader(self._id)
@@ -168,6 +159,10 @@ class BaseShader(GLObject):
 			print("done")
 
 	def _test_should_recompile(self):
+		if GlassConfig.recompile:
+			self._should_recompile = True
+			return True
+
 		meta_mtime = modify_time(self._meta_file_name)
 		self._max_modify_time = 0
 
@@ -206,19 +201,19 @@ class BaseShader(GLObject):
 		self._should_recompile = False
 		return False
 
-	def _predefine_shader_type(self):
+	def _define_shader_type(self):
 		if self._type == GL.GL_VERTEX_SHADER:
-			self.predefine("VERTEX_SHADER")
+			self.define("VERTEX_SHADER")
 		elif self._type == GL.GL_TESS_CONTROL_SHADER:
-			self.predefine("TESS_CONTROL_SHADER")
+			self.define("TESS_CONTROL_SHADER")
 		elif self._type == GL.GL_TESS_EVALUATION_SHADER:
-			self.predefine("TESS_EVALUATION_SHADER")
+			self.define("TESS_EVALUATION_SHADER")
 		elif self._type == GL.GL_GEOMETRY_SHADER:
-			self.predefine("GEOMETRY_SHADER")
+			self.define("GEOMETRY_SHADER")
 		elif self._type == GL.GL_FRAGMENT_SHADER:
-			self.predefine("FRAGMENT_SHADER")
+			self.define("FRAGMENT_SHADER")
 		elif self._type == GL.GL_COMPUTE_SHADER:
-			self.predefine("COMPUTE_SHADER")
+			self.define("COMPUTE_SHADER")
 
 	def _collect_info(self, file_name):
 		abs_name = os.path.abspath(file_name).replace("\\", "/")
@@ -226,14 +221,14 @@ class BaseShader(GLObject):
 		self.related_files = [abs_name]
 
 		self.add_include_path(".")
-		self._predefine_shader_type()
+		self._define_shader_type()
 		include_path = os.path.dirname(abs_name)
 		if not os.path.isabs(file_name):
 			include_path = relative_path(include_path)
 		self.add_include_path(include_path)
 		self.related_files.extend(self._replace_includes())
 
-	def compile(self, file_name):
+	def compile(self, file_name:str):
 		if self.is_compiled and not self._compiled_but_not_applied:
 			raise RuntimeError("compiled shader cannot compile other files")
 
@@ -245,12 +240,15 @@ class BaseShader(GLObject):
 		used_name = rel_name if len(rel_name) < len(abs_name) else abs_name
 		self._file_name = used_name
 		base_name = os.path.basename(abs_name)
-		self._meta_file_name = GlassConfig.cache_folder + "/" + base_name + "_" + md5s(GLConfig.renderer + "/" + abs_name) + ".meta"
+
+		md5_key = f"{GLConfig.renderer}/{abs_name}{defines_key(self.defines)}"
+		md5_value = md5s(md5_key)
+		self._meta_file_name = GlassConfig.cache_folder + "/" + base_name + "_" + md5_value + ".meta"
 
 		if self._test_should_recompile():
 			self._collect_info(file_name)
 
-			self._clean_code = ShaderParser.delete_C_comments(self._code)
+			self._clean_code = macros_expand(self._code)
 			self.attributes_info = {}
 			self.geometry_in = ""
 			self.uniforms_info = {}
@@ -279,15 +277,49 @@ class BaseShader(GLObject):
 
 		self._compiled_but_not_applied = True
 
-	def add_include_path(self, include_path):
-		self._include_paths.insert(0, include_path)
+	def add_include_path(self, include_path:str):
+		full_name = os.path.abspath(include_path).replace("\\", "/")
+		if self._include_paths and self._include_paths[0] == full_name:
+			return False
 
-	def predefine(self, name:str, value=None)->bool:
-		if name in self._predefines and self._predefines[name] == value:
+		self._include_paths.insert(0, full_name)
+		return True
+
+	def remove_include_path(self, include_path:str):
+		full_name = os.path.abspath(include_path).replace("\\", "/")
+		if full_name not in self._include_paths:
+			return False
+
+		while full_name in self._include_paths:
+			self._include_paths.remove(full_name)
+
+		return True
+
+	@property
+	def include_paths(self)->list:
+		return self._include_paths + di(self._program_id).include_paths
+
+	def define(self, name:str, value=None)->bool:
+		if name in self._defines and self._defines[name] == value:
 			return False
 		
-		self._predefines[name] = value
+		self._defines[name] = value
 		return True
+	
+	def undef(self, name:str)->bool:
+		if name not in self._defines:
+			return False
+		
+		del self._defines[name]
+		return True
+	
+	@property
+	def defines(self)->dict:
+		defines = {}
+		program = di(self._program_id)
+		defines.update(program.defines)
+		defines.update(self._defines)
+		return defines
 
 	def _find_comments(self):
 		self._comments_set.clear()
@@ -329,13 +361,13 @@ class BaseShader(GLObject):
 				break
 
 	def _replace_includes(self):
-		predefine_str = ""
-		for name, value in self._predefines.items():
+		defines_str = ""
+		for name, value in self.defines.items():
 			if value is None:
-				predefine_str += f"#define {name}\n"
+				defines_str += f"#define {name}\n"
 			else:
-				predefine_str += f"#define {name} {value}\n"
-		lines_of_predefine_str = ShaderParser.lines(predefine_str)
+				defines_str += f"#define {name} {value}\n"
+		lines_of_defines_str = ShaderParser.lines(defines_str)
 		
 		len_version = len("#version")
 		self._find_comments()
@@ -343,19 +375,19 @@ class BaseShader(GLObject):
 		while True:
 			pos_version = self._code.find("#version", pos_version)
 			if pos_version == -1:
-				if predefine_str:
-					self._code = predefine_str + self._code
+				if defines_str:
+					self._code = defines_str + self._code
 				break
 			elif pos_version in self._comments_set:
 				pos_version += len_version
 				continue
 			else:
 				pos_endl = self._code.find("\n", pos_version)
-				if predefine_str:
+				if defines_str:
 					if pos_endl == -1:
-						self._code = self._code + "\n" + predefine_str
+						self._code = self._code + "\n" + defines_str
 					else:
-						self._code = self._code[:pos_endl+1] + predefine_str + self._code[pos_endl+1:]
+						self._code = self._code[:pos_endl+1] + defines_str + self._code[pos_endl+1:]
 				break
 		line_num_version = ShaderParser.line_of(self._code, pos_version)
 
@@ -368,10 +400,10 @@ class BaseShader(GLObject):
 		for i in range(1, n_lines+1):
 			if i <= line_num_version:
 				self._line_message_map[i] = self._file_name + ":" + str(i) + ": {message_type}: "
-			elif i < line_num_version + lines_of_predefine_str:
+			elif i < line_num_version + lines_of_defines_str:
 				self._line_message_map[i] = self._file_name + ":" + str(line_num_version) + ": {message_type}: "
 			else:
-				self._line_message_map[i] = self._file_name + ":" + str(i-lines_of_predefine_str+1) + ": {message_type}: "
+				self._line_message_map[i] = self._file_name + ":" + str(i-lines_of_defines_str+1) + ": {message_type}: "
 
 		included_files = set()
 		should_find_comments = False
@@ -412,7 +444,7 @@ class BaseShader(GLObject):
 			include_filename = self._code[pos_filename_start : pos_filename_end+1]
 			found = False
 
-			for include_path in self._include_paths:
+			for include_path in self.include_paths:
 				if include_path and not os.path.isdir(include_path):
 					continue
 
@@ -448,7 +480,7 @@ class BaseShader(GLObject):
 					for i in range(include_line_num, include_line_end):
 						self._line_message_map[i] = used_name + ":" + str(i-include_line_num+1) + ": {message_type}: "
 				
-					self._include_paths.insert(0, os.path.dirname(full_name))
+					self.add_include_path(os.path.dirname(full_name))
 					should_find_comments = True
 				else:
 					should_find_comments = False
@@ -498,43 +530,19 @@ class BaseShader(GLObject):
 		return error_messages, warning_messages
 
 class VertexShader(BaseShader):
-
-	_shader_map = {}
-
-	def __init__(self):
-		BaseShader.__init__(self, GL.GL_VERTEX_SHADER)
+	_type = GL.GL_VERTEX_SHADER
 
 class FragmentShader(BaseShader):
-
-	_shader_map = {}
-
-	def __init__(self):
-		BaseShader.__init__(self, GL.GL_FRAGMENT_SHADER)
+	_type = GL.GL_FRAGMENT_SHADER
 
 class GeometryShader(BaseShader):
-
-	_shader_map = {}
-
-	def __init__(self):
-		BaseShader.__init__(self, GL.GL_GEOMETRY_SHADER)
+	_type = GL.GL_GEOMETRY_SHADER
 
 class ComputeShader(BaseShader):
-
-	_shader_map = {}
-
-	def __init__(self):
-		BaseShader.__init__(self, GL.GL_COMPUTE_SHADER)
+	_type = GL.GL_COMPUTE_SHADER
 
 class TessControlShader(BaseShader):
-
-	_shader_map = {}
-
-	def __init__(self):
-		BaseShader.__init__(self, GL.GL_TESS_CONTROL_SHADER)
+	_type = GL.GL_TESS_CONTROL_SHADER
 
 class TessEvaluationShader(BaseShader):
-
-	_shader_map = {}
-
-	def __init__(self):
-		BaseShader.__init__(self, GL.GL_TESS_EVALUATION_SHADER)
+	_type = GL.GL_TESS_EVALUATION_SHADER

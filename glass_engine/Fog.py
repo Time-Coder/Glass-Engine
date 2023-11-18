@@ -4,20 +4,27 @@ from enum import Enum
 from OpenGL import GL
 
 from glass.utils import checktype
+from glass.MetaInstancesRecorder import MetaInstancesRecorder
 from glass import GLInfo
+from .GlassEngineConfig import GlassEngineConfig
 
-class Fog:
+class Fog(metaclass=MetaInstancesRecorder):
 
     class Mode(Enum):
         Linear = GL.GL_LINEAR
         Exp = GL.GL_EXP
         Exp2 = GL.GL_EXP2
 
+    @MetaInstancesRecorder.init
     def __init__(self):
         self._mode = Fog.Mode.Exp
         self._color = glm.vec3(1, 1, 1)
         self._extinction_density = 0
         self._inscattering_density = 0
+
+    @MetaInstancesRecorder.delete
+    def __del__(self):
+        pass
 
     def apply(self, color:(glm.vec3, glm.vec4), camera_pos:glm.vec3, frag_pos:glm.vec3):
         if self.extinction_density < 1E-6 and \
@@ -73,6 +80,7 @@ class Fog:
     def density(self, density:float):
         self._extinction_density = density
         self._inscattering_density = density
+        GlassEngineConfig._update_fog()
 
     @property
     def extinction_density(self)->float:
@@ -82,6 +90,7 @@ class Fog:
     @checktype
     def extinction_density(self, density:float):
         self._extinction_density = density
+        GlassEngineConfig._update_fog()
 
     @property
     def inscattering_density(self)->float:
@@ -91,4 +100,5 @@ class Fog:
     @checktype
     def inscattering_density(self, density:float):
         self._inscattering_density = density
+        GlassEngineConfig._update_fog()
         

@@ -13,12 +13,18 @@ in vec3 view_dir;
 uniform samplerCube skybox_map;
 uniform float sky_distance;
 uniform Camera camera;
+
+#if USE_FOG
 uniform Fog fog;
+#endif
 
 void main()
 {
     frag_color = max(texture(skybox_map, tex_coord), 0.0);
+
+#if USE_FOG
     frag_color.rgb = fog_apply(fog, frag_color.rgb, sky_distance);
+#endif
 
     view_pos = sky_distance * normalize(view_dir);
     view_normal = vec3(0);

@@ -1,11 +1,16 @@
 #version 430 core
 
+#if USE_BINDLESS_TEXTURE
 #extension GL_ARB_bindless_texture : require
+#endif
 #extension GL_EXT_texture_array : enable
 
+// vertex
 layout (location = 0) in vec3 position;
 layout (location = 1) in vec3 tex_coord;
 layout (location = 2) in vec4 color;
+
+// instance
 layout (location = 3) in vec4 affine_transform_row0;
 layout (location = 4) in vec4 affine_transform_row1;
 layout (location = 5) in vec4 affine_transform_row2;
@@ -51,10 +56,13 @@ void main()
     vs_out.env_map_handle = env_map_handle;
     vs_out.visible = visible;
     gl_Position = view_to_NDC(camera, vs_out.view_pos);
+
+#if USE_SHADING_MODEL_FLAT || USE_SHADING_MODEL_GOURAUD
     if (material.shading_model == SHADING_MODEL_FLAT ||
         material.shading_model == SHADING_MODEL_GOURAUD)
     {
         InternalMaterial internal_material = fetch_internal_material(color, material, tex_coord.st);
         vs_out.preshading_color = lighting(internal_material, camera, camera.abs_position, world_pos, world_normal);
     }
+#endif
 }

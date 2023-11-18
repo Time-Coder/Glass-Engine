@@ -1,5 +1,6 @@
 from .CommonRenderer import CommonRenderer
 from ..Frame import Frame
+from ..GlassEngineConfig import GlassEngineConfig
 
 from glass import \
     ShaderProgram, GLConfig, FBO, sampler2DMS, sampler2D, usampler2D, usampler2DMS
@@ -25,12 +26,11 @@ class DeferredRenderer(CommonRenderer):
         if "deferred_render" in self.programs:
             return self.programs["deferred_render"]
         
+        self_folder = os.path.dirname(os.path.abspath(__file__))
         program = ShaderProgram()
+        GlassEngineConfig.define_for_program(program)
         program.compile(Frame.draw_frame_vs)
-        if "GL_ARB_bindless_texture" in GLConfig.available_extensions:
-            program.compile(os.path.dirname(os.path.abspath(__file__)) + "/../glsl/Pipelines/deferred_rendering/deferred_rendering.fs")
-        else:
-            program.compile(os.path.dirname(os.path.abspath(__file__)) + "/../glsl/Pipelines/deferred_rendering/deferred_rendering_nobindless.fs")
+        program.compile(self_folder + "/../glsl/Pipelines/deferred_rendering/deferred_rendering.fs")
 
         program["PointLights"].bind(self.scene.point_lights)
         program["DirLights"].bind(self.scene.dir_lights)
@@ -47,14 +47,10 @@ class DeferredRenderer(CommonRenderer):
         
         self_folder = os.path.dirname(os.path.abspath(__file__))
         program = ShaderProgram()
+        GlassEngineConfig.define_for_program(program)
         program.compile(self_folder + "/../glsl/Pipelines/forward_rendering/forward_rendering.vs")
-        
-        if "GL_ARB_bindless_texture" in GLConfig.available_extensions:
-            program.compile(self_folder + "/../glsl/Pipelines/forward_rendering/forward_rendering.gs")
-            program.compile(self_folder + "/../glsl/Pipelines/deferred_rendering/draw_to_gbuffer.fs")
-        else:
-            program.compile(self_folder + "/../glsl/Pipelines/forward_rendering/forward_rendering_nobindless.gs")
-            program.compile(self_folder + "/../glsl/Pipelines/deferred_rendering/draw_to_gbuffer_nobindless.fs")
+        program.compile(self_folder + "/../glsl/Pipelines/forward_rendering/forward_rendering.gs")
+        program.compile(self_folder + "/../glsl/Pipelines/deferred_rendering/draw_to_gbuffer.fs")
 
         program["PointLights"].bind(self.scene.point_lights)
         program["DirLights"].bind(self.scene.dir_lights)
@@ -70,12 +66,9 @@ class DeferredRenderer(CommonRenderer):
         
         self_folder = os.path.dirname(os.path.abspath(__file__))
         program = ShaderProgram()
-        if "GL_ARB_bindless_texture" in GLConfig.available_extensions:
-            program.compile(self_folder + "/../glsl/Pipelines/forward_rendering/forward_draw_lines.vs")
-            program.compile(self_folder + "/../glsl/Pipelines/deferred_rendering/draw_points_to_gbuffer.fs")
-        else:
-            program.compile(self_folder + "/../glsl/Pipelines/forward_rendering/forward_draw_lines_nobindless.vs")
-            program.compile(self_folder + "/../glsl/Pipelines/deferred_rendering/draw_points_to_gbuffer_nobindless.fs")
+        GlassEngineConfig.define_for_program(program)
+        program.compile(self_folder + "/../glsl/Pipelines/forward_rendering/forward_draw_lines.vs")
+        program.compile(self_folder + "/../glsl/Pipelines/deferred_rendering/draw_points_to_gbuffer.fs")
 
         program["PointLights"].bind(self.scene.point_lights)
         program["DirLights"].bind(self.scene.dir_lights)
@@ -91,12 +84,9 @@ class DeferredRenderer(CommonRenderer):
         
         self_folder = os.path.dirname(os.path.abspath(__file__))
         program = ShaderProgram()
-        if "GL_ARB_bindless_texture" in GLConfig.available_extensions:
-            program.compile(self_folder + "/../glsl/Pipelines/forward_rendering/forward_draw_points.vs")
-            program.compile(self_folder + "/../glsl/Pipelines/deferred_rendering/draw_points_to_gbuffer.fs")
-        else:
-            program.compile(self_folder + "/../glsl/Pipelines/forward_rendering/forward_draw_points_nobindless.vs")
-            program.compile(self_folder + "/../glsl/Pipelines/deferred_rendering/draw_points_to_gbuffer_nobindless.fs")
+        GlassEngineConfig.define_for_program(program)
+        program.compile(self_folder + "/../glsl/Pipelines/forward_rendering/forward_draw_points.vs")
+        program.compile(self_folder + "/../glsl/Pipelines/deferred_rendering/draw_points_to_gbuffer.fs")
 
         program["PointLights"].bind(self.scene.point_lights)
         program["DirLights"].bind(self.scene.dir_lights)
@@ -248,7 +238,8 @@ class DeferredRenderer(CommonRenderer):
             self.deferred_render_program["env_center_and_mixed_value_map"] = env_center_and_mixed_value_map
             self.deferred_render_program["mixed_uint_map"] = mixed_uint_map
             self.deferred_render_program["background"] = self.scene.background
-            self.deferred_render_program["fog"] = self.scene.fog
+            if GlassEngineConfig["USE_FOG"]:
+                self.deferred_render_program["fog"] = self.scene.fog
             self.deferred_render_program.draw_triangles(Frame.vertices, Frame.indices)
 
         self.gbuffer.draw_to_active(GL.GL_DEPTH_ATTACHMENT)

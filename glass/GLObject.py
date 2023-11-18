@@ -1,12 +1,10 @@
 import numpy as np
 from OpenGL import GL
 
-from .WeakSet import WeakSet
 from .GLConfig import GLConfig
+from .MetaInstancesRecorder import MetaInstancesRecorder
 
-class _MetaGLObject(type):
-
-    _all_instances = {}
+class MetaGLObject(MetaInstancesRecorder):
 
     @property
     def active_id(cls):
@@ -14,24 +12,14 @@ class _MetaGLObject(type):
             return GL.glGetIntegerv(cls._basic_info["binding_type"])
         except:
             return 0
-        
-    @property
-    def all_instances(cls):
-        if cls not in _MetaGLObject._all_instances:
-            _MetaGLObject._all_instances[cls] = WeakSet()
 
-        return _MetaGLObject._all_instances[cls]
+class GLObject(metaclass=MetaGLObject):
 
-class GLObject(metaclass=_MetaGLObject):
-
+    @MetaGLObject.init
     def __init__(self, context_shared=True):
         self._id = 0
         self._context_shared = context_shared
         self._context = 0
-        if self.__class__ not in _MetaGLObject._all_instances:
-            _MetaGLObject._all_instances[self.__class__] = WeakSet()
-
-        _MetaGLObject._all_instances[self.__class__].add(self)
 
     def __hash__(self)->int:
         return id(self)
@@ -72,10 +60,8 @@ class GLObject(metaclass=_MetaGLObject):
 
         self._id = 0
 
+    @MetaGLObject.delete
     def __del__(self):
-        if self.__class__ in _MetaGLObject._all_instances:
-            _MetaGLObject._all_instances[self.__class__].remove(self)
-
         if self._id == 0:
             return
 
@@ -85,10 +71,11 @@ class GLObject(metaclass=_MetaGLObject):
         except:
             pass
 
+        basic_info = self.__class__._basic_info
         if is_bound:
             try:
-                target_type = self.__class__._basic_info["target_type"]
-                bind_func = self.__class__._basic_info["bind_func"]
+                target_type = basic_info["target_type"]
+                bind_func = basic_info["bind_func"]
                 if target_type is None:
                     bind_func(0)
                 else:
@@ -97,8 +84,8 @@ class GLObject(metaclass=_MetaGLObject):
                 pass
 
         try:
-            del_func = self.__class__._basic_info["del_func"]
-            need_number = self.__class__._basic_info["need_number"]
+            del_func = basic_info["del_func"]
+            need_number = basic_info["need_number"]
             if need_number:
                 del_func(1, np.array([self._id]))
             else:

@@ -1,6 +1,8 @@
 #version 430 core
 
+#if USE_BINDLESS_TEXTURE
 #extension GL_ARB_bindless_texture : require
+#endif
 
 in VertexOut
 {
@@ -35,7 +37,10 @@ uniform vec3 mesh_center;
 void main()
 {
     if (fs_in.visible == 0)
+    {
         discard;
+    }
+
     vec2 tex_coord = fs_in.tex_coord.st;
     mat3 view_TBN = fs_in.view_TBN;
     vec3 view_pos = fs_in.view_pos;
@@ -43,6 +48,7 @@ void main()
     change_geometry(material, tex_coord, view_TBN, view_pos);
     InternalMaterial internal_material = fetch_internal_material(fs_in.color, material, tex_coord);
     internal_material.preshading_color = fs_in.preshading_color;
+
     write_to_gbuffer(
         internal_material, view_pos, view_TBN[2], env_center, fs_in.env_map_handle, false,
         view_pos_and_alpha, view_normal_and_emission_r, ambient_and_emission_g,

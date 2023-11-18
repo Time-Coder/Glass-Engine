@@ -1,5 +1,6 @@
 from .Mesh import Mesh
 from .Camera import Camera
+from .GlassEngineConfig import GlassEngineConfig
 
 from glass.utils import checktype
 from glass import Vertex, samplerCube, ShaderProgram
@@ -136,5 +137,7 @@ class SkyBox(Mesh):
         self.program["camera"] = camera
         self.program["skybox_map"] = self.skybox_map
         self.program["sky_distance"] = scene.background.distance
-        self.program["fog"] = scene.fog
+        if GlassEngineConfig["USE_FOG"]:
+            self.program["fog"] = scene.fog
+            
         Mesh.draw(self, self.program)

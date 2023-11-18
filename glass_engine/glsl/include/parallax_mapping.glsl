@@ -46,7 +46,7 @@ void parallax_mapping(sampler2D height_map, float height_scale, mat3 view_TBN, i
     }
 
     int times = 0;
-    float middle_d;
+    float middle_d = (lower_d*(z_bump_upper - z_line_upper) + upper_d*(z_line_lower - z_bump_lower)) / (z_bump_upper -  z_line_upper + z_line_lower - z_bump_lower);
     while (upper_d - lower_d > 1E-6 && times < 20)
     {
         middle_d = (lower_d*(z_bump_upper - z_line_upper) + upper_d*(z_line_lower - z_bump_lower)) / (z_bump_upper -  z_line_upper + z_line_lower - z_bump_lower);
@@ -76,22 +76,45 @@ void change_geometry(Material material, inout vec2 tex_coord, inout mat3 view_TB
 {
     view_TBN[2] = normalize(view_TBN[2]);
     if (!gl_FrontFacing)
+    {
         view_TBN[2] = -view_TBN[2];
+    }
+
     if (hasnan(view_TBN))
+    {
         return;
+    }
+
     if (textureValid(material.height_map))
+    {
         parallax_mapping(material.height_map, material.height_scale, view_TBN, view_pos, tex_coord);
+    }
+
     if (textureValid(material.normal_map))
     {
         vec3 normal_in_tbn = 2*texture(material.normal_map, tex_coord).rgb-1;
         float len_normal = length(normal_in_tbn);
-        if (len_normal < 1E-6) normal_in_tbn = vec3(0);
-        else normal_in_tbn /= len_normal;
+        if (len_normal < 1E-6)
+        {
+            normal_in_tbn = vec3(0);
+        }
+        else
+        {
+            normal_in_tbn /= len_normal;
+        }
+
         view_TBN[0] = material.height_scale/0.05 * view_TBN[0]/dot(view_TBN[0], view_TBN[0]);
         view_TBN[1] = material.height_scale/0.05 * view_TBN[1]/dot(view_TBN[1], view_TBN[1]);
         view_TBN[2] = view_TBN * normal_in_tbn;
+        
         len_normal = length(view_TBN[2]);
-        if (len_normal < 1E-6) view_TBN[2] = vec3(0);
-        else view_TBN[2] /= len_normal;
+        if (len_normal < 1E-6)
+        {
+            view_TBN[2] = vec3(0);
+        }
+        else
+        {
+            view_TBN[2] /= len_normal;
+        }
     }
 }

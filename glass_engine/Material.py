@@ -2,7 +2,9 @@ from glass.utils import checktype
 from glass import sampler2D
 from glass.ImageLoader import ImageLoader
 from glass.WeakSet import WeakSet
+from glass.MetaInstancesRecorder import MetaInstancesRecorder
 from .callback_vec import callback_vec3, callback_vec4
+from .GlassEngineConfig import GlassEngineConfig
 
 import glm
 from enum import Enum
@@ -74,7 +76,7 @@ def param_setter(func):
 
     return wrapper
 
-class Material:
+class Material(metaclass=MetaInstancesRecorder):
 
     class ShadingModel(Enum):
         Flat = 0x1
@@ -119,6 +121,7 @@ class Material:
         def __init__(self, ch_name):
             self.ch_name = ch_name
 
+    @MetaInstancesRecorder.init
     def __init__(self, name:str=""):
         self._name:str = name
         self._shading_model:Material.ShadingModel = Material.ShadingModel.PhongBlinn
@@ -173,6 +176,16 @@ class Material:
         self._parent_meshes:WeakSet = WeakSet()
         self._should_callback:bool = True
         self._prop_name:str = ""
+
+        GlassEngineConfig._update_cast_shadows(self._cast_shadows)
+        GlassEngineConfig._update_recv_shadows(self._recv_shadows)
+        GlassEngineConfig._update_recv_fog(self._fog)
+        GlassEngineConfig._update_dynamic_env(self._dynamic_env_mapping)
+        GlassEngineConfig._update_shading_model()
+
+    @MetaInstancesRecorder.delete
+    def __del__(self):
+        pass
 
     @property
     def name(self)->str:
@@ -233,6 +246,7 @@ class Material:
     @param_setter
     def fog(self, fog:bool):
         self._fog = fog
+        GlassEngineConfig._update_recv_fog(fog)
 
     @property
     def diffuse_bands(self)->int:
@@ -287,6 +301,7 @@ class Material:
     @param_setter
     def recv_shadows(self, flag:bool):
         self._recv_shadows = flag
+        GlassEngineConfig._update_recv_shadows(flag)
 
     @property
     def cast_shadows(self):
@@ -296,6 +311,7 @@ class Material:
     @param_setter
     def cast_shadows(self, flag:bool):
         self._cast_shadows = flag
+        GlassEngineConfig._update_cast_shadows(flag)
 
     @property
     def has_transparent(self):
@@ -342,6 +358,7 @@ class Material:
     @param_setter
     def dynamic_env_mapping(self, flag:bool):
         self._dynamic_env_mapping = flag
+        GlassEngineConfig._update_dynamic_env(flag)
 
     @property
     def env_max_bake_times(self):
@@ -363,6 +380,7 @@ class Material:
             shading_model = Material.ShadingModel.Unlit
 
         self._shading_model = shading_model
+        GlassEngineConfig._update_shading_model()
 
     @property
     def ambient(self)->callback_vec3:

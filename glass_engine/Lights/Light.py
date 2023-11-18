@@ -3,6 +3,7 @@ from ..callback_vec import callback_vec3
 
 from glass.utils import checktype, di
 from glass import GLConfig
+from ..GlassEngineConfig import GlassEngineConfig
 
 import glm
 
@@ -15,6 +16,26 @@ class Light(SceneNode):
         self._generate_shadows:bool = True
         self._rim_power:float = 0.3
         self._flats:set = set()
+
+        cls_name = self.__class__.__name__
+        if cls_name == "DirLight":
+            GlassEngineConfig._update_dir_lights()
+            GlassEngineConfig._update_dir_lights_generate_shadows(self._generate_shadows)
+        elif cls_name == "PointLight":
+            GlassEngineConfig._update_point_lights()
+            GlassEngineConfig._update_point_lights_generate_shadows(self._generate_shadows)
+        elif cls_name == "SpotLight":
+            GlassEngineConfig._update_spot_lights()
+            GlassEngineConfig._update_spot_lights_generate_shadows(self._generate_shadows)
+
+    def __del__(self):
+        cls_name = self.__class__.__name__
+        if cls_name == "DirLight":
+            GlassEngineConfig._update_dir_lights()
+        elif cls_name == "PointLight":
+            GlassEngineConfig._update_point_lights()
+        elif cls_name == "SpotLight":
+            GlassEngineConfig._update_spot_lights()
 
     def _set_transform_dirty(self, scenes):
         self._transform_dirty.update(scenes)
@@ -59,6 +80,14 @@ class Light(SceneNode):
     def generate_shadows(self, flag:bool):
         self._generate_shadows = flag
         self._update_generate_shadows()
+
+        cls_name = self.__class__.__name__
+        if cls_name == "DirLight":
+            GlassEngineConfig._update_dir_lights_generate_shadows(self._generate_shadows)
+        elif cls_name == "PointLight":
+            GlassEngineConfig._update_point_lights_generate_shadows(self._generate_shadows)
+        elif cls_name == "SpotLight":
+            GlassEngineConfig._update_spot_lights_generate_shadows(self._generate_shadows)
 
     @property
     def rim_power(self):

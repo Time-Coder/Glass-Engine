@@ -1,6 +1,8 @@
 #version 430 core
 
+#if USE_BINDLESS_TEXTURE
 #extension GL_ARB_bindless_texture : require
+#endif
 #extension GL_EXT_texture_array : require
 
 layout (lines, invocations=6) in;
@@ -58,12 +60,14 @@ void main()
         env_map_handle = gs_in[i].env_map_handle;
         preshading_color = vec3(0);
 
+#if USE_SHADING_MODEL_FLAT || USE_SHADING_MODEL_GOURAUD
         if (material.shading_model == SHADING_MODEL_FLAT ||
             material.shading_model == SHADING_MODEL_GOURAUD)
         {
             InternalMaterial internal_material = fetch_internal_material(gs_in[i].color, material, gs_in[i].tex_coord.st);
             preshading_color = lighting(internal_material, CSM_camera, camera.abs_position, world_pos, world_normal);
         }
+#endif
         
         gl_Position = view_to_NDC(camera, gs_out.view_pos);
         EmitVertex();

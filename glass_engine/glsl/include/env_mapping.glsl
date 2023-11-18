@@ -6,16 +6,23 @@
 
 vec3 fetch_env_color(
     vec3 out_dir, float roughness,
-    Background background, Fog fog
+    Background background
+#if USE_FOG
+    , Fog fog
+#endif
+#if USE_DYNAMIC_ENV_MAPPING
     , bool dynamic_env_mapping
     , sampler2D env_map
+#endif
 )
 {
     vec4 env_color = vec4(0);
     float bias = 0.7*roughness;
 
+#if USE_DYNAMIC_ENV_MAPPING
     if (dynamic_env_mapping && textureValid(env_map))
         env_color = max(textureSphere(env_map, out_dir, bias), 0.0);
+#endif
     
     vec3 background_color = background.color.rgb;
     if (textureValid(background.skybox_map))
@@ -25,16 +32,24 @@ vec3 fetch_env_color(
     }
     else if (textureValid(background.skydome_map))
         background_color = max(textureSphere(background.skydome_map, out_dir, bias).rgb, 0.0);
-    background_color = fog_apply(fog, background_color, background.distance);
-    env_color.rgb = mix(background_color, env_color.rgb, env_color.a);
 
-    return env_color.rgb;
+#if USE_FOG
+    background_color = fog_apply(fog, background_color, background.distance);
+#endif
+
+    return mix(background_color, env_color.rgb, env_color.a);
 }
 
 vec4 sphere_reflect_refract_color(
     InternalMaterial material, Camera CSM_camera,
     vec3 env_center, vec3 view_dir, vec3 frag_pos, vec3 frag_normal,
-    Background background, Fog fog, sampler2D env_map
+    Background background
+#if USE_FOG
+    , Fog fog
+#endif
+#if USE_DYNAMIC_ENV_MAPPING
+    , sampler2D env_map
+#endif
 )
 {
     vec4 reflection = material.reflection;
@@ -69,9 +84,14 @@ vec4 sphere_reflect_refract_color(
         {
             reflection_color = reflection_factor * fetch_env_color(
                 reflect_out_dir, material.roughness,
-                background, fog
+                background
+#if USE_FOG
+                , fog
+#endif
+#if USE_DYNAMIC_ENV_MAPPING
                 , material.dynamic_env_mapping
                 , env_map
+#endif
             );
             vec3 specular_color = get_specular_color(material, CSM_camera, reflect_out_dir, frag_pos, frag_normal);
             reflection_color += reflection_factor*specular_color;
@@ -96,9 +116,14 @@ vec4 sphere_reflect_refract_color(
                 {
                     refraction_color += refraction_factor * fetch_env_color(
                         refract_out_dir, material.roughness,
-                        background, fog
+                        background
+#if USE_FOG
+                        , fog
+#endif
+#if USE_DYNAMIC_ENV_MAPPING
                         , material.dynamic_env_mapping
                         , env_map
+#endif
                     );
                     if (i >= 1)
                         material.recv_shadows = false;
@@ -132,9 +157,14 @@ vec4 sphere_reflect_refract_color(
             {
                 refraction_color += refraction_factor * fetch_env_color(
                     refract_out_dir, material.roughness,
-                    background, fog
+                    background
+#if USE_FOG
+                    , fog
+#endif
+#if USE_DYNAMIC_ENV_MAPPING
                     , material.dynamic_env_mapping
                     , env_map
+#endif
                 );
                 if (i >= 1)
                     material.recv_shadows = false;
@@ -163,7 +193,13 @@ vec4 sphere_reflect_refract_color(
 vec4 reflect_refract_color(
     InternalMaterial material, Camera CSM_camera,
     vec3 env_center, vec3 view_dir, vec3 frag_pos, vec3 frag_normal,
-    Background background, Fog fog, sampler2D env_map
+    Background background
+#if USE_FOG
+    , Fog fog
+#endif
+#if USE_DYNAMIC_ENV_MAPPING
+    , sampler2D env_map
+#endif
 )
 {
     vec4 reflection = material.reflection;
@@ -195,8 +231,14 @@ vec4 reflect_refract_color(
     {
         vec3 reflect_out_dir = normalize(reflect(view_dir, frag_normal));
         reflection_color = reflection_factor * fetch_env_color(
-            reflect_out_dir, material.roughness, background, fog,
-            material.dynamic_env_mapping, env_map
+            reflect_out_dir, material.roughness, background
+#if USE_FOG
+            , fog
+#endif
+#if USE_DYNAMIC_ENV_MAPPING
+            , material.dynamic_env_mapping
+            , env_map
+#endif
         );
         vec3 specular_color = get_specular_color(material, CSM_camera, reflect_out_dir, frag_pos, frag_normal);
         reflection_color += reflection_factor * specular_color;
@@ -210,7 +252,14 @@ vec4 reflect_refract_color(
         vec3 refract_out_dir = normalize(refract(view_dir, frag_normal, refractive_index));
         refraction_color = (1-reflection_factor)*fetch_env_color(
             refract_out_dir, material.roughness,
-            background, fog, material.dynamic_env_mapping, env_map
+            background
+#if USE_FOG
+            , fog
+#endif
+#if USE_DYNAMIC_ENV_MAPPING
+            , material.dynamic_env_mapping
+            , env_map
+#endif
         );
         vec3 specular_color = get_specular_color(material, CSM_camera, refract_out_dir, frag_pos, frag_normal);
         refraction_color += (1 - reflection_factor) * specular_color;

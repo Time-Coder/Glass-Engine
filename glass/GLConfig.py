@@ -589,41 +589,41 @@ class _MetaGLConfig(type):
     @property
     def version(cls)->str:
         if _MetaGLConfig.__gl_version is None:
-            if cls.buffered_current_context is None:
-                _MetaGLConfig.__gl_version = cls.standalone_context.info["GL_VERSION"]
-            else:
+            try:
                 _MetaGLConfig.__gl_version = GL.glGetString(GL.GL_VERSION).decode("utf-8")
+            except:
+                _MetaGLConfig.__gl_version = cls.standalone_context.info["GL_VERSION"]
         
         return _MetaGLConfig.__gl_version
     
     @property
     def major_version(cls)->str:
         if _MetaGLConfig.__gl_major_version is None:
-            if cls.buffered_current_context is None:
-                _MetaGLConfig.__gl_major_version = cls.standalone_context.info["GL_MAJOR_VERSION"]
-            else:
+            try:
                 _MetaGLConfig.__gl_major_version = GL.glGetInteger(GL.GL_MAJOR_VERSION)
+            except:
+                _MetaGLConfig.__gl_major_version = cls.standalone_context.info["GL_MAJOR_VERSION"]                
         
         return _MetaGLConfig.__gl_major_version
     
     @property
     def minor_version(cls)->str:
         if _MetaGLConfig.__gl_minor_version is None:
-            if cls.buffered_current_context is None:
-                _MetaGLConfig.__gl_minor_version = cls.standalone_context.info["GL_MINOR_VERSION"]
-            else:
+            try:
                 _MetaGLConfig.__gl_minor_version = GL.glGetInteger(GL.GL_MINOR_VERSION)
-        
+            except:
+                _MetaGLConfig.__gl_minor_version = cls.standalone_context.info["GL_MINOR_VERSION"]
+
         return _MetaGLConfig.__gl_minor_version
 
     @property
     def renderer(cls)->str:
         if _MetaGLConfig.__gl_renderer is None:
-            if cls.buffered_current_context is None:
-                _MetaGLConfig.__gl_renderer = cls.standalone_context.info["GL_RENDERER"]
-            else:
+            try:
                 _MetaGLConfig.__gl_renderer = GL.glGetString(GL.GL_RENDERER).decode("utf-8")
-        
+            except:
+                _MetaGLConfig.__gl_renderer = cls.standalone_context.info["GL_RENDERER"]
+
         return _MetaGLConfig.__gl_renderer
 
     @property
@@ -643,7 +643,12 @@ class _MetaGLConfig(type):
     @property
     def available_extensions(cls):
         if _MetaGLConfig.__available_extensions is None:
-            extensions = GL.glGetString(GL.GL_EXTENSIONS).decode("utf-8")
+            try:
+                extensions = GL.glGetString(GL.GL_EXTENSIONS).decode("utf-8")
+            except:
+                with cls.standalone_context:
+                    extensions = GL.glGetString(GL.GL_EXTENSIONS).decode("utf-8")
+
             _MetaGLConfig.__available_extensions = extensions.split()
 
         return _MetaGLConfig.__available_extensions

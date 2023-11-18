@@ -1,8 +1,11 @@
 #version 430 core
 
+// vertex
 layout (location = 0) in vec3 position;
 layout (location = 1) in vec3 tex_coord;
 layout (location = 2) in vec4 color;
+
+// instance
 layout (location = 3) in vec4 affine_transform_row0;
 layout (location = 4) in vec4 affine_transform_row1;
 layout (location = 5) in vec4 affine_transform_row2;

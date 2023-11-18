@@ -1,6 +1,8 @@
 #version 430 core
 
+#if USE_BINDLESS_TEXTURE
 #extension GL_ARB_bindless_texture : require
+#endif
 #extension GL_EXT_texture_array : require
 
 layout (triangles) in;
@@ -49,15 +51,21 @@ mat3 choose_good_TBN(int index, mat3 backup_TBN)
         length(gs_in[index].view_TBN[0]) > 1E-6 &&
         length(gs_in[index].view_TBN[1]) > 1E-6 &&
         length(gs_in[index].view_TBN[2]) > 1E-6)
+    {
         return gs_in[index].view_TBN;
+    }
 
     for (int i = 0; i < 3; i++)
+    {
         if (i != index &&
             !hasnan(gs_in[i].view_TBN) &&
             length(gs_in[i].view_TBN[0]) > 1E-6 &&
             length(gs_in[i].view_TBN[1]) > 1E-6 &&
             length(gs_in[i].view_TBN[2]) > 1E-6)
+        {
             return gs_in[i].view_TBN;
+        }
+    }
 
     return backup_TBN;
 }
@@ -94,10 +102,16 @@ void main()
         gs_out.affine_transform = gs_in[i].affine_transform;
         gs_out.view_pos = gl_in[i].gl_Position.xyz + explode_distance * face_view_normal;
         mat3 backup_TBN = mat3(face_view_tangent, face_view_bitangent, face_view_normal);
+
         if (material.shading_model == SHADING_MODEL_FLAT)
+        {
             gs_out.view_TBN = backup_TBN;
+        }
         else
+        {
             gs_out.view_TBN = choose_good_TBN(i, backup_TBN);
+        }
+
         gs_out.color = gs_in[i].color;
         gs_out.back_color = gs_in[i].back_color;
         gs_out.tex_coord = gs_in[i].tex_coord;
@@ -105,16 +119,22 @@ void main()
         env_map_handle = gs_in[i].env_map_handle;
         preshading_color = vec3(0);
         preshading_back_color = vec3(0);
+
+#if USE_SHADING_MODEL_FLAT
         if (material.shading_model == SHADING_MODEL_FLAT)
         {
             InternalMaterial internal_material = fetch_internal_material(face_color, material, face_tex_coord);
             preshading_color = lighting(internal_material, camera, camera.abs_position, face_world_pos, face_world_normal);
         }
+
         if (back_material.shading_model == SHADING_MODEL_FLAT)
         {
             InternalMaterial internal_material = fetch_internal_material(face_back_color, back_material, face_tex_coord);
             preshading_back_color = lighting(internal_material, camera, camera.abs_position, face_world_pos, -face_world_normal);
         }
+#endif
+
+#if USE_SHADING_MODEL_GOURAUD
         if (material.shading_model == SHADING_MODEL_GOURAUD ||
             back_material.shading_model == SHADING_MODEL_GOURAUD)
         {
@@ -131,6 +151,8 @@ void main()
                 preshading_back_color = lighting(internal_material, camera, camera.abs_position, vertex_world_pos, -vertex_world_normal);
             }
         }
+#endif
+
         gl_Position = view_to_NDC(camera, gs_out.view_pos);
         EmitVertex();
     }

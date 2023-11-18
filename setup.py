@@ -28,11 +28,16 @@ glass_engine_extra_files = \
     "README_PYPI.md"
 ]
 glass_engine_extra_files.extend(find_files("glass_engine", "glass_engine/glsl"))
-glass_extra_files = find_files("glass", "glass/glsl")
+
+glass_extra_files = \
+[
+    "tree-sitter-glsl/glsl.dll"
+]
+glass_extra_files.extend(find_files("glass", "glass/glsl"))
 
 setuptools.setup(
     name="glass_engine",
-    version="0.1.25",
+    version="0.1.26",
     author="王炳辉 (BingHui-WANG)",
     author_email="binghui.wang@foxmail.com",
     description="An easy-to-use 3D rendering engine for Python",
@@ -59,7 +64,8 @@ setuptools.setup(
         "maxminddb-geolite2",
         "wget",
         "requests",
-        "chardet"
+        "chardet",
+        "tree-sitter"
     ],
     classifiers=[
         "Programming Language :: Python :: 3",

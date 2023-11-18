@@ -28,10 +28,10 @@ class Uniform:
     #     "<id_normal_var>":
     #     {
     #         "<atom_name>":
-    #       {
-    #           "suffix": "<suffix>"
-    #            "uniforms": set()
-    #       }
+    #         {
+    #             "suffix": "<suffix>"
+    #             "uniforms": set()
+    #         }
     #     }
     # }
 
@@ -185,7 +185,7 @@ class Uniform:
 
     def __init__(self, shader_program):
         self._program_id = id(shader_program)
-        self._should_update_atoms = {}
+        self._atoms_to_update = {}
         self._uniform_var_map = {}
         self._atom_value_map = {}
         self._texture_value_map = {}
@@ -262,7 +262,7 @@ class Uniform:
                 offset = uniform_info["offset"]
                 ACBO.set(binding=binding_point, offset=offset, value=value)
         else:
-            self._should_update_atoms[name] = Uniform._copy(value)
+            self._atoms_to_update[name] = Uniform._copy(value)
 
     @staticmethod
     def _set_atom_func(atom_type):
