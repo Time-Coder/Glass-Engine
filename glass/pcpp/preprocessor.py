@@ -11,7 +11,7 @@
 
 from __future__ import generators, print_function, absolute_import, division
 
-import sys, os, re, codecs, time, copy, traceback
+import sys, os, re, time, copy
 if __name__ == '__main__' and __package__ is None:
     sys.path.append( os.path.dirname( os.path.dirname( os.path.abspath(__file__) ) ) )
 from .parser import STRING_TYPES, default_lexer, trigraph, Macro, Action, OutputDirective, PreprocessorHooks
@@ -692,7 +692,7 @@ class Preprocessor(PreprocessorHooks):
                             else:
                                 repl = self.on_unknown_macro_in_defined_expr(tokens[j])
                                 if repl is None:
-                                    partial_expansion = True
+                                    # partial_expansion = True
                                     result = 'defined('+tokens[j].value+')'
                                 else:
                                     result = "1L" if repl else "0L"
