@@ -2839,7 +2839,7 @@ del _lr_goto_items
             f.write(']\n')
             f.close()
 
-        except IOError as e:
+        except IOError:
             raise
 
 

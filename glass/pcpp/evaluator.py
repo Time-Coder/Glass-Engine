@@ -5,7 +5,7 @@
 
 from __future__ import generators, print_function, absolute_import, division
 
-import sys, os, re, codecs, copy
+import sys, os, re, codecs
 if __name__ == '__main__' and __package__ is None:
     sys.path.append( os.path.dirname( os.path.dirname( os.path.abspath(__file__) ) ) )
 from .ply import yacc
