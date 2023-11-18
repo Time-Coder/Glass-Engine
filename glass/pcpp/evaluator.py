@@ -8,7 +8,8 @@ from __future__ import generators, print_function, absolute_import, division
 import sys, os, re, codecs, copy
 if __name__ == '__main__' and __package__ is None:
     sys.path.append( os.path.dirname( os.path.dirname( os.path.abspath(__file__) ) ) )
-from pcpp.parser import STRING_TYPES, yacc, default_lexer, in_production
+from .ply import yacc
+from .parser import STRING_TYPES, default_lexer, in_production
 
 # The width of signed integer which this evaluator will use
 INTMAXBITS = 64
