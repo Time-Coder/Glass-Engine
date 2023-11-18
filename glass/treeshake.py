@@ -42,7 +42,7 @@ def _get_funcs_and_structs(node, func_defs:dict, struct_defs:dict):
 
         func = \
         {
-            "signature": f"{func_name}({", ".join(arg_types)})",
+            "signature": f"{func_name}({', '.join(arg_types)})",
             "name": func_name,
             "args": args,
             "start": node.start_byte,
