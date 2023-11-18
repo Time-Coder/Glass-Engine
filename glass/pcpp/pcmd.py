@@ -8,7 +8,7 @@ from __future__ import generators, print_function, absolute_import, division
 import sys, argparse, traceback, os, copy, io, re
 if __name__ == '__main__' and __package__ is None:
     sys.path.append( os.path.dirname( os.path.dirname( os.path.abspath(__file__) ) ) )
-from pcpp.preprocessor import Preprocessor, OutputDirective, Action
+from .preprocessor import Preprocessor, OutputDirective, Action
 
 version='1.30'
 

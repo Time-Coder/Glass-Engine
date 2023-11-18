@@ -1,5 +1,5 @@
 from tree_sitter import Language, Parser
-import pcpp
+from .pcpp import pcmd
 import sys
 import os
 import io
@@ -19,7 +19,7 @@ def macros_expand(code:str, defines:dict=None)->str:
             arg += f"={value}"
         cmds.append(arg)
 
-    pcpp.pcmd.CmdPreprocessor(cmds, input, output)
+    pcmd.CmdPreprocessor(cmds, input, output)
     return output.getvalue()
 
 def _get_funcs_and_structs(node, func_defs:dict, struct_defs:dict):
