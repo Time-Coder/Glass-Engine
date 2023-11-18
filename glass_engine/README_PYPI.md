@@ -59,6 +59,9 @@ camera.screen.show() # 相机显示屏显示渲染结果
 
 ## Release note
 
+* version 0.1.28:
+    * 修改 pcpp 冲突 bug
+
 * version 0.1.27:
     * 禁用滚轮
     * 修改 Python 3.7 f-string bug
