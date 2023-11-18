@@ -59,6 +59,10 @@ camera.screen.show() # 相机显示屏显示渲染结果
 
 ## Release note
 
+* version 0.1.26:
+    * 添加 treeshake 功能，自动删除 glsl 无用函数
+    * 添加功能自动剪裁功能，没有用到的功能不参与 glsl 编译
+
 * version 0.1.25:
     * 添加 minifyc 进一步减小 glsl 代码体积，避免 OSError: 0x000000010 bug
 
