@@ -157,8 +157,9 @@ class ShaderProgram(GPUProgram):
         if not is_recompiled:
             return
         
-        self._uniform._atoms_to_update = self._uniform._atom_value_map
-        self._uniform._atom_value_map = {}
+        self._uniform._atoms_to_update.clear()
+        self._uniform._atom_value_map.clear()
+        self._uniform._texture_value_map.clear()
         for uniform_var in self._uniform._uniform_var_map.values():
             bound_var = uniform_var._bound_var
             if bound_var is None:
@@ -166,6 +167,22 @@ class ShaderProgram(GPUProgram):
 
             uniform_var.unbind()
             uniform_var.bind(bound_var)
+
+        for uniform_block_var in self._uniform_block._block_var_map.values():
+            bound_var = uniform_block_var._bound_var
+            if bound_var is None:
+                continue
+
+            uniform_block_var.unbind()
+            uniform_block_var.bind(bound_var)
+
+        for shader_storage_block_var in self._shader_storage_block._block_var_map.values():
+            bound_var = shader_storage_block_var._bound_var
+            if bound_var is None:
+                continue
+
+            shader_storage_block_var.unbind()
+            shader_storage_block_var.bind(bound_var)
         
     def compile(self, file_name:str, shader_type:GLInfo.shader_types=None):        
         if not os.path.isfile(file_name):
@@ -529,7 +546,7 @@ class ShaderProgram(GPUProgram):
                 self_used_image_units.add(texture_unit)
 
             if location not in self.uniform._texture_value_map or \
-            self.uniform._texture_value_map[location] != texture_unit:
+               self.uniform._texture_value_map[location] != texture_unit:
                 GL.glUniform1i(location, texture_unit)
                 self.uniform._texture_value_map[location] = texture_unit
 

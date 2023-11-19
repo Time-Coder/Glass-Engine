@@ -58,7 +58,7 @@ class Block:
 				return
 
 			id_var = id(self._bound_var)
-			cls = self._block.__class__
+			cls = self.block.__class__
 			
 			if id_var not in cls._bound_vars or \
 			   self._structure_key not in cls._bound_vars[id_var]:
@@ -71,6 +71,7 @@ class Block:
 				ssubo.unbind_from_point()
 
 			self._bound_var = None
+			self._binding_point = 0
 
 		def binding_point(self)->int:
 			return self._binding_point

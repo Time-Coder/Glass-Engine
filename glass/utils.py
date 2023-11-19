@@ -611,7 +611,7 @@ def defines_key(*args):
 
     keys = list(defines.keys())
     keys.sort()
-    defines_str = ":"
+    defines_str = ""
     for key in keys:
         if key in shader_type_defines:
             continue
@@ -619,6 +619,6 @@ def defines_key(*args):
         part = key
         if defines[key] is not None:
             part += f"={defines[key]}"
-        defines_str += (part + ":")
+        defines_str += (":" + part)
 
-    return defines_str[:-1]
+    return defines_str

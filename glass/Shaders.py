@@ -4,6 +4,7 @@ from OpenGL import GL
 import re
 import copy
 import warnings
+import sys
 
 from .minifyc import minifyc
 from .treeshake import treeshake, macros_expand
@@ -110,10 +111,11 @@ class BaseShader(GLObject):
 			print(f"compiling shader: {printable_path(self.file_name)} {printable_size(used_code)} ", end="", flush=True)
 
 		if GlassConfig.debug:
-			if not os.path.isdir("used_shaders"):
-				os.makedirs("used_shaders")
+			dest_folder = "used_shaders/" + os.path.basename(sys.argv[0])
+			if not os.path.isdir(dest_folder):
+				os.makedirs(dest_folder)
 
-			out_file = open("used_shaders/" + os.path.basename(self.file_name), "w")
+			out_file = open(dest_folder + "/" + os.path.basename(self.file_name), "w")
 			out_file.write(self._code)
 			out_file.close()
 
@@ -230,7 +232,7 @@ class BaseShader(GLObject):
 
 	def compile(self, file_name:str):
 		if self.is_compiled and not self._compiled_but_not_applied:
-			raise RuntimeError("compiled shader cannot compile other files")
+			self.delete()
 
 		if not os.path.isfile(file_name):
 			raise FileNotFoundError(file_name)

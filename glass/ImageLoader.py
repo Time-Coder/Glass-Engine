@@ -132,21 +132,19 @@ class ImageLoader:
     def PIL_load(file_name):
         try:
             pil_image = Image.open(file_name)
-            dest_mode = "RGBA"
-            if pil_image.mode == "RGB":
-                dest_mode = "RGB"
-            elif pil_image.mode == "RGBA":
+            should_convert = False
+            dest_mode = pil_image.mode
+            if pil_image.mode == "CMYK":
                 dest_mode = "RGBA"
-            elif pil_image.mode == "CMYK":
-                dest_mode = "RGBA"
+                should_convert = True
             elif pil_image.mode == "P":
                 dest_mode = "RGBA"
-            elif pil_image.mode == "L":
-                dest_mode = "L"
+                should_convert = True
             elif pil_image.mode == "1":
                 dest_mode = "L"
+                should_convert = True
 
-            if dest_mode != pil_image.mode:
+            if should_convert:
                 pil_image = pil_image.convert(dest_mode)
 
             return np.array(pil_image)

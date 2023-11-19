@@ -268,7 +268,10 @@ class SSUBO(BO):
 
 		return binding_point
 
-	def unbind_from_point(self, start:int, nbytes:int):
+	def unbind_from_point(self, start:int=0, nbytes:int=None):
+		if nbytes is None:
+			nbytes = self.nbytes
+
 		if (start, nbytes) not in self._binding_points:
 			return
 		
