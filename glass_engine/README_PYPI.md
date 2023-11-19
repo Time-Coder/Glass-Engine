@@ -59,6 +59,9 @@ camera.screen.show() # 相机显示屏显示渲染结果
 
 ## Release note
 
+* version 0.1.29:
+    * 修改动态加载新功能代码 bug
+
 * version 0.1.28:
     * 修改 pcpp 冲突 bug
 
@@ -75,8 +78,9 @@ camera.screen.show() # 相机显示屏显示渲染结果
 
 * version 0.1.24:
     * 修复 OSError: 0x000000010 bug
-    * 解决 dynamic_env_map 开启再关闭失效 bug
-    * 解决 cast_shadows 开启再关闭失效 bug
+    * 修复 dynamic_env_map 开启再关闭失效 bug
+    * 修复 cast_shadows 开启再关闭失效 bug
+    * 修复 16bits 灰度图像加载错误 bug
 
 * version 0.1.23:
     * 修复后处理 bug
