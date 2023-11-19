@@ -225,7 +225,7 @@ class Uniform:
     @staticmethod
     def _copy(value):
         type_str = type(value).__name__
-        if "sampler" in type_str or "image" in type_str:
+        if value is None or "sampler" in type_str or "image" in type_str:
             return value
         else:
             return copy.copy(value)

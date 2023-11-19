@@ -92,23 +92,25 @@ class GlassEngineConfig:
     
     def define_for_program(self, program):
         has_bindless_extension = ("GL_ARB_bindless_texture" in GLConfig.available_extensions)
+        is_valid = False
         for name in self._dict:
             if name in ["USE_DYNAMIC_ENV_MAPPING", "USE_DIR_LIGHT_SHADOW", "USE_POINT_LIGHT_SHADOW", "USE_SPOT_LIGHT_SHADOW"] and \
                not has_bindless_extension:
-                program.undef(name)
+                is_valid = program.undef(name) or is_valid
                 continue
 
             if name == "USE_BINDLESS_TEXTURE":
                 if has_bindless_extension:
-                    program.define(name, 1)
+                    is_valid = program.define(name, 1) or is_valid
                 else:
-                    program.undef(name)
+                    is_valid = program.undef(name) or is_valid
                 continue
 
             if self._dict[name]:
-                program.define(name, 1)
+                is_valid = program.define(name, 1) or is_valid
             else:
-                program.undef(name)
+                is_valid = program.undef(name) or is_valid
+        return is_valid
 
     def __has_macro(self, program):
         for name in program.defines:
@@ -118,13 +120,11 @@ class GlassEngineConfig:
         return False
 
     def __reload_program(self, program):
-        has_macro = self.__has_macro(program)
-
-        if not has_macro:
+        if not self.__has_macro(program):
             return
         
-        self.define_for_program(program)
-        program.reload()
+        if self.define_for_program(program):
+            program.reload()
 
     def _update_dynamic_env(self, flag:bool):
         import_Material()
