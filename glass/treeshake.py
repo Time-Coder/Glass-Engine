@@ -22,7 +22,7 @@ def macros_expand(code:str, defines:dict=None)->str:
     pcmd.CmdPreprocessor(cmds, input, output)
     return output.getvalue()
 
-def _get_funcs_and_structs(node, func_defs:dict, struct_defs:dict):
+def _find_func_defs(node, func_defs:dict):
     if node.grammar_name == "function_definition":
         func_name = str(node.children[1].children[0].text, encoding="utf-8")
         args = []
@@ -33,9 +33,11 @@ def _get_funcs_and_structs(node, func_defs:dict, struct_defs:dict):
                 if child.children[0].grammar_name in ["identifier", "type_identifier", "primitive_type"]:
                     arg["modifier"] = "in"
                     arg["type"] = str(child.children[0].text, encoding="utf-8")
+                    arg["name"] = str(child.children[1].text, encoding="utf-8")
                 elif child.children[0].grammar_name in ["in", "inout", "out"]:
                     arg["modifier"] = str(child.children[0].text, encoding="utf-8")
                     arg["type"] = str(child.children[1].text, encoding="utf-8")
+                    arg["name"] = str(child.children[2].text, encoding="utf-8")
 
                 args.append(arg)
                 arg_types.append(arg["type"])
@@ -58,27 +60,19 @@ def _get_funcs_and_structs(node, func_defs:dict, struct_defs:dict):
         func_defs[func_name].append(func)
         return
 
-    if node.grammar_name == "struct_specifier":
-        struct_name = str(node.children[1].text, encoding="utf-8")
-        struct = {}
-        struct["name"] = struct_name
-        struct["start"] = node.start_byte
-        struct["end"] = node.end_byte
-        struct["used"] = False
-        struct_defs[struct_name] = struct
-        return
-
     for child in node.children:
-        _get_funcs_and_structs(child, func_defs, struct_defs)
+        _find_func_defs(child, func_defs)
 
 def _find_func_calls(node, func_calls:list):
     if node.grammar_name == "call_expression":
         func_call = {}
         func_call["name"] = str(node.children[0].text, encoding="utf-8")
         func_call["argc"] = 0
+        func_call["args"] = []
         for child in node.children[1].children:
             if child.grammar_name not in "(),":
                 func_call["argc"] += 1
+                func_call["args"].append(child)
 
         func_calls.append(func_call)
 
@@ -91,23 +85,6 @@ def _remove_segments(content, segments):
     for start, end in segments:
         result = result[:start] + result[end:]
     return result
-
-def _find_node_used_structs(node, structs_defs:dict):
-    if node.grammar_name == "identifier":
-        identifier_name = str(node.text, encoding="utf-8")
-        if identifier_name in structs_defs:
-            structs_defs[identifier_name]["used"] = True
-
-    for child in node.children:
-        _find_node_used_structs(child, structs_defs)
-
-def _find_used_structs(func, structs_defs:dict):
-    for arg in func["args"]:
-        if arg["type"] in structs_defs:
-            structs_defs[arg["type"]]["used"] = True
-
-    body_node = func["body_node"]
-    _find_node_used_structs(body_node, structs_defs)
 
 glsl_parser = None
 def treeshake(code:str, defines:dict=None)->str:
@@ -123,15 +100,13 @@ def treeshake(code:str, defines:dict=None)->str:
     root_node = tree.root_node
     
     func_defs = {}
-    structs_defs = {}
-    _get_funcs_and_structs(root_node, func_defs, structs_defs)
+    _find_func_defs(root_node, func_defs)
 
     used_funcs = set()
 
     main_func = func_defs["main"][0]
     main_func["used"] = True
     func_stack = [main_func]
-    _find_used_structs(main_func, structs_defs)
     while func_stack:
         parent_func = func_stack.pop()
         body_node = parent_func["body_node"]
@@ -152,7 +127,6 @@ def treeshake(code:str, defines:dict=None)->str:
                     continue
                 
                 func["used"] = True
-                _find_used_structs(func, structs_defs)
                 func_stack.append(func)
                 used_funcs.add(signature)
     

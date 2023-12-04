@@ -24,6 +24,7 @@ class sampler2D(FBOAttachment):
     _default_filter_min = GL.GL_LINEAR
     _default_filter_mag = GL.GL_LINEAR
     _default_filter_mipmap = GL.GL_LINEAR
+    _blank = None
 
     _sampler2D_map = {}
     _should_update = False
@@ -120,6 +121,13 @@ class sampler2D(FBOAttachment):
             self._handle = 0
 
         FBOAttachment.__del__(self)
+
+    @staticmethod
+    def blank():
+        if sampler2D._blank is None:
+            sampler2D._blank = sampler2D(width=1, height=1, internal_format=GL.GL_R8)
+
+        return sampler2D._blank
 
     @property
     def is_shadertoy(self)->bool:

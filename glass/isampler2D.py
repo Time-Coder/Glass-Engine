@@ -12,6 +12,7 @@ class isampler2D(sampler2D):
     _default_filter_min = GL.GL_NEAREST
     _default_filter_mag = GL.GL_NEAREST
     _default_filter_mipmap = None
+    _blank = None
 
     @checktype
     def __init__(self, image:(str,np.ndarray)=None, width:int=None, height:int=None, internal_format:GLInfo.isampler_internal_formats=None):
@@ -44,3 +45,10 @@ class isampler2D(sampler2D):
             self._dynamic = False
 
         return self._handle
+    
+    @staticmethod
+    def blank():
+        if isampler2D._blank is None:
+            isampler2D._blank = isampler2D(width=1, height=1, internal_format=GL.GL_R8I)
+
+        return isampler2D._blank
