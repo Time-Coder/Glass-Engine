@@ -7,6 +7,8 @@ import OpenGL.GL.ARB.bindless_texture as bt
 
 class isampler2DMS(sampler2DMS):
 
+    _blank = None
+
     @checktype
     def __init__(self, width:int=0, height:int=0, samples:int=4, internal_format:GLInfo.isampler_internal_formats=None):
         if internal_format is None:
@@ -40,3 +42,9 @@ class isampler2DMS(sampler2DMS):
 
         return self._handle
     
+    @staticmethod
+    def blank():
+        if isampler2DMS._blank is None:
+            isampler2DMS._blank = isampler2DMS(width=1, height=1, samples=1, internal_format=GL.GL_R8I)
+
+        return isampler2DMS._blank

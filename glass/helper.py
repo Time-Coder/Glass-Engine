@@ -120,10 +120,7 @@ def type_from_str(type_str):
 		raise TypeError(f"not support type {type_str}")
 
 def get_external_format(internal_format):
-	if internal_format not in GLInfo.format_info_map:
-		return GL.GL_RGB
-	else:
-		return GLInfo.format_info_map[internal_format][0]
+	return GLInfo.format_info_map[internal_format][0]
 
 def get_channels(internal_format):
 	external_format = get_external_format(internal_format)
@@ -134,10 +131,7 @@ def get_channels(internal_format):
 	elif external_format == GL.GL_STENCIL_INDEX: return 1
 	elif external_format == GL.GL_DEPTH_COMPONENT: return 1
 	elif external_format == GL.GL_DEPTH_STENCIL: return 2
-	else: return 3
+	else: raise ValueError(f"not support format {external_format}")
 
 def get_dtype(internal_format):
-	if internal_format not in GLInfo.format_info_map:
-		return GL.GL_UNSIGNED_BYTE
-	else:
-		return GLInfo.format_info_map[internal_format][1]
+	return GLInfo.format_info_map[internal_format][1]

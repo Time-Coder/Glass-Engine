@@ -17,6 +17,7 @@ class sampler2DMS(FBOAttachment):
 		"binding_type": GL.GL_TEXTURE_BINDING_2D_MULTISAMPLE,
 		"need_number": True,
 	}
+	_blank = None
 
 	def __init__(self, width:int=0, height:int=0, samples:int=4, internal_format:GLInfo.internal_formats=GL.GL_RGBA32F):
 		FBOAttachment.__init__(self)
@@ -42,7 +43,14 @@ class sampler2DMS(FBOAttachment):
 		result._internal_format = self._internal_format
 
 		return result
+	
+	@staticmethod
+	def blank():
+		if sampler2DMS._blank is None:
+			sampler2DMS._blank = sampler2DMS(width=1, height=1, samples=1, internal_format=GL.GL_R8)
 
+		return sampler2DMS._blank
+	
 	def bind(self, update_fbo:bool=False, force_update_image:bool=False):
 		FBOAttachment.bind(self, update_fbo, force_update_image)
 		if force_update_image or self._param_changed:

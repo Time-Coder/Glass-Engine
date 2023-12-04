@@ -16,6 +16,7 @@ class sampler2DArray(FBOAttachment):
     _default_filter_min = GL.GL_LINEAR
     _default_filter_mag = GL.GL_LINEAR
     _default_filter_mipmap = GL.GL_LINEAR
+    _blank = None
 
     _basic_info = \
     {
@@ -168,6 +169,13 @@ class sampler2DArray(FBOAttachment):
         result._border_color = self._border_color
 
         return result
+
+    @staticmethod
+    def blank():
+        if sampler2DArray._blank is None:
+            sampler2DArray._blank = sampler2DArray(width=1, height=1, layers=1, internal_format=GL.GL_R8)
+
+        return sampler2DArray._blank
 
     @property
     def handle(self):

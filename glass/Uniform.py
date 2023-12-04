@@ -254,8 +254,8 @@ class Uniform:
                     return
                 
                 self._current_atom_name = name
-                func = Uniform._set_atom_func(uniform_type)
-                func(self, location, value)
+                func = getattr(self, "_set_" + uniform_type)
+                func(location, value)
                 self._atom_value_map[name] = Uniform._copy(value)
             else:
                 binding_point = uniform_info["binding_point"]
@@ -263,34 +263,6 @@ class Uniform:
                 ACBO.set(binding=binding_point, offset=offset, value=value)
         else:
             self._atoms_to_update[name] = Uniform._copy(value)
-
-    @staticmethod
-    def _set_atom_func(atom_type):
-        if not Uniform._set_atom_map:
-            Uniform._set_atom_map = \
-            {
-                "bool": Uniform._set_bool, "int": Uniform._set_int, "uint": Uniform._set_uint,
-                "uint64_t": Uniform._set_uint64_t, "float": Uniform._set_float, "double": Uniform._set_double,
-                "bvec2": Uniform._set_bvec2, "bvec3": Uniform._set_bvec3, "bvec4": Uniform._set_bvec4,
-                "ivec2": Uniform._set_ivec2, "ivec3": Uniform._set_ivec3, "ivec4": Uniform._set_ivec4,
-                "uvec2": Uniform._set_uvec2, "uvec3": Uniform._set_uvec3, "uvec4": Uniform._set_uvec4,
-                "vec2": Uniform._set_vec2, "vec3": Uniform._set_vec3, "vec4": Uniform._set_vec4,
-                "dvec2": Uniform._set_dvec2, "dvec3": Uniform._set_dvec3, "dvec4": Uniform._set_dvec4,
-                "mat2": Uniform._set_mat2, "mat3": Uniform._set_mat3, "mat4": Uniform._set_mat4,
-                "dmat2": Uniform._set_dmat2, "dmat3": Uniform._set_dmat3, "dmat4": Uniform._set_dmat4,
-                "mat2x2": Uniform._set_mat2x2, "mat2x3": Uniform._set_mat2x3, "mat2x4": Uniform._set_mat2x4,
-                "mat3x2": Uniform._set_mat3x2, "mat3x3": Uniform._set_mat3x3, "mat3x4": Uniform._set_mat3x4,
-                "mat4x2": Uniform._set_mat4x2, "mat4x3": Uniform._set_mat4x3, "mat4x4": Uniform._set_mat4x4,
-                "dmat2x2": Uniform._set_dmat2x2, "dmat2x3": Uniform._set_dmat2x3, "dmat2x4": Uniform._set_dmat2x4,
-                "dmat3x2": Uniform._set_dmat3x2, "dmat3x3": Uniform._set_dmat3x3, "dmat3x4": Uniform._set_dmat3x4,
-                "dmat4x2": Uniform._set_dmat4x2, "dmat4x3": Uniform._set_dmat4x3, "dmat4x4": Uniform._set_dmat4x4,
-            
-                "sampler2D": Uniform._set_sampler2D, "isampler2D": Uniform._set_isampler2D, "usampler2D": Uniform._set_usampler2D,
-                "image2D": Uniform._set_image2D, "iimage2D": Uniform._set_iimage2D, "uimage2D": Uniform._set_uimage2D,
-                "sampler2DMS": Uniform._set_sampler2DMS, "isampler2DMS": Uniform._set_isampler2DMS, "usampler2DMS": Uniform._set_usampler2DMS,
-                "samplerCube": Uniform._set_samplerCube, "sampler2DArray": Uniform._set_sampler2DArray
-            }
-        return Uniform._set_atom_map[atom_type]
 
     def _set_bool(self, location:int, value):
         if not isinstance(value, int):
@@ -577,8 +549,10 @@ class Uniform:
         if isinstance(value, str):
             value = sampler_type.load(value)
 
-        if value is not None:
-            value.bind()
+        if value is None:
+            value = sampler_type.blank()
+
+        value.bind()
 
         program = self.program
         program._sampler_map[self._current_atom_name]["location"] = location
@@ -594,9 +568,10 @@ class Uniform:
         
     @checktype
     def _set_sampler2DMS(self, location:int, value:sampler2DMS):
-        if value is not None:
-            value.bind()
+        if value is None:
+            value = sampler2DMS.blank()
 
+        value.bind()
         program = self.program
         program._sampler_map[self._current_atom_name]["location"] = location
         program._sampler_map[self._current_atom_name]["sampler"] = value
@@ -611,9 +586,10 @@ class Uniform:
         
     @checktype
     def _set_sampler2DArray(self, location:int, value:sampler2DArray):
-        if value is not None:
-            value.bind()
+        if value is None:
+            value = sampler2DArray.blank()
 
+        value.bind()
         program = self.program
         program._sampler_map[self._current_atom_name]["location"] = location
         program._sampler_map[self._current_atom_name]["sampler"] = value
@@ -659,9 +635,10 @@ class Uniform:
         if value is not None and not value.is_completed:
             raise RuntimeError("not completed samplerCube")
 
-        if value is not None:
-            value.bind()
+        if value is None:
+            value = samplerCube.blank()
 
+        value.bind()
         program = self.program
         program._sampler_map[self._current_atom_name]["sampler"] = value
         program._sampler_map[self._current_atom_name]["location"] = location
