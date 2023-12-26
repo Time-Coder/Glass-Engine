@@ -3,7 +3,6 @@
 #include "../include/Material.glsl"
 #include "../include/random.glsl"
 #include "../include/Camera.glsl"
-#include "../ShadingModels/lighting.glsl"
 #include "SpotLight_shadow_mapping.glsl"
 
 bool get_lighting_info(

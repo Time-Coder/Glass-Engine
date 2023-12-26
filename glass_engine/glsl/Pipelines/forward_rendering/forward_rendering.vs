@@ -13,7 +13,11 @@ layout (location = 6) in vec4 back_color;
 layout (location = 7) in vec4 affine_transform_row0;
 layout (location = 8) in vec4 affine_transform_row1;
 layout (location = 9) in vec4 affine_transform_row2;
+
+#if USE_BINDLESS_TEXTURE && USE_DYNAMIC_ENV_MAPPING
 layout (location = 10) in uvec2 env_map_handle;
+#endif
+
 layout (location = 11) in int visible;
 
 out VertexOut
@@ -23,7 +27,11 @@ out VertexOut
     vec3 tex_coord;
     vec4 color;
     vec4 back_color;
+
+#if USE_BINDLESS_TEXTURE && USE_DYNAMIC_ENV_MAPPING
     flat uvec2 env_map_handle;
+#endif
+
     flat int visible;
 } vs_out;
 
@@ -48,7 +56,11 @@ void main()
     mat3 TBN = mat3(tangent, bitangent, normal);
     TBN = transform_apply_to_TBN(transform, TBN);
     vs_out.view_TBN = world_TBN_to_view(camera, TBN);
+
+#if USE_BINDLESS_TEXTURE && USE_DYNAMIC_ENV_MAPPING
     vs_out.env_map_handle = env_map_handle;
+#endif
+
     vs_out.visible = visible;
 
     vec3 world_pos = transform_apply(transform, position);

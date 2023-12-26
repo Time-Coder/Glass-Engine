@@ -24,8 +24,8 @@ out GeometryOut
     flat int visible;
 } gs_out;
 
-#include "../../Lights/SpotLight.glsl"
 #include "../../include/Camera.glsl"
+#include "../../Lights/SpotLight.glsl"
 
 uniform SpotLight spot_light;
 

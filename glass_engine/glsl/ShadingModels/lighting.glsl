@@ -1,3 +1,5 @@
+#include "Lambert.glsl"
+
 #if USE_SHADING_MODEL_FLAT
 #include "Flat.glsl"
 #endif

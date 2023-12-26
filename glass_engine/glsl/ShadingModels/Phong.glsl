@@ -1,5 +1,3 @@
-#include "Lambert.glsl"
-
 float Phong_specular(vec3 to_light, vec3 to_camera, vec3 normal, float shininess)
 {
     vec3 reflect_dir = reflect(-to_light, normal);

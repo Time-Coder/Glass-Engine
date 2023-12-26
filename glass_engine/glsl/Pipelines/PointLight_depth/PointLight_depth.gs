@@ -24,8 +24,8 @@ out GeometryOut
     flat int visible;
 } gs_out;
 
-#include "../../Lights/PointLight.glsl"
 #include "../../include/Camera.glsl"
+#include "../../Lights/PointLight.glsl"
 
 uniform PointLight point_light;
 uniform float explode_distance;

@@ -13,8 +13,10 @@ in VertexOut
     vec3 tex_coord;
     vec4 color;
     flat int visible;
-    vec3 preshading_color;
+#if USE_BINDLESS_TEXTURE && USE_DYNAMIC_ENV_MAPPING
     flat uvec2 env_map_handle;
+#endif
+
 } fs_in;
 
 layout(location=0) out vec4 out_color;
@@ -46,14 +48,18 @@ void main()
         discard;
     }
 
-    ShadingInfo shading_info = ShadingInfo(
-        fs_in.color, fs_in.preshading_color
+    ShadingInfo shading_info;
+    shading_info.color = fs_in.color;
 #if USE_DYNAMIC_ENV_MAPPING
-        , sampler2D(fs_in.env_map_handle)
+    shading_info.env_map = sampler2D(fs_in.env_map_handle);
 #endif
-        , is_opaque_pass, false, fs_in.view_TBN, fs_in.view_pos,
-        fs_in.tex_coord.st, fs_in.affine_transform, mesh_center
-    );
+    shading_info.is_opaque_pass = is_opaque_pass;
+    shading_info.is_sphere = false;
+    shading_info.view_TBN = fs_in.view_TBN;
+    shading_info.view_pos = fs_in.view_pos;
+    shading_info.tex_coord = fs_in.tex_coord.st;
+    shading_info.affine_transform = fs_in.affine_transform;
+    shading_info.mesh_center = mesh_center;
 
     out_color = shading_all(camera, background, material
 #if USE_FOG

@@ -71,7 +71,7 @@ class ImageLoader:
         if not os.path.isfile(file_name):
             if is_url(file_name):
                 url = file_name
-                file_name = GlassConfig.cache_folder + "/" + md5s(url) + "/" + os.path.basename(url)
+                file_name = GlassConfig.cache_folder + "/images/" + md5s(url) + "/" + os.path.basename(url)
                 if not os.path.isfile(file_name):
                     download(url, file_name)
             else:

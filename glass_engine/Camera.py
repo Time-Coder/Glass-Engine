@@ -10,6 +10,7 @@ import math
 from enum import Enum
 import numpy as np
 import sys
+import importlib
 
 Screen = {}
 def import_Screen(gui_system:str)->None:
@@ -68,58 +69,39 @@ class Camera(SceneNode):
         self._set_screen(gui_system)
 
     def _set_screen(self, gui_system)->None:
+        all_gui_systems = ["PySide6", "PyQt6", "PySide2", "PyQt5"]
+
         if not isinstance(gui_system, str):
             gui_system = gui_system.__name__
 
         if not gui_system:
             for module_name in sys.modules:
-                if module_name.startswith("PyQt6"):
-                    gui_system = "PyQt6"
-                    break
+                for gui_sys in all_gui_systems:
+                    if module_name.startswith(gui_sys):
+                        gui_system = gui_sys
+                        break
 
-                if module_name.startswith("PyQt5"):
-                    gui_system = "PyQt5"
+        if not gui_system:
+            for gui_sys in all_gui_systems:
+                try:
+                    exec(f"from {gui_sys}.QtWidgets import QWidget")
+                    gui_system = gui_sys
                     break
-
-                if module_name.startswith("PySide6"):
-                    gui_system = "PySide6"
-                    break
-
-                if module_name.startswith("PySide2"):
-                    gui_system = "PySide2"
-                    break
+                except:
+                    pass
 
         if gui_system:
             self.__gui_system = gui_system.lower().replace("pyside", "PySide").replace("pyqt", "PyQt")
             import_Screen(self.__gui_system)
 
         if not self.__gui_system:
-            try:
-                import_Screen("PyQt6")
-                self.__gui_system = "PyQt6"
-            except:
-                self.__gui_system = ""
-
-        if not self.__gui_system:
-            try:
-                import_Screen("PyQt5")
-                self.__gui_system = "PyQt5"
-            except:
-                self.__gui_system = ""
-
-        if not self.__gui_system:
-            try:
-                import_Screen("PySide6")
-                self.__gui_system = "PySide6"
-            except:
-                self.__gui_system = ""
-
-        if not self.__gui_system:
-            try:
-                import_Screen("PySide2")
-                self.__gui_system = "PySide2"
-            except:
-                self.__gui_system = ""
+            for gui_sys in all_gui_systems:
+                try:
+                    import_Screen(gui_sys)
+                    self.__gui_system = gui_sys
+                    break
+                except:
+                    self.__gui_system = ""
 
         if not self.__gui_system:
             raise RuntimeError("all GUI systems failed to init")

@@ -405,11 +405,6 @@ class CommonRenderer(Renderer):
         if "GL_ARB_bindless_texture" not in GLConfig.available_extensions:
             return
         
-        # if not self._meshes_cast_shadows and \
-        #    not self._lines_cast_shadows and \
-        #    not self._points_cast_shadows:
-        #     return
-        
         for dir_light in self.scene.dir_lights:
             if not dir_light.generate_shadows:
                 continue
@@ -476,6 +471,7 @@ class CommonRenderer(Renderer):
                             self.dir_light_depth_points_program["back_material"] = mesh._back_material
                             mesh.draw(self.dir_light_depth_points_program, instances)
 
+            error = GL.glGetError()
             new_handle = dir_light.depth_fbo.depth_attachment.handle
             if dir_light.depth_map_handle != new_handle:
                 dir_light.depth_map_handle = new_handle

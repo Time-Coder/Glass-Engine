@@ -1,4 +1,5 @@
 #include "Lights.glsl"
+#include "../ShadingModels/lighting.glsl"
 
 #if USE_DIR_LIGHT
 #include "DirLight_lighting.glsl"

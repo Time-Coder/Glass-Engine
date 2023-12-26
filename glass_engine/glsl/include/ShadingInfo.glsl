@@ -4,7 +4,6 @@
 struct ShadingInfo
 {
     vec4 color;
-    vec3 preshading_color;
 #if USE_DYNAMIC_ENV_MAPPING
     sampler2D env_map;
 #endif
@@ -28,13 +27,3 @@ struct PostShadingInfo
     vec3 world_normal;
     vec3 env_center;
 };
-
-PostShadingInfo PostShadingInfo_create()
-{
-    InternalMaterial _internal_material;
-    return PostShadingInfo(_internal_material
-#if USE_DYNAMIC_ENV_MAPPING
-    , sampler2D(uvec2(0))
-#endif
-    , false, vec3(0), vec3(0), vec3(0));
-}

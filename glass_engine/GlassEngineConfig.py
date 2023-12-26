@@ -272,7 +272,7 @@ class GlassEngineConfig:
 
         has_point_lights_generate_shadows = flag
         if not flag:
-            for point_light in DirLight.all_instances:
+            for point_light in PointLight.all_instances:
                 if point_light.generate_shadows:
                     has_point_lights_generate_shadows = True
                     break
@@ -292,7 +292,7 @@ class GlassEngineConfig:
 
         has_spot_lights_generate_shadows = flag
         if not flag:
-            for spot_light in DirLight.all_instances:
+            for spot_light in SpotLight.all_instances:
                 if spot_light.generate_shadows:
                     has_spot_lights_generate_shadows = True
                     break

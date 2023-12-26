@@ -26,8 +26,6 @@ uniform Material material;
 uniform Material back_material;
 uniform Camera camera;
 
-#define CURRENT_MATERIAL (gl_FrontFacing ? material : back_material)
-
 void main()
 {
     if (fs_in.visible == 0)
@@ -38,17 +36,28 @@ void main()
     vec2 tex_coord = fs_in.tex_coord.st;
     mat3 view_TBN = fs_in.view_TBN;
     view_pos = fs_in.view_pos;
-    change_geometry(CURRENT_MATERIAL, tex_coord, view_TBN, view_pos);
-    if (hasnan(view_TBN[2]) || length(view_TBN[2]) < 1E-6)
-    {
-        discard;
-    }
+    InternalMaterial internal_material;
 
-    InternalMaterial internal_material = fetch_internal_material(
-        (gl_FrontFacing ? fs_in.color : fs_in.back_color),
-        (gl_FrontFacing ? material : back_material),
-        tex_coord
-    );
+    if (gl_FrontFacing)
+    {
+        change_geometry(material, tex_coord, view_TBN, view_pos);
+        if (hasnan(view_TBN[2]) || length(view_TBN[2]) < 1E-6)
+        {
+            discard;
+        }
+
+        internal_material = fetch_internal_material(fs_in.color, material, tex_coord);
+    }
+    else
+    {
+        change_geometry(back_material, tex_coord, view_TBN, view_pos);
+        if (hasnan(view_TBN[2]) || length(view_TBN[2]) < 1E-6)
+        {
+            discard;
+        }
+
+        internal_material = fetch_internal_material(fs_in.back_color, back_material, tex_coord);
+    }
 
     if (internal_material.opacity < 1E-6)
     {

@@ -243,9 +243,8 @@ class BaseShader(GLObject):
 		self._file_name = used_name
 		base_name = os.path.basename(abs_name)
 
-		md5_key = f"{GLConfig.renderer}/{abs_name}{defines_key(self.defines)}"
-		md5_value = md5s(md5_key)
-		self._meta_file_name = GlassConfig.cache_folder + "/" + base_name + "_" + md5_value + ".meta"
+		md5_value = md5s(f"{abs_name}{defines_key(self.defines)}")
+		self._meta_file_name = f"{GlassConfig.cache_folder}/{GLConfig.renderer}/{base_name}_{md5_value}.meta"
 
 		if self._test_should_recompile():
 			self._collect_info(file_name)
@@ -379,6 +378,7 @@ class BaseShader(GLObject):
 			if pos_version == -1:
 				if defines_str:
 					self._code = defines_str + self._code
+					self._find_comments()
 				break
 			elif pos_version in self._comments_set:
 				pos_version += len_version
@@ -390,6 +390,7 @@ class BaseShader(GLObject):
 						self._code = self._code + "\n" + defines_str
 					else:
 						self._code = self._code[:pos_endl+1] + defines_str + self._code[pos_endl+1:]
+					self._find_comments()
 				break
 		line_num_version = ShaderParser.line_of(self._code, pos_version)
 

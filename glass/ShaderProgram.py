@@ -380,9 +380,7 @@ class ShaderProgram(GPUProgram):
         if self.fragment_shader._max_modify_time > max_modify_time:
             max_modify_time = self.fragment_shader._max_modify_time
 
-        md5_key = GLConfig.renderer + "/" + shaders_key
-        md5_value = md5s(md5_key)
-        base = GlassConfig.cache_folder + "/" + binary_name + "_" + md5_value
+        base = f"{GlassConfig.cache_folder}/{GLConfig.renderer}/{binary_name}_{md5s(shaders_key)}"
         self._binary_file_name = base + ".bin"
         self._meta_file_name = base + ".meta"
 

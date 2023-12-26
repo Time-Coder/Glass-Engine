@@ -57,7 +57,6 @@ struct InternalMaterial
 {
 	uint shading_model;
     bool recv_shadows;
-    vec3 preshading_color;
 	vec3 ambient;
 	vec3 diffuse;
 	vec3 specular;

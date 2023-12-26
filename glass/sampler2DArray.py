@@ -16,7 +16,6 @@ class sampler2DArray(FBOAttachment):
     _default_filter_min = GL.GL_LINEAR
     _default_filter_mag = GL.GL_LINEAR
     _default_filter_mipmap = GL.GL_LINEAR
-    _blank = None
 
     _basic_info = \
     {
@@ -170,13 +169,6 @@ class sampler2DArray(FBOAttachment):
 
         return result
 
-    @staticmethod
-    def blank():
-        if sampler2DArray._blank is None:
-            sampler2DArray._blank = sampler2DArray(width=1, height=1, layers=1, internal_format=GL.GL_R8)
-
-        return sampler2DArray._blank
-
     @property
     def handle(self):
         if not bt.glGetTextureHandleARB:
@@ -220,7 +212,6 @@ class sampler2DArray(FBOAttachment):
             width_adapt(self._width)
             GL.glTexImage3D(GL.GL_TEXTURE_2D_ARRAY, 0, self._internal_format,
                             self._width, self._height, self.layers, 0, external_format, self.dtype, None)
-            
             if not update_fbo and self._filter_mipmap is not None and self._image is not None:
                 self.generate_mipmap()
                 generated_mipmap = True

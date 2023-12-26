@@ -20,12 +20,16 @@ void main()
         discard;
     }
 
-    InternalMaterial internal_material = 
-        fetch_internal_material(
-            (gl_FrontFacing ? fs_in.color : fs_in.back_color),
-            (gl_FrontFacing ? material : back_material),
-            fs_in.tex_coord.st
-        );
+    InternalMaterial internal_material;
+
+    if (gl_FrontFacing)
+    {
+        internal_material = fetch_internal_material(fs_in.color, material, fs_in.tex_coord.st);
+    }
+    else
+    {
+        internal_material = fetch_internal_material(fs_in.back_color, back_material, fs_in.tex_coord.st);
+    }
 
     if (internal_material.opacity < 1E-6)
     {

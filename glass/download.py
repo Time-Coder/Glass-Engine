@@ -90,7 +90,7 @@ def pip_install(package_name:str):
         if return_code != 0:
             raise RuntimeError(f"failed to install {package_name}")
     else:
-        target_file = GlassConfig.cache_folder + "/" + os.path.basename(package_name)
+        target_file = GlassConfig.cache_folder + "/packages/" + os.path.basename(package_name)
         download(package_name, target_file)
         install_cmd = [sys.executable, "-m", "pip", "install", target_file]
         return_code = subprocess.call(install_cmd)
