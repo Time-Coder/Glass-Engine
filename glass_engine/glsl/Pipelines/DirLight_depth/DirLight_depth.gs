@@ -5,7 +5,7 @@
 #endif
 #extension GL_EXT_texture_array : require
 
-layout (triangles, invocations={CSM_levels}) in;
+layout (triangles, invocations=CSM_LEVELS) in;
 layout (triangle_strip, max_vertices=3) out;
 
 in VertexOut

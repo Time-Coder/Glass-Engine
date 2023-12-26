@@ -5,7 +5,7 @@
 #endif
 #extension GL_EXT_texture_array : require
 
-layout (lines, invocations={CSM_levels}) in;
+layout (lines, invocations=CSM_LEVELS) in;
 layout (line_strip, max_vertices=2) out;
 
 in VertexOut
