@@ -13,7 +13,11 @@ in VertexOut
     mat4 affine_transform;
     vec3 tex_coord;
     vec4 color;
+
+#if USE_BINDLESS_TEXTURE && USE_DYNAMIC_ENV_MAPPING
     flat uvec2 env_map_handle;
+#endif
+
     flat int visible;
 } gs_in[];
 
@@ -27,8 +31,9 @@ out GeometryOut
     flat int visible;
 } gs_out;
 
-out vec3 preshading_color;
+#if USE_BINDLESS_TEXTURE && USE_DYNAMIC_ENV_MAPPING
 out flat uvec2 env_map_handle;
+#endif
 
 #include "../../include/Camera.glsl"
 #include "../../include/InternalMaterial.glsl"
@@ -57,15 +62,17 @@ void main()
         gs_out.tex_coord = gs_in[i].tex_coord;
         gs_out.color = gs_in[i].color;
         gs_out.visible = gs_in[i].visible;
+
+#if USE_BINDLESS_TEXTURE && USE_DYNAMIC_ENV_MAPPING
         env_map_handle = gs_in[i].env_map_handle;
-        preshading_color = vec3(0);
+#endif
 
 #if USE_SHADING_MODEL_FLAT || USE_SHADING_MODEL_GOURAUD
         if (material.shading_model == SHADING_MODEL_FLAT ||
             material.shading_model == SHADING_MODEL_GOURAUD)
         {
             InternalMaterial internal_material = fetch_internal_material(gs_in[i].color, material, gs_in[i].tex_coord.st);
-            preshading_color = lighting(internal_material, CSM_camera, camera.abs_position, world_pos, world_normal);
+            gs_out.color = vec4(lighting(internal_material, CSM_camera, camera.abs_position, world_pos, world_normal), 1.0);
         }
 #endif
         

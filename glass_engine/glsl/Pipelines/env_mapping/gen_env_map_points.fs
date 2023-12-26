@@ -15,8 +15,9 @@ in GeometryOut
     flat int visible;
 } fs_in;
 
-in vec3 preshading_color;
+#if USE_BINDLESS_TEXTURE && USE_DYNAMIC_ENV_MAPPING
 in flat uvec2 env_map_handle;
+#endif
 
 layout(location=0) out vec4 out_color;
 layout(location=1) out vec4 accum;
@@ -48,14 +49,18 @@ void main()
 
     Camera camera = cube_camera(gl_Layer, view_center);
 
-    ShadingInfo shading_info = ShadingInfo(
-        fs_in.color, preshading_color
+    ShadingInfo shading_info;
+    shading_info.color = fs_in.color;
 #if USE_DYNAMIC_ENV_MAPPING
-        , sampler2D(env_map_handle)
+    shading_info.env_map = sampler2D(env_map_handle);
 #endif
-        , is_opaque_pass, false, fs_in.view_TBN, fs_in.view_pos,
-        fs_in.tex_coord.st, fs_in.affine_transform, mesh_center
-    );
+    shading_info.is_opaque_pass = is_opaque_pass;
+    shading_info.is_sphere = false;
+    shading_info.view_TBN = fs_in.view_TBN;
+    shading_info.view_pos = fs_in.view_pos;
+    shading_info.tex_coord = fs_in.tex_coord.st;
+    shading_info.affine_transform = fs_in.affine_transform;
+    shading_info.mesh_center = mesh_center;
 
     out_color = shading_all(camera, CSM_camera, background, material
 #if USE_FOG

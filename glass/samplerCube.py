@@ -23,8 +23,6 @@ class samplerCube(FBOAttachment):
 		"need_number": True,
 	}
 
-	_blank = None
-
 	class Face:
 		def __init__(self, sampler_cube, texture_target, width:int=0, height:int=0, internal_format:GLInfo.internal_formats=GL.GL_RGBA32F):
 			self._texture_target = texture_target
@@ -218,13 +216,6 @@ class samplerCube(FBOAttachment):
 			return super().__setattr__(key, value)
 
 		self[key] = value
-
-	@staticmethod
-	def blank():
-		if samplerCube._blank is None:
-			samplerCube._blank = samplerCube(width=1, height=1, internal_format=GL.GL_R8)
-
-		return samplerCube._blank
 	
 	@property
 	def handle(self):

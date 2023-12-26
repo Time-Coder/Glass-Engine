@@ -549,10 +549,8 @@ class Uniform:
         if isinstance(value, str):
             value = sampler_type.load(value)
 
-        if value is None:
-            value = sampler_type.blank()
-
-        value.bind()
+        if value is not None:
+            value.bind()
 
         program = self.program
         program._sampler_map[self._current_atom_name]["location"] = location
@@ -568,10 +566,9 @@ class Uniform:
         
     @checktype
     def _set_sampler2DMS(self, location:int, value:sampler2DMS):
-        if value is None:
-            value = sampler2DMS.blank()
+        if value is not None:
+            value.bind()
 
-        value.bind()
         program = self.program
         program._sampler_map[self._current_atom_name]["location"] = location
         program._sampler_map[self._current_atom_name]["sampler"] = value
@@ -586,10 +583,9 @@ class Uniform:
         
     @checktype
     def _set_sampler2DArray(self, location:int, value:sampler2DArray):
-        if value is None:
-            value = sampler2DArray.blank()
+        if value is not None:
+            value.bind()
 
-        value.bind()
         program = self.program
         program._sampler_map[self._current_atom_name]["location"] = location
         program._sampler_map[self._current_atom_name]["sampler"] = value
@@ -635,10 +631,9 @@ class Uniform:
         if value is not None and not value.is_completed:
             raise RuntimeError("not completed samplerCube")
 
-        if value is None:
-            value = samplerCube.blank()
+        if value is not None:
+            value.bind()
 
-        value.bind()
         program = self.program
         program._sampler_map[self._current_atom_name]["sampler"] = value
         program._sampler_map[self._current_atom_name]["location"] = location

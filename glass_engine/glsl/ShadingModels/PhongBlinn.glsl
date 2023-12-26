@@ -1,5 +1,3 @@
-#include "Lambert.glsl"
-
 float PhongBlinn_specular(vec3 to_light, vec3 to_camera, vec3 normal, float shininess)
 {
     vec3 halfway_vec = normalize(to_light + to_camera);

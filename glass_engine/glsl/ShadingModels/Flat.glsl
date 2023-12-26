@@ -1,4 +1,3 @@
-#include "Lambert.glsl"
 #include "../include/Material.glsl"
 
 vec3 Flat_lighting(vec3 to_light, vec3 to_camera, vec3 normal, InternalMaterial material)

@@ -4,7 +4,6 @@
 #include "../include/random.glsl"
 #include "../include/Camera.glsl"
 #include "../ShadingModels/Lambert.glsl"
-#include "../ShadingModels/lighting.glsl"
 #include "DirLight_shadow_mapping.glsl"
 
 vec3 get_lighting_info(

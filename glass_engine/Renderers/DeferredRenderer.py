@@ -124,7 +124,7 @@ class DeferredRenderer(CommonRenderer):
                 fbo.attach(1, sampler2DMS, GL.GL_RGBA32F) # view_normal_and_emission_r
                 fbo.attach(2, sampler2DMS, GL.GL_RGBA32F) # ambient_and_emission_g
                 fbo.attach(3, sampler2DMS, GL.GL_RGBA32F) # diffuse_or_base_color_and_emission_b
-                fbo.attach(4, sampler2DMS, GL.GL_RGBA32F) # specular_or_preshading_and_shininess
+                fbo.attach(4, sampler2DMS, GL.GL_RGBA32F) # specular_and_shininess
                 fbo.attach(5, sampler2DMS, GL.GL_RGBA32F) # reflection
                 fbo.attach(6, sampler2DMS, GL.GL_RGBA32F) # env_center_and_mixed_value
                 fbo.attach(7, usampler2DMS, GL.GL_RGBA32UI) # mixed_uint
@@ -142,7 +142,7 @@ class DeferredRenderer(CommonRenderer):
                 fbo.attach(1, sampler2D, GL.GL_RGBA32F) # view_normal_and_emission_r
                 fbo.attach(2, sampler2D, GL.GL_RGBA32F) # ambient_and_emission_g
                 fbo.attach(3, sampler2D, GL.GL_RGBA32F) # diffuse_or_base_color_and_emission_b
-                fbo.attach(4, sampler2D, GL.GL_RGBA32F) # specular_or_preshading_and_shininess
+                fbo.attach(4, sampler2D, GL.GL_RGBA32F) # specular_and_shininess
                 fbo.attach(5, sampler2D, GL.GL_RGBA32F) # reflection
                 fbo.attach(6, sampler2D, GL.GL_RGBA32F) # env_center_and_mixed_value
                 fbo.attach(7, usampler2D, GL.GL_RGBA32UI) # mixed_uint
@@ -217,7 +217,7 @@ class DeferredRenderer(CommonRenderer):
         view_normal_and_emission_r_map = resolved.color_attachment(4)
         ambient_and_emission_g_map = resolved.color_attachment(2)
         diffuse_or_base_color_and_emission_b_map = resolved.color_attachment(0)
-        specular_or_preshading_and_shininess_map = resolved.color_attachment(1)
+        specular_and_shininess_map = resolved.color_attachment(1)
         reflection_map = resolved.color_attachment(5)
         env_center_and_mixed_value_map = resolved.color_attachment(6)
         mixed_uint_map = resolved.color_attachment(7)
@@ -233,7 +233,7 @@ class DeferredRenderer(CommonRenderer):
             self.deferred_render_program["view_normal_and_emission_r_map"] = view_normal_and_emission_r_map
             self.deferred_render_program["ambient_and_emission_g_map"] = ambient_and_emission_g_map
             self.deferred_render_program["diffuse_or_base_color_and_emission_b_map"] = diffuse_or_base_color_and_emission_b_map
-            self.deferred_render_program["specular_or_preshading_and_shininess_map"] = specular_or_preshading_and_shininess_map
+            self.deferred_render_program["specular_and_shininess_map"] = specular_and_shininess_map
             self.deferred_render_program["reflection_map"] = reflection_map
             self.deferred_render_program["env_center_and_mixed_value_map"] = env_center_and_mixed_value_map
             self.deferred_render_program["mixed_uint_map"] = mixed_uint_map

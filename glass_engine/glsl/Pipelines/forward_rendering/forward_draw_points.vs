@@ -14,7 +14,11 @@ layout (location = 2) in vec4 color;
 layout (location = 3) in vec4 affine_transform_row0;
 layout (location = 4) in vec4 affine_transform_row1;
 layout (location = 5) in vec4 affine_transform_row2;
+
+#if USE_BINDLESS_TEXTURE && USE_DYNAMIC_ENV_MAPPING
 layout (location = 6) in uvec2 env_map_handle;
+#endif
+
 layout (location = 7) in int visible;
 
 out VertexOut
@@ -25,8 +29,10 @@ out VertexOut
     vec3 tex_coord;
     vec4 color;
     flat int visible;
-    vec3 preshading_color;
+#if USE_BINDLESS_TEXTURE && USE_DYNAMIC_ENV_MAPPING
     flat uvec2 env_map_handle;
+#endif
+
 } vs_out;
 
 #include "../../include/transform.glsl"
@@ -53,7 +59,11 @@ void main()
     vec3 world_normal = normalize(camera.abs_position - world_pos);
     vs_out.view_pos = world_to_view(camera, world_pos);
     vs_out.view_TBN = mat3(vec3(1,0,0), vec3(0,0,1), normalize(-vs_out.view_pos));
+
+#if USE_BINDLESS_TEXTURE && USE_DYNAMIC_ENV_MAPPING
     vs_out.env_map_handle = env_map_handle;
+#endif
+
     vs_out.visible = visible;
     gl_Position = view_to_NDC(camera, vs_out.view_pos);
 
@@ -62,7 +72,7 @@ void main()
         material.shading_model == SHADING_MODEL_GOURAUD)
     {
         InternalMaterial internal_material = fetch_internal_material(color, material, tex_coord.st);
-        vs_out.preshading_color = lighting(internal_material, camera, camera.abs_position, world_pos, world_normal);
+        vs_out.color = vec4(lighting(internal_material, camera, camera.abs_position, world_pos, world_normal), 1.0);
     }
 #endif
 }

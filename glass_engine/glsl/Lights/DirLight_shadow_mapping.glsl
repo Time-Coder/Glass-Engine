@@ -1,7 +1,6 @@
 #if USE_DIR_LIGHT && USE_DIR_LIGHT_SHADOW
 
 #include "DirLight.glsl"
-#include "../include/Camera.glsl"
 #include "../include/random.glsl"
 
 vec4 world_to_lightNDC(DirLight light, Camera CSM_camera, int level, vec3 world_coord, out float depth_length)
@@ -16,7 +15,8 @@ vec4 world_to_lightNDC(DirLight light, Camera CSM_camera, int level, vec3 world_
         back_offset = dot(center, -light.direction) - dot(bounding_sphere.center, -light.direction) - bounding_sphere.radius;
     }
 
-    vec2 meters_per_pixel = 2*bounding_sphere.radius / textureSize(sampler2DArray(light.depth_map_handle), 0).xy;
+    sampler2DArray depth_map = sampler2DArray(light.depth_map_handle);
+    vec2 meters_per_pixel = 2*bounding_sphere.radius / textureSize(depth_map, 0).xy;
     quat light_quat = quat_conj(light.abs_orientation);
     vec3 center_view = quat_apply(light_quat, center);
     center_view.xz = round(center_view.xz / meters_per_pixel)*meters_per_pixel;
@@ -40,12 +40,14 @@ vec4 world_to_lightNDC(DirLight light, Camera CSM_camera, int level, vec3 world_
 
 float _get_PCF_value(DirLight light, Camera CSM_camera, int level, vec3 frag_pos, vec3 frag_normal, float PCF_width, out int total_count, inout int rand_seed)
 {
+    sampler2DArray depth_map = sampler2DArray(light.depth_map_handle);
+
     float depth_length = 0;
     vec4 light_NDC = world_to_lightNDC(light, CSM_camera, level, frag_pos, depth_length);
     float self_depth = (light_NDC.z / light_NDC.w + 1) / 2;
 
     BoundingSphere bounding_sphere = Frustum_bounding_sphere(CSM_camera, level);
-    ivec2 tex_size = textureSize(sampler2DArray(light.depth_map_handle), 0).xy;
+    ivec2 tex_size = textureSize(depth_map, 0).xy;
     float beta = acos(max(0, dot(frag_normal, -light.direction)));
     float bias = (1+ceil(0.5*PCF_width)) * 2 * bounding_sphere.radius / max(tex_size.x, tex_size.y) * clamp(tan(beta), 0.2, 10.0);
     bias /= depth_length;
@@ -62,6 +64,7 @@ float _get_PCF_value(DirLight light, Camera CSM_camera, int level, vec3 frag_pos
 
     int not_occ_count = 0;
     total_count = 0;
+    
     for (int i = 0; i < n_samples; i++)
     {
         vec2 rand_result = rand2(frag_pos, rand_seed)-0.5;
@@ -72,7 +75,7 @@ float _get_PCF_value(DirLight light, Camera CSM_camera, int level, vec3 frag_pos
             continue;
         }
 
-        float sample_depth = max(texture(sampler2DArray(light.depth_map_handle), vec3(s, t, level)).r, 0.0);
+        float sample_depth = max(texture(depth_map, vec3(s, t, level)).r, 0.0);
         not_occ_count += (sample_depth > self_depth ? 1 : 0);
         total_count += 1;
     }

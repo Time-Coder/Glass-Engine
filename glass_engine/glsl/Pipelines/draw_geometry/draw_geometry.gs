@@ -95,14 +95,18 @@ void main()
         gs_out.affine_transform = gs_in[i].affine_transform;
         gs_out.view_pos = gl_in[i].gl_Position.xyz + explode_distance * face_view_normal;
         mat3 backup_TBN = mat3(face_view_tangent, face_view_bitangent, face_view_normal);
+#if USE_SHADING_MODEL_FLAT
         if (material.shading_model == SHADING_MODEL_FLAT)
         {
             gs_out.view_TBN = backup_TBN;
         }
         else
         {
+#endif
             gs_out.view_TBN = choose_good_TBN(i, backup_TBN);
+#if USE_SHADING_MODEL_FLAT
         }
+#endif
 
         gs_out.color = gs_in[i].color;
         gs_out.back_color = gs_in[i].back_color;

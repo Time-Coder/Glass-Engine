@@ -13,7 +13,11 @@ layout (location = 6) in vec4 back_color;
 layout (location = 7) in vec4 affine_transform_row0;
 layout (location = 8) in vec4 affine_transform_row1;
 layout (location = 9) in vec4 affine_transform_row2;
+
+#if USE_BINDLESS_TEXTURE && USE_DYNAMIC_ENV_MAPPING
 layout (location = 10) in uvec2 env_map_handle;
+#endif
+
 layout (location = 11) in int visible;
 
 out VertexOut

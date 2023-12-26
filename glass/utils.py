@@ -334,6 +334,10 @@ def printable_path(file_name):
     return result
 
 def save_var(var, file_path):
+    folder_path = os.path.dirname(os.path.abspath(file_path))
+    if not os.path.isdir(folder_path):
+        os.makedirs(folder_path)
+        
     with open(file_path, 'wb') as file:
         pickle.dump(var, file)
 

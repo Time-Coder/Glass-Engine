@@ -79,15 +79,19 @@ vec4 post_shading_all(
     }
 
     vec3 out_color3;
+#if USE_SHADING_MODEL_FLAT || USE_SHADING_MODEL_GOURAUD
     if (shading_info.material.shading_model == SHADING_MODEL_FLAT ||
         shading_info.material.shading_model == SHADING_MODEL_GOURAUD)
     {
-        out_color3 = shading_info.material.preshading_color;
+        out_color3 = shading_info.material.base_color;
     }
     else
     {
+#endif
         out_color3 = lighting(shading_info.material, CSM_camera, camera.abs_position, shading_info.world_pos, shading_info.world_normal);
+#if USE_SHADING_MODEL_FLAT || USE_SHADING_MODEL_GOURAUD
     }
+#endif
 
     out_color3 *= shading_info.material.ao;
     out_color3 += shading_info.material.emission;
@@ -142,16 +146,16 @@ vec4 shading_all(
     vec3 world_pos = view_to_world(camera, shading_info.view_pos);
     vec3 world_normal = view_dir_to_world(camera, shading_info.view_TBN[2]);
     vec3 env_center = transform_apply(shading_info.affine_transform, shading_info.mesh_center);
-    internal_material.preshading_color = shading_info.preshading_color;
 
-    PostShadingInfo post_shading_info = PostShadingInfo(
-        internal_material
+    PostShadingInfo post_shading_info;
+    post_shading_info.material = internal_material;
 #if USE_DYNAMIC_ENV_MAPPING
-        , shading_info.env_map
+    post_shading_info.env_map = shading_info.env_map;
 #endif
-        , shading_info.is_sphere,
-        world_pos, world_normal, env_center
-    );
+    post_shading_info.is_sphere = shading_info.is_sphere;
+    post_shading_info.world_pos = world_pos;
+    post_shading_info.world_normal = world_normal;
+    post_shading_info.env_center = env_center;
 
     return post_shading_all(camera, CSM_camera, background
 #if USE_FOG
