@@ -12,10 +12,6 @@ import os
 
 class CommonRenderer(Renderer):
 
-    __dir_light_depth_geo_shader_template = None
-    __dir_light_depth_lines_geo_shader_template = None
-    __dir_light_depth_points_geo_shader_template = None
-
     def __init__(self):
         Renderer.__init__(self)
 
@@ -50,54 +46,6 @@ class CommonRenderer(Renderer):
             self._fbos = {}
 
         return self._fbos
-    
-    @property
-    def dir_light_depth_geo_shader_path(self):
-        self_folder = os.path.dirname(os.path.abspath(__file__))
-        target_filename = GlassConfig.cache_folder + f"/DirLight_depth{self.camera.CSM_levels}.gs"
-        template_filename = self_folder + "/../glsl/Pipelines/DirLight_depth/DirLight_depth.gs"
-        if not os.path.isfile(target_filename) or modify_time(template_filename) > modify_time(target_filename):
-            if CommonRenderer.__dir_light_depth_geo_shader_template is None:
-                CommonRenderer.__dir_light_depth_geo_shader_template = cat(template_filename)
-
-            content = CommonRenderer.__dir_light_depth_geo_shader_template.replace("{CSM_levels}", str(self.camera.CSM_levels))
-            out_file = open(target_filename, "w")
-            out_file.write(content)
-            out_file.close()
-
-        return target_filename
-    
-    @property
-    def dir_light_depth_lines_geo_shader_path(self):
-        self_folder = os.path.dirname(os.path.abspath(__file__))
-        target_filename = GlassConfig.cache_folder + f"/DirLight_depth_lines{self.camera.CSM_levels}.gs"
-        template_filename = self_folder + "/../glsl/Pipelines/DirLight_depth/DirLight_depth_lines.gs"
-        if not os.path.isfile(target_filename) or modify_time(template_filename) > modify_time(target_filename):
-            if CommonRenderer.__dir_light_depth_lines_geo_shader_template is None:
-                CommonRenderer.__dir_light_depth_lines_geo_shader_template = cat(template_filename)
-
-            content = CommonRenderer.__dir_light_depth_lines_geo_shader_template.replace("{CSM_levels}", str(self.camera.CSM_levels))
-            out_file = open(target_filename, "w")
-            out_file.write(content)
-            out_file.close()
-
-        return target_filename
-
-    @property
-    def dir_light_depth_points_geo_shader_path(self):
-        self_folder = os.path.dirname(os.path.abspath(__file__))
-        target_filename = GlassConfig.cache_folder + f"/DirLight_depth_points{self.camera.CSM_levels}.gs"
-        template_filename = self_folder + "/../glsl/Pipelines/DirLight_depth/DirLight_depth_points.gs"
-        if not os.path.isfile(target_filename) or modify_time(template_filename) > modify_time(target_filename):
-            if CommonRenderer.__dir_light_depth_points_geo_shader_template is None:
-                CommonRenderer.__dir_light_depth_points_geo_shader_template = cat(template_filename)
-
-            content = CommonRenderer.__dir_light_depth_points_geo_shader_template.replace("{CSM_levels}", str(self.camera.CSM_levels))
-            out_file = open(target_filename, "w")
-            out_file.write(content)
-            out_file.close()
-
-        return target_filename
 
     @property
     def dir_light_depth_program(self):
@@ -108,9 +56,9 @@ class CommonRenderer(Renderer):
         program = ShaderProgram()
         GlassEngineConfig.define_for_program(program)
         self_folder = os.path.dirname(os.path.abspath(__file__))
-        program.add_include_path(self_folder + "/../glsl/Pipelines/DirLight_depth")
+        program.define("CSM_LEVELS", self.camera.CSM_levels)
         program.compile(self_folder + "/../glsl/Pipelines/DirLight_depth/DirLight_depth.vs")
-        program.compile(self.dir_light_depth_geo_shader_path)
+        program.compile(self_folder + "/../glsl/Pipelines/DirLight_depth/DirLight_depth.gs")
         program.compile(self_folder + "/../glsl/Pipelines/DirLight_depth/DirLight_depth.fs")
 
         self.programs[key] = program
@@ -126,9 +74,9 @@ class CommonRenderer(Renderer):
         self_folder = os.path.dirname(os.path.abspath(__file__))
         program = ShaderProgram()
         GlassEngineConfig.define_for_program(program)
-        program.add_include_path(self_folder + "/../glsl/Pipelines/DirLight_depth")
+        program.define("CSM_LEVELS", self.camera.CSM_levels)
         program.compile(self_folder + "/../glsl/Pipelines/DirLight_depth/DirLight_depth.vs")
-        program.compile(self.dir_light_depth_lines_geo_shader_path)
+        program.compile(self_folder + "/../glsl/Pipelines/DirLight_depth/DirLight_depth_lines.gs")
         program.compile(self_folder + "/../glsl/Pipelines/DirLight_depth/DirLight_depth.fs")
 
         self.programs[key] = program
@@ -144,9 +92,9 @@ class CommonRenderer(Renderer):
         self_folder = os.path.dirname(os.path.abspath(__file__))
         program = ShaderProgram()
         GlassEngineConfig.define_for_program(program)
-        program.add_include_path(self_folder + "/../glsl/Pipelines/DirLight_depth")
+        program.define("CSM_LEVELS", self.camera.CSM_levels)
         program.compile(self_folder + "/../glsl/Pipelines/DirLight_depth/DirLight_depth.vs")
-        program.compile(self.dir_light_depth_points_geo_shader_path)
+        program.compile(self_folder + "/../glsl/Pipelines/DirLight_depth/DirLight_depth_points.vs")
         program.compile(self_folder + "/../glsl/Pipelines/DirLight_depth/DirLight_depth.fs")
 
         self.programs[key] = program
@@ -471,7 +419,6 @@ class CommonRenderer(Renderer):
                             self.dir_light_depth_points_program["back_material"] = mesh._back_material
                             mesh.draw(self.dir_light_depth_points_program, instances)
 
-            error = GL.glGetError()
             new_handle = dir_light.depth_fbo.depth_attachment.handle
             if dir_light.depth_map_handle != new_handle:
                 dir_light.depth_map_handle = new_handle
