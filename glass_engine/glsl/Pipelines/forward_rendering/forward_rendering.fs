@@ -53,7 +53,7 @@ void main()
     ShadingInfo shading_info;
     shading_info.color = (gl_FrontFacing ? fs_in.color : fs_in.back_color);
 #if USE_DYNAMIC_ENV_MAPPING
-    shading_info.env_map = sampler2D(env_map_handle);
+    shading_info.env_map_handle = env_map_handle;
 #endif
     shading_info.is_opaque_pass = is_opaque_pass;
     shading_info.is_sphere = is_sphere;

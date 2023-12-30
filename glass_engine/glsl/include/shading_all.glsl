@@ -41,7 +41,7 @@ vec4 post_shading_all(
             , fog
 #endif
 #if USE_DYNAMIC_ENV_MAPPING
-            , shading_info.env_map
+            , shading_info.env_map_handle
 #endif
         );
     }
@@ -56,7 +56,7 @@ vec4 post_shading_all(
             , fog
 #endif
 #if USE_DYNAMIC_ENV_MAPPING
-            , shading_info.env_map
+            , shading_info.env_map_handle
 #endif
         );
     }
@@ -150,7 +150,7 @@ vec4 shading_all(
     PostShadingInfo post_shading_info;
     post_shading_info.material = internal_material;
 #if USE_DYNAMIC_ENV_MAPPING
-    post_shading_info.env_map = shading_info.env_map;
+    post_shading_info.env_map_handle = shading_info.env_map_handle;
 #endif
     post_shading_info.is_sphere = shading_info.is_sphere;
     post_shading_info.world_pos = world_pos;

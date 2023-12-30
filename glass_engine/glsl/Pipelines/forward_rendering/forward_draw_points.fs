@@ -51,7 +51,7 @@ void main()
     ShadingInfo shading_info;
     shading_info.color = fs_in.color;
 #if USE_DYNAMIC_ENV_MAPPING
-    shading_info.env_map = sampler2D(fs_in.env_map_handle);
+    shading_info.env_map_handle = fs_in.env_map_handle;
 #endif
     shading_info.is_opaque_pass = is_opaque_pass;
     shading_info.is_sphere = false;

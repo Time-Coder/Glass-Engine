@@ -365,7 +365,7 @@ class SSUBO(BO):
 			if not isinstance(value, int):
 				value = int(value)
 
-			self.bufferSubData(offset, 8, np.array([value], dtype=np.uint64))
+			self.bufferSubData(offset, 8, np.array(value, dtype=np.uint64))
 	
 	def _set_uvec3(self, offset:int, value:glm.uvec3):
 		if not isinstance(value, glm.uvec3):

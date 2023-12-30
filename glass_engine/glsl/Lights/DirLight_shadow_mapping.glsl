@@ -3,6 +3,10 @@
 #include "DirLight.glsl"
 #include "../include/random.glsl"
 
+#define DEPTH_MAP_WIDTH 1024
+#define DEPTH_MAP_HEIGHT 1024
+#define DEPTH_MAP_SIZE vec2(1024)
+
 vec4 world_to_lightNDC(DirLight light, Camera CSM_camera, int level, vec3 world_coord, out float depth_length)
 {
     BoundingSphere bounding_sphere = Frustum_bounding_sphere(CSM_camera, level);
@@ -15,8 +19,8 @@ vec4 world_to_lightNDC(DirLight light, Camera CSM_camera, int level, vec3 world_
         back_offset = dot(center, -light.direction) - dot(bounding_sphere.center, -light.direction) - bounding_sphere.radius;
     }
 
-    sampler2DArray depth_map = sampler2DArray(light.depth_map_handle);
-    vec2 meters_per_pixel = 2*bounding_sphere.radius / textureSize(depth_map, 0).xy;
+    vec2 meters_per_pixel = 2*bounding_sphere.radius / DEPTH_MAP_SIZE;
+
     quat light_quat = quat_conj(light.abs_orientation);
     vec3 center_view = quat_apply(light_quat, center);
     center_view.xz = round(center_view.xz / meters_per_pixel)*meters_per_pixel;
@@ -47,9 +51,8 @@ float _get_PCF_value(DirLight light, Camera CSM_camera, int level, vec3 frag_pos
     float self_depth = (light_NDC.z / light_NDC.w + 1) / 2;
 
     BoundingSphere bounding_sphere = Frustum_bounding_sphere(CSM_camera, level);
-    ivec2 tex_size = textureSize(depth_map, 0).xy;
     float beta = acos(max(0, dot(frag_normal, -light.direction)));
-    float bias = (1+ceil(0.5*PCF_width)) * 2 * bounding_sphere.radius / max(tex_size.x, tex_size.y) * clamp(tan(beta), 0.2, 10.0);
+    float bias = (1+ceil(0.5*PCF_width)) * 2 * bounding_sphere.radius / DEPTH_MAP_WIDTH * clamp(tan(beta), 0.2, 10.0);
     bias /= depth_length;
     self_depth -= bias;
 
@@ -57,7 +60,7 @@ float _get_PCF_value(DirLight light, Camera CSM_camera, int level, vec3 frag_pos
     depth_map_tex_coord.xy = (light_NDC.xy / light_NDC.w + 1) / 2;
     depth_map_tex_coord.z = level;
 
-    vec2 dst = 1.0 / tex_size;
+    vec2 dst = 1.0 / DEPTH_MAP_SIZE;
     float ds = dst.s;
     float dt = dst.t;
     int n_samples = 10;
