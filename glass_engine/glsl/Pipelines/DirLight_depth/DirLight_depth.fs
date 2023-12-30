@@ -1,6 +1,6 @@
 #version 430 core
 
-in GeometryOut
+in VertexOut
 {
     vec4 color;
     vec4 back_color;

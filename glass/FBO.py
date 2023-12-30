@@ -66,17 +66,18 @@ class FBO(BO):
 	@checktype
 	def attach(self, attach_point:int, attachment, internal_format:GLInfo.internal_formats=None):
 		
-		if self._attachments_attached:
-			raise RuntimeError("attempt to attach new attachment to used FBO")
-		
-		if not (0 <= attach_point < GLConfig.max_color_attachments) and \
-		   not (GL.GL_COLOR_ATTACHMENT0 <= attach_point < GL.GL_COLOR_ATTACHMENT0 + GLConfig.max_color_attachments) and \
-		   attach_point not in GLInfo.none_color_attachment_types:
-			max_value = GLConfig.max_color_attachments-1
-			max_enum = GLInfo.enum_map[GL.GL_COLOR_ATTACHMENT0 + max_value]
-			error_message = f"attach target(given as {attach_point}) should be in 0~{max_value} or GL_COLOR_ATTACHMENT0~{max_enum} for color attachment\n"
-			error_message += f"or be one of {GLInfo.none_color_attachment_types} for other attachments."
-			raise ValueError(error_message)
+		if GlassConfig.debug:
+			if self._attachments_attached:
+				raise RuntimeError("attempt to attach new attachment to used FBO")
+			
+			if not (0 <= attach_point < GLConfig.max_color_attachments) and \
+			   not (GL.GL_COLOR_ATTACHMENT0 <= attach_point < GL.GL_COLOR_ATTACHMENT0 + GLConfig.max_color_attachments) and \
+			   attach_point not in GLInfo.none_color_attachment_types:
+				max_value = GLConfig.max_color_attachments-1
+				max_enum = GLInfo.enum_map[GL.GL_COLOR_ATTACHMENT0 + max_value]
+				error_message = f"attach target(given as {attach_point}) should be in 0~{max_value} or GL_COLOR_ATTACHMENT0~{max_enum} for color attachment\n"
+				error_message += f"or be one of {GLInfo.none_color_attachment_types} for other attachments."
+				raise ValueError(error_message)
 		
 		if GL.GL_COLOR_ATTACHMENT0 <= attach_point < GL.GL_COLOR_ATTACHMENT0 + GLConfig.max_color_attachments:
 			attach_point = attach_point - GL.GL_COLOR_ATTACHMENT0
@@ -92,13 +93,13 @@ class FBO(BO):
 		
 		if GlassConfig.debug:
 			if self._samples is not None and \
-			attachment_type not in (sampler2DMS, isampler2DMS, usampler2DMS, RBO) and \
-			not isinstance(attachment, (sampler2DMS, isampler2DMS, usampler2DMS, RBO)):
+			   attachment_type not in (sampler2DMS, isampler2DMS, usampler2DMS, RBO) and \
+			   not isinstance(attachment, (sampler2DMS, isampler2DMS, usampler2DMS, RBO)):
 				raise TypeError("can only attach (sampler2DMS, isampler2DMS, usampler2DMS, RBO) to multi-samples FBO")
 			
 			if self._layers is not None and \
-			attachment_type not in (sampler2DArray,) and \
-			not isinstance(attachment, (sampler2DArray,)):
+			   attachment_type not in (sampler2DArray,) and \
+			   not isinstance(attachment, (sampler2DArray,)):
 				raise TypeError(f"can only attach (sampler2DArray,) to multi-layers FBO, {attachment_type.__class__.__name__} were given.")
 
 		if attachment is None:

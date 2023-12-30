@@ -66,26 +66,28 @@ vec4 textureCubeFace(samplerCube cube_image, vec2 tex_coord, int face_id)
     return texture(cube_image, cube_tex_coord);
 }
 
-vec2 textureQueryLodSeamless(sampler2D image, vec2 tex_coord)
+float reduce_value(float value)
+{
+    if (value > 0.9) value -= 1;
+    if (value < -0.9) value += 1;
+    return value;
+}
+
+vec2 textureQueryLodSeamless(sampler2D image, ivec2 texture_size, vec2 tex_coord)
 {
 #ifdef FRAGMENT_SHADER
-    ivec2 texture_size = textureSize(image, 0);
-    float ds_dx = dFdx(tex_coord.s);
-    if (ds_dx >= 0.9) ds_dx -= 1;
-    if (ds_dx <= -0.9) ds_dx += 1;
-    float ds_dy = dFdy(tex_coord.s);
-    if (ds_dy >= 0.9) ds_dy -= 1;
-    if (ds_dy <= -0.9) ds_dy += 1;
-    float dt_dx = dFdx(tex_coord.t);
-    if (dt_dx >= 0.9) dt_dx -= 1;
-    if (dt_dx <= -0.9) dt_dx += 1;
-    float dt_dy = dFdy(tex_coord.t);
-    if (dt_dy >= 0.9) dt_dy -= 1;
-    if (dt_dy <= -0.9) dt_dy += 1;
+    float ds_dx = reduce_value(dFdy(tex_coord.s));
+    float ds_dy = reduce_value(dFdy(tex_coord.s));
+    float dt_dx = reduce_value(dFdx(tex_coord.t));
+    float dt_dy = reduce_value(dFdy(tex_coord.t));
     vec2 dx = texture_size*vec2(ds_dx, dt_dx);
     vec2 dy = texture_size*vec2(ds_dy, dt_dy);
     float d = max( dot( dx, dx ), dot( dy, dy ) );
     float lod = 0.5 * log2(d);
+    if (lod > 7)
+    {
+        lod = log2(lod);
+    }
     vec2 result = textureQueryLod(image, tex_coord);
     result.x = lod;
     return result;
@@ -94,13 +96,23 @@ vec2 textureQueryLodSeamless(sampler2D image, vec2 tex_coord)
 #endif
 }
 
-vec4 textureSeamless(sampler2D image, vec2 tex_coord)
+vec2 textureQueryLodSeamless(sampler2D image, vec2 tex_coord)
 {
-    float lod = textureQueryLodSeamless(image, tex_coord).x;
+    return textureQueryLodSeamless(image, textureSize(image, 0), tex_coord);
+}
+
+vec4 textureSeamless(sampler2D image, ivec2 texture_size, vec2 tex_coord)
+{
+    float lod = textureQueryLodSeamless(image, texture_size, tex_coord).x;
     return textureLod(image, tex_coord, lod);
 }
 
-vec4 textureSphere(sampler2D image, vec3 sphecial_tex_coord, float bias)
+vec4 textureSeamless(sampler2D image, vec2 tex_coord)
+{
+    return textureSeamless(image, textureSize(image, 0), tex_coord);
+}
+
+vec4 textureSphere(sampler2D image, ivec2 texture_size, vec3 sphecial_tex_coord, float bias)
 {
     float len = length(sphecial_tex_coord);
     if (len < 1E-6)
@@ -111,13 +123,24 @@ vec4 textureSphere(sampler2D image, vec3 sphecial_tex_coord, float bias)
     vec2 tex_coord;
     tex_coord.x = 0.5*(atan(sphecial_tex_coord.x, sphecial_tex_coord.y)/PI + 1);
     tex_coord.y = asin(sphecial_tex_coord.z) / PI + 0.5;
+
     float cos_phi = length(sphecial_tex_coord.xy);
     float lod_factor = 1 - 0.99*pow(1-cos_phi, 20);
-    float texture_lod = lod_factor * textureQueryLodSeamless(image, tex_coord).x;
+    float texture_lod = lod_factor * textureQueryLodSeamless(image, texture_size, tex_coord).x;
     return textureLod(image, tex_coord, texture_lod+bias);
+}
+
+vec4 textureSphere(sampler2D image, vec3 sphecial_tex_coord, float bias)
+{
+    return textureSphere(image, textureSize(image, 0), sphecial_tex_coord, bias);
+}
+
+vec4 textureSphere(sampler2D image, ivec2 texture_size, vec3 sphecial_tex_coord)
+{
+    return textureSphere(image, texture_size, sphecial_tex_coord, 0);
 }
 
 vec4 textureSphere(sampler2D image, vec3 sphecial_tex_coord)
 {
-    return textureSphere(image, sphecial_tex_coord, 0);
+    return textureSphere(image, textureSize(image, 0), sphecial_tex_coord);
 }

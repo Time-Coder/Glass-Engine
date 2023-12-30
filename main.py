@@ -3,8 +3,8 @@ from glass_engine.Geometries import * # 导入所有的基本几何体
 from glass_engine.Lights import *
 from glass_engine.Renderers import *
 
-# GlassConfig.debug = True
-# GlassConfig.recompile = True
+GlassConfig.debug = True
+GlassConfig.recompile = True
 
 scene = Scene()
 camera = Camera()
@@ -26,8 +26,9 @@ scene.skydome = "https://dl.polyhaven.org/file/ph-assets/HDRIs/extra/Tonemapped%
 
 sphere = Sphere() # 创建一个球体模型
 sphere.position.z = 1 # 设置球体位置
-# sphere.material.reflection.a = 1
-# sphere.material.dynamic_env_mapping = True
+sphere.material.reflection.a = 1
+# sphere.material.env_mix_diffuse = False
+sphere.material.dynamic_env_mapping = True
 scene.add(sphere) # 将球体添加到场景中
 
 # camera.screen.renderer = DeferredRenderer()

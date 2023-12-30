@@ -14,7 +14,7 @@ PostShadingInfo read_from_gbuffer(
 {
     PostShadingInfo shading_info;
 #if USE_DYNAMIC_ENV_MAPPING
-    shading_info.env_map = sampler2D(uvec2(0));
+    shading_info.env_map_handle = uvec2(0);
 #endif
     shading_info.is_sphere = false;
     shading_info.world_pos = vec3(0);
@@ -47,8 +47,7 @@ PostShadingInfo read_from_gbuffer(
     shading_info.env_center = env_center_and_mixed_value.xyz;
 
 #if USE_DYNAMIC_ENV_MAPPING
-    uvec2 env_map_handle = mixed_uint.xy;
-    shading_info.env_map = sampler2D(env_map_handle);
+    shading_info.env_map_handle = mixed_uint.xy;
 #endif
 
     shading_info.material.shading_model = uint((mixed_uint.z >> 3) & 0xF);
