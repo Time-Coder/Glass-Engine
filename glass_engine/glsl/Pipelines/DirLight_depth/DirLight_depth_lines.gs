@@ -16,7 +16,7 @@ in VertexOut
     flat int visible;
 } gs_in[];
 
-out GeometryOut
+out VertexOut
 {
     vec4 color;
     vec4 back_color;

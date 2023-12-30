@@ -94,7 +94,7 @@ class CommonRenderer(Renderer):
         GlassEngineConfig.define_for_program(program)
         program.define("CSM_LEVELS", self.camera.CSM_levels)
         program.compile(self_folder + "/../glsl/Pipelines/DirLight_depth/DirLight_depth.vs")
-        program.compile(self_folder + "/../glsl/Pipelines/DirLight_depth/DirLight_depth_points.vs")
+        program.compile(self_folder + "/../glsl/Pipelines/DirLight_depth/DirLight_depth_points.gs")
         program.compile(self_folder + "/../glsl/Pipelines/DirLight_depth/DirLight_depth.fs")
 
         self.programs[key] = program
