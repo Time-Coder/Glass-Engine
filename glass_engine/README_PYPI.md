@@ -59,6 +59,12 @@ camera.screen.show() # 相机显示屏显示渲染结果
 
 ## Release note
 
+* version 0.1.30:
+    * 兼容了 AMD 显卡
+    * 修复仅有天空盒不显示 bug
+    * 优化 shader 逻辑
+    * 改进 Qt API 选择逻辑
+
 * version 0.1.29:
     * 修改动态加载新功能代码 bug
 
