@@ -11,6 +11,8 @@ from glass.ImageLoader import ImageLoader
 import os
 import sys
 import platform
+import cv2
+import numpy as np
 
 import glm
 from OpenGL import GL
@@ -31,56 +33,56 @@ def import_AssimpModelLoader()->None:
     if postfix == "-win32.pyd":
         module_folder += "_win32"
 
-    md5_map = \
-    {
-        "assimp-vc143-mt.dll-win_amd64.pyd": "739010c640f5cc8472e9545bbec55215",
-        "AssimpModelLoader.cp36-win_amd64.pyd": "4b88c7af14add7c7a97303257cafcc39",
-        "AssimpModelLoader.cp37-win_amd64.pyd": "1264d2b5c4ba736c0cfc97ea64b0c980",
-        "AssimpModelLoader.cp38-win_amd64.pyd": "24f18a3c43f66af2060cf09a7f2e9fbf",
-        "AssimpModelLoader.cp39-win_amd64.pyd": "0e634908142f44a5995ec761630fdad1",
-        "AssimpModelLoader.cp310-win_amd64.pyd": "e4ac67a9a787f7a6dfb3ff360664f0ca",
-        "AssimpModelLoader.cp311-win_amd64.pyd": "abaf2bf9a2acf2681efdb53abeeeb4af",
-        "AssimpModelLoader.cp312-win_amd64.pyd": "9ff1b2b7c572d9617cf9ba0ca787f963",
+    # md5_map = \
+    # {
+    #     "assimp-vc143-mt.dll-win_amd64.pyd": "739010c640f5cc8472e9545bbec55215",
+    #     "AssimpModelLoader.cp36-win_amd64.pyd": "4b88c7af14add7c7a97303257cafcc39",
+    #     "AssimpModelLoader.cp37-win_amd64.pyd": "1264d2b5c4ba736c0cfc97ea64b0c980",
+    #     "AssimpModelLoader.cp38-win_amd64.pyd": "24f18a3c43f66af2060cf09a7f2e9fbf",
+    #     "AssimpModelLoader.cp39-win_amd64.pyd": "0e634908142f44a5995ec761630fdad1",
+    #     "AssimpModelLoader.cp310-win_amd64.pyd": "e4ac67a9a787f7a6dfb3ff360664f0ca",
+    #     "AssimpModelLoader.cp311-win_amd64.pyd": "abaf2bf9a2acf2681efdb53abeeeb4af",
+    #     "AssimpModelLoader.cp312-win_amd64.pyd": "9ff1b2b7c572d9617cf9ba0ca787f963",
 
-        "assimp-vc143-mt.dll-win32.pyd": "5e10d5946ee44584eda250ac458da889",
-        "AssimpModelLoader.cp36-win32.pyd": "32f734260138847c8734ac3dd3b1919d",
-        "AssimpModelLoader.cp37-win32.pyd": "692354b624b87c4e17a265f5db1475a8",
-        "AssimpModelLoader.cp38-win32.pyd": "f0ffa3502bb9b7c225e6bf20856932e6",
-        "AssimpModelLoader.cp39-win32.pyd": "762aa5a6b281b894ec955724ba613f19",
-        "AssimpModelLoader.cp310-win32.pyd": "563677469a4daa43ffc70a40dd993695",
-        "AssimpModelLoader.cp311-win32.pyd": "ceb6d0ce38f44ad82379c5298106ddbb",
-        "AssimpModelLoader.cp312-win32.pyd": "822fb1a01ca05f547033da5acacc233d",
-    }
+    #     "assimp-vc143-mt.dll-win32.pyd": "5e10d5946ee44584eda250ac458da889",
+    #     "AssimpModelLoader.cp36-win32.pyd": "32f734260138847c8734ac3dd3b1919d",
+    #     "AssimpModelLoader.cp37-win32.pyd": "692354b624b87c4e17a265f5db1475a8",
+    #     "AssimpModelLoader.cp38-win32.pyd": "f0ffa3502bb9b7c225e6bf20856932e6",
+    #     "AssimpModelLoader.cp39-win32.pyd": "762aa5a6b281b894ec955724ba613f19",
+    #     "AssimpModelLoader.cp310-win32.pyd": "563677469a4daa43ffc70a40dd993695",
+    #     "AssimpModelLoader.cp311-win32.pyd": "ceb6d0ce38f44ad82379c5298106ddbb",
+    #     "AssimpModelLoader.cp312-win32.pyd": "822fb1a01ca05f547033da5acacc233d",
+    # }
 
-    pyd_name = "AssimpModelLoader.cp3" + versions[1] + postfix
-    target_pyd = module_folder + "/" + pyd_name
-    gitee_url = ""
-    github_url = ""
-    if postfix == "-win_amd64.pyd":
-        gitee_url = "https://gitee.com/time-coder/Glass-Engine/raw/main/glass_engine/AssimpModelLoader/" + pyd_name
-        github_url = "https://raw.githubusercontent.com/Time-Coder/Glass-Engine/main/glass_engine/AssimpModelLoader/" + pyd_name
-    else:
-        gitee_url = "https://gitee.com/time-coder/Glass-Engine/raw/main/glass_engine/AssimpModelLoader_win32/" + pyd_name
-        github_url = "https://raw.githubusercontent.com/Time-Coder/Glass-Engine/main/glass_engine/AssimpModelLoader_win32/" + pyd_name
+    # pyd_name = "AssimpModelLoader.cp3" + versions[1] + postfix
+    # target_pyd = module_folder + "/" + pyd_name
+    # gitee_url = ""
+    # github_url = ""
+    # if postfix == "-win_amd64.pyd":
+    #     gitee_url = "https://gitee.com/time-coder/Glass-Engine/raw/main/glass_engine/AssimpModelLoader/" + pyd_name
+    #     github_url = "https://raw.githubusercontent.com/Time-Coder/Glass-Engine/main/glass_engine/AssimpModelLoader/" + pyd_name
+    # else:
+    #     gitee_url = "https://gitee.com/time-coder/Glass-Engine/raw/main/glass_engine/AssimpModelLoader_win32/" + pyd_name
+    #     github_url = "https://raw.githubusercontent.com/Time-Coder/Glass-Engine/main/glass_engine/AssimpModelLoader_win32/" + pyd_name
     
-    if is_China_user():
-        download(gitee_url, target_pyd, md5_map[pyd_name])
-    else:
-        download(github_url, target_pyd, md5_map[pyd_name])
+    # if is_China_user():
+    #     download(gitee_url, target_pyd, md5_map[pyd_name])
+    # else:
+    #     download(github_url, target_pyd, md5_map[pyd_name])
 
-    dll_name = "assimp-vc143-mt.dll"
-    target_dll = module_folder + "/" + dll_name
-    if postfix == "-win_amd64.pyd":
-        gitee_url = "https://gitee.com/time-coder/Glass-Engine/raw/main/glass_engine/AssimpModelLoader/assimp-vc143-mt.dll"
-        github_url = "https://raw.githubusercontent.com/Time-Coder/Glass-Engine/main/glass_engine/AssimpModelLoader/assimp-vc143-mt.dll"
-    else:
-        gitee_url = "https://gitee.com/time-coder/Glass-Engine/raw/main/glass_engine/AssimpModelLoader_win32/assimp-vc143-mt.dll"
-        github_url = "https://raw.githubusercontent.com/Time-Coder/Glass-Engine/main/glass_engine/AssimpModelLoader_win32/assimp-vc143-mt.dll"
+    # dll_name = "assimp-vc143-mt.dll"
+    # target_dll = module_folder + "/" + dll_name
+    # if postfix == "-win_amd64.pyd":
+    #     gitee_url = "https://gitee.com/time-coder/Glass-Engine/raw/main/glass_engine/AssimpModelLoader/assimp-vc143-mt.dll"
+    #     github_url = "https://raw.githubusercontent.com/Time-Coder/Glass-Engine/main/glass_engine/AssimpModelLoader/assimp-vc143-mt.dll"
+    # else:
+    #     gitee_url = "https://gitee.com/time-coder/Glass-Engine/raw/main/glass_engine/AssimpModelLoader_win32/assimp-vc143-mt.dll"
+    #     github_url = "https://raw.githubusercontent.com/Time-Coder/Glass-Engine/main/glass_engine/AssimpModelLoader_win32/assimp-vc143-mt.dll"
 
-    if is_China_user():
-        download(gitee_url, target_dll, md5_map[dll_name + postfix])
-    else:
-        download(github_url, target_dll, md5_map[dll_name + postfix])
+    # if is_China_user():
+    #     download(gitee_url, target_dll, md5_map[dll_name + postfix])
+    # else:
+    #     download(github_url, target_dll, md5_map[dll_name + postfix])
 
     if module_folder not in sys.path:
         sys.path.append(module_folder)
@@ -261,9 +263,12 @@ class Model(SceneNode):
             arm_map = None
             for texture_map in texture_maps:
                 texture_map_list = getattr(assimp_material, texture_map)
-                if texture_map_list:
-                    image_path = self.__dir_name + "/" + texture_map_list[0]
-                    
+                if not texture_map_list:
+                    continue
+
+                texture = texture_map_list[0]
+                if texture.file_name:
+                    image_path = self.__dir_name + "/" + texture.file_name
                     if texture_map == "roughness_map" and image_path == arm_map:
                         image = ImageLoader.load(image_path)
                         if len(image.shape) > 2 and image.shape[2] >= 3:
@@ -296,6 +301,27 @@ class Model(SceneNode):
                             material.ambient_map = sampler2D(image)
                         else:
                             setattr(material, texture_map, sampler2D.load(image_path))
+                else:
+                    if texture.height == 0:
+                        image = cv2.imdecode(np.asarray(bytearray(texture.content), dtype=np.uint8), cv2.IMREAD_UNCHANGED)
+                        image = cv2.cvtColor(image, cv2.COLOR_BGRA2RGBA)
+                    else:
+                        image = np.frombuffer(texture.content, dtype=np.uint8).reshape(texture.height, texture.width, 4)
+                    image = cv2.flip(image, 0)
+                    sampler = sampler2D(image)
+
+                    if texture_map == "ambient_map":
+                        image_dtype = image.dtype
+                        threshold = 0.5
+                        if "int" in str(image_dtype):
+                            threshold = 127
+
+                        if image.max() > threshold:
+                            image = (0.2*image).astype(image_dtype)
+
+                        material.ambient_map = sampler
+                    else:
+                        setattr(material, texture_map, sampler)
 
             self.__materials.append(material)
 

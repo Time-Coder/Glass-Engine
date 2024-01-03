@@ -624,6 +624,8 @@ class _MetaGLConfig(type):
             except:
                 _MetaGLConfig.__gl_renderer = cls.standalone_context.info["GL_RENDERER"]
 
+            _MetaGLConfig.__gl_renderer = _MetaGLConfig.__gl_renderer.replace("\\", " ").replace("/", " ")
+
         return _MetaGLConfig.__gl_renderer
 
     @property
