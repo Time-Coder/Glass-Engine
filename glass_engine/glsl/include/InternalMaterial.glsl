@@ -122,6 +122,13 @@ InternalMaterial fetch_internal_material(vec4 frag_color, Material material, vec
     internal_material.ao = 1;
     internal_material.roughness = material.roughness;
     internal_material.metallic = material.metallic;
+    if (textureValid(material.mr_map))
+    {
+        vec3 arm = max(texture(material.mr_map, tex_coord).rgb, 0.0);
+        internal_material.roughness = arm[1];
+        internal_material.metallic = arm[2];
+    }
+
     if (textureValid(material.arm_map))
     {
         vec3 arm = max(texture(material.arm_map, tex_coord).rgb, 0.0);

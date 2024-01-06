@@ -131,10 +131,13 @@ class GlassEngineConfig:
 
         has_dynamic_env_mapping = flag
         if not flag:
-            for material in Material.all_instances:
-                if material.dynamic_env_mapping:
-                    has_dynamic_env_mapping = True
-                    break
+            try:
+                for material in Material.all_instances:
+                    if material.dynamic_env_mapping:
+                        has_dynamic_env_mapping = True
+                        break
+            except:
+                pass
         
         self["USE_DYNAMIC_ENV_MAPPING"] = has_dynamic_env_mapping
 
