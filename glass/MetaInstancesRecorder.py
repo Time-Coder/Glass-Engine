@@ -1,5 +1,6 @@
 from .WeakSet import WeakSet
 import functools
+import copy
 
 class MetaInstancesRecorder(type):
 
@@ -11,6 +12,10 @@ class MetaInstancesRecorder(type):
             MetaInstancesRecorder._all_instances[cls] = WeakSet()
 
         return MetaInstancesRecorder._all_instances[cls]
+    
+    @property
+    def all_instances_copy(cls):
+        return copy.deepcopy(cls.all_instances)
     
     @staticmethod
     def init(func):

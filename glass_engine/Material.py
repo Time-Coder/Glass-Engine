@@ -168,6 +168,7 @@ class Material(metaclass=MetaInstancesRecorder):
         self._metallic_map:sampler2D = None
         self._roughness_map:sampler2D = None
         self._arm_map:sampler2D = None
+        self._mr_map:sampler2D = None
 
         self._opacity_user_set:bool = False
         self._reflection_user_set:bool = False
@@ -768,6 +769,21 @@ class Material(metaclass=MetaInstancesRecorder):
                 self._arm_map = sampler2D(arm_map)
             else:
                 self._arm_map.image = arm_map
+
+    @property
+    def mr_map(self):
+        return self._mr_map
+    
+    @mr_map.setter
+    @param_setter
+    def mr_map(self, mr_map:(sampler2D,str,np.ndarray)):
+        if isinstance(mr_map, sampler2D) or mr_map is None:
+            self._mr_map = mr_map
+        elif isinstance(mr_map, (str,np.ndarray)):
+            if self._mr_map is None:
+                self._mr_map = sampler2D(mr_map)
+            else:
+                self._mr_map.image = mr_map
 
     @property
     def reflection_map(self):

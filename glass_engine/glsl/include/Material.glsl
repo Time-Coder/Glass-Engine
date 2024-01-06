@@ -51,6 +51,7 @@ struct Material
     sampler2D roughness_map;
 	sampler2D metallic_map;
     sampler2D arm_map;
+	sampler2D mr_map;
 };
 
 struct InternalMaterial

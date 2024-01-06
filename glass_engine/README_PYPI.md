@@ -59,6 +59,11 @@ camera.screen.show() # 相机显示屏显示渲染结果
 
 ## Release note
 
+* version 0.1.31:
+    * 将 OpenGL 封装模块分离出来并单独打包为 python-glass
+    * 将模型加载模块分离出来并单独打包为 assimp
+    * 模型加载支持内置纹理
+
 * version 0.1.30:
     * 兼容了 AMD 显卡
     * 修复仅有天空盒不显示 bug
