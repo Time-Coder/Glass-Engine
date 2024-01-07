@@ -10,10 +10,6 @@ dist
 *.egg-info
 *.avi
 *.mp4
-static_check.py
-build.bat
-clear_compilation.py
-compile.py
 .vscode
 upload.bat
 generate_md5.py
