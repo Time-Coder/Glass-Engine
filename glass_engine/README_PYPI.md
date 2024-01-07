@@ -16,6 +16,8 @@ pip install glass-engine
 pip install glass-engine -i https://pypi.tuna.tsinghua.edu.cn/simple
 ```
 
+若发生安装错误，请参考 [Glass Engine 的安装教程](https://glass-engine-doc.readthedocs.io/zh/latest/installation/installation.html) 进行解决。
+
 接下来，让我们通过一个简单例子来直观感受一下 **Glass Engine** 的使用过程：
 
 ```python
@@ -53,10 +55,10 @@ camera.screen.show() # 相机显示屏显示渲染结果
 * Gitee 项目主页：<https://gitee.com/time-coder/Glass-Engine>
 * 文档：<https://glass-engine-doc.readthedocs.io/zh/latest/>
 
-## 说明
-* 若发生 PyOpenGL-accelerate 安装失败的情况，请到 [github](https://github.com/Time-Coder/Glass-Engine/tree/main/PyOpenGL-accelerate) 或 [gitee](https://gitee.com/time-coder/Glass-Engine/tree/main/PyOpenGL-accelerate) 手动下载 PyOpenGL-accelerate for Python 3.12 的 wheel 包并使用 pip install 安装；
-
 ## Release notes
+
+* version 0.1.35
+    * 修改 PyPI 主页文档
 
 * version 0.1.34:
     * 删除对 OpenEXR 的依赖，使用 opencv 读取 exr
@@ -65,8 +67,8 @@ camera.screen.show() # 相机显示屏显示渲染结果
     * 修复打包错误
 
 * version 0.1.31:
-    * 将 OpenGL 封装模块分离出来并单独打包为 python-glass
-    * 将模型加载模块分离出来并单独打包为 assimp
+    * 将 OpenGL 封装模块分离出来并单独打包为 [python-glass](https://pypi.org/project/python-glass/)
+    * 将模型加载模块分离出来并单独打包为 [assimpy](https://pypi.org/project/assimpy/)
     * 模型加载支持内置纹理
 
 * version 0.1.30:
