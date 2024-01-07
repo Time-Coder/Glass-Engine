@@ -2,7 +2,15 @@ from setuptools import setup
 import os
 
 import platform
-import pybind11
+
+try:
+    import pybind11
+except:
+    import sys
+    import subprocess
+    subprocess.call([sys.executable, "-m", "pip", "install", "pybind11"])
+    import pybind11
+
 from pybind11.setup_helpers import Pybind11Extension
 
 def find_files(module, directory):
@@ -33,23 +41,24 @@ ext_modules = [
     ),
 ]
 
+with open("assimpy/README_PYPI.md", "r", encoding='utf-8') as in_file:
+    long_description = in_file.read()
+
 setup(
     name="assimpy",
-    version="5.3.1",
+    version="5.3.1.1",
     author="王炳辉 (BingHui-WANG)",
     author_email="binghui.wang@foxmail.com",
     description="3D model loader for Glass-Engine",
-    long_description="3D model loader for Glass-Engine",
-    long_description_content_type="text/plain",
+    long_description=long_description,
+    long_description_content_type="text/markdown",
     url="https://github.com/Time-Coder/Glass-Engine",
-    packages=['assimpy'],
-    package_data={
-        'assimpy': find_files("assimpy", "assimpy/assimp"),
-    },
+    include_package_data=False,
     platforms=["win_amd64", "win32"],
     python_requires=">=3.7",
     classifiers=[
         "Programming Language :: Python :: 3",
+        "License :: OSI Approved :: MIT License",
         "Operating System :: Microsoft :: Windows",
     ],
     ext_modules=ext_modules

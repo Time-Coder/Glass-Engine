@@ -3,8 +3,7 @@ from ..PostProcessEffects import FXAAEffect
 from ..Frame import Frame
 from ..GlassEngineConfig import GlassEngineConfig
 
-from glass import ShaderProgram, GLConfig, FBO, sampler2D, sampler2DMS, samplerCube, sampler2DArray, GlassConfig, GLInfo
-from glass.utils import cat, modify_time
+from glass import ShaderProgram, GLConfig, FBO, sampler2D, sampler2DMS, samplerCube, sampler2DArray, GLInfo
 
 from OpenGL import GL
 import glm
