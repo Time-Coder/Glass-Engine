@@ -1,8 +1,6 @@
 __pycache__
 __glcache__
 workspace
-temp_shaders
-*.txt
 *.c
 *.pyd/*
 build
@@ -14,6 +12,5 @@ dist
 upload.bat
 generate_md5.py
 used_shaders
-temp_shaders
 setup.py
 MANIFEST.in
