@@ -1,4 +1,31 @@
 import subprocess
 import sys
+import os
+import shutil
 
-subprocess.call([sys.executable, "setup_GlassEngine.py", "sdist", "bdist_wheel"])
+if os.path.isdir("build"):
+    shutil.rmtree("build")
+
+if os.path.isdir("glass_engine.egg-info"):
+    shutil.rmtree("glass_engine.egg-info")
+
+with open("README_GlassEngine.rst", "r", encoding="utf-8") as in_file:
+    content = in_file.read()
+
+with open("README.rst", "w", encoding="utf-8") as out_file:
+    out_file.write(content)
+
+with open("setup_GlassEngine.py", "r", encoding="utf-8") as in_file:
+    content = in_file.read()
+
+with open("setup.py", "w", encoding="utf-8") as out_file:
+    out_file.write(content)
+
+with open("MANIFEST.in", "w", encoding="utf-8") as out_file:
+    out_file.write(
+"""include glass_engine/images/glass_engine_logo256.png
+include glass_engine/images/start.png
+include glass_engine/README_PYPI.md
+""")
+
+subprocess.call([sys.executable, "-m", "build", "--config-setting=-i", "--config-setting=https://pypi.tuna.tsinghua.edu.cn/simple"])

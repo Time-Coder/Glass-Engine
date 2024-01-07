@@ -11,9 +11,11 @@ import time
 import glm
 import sys
 from OpenGL import GL
-import numpy as np
+
 import os
+os.environ["OPENCV_IO_ENABLE_OPENEXR"] = "1"
 import cv2
+import numpy as np
 import warnings
 
 def __new__(cls, *args, **kwargs):

@@ -4,11 +4,11 @@ from ..Manipulators.Manipulator import Manipulator
 
 try:
     import PySide2
-    from PySide2.QtOpenGLWidgets import QOpenGLWidget
 except ModuleNotFoundError:
     pip_install("PySide2")
     import PySide2
-    from PySide2.QtOpenGLWidgets import QOpenGLWidget
+    
+from PySide2.QtOpenGLWidgets import QOpenGLWidget
 
 import glm
 

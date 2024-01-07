@@ -4,11 +4,11 @@ from ..Manipulators.Manipulator import Manipulator
 
 try:
     import PyQt5
-    from PyQt5.QtWidgets import QOpenGLWidget
 except ModuleNotFoundError:
     pip_install("PyQt5")
     import PyQt5
-    from PyQt5.QtWidgets import QOpenGLWidget
+
+from PyQt5.QtWidgets import QOpenGLWidget
 
 import glm
 

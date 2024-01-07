@@ -19,3 +19,5 @@ upload.bat
 generate_md5.py
 used_shaders
 temp_shaders
+setup.py
+MANIFEST.in

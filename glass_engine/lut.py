@@ -1,5 +1,7 @@
-import numpy as np
+import os
+os.environ["OPENCV_IO_ENABLE_OPENEXR"] = "1"
 import cv2
+import numpy as np
 import re
 
 def generate_standard_LUT(LUT_3D_size:int=64, dest_file_name:str=None):

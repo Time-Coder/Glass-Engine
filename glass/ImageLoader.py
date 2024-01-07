@@ -1,66 +1,12 @@
-import cv2
 import os
+os.environ["OPENCV_IO_ENABLE_OPENEXR"] = "1"
+import cv2
 from PIL import Image
 import numpy as np
-import platform
-import importlib
 
 from .utils import extname, printable_path, is_url, md5s
-from .download import is_China_user, pip_install, download
+from .download import download
 from .GlassConfig import GlassConfig
-
-OpenEXR = None
-Imath = None
-
-def import_OpenEXR()->None:
-    global OpenEXR
-    global Imath
-
-    if OpenEXR is not None:
-        return
-
-    try:
-        OpenEXR = importlib.import_module("OpenEXR")
-        Imath = importlib.import_module("Imath")
-    except:
-        version = ".".join(platform.python_version().split(".")[:2])
-        plat = "x64" if platform.architecture()[0] == "64bit" else "win32"
-        if version == "3.12":
-            github_url = ""
-            gitee_url = ""
-
-            if plat == "x64":
-                github_url = "https://raw.githubusercontent.com/Time-Coder/Glass-Engine/main/OpenEXR/OpenEXR-1.3.9-cp312-cp312-win_amd64.whl"
-                gitee_url = "https://gitee.com/time-coder/Glass-Engine/raw/main/OpenEXR/OpenEXR-1.3.9-cp312-cp312-win_amd64.whl"
-            else:
-                github_url = "https://raw.githubusercontent.com/Time-Coder/Glass-Engine/main/OpenEXR/OpenEXR-1.3.9-cp312-cp312-win32.whl"
-                gitee_url = "https://gitee.com/time-coder/Glass-Engine/raw/main/OpenEXR/OpenEXR-1.3.9-cp312-cp312-win32.whl"
-
-            if is_China_user():
-                pip_install(gitee_url)
-            else:
-                pip_install(github_url)
-        else:
-            openexr_urls = \
-            {
-                ("3.6", "win32"): "https://download.lfd.uci.edu/pythonlibs/archived/cp36/OpenEXR-1.3.2-cp36-cp36m-win32.whl",
-                ("3.7", "win32"): "https://download.lfd.uci.edu/pythonlibs/archived/cp37/OpenEXR-1.3.7-cp37-cp37m-win32.whl",
-                ("3.8", "win32"): "https://download.lfd.uci.edu/pythonlibs/archived/OpenEXR-1.3.8-cp38-cp38-win32.whl",
-                ("3.9", "win32"): "https://download.lfd.uci.edu/pythonlibs/archived/OpenEXR-1.3.8-cp39-cp39-win32.whl",
-                ("3.10", "win32"): "https://download.lfd.uci.edu/pythonlibs/archived/OpenEXR-1.3.8-cp310-cp310-win32.whl",
-                ("3.11", "win32"): "https://download.lfd.uci.edu/pythonlibs/archived/OpenEXR-1.3.8-cp311-cp311-win32.whl",
-
-                ("3.6", "x64"): "https://download.lfd.uci.edu/pythonlibs/archived/cp36/OpenEXR-1.3.2-cp36-cp36m-win_amd64.whl",
-                ("3.7", "x64"): "https://download.lfd.uci.edu/pythonlibs/archived/cp37/OpenEXR-1.3.7-cp37-cp37m-win_amd64.whl",
-                ("3.8", "x64"): "https://download.lfd.uci.edu/pythonlibs/archived/OpenEXR-1.3.8-cp38-cp38-win_amd64.whl",
-                ("3.9", "x64"): "https://download.lfd.uci.edu/pythonlibs/archived/OpenEXR-1.3.8-cp39-cp39-win_amd64.whl",
-                ("3.10", "x64"): "https://download.lfd.uci.edu/pythonlibs/archived/OpenEXR-1.3.8-cp310-cp310-win_amd64.whl",
-                ("3.11", "x64"): "https://download.lfd.uci.edu/pythonlibs/archived/OpenEXR-1.3.8-cp311-cp311-win_amd64.whl"
-            }
-            pip_install(openexr_urls[(version, plat)])
-        
-        OpenEXR = importlib.import_module("OpenEXR")
-        Imath = importlib.import_module("Imath")
 
 class ImageLoader:
 
@@ -87,12 +33,9 @@ class ImageLoader:
         if GlassConfig.print:
             print(f"loading image: {printable_path(file_name)} ", end="", flush=True)
         image = None
-        if ext_name == "exr":
-            image = ImageLoader.OpenEXR_load(file_name)
-        else:
-            image = ImageLoader.cv2_load(file_name)
-            if image is None:
-                image = ImageLoader.PIL_load(file_name)
+        image = ImageLoader.cv2_load(file_name)
+        if image is None:
+            image = ImageLoader.PIL_load(file_name)
 
         if image is None:
             if GlassConfig.print:
@@ -150,20 +93,6 @@ class ImageLoader:
             return np.array(pil_image)
         except:
             return None
-    
-    @staticmethod
-    def OpenEXR_load(file_name):
-        import_OpenEXR()
-        pt = Imath.PixelType(Imath.PixelType.FLOAT)
-        img_exr = OpenEXR.InputFile(file_name)
-        dw = img_exr.header()['dataWindow']
-        shape = (dw.max.y - dw.min.y + 1, dw.max.x - dw.min.x + 1)
-        r_bytes, g_bytes, b_bytes = img_exr.channels('RGB', pt)
-        r = np.frombuffer(r_bytes, dtype=np.float32).reshape(shape)
-        g = np.frombuffer(g_bytes, dtype=np.float32).reshape(shape)
-        b = np.frombuffer(b_bytes, dtype=np.float32).reshape(shape)
-
-        return cv2.merge((r, g, b))
     
     @staticmethod
     def tone_mapping(image):

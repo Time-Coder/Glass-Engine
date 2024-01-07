@@ -55,9 +55,14 @@ camera.screen.show() # 相机显示屏显示渲染结果
 
 ## 说明
 * 若发生 PyOpenGL-accelerate 安装失败的情况，请到 [github](https://github.com/Time-Coder/Glass-Engine/tree/main/PyOpenGL-accelerate) 或 [gitee](https://gitee.com/time-coder/Glass-Engine/tree/main/PyOpenGL-accelerate) 手动下载 PyOpenGL-accelerate for Python 3.12 的 wheel 包并使用 pip install 安装；
-* 若发生 moderngl 安装失败的情况，请到 [github](https://github.com/Time-Coder/Glass-Engine/tree/main/moderngl) 或 [gitee](https://gitee.com/time-coder/Glass-Engine/tree/main/moderngl) 手动下载 moderngl for Python 3.12 的 wheel 包并使用 pip install 安装。
 
-## Release note
+## Release notes
+
+* version 0.1.34:
+    * 删除对 OpenEXR 的依赖，使用 opencv 读取 exr
+
+* version 0.1.33:
+    * 修复打包错误
 
 * version 0.1.31:
     * 将 OpenGL 封装模块分离出来并单独打包为 python-glass
