@@ -56,8 +56,6 @@ Glass Engine -- 易用的 Python 3D 渲染引擎
 - :kbd:`W` 向前移动，:kbd:`S` 向后移动
 - :kbd:`E` 向上移动，:kbd:`C` 向下移动
 
-并可通过鼠标滚轮来缩放场景。
-
 怎么样，是不是很简单、直观、易用？如果你感兴趣的话，就让我们开始接下来的 3D 渲染之旅吧！
 
 - 文档：https://glass-engine-doc.readthedocs.io/zh/latest/

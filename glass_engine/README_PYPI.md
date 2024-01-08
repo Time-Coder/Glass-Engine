@@ -47,8 +47,6 @@ camera.screen.show() # 相机显示屏显示渲染结果
 * <kbd>W</kbd> 向前移动，<kbd>S</kbd> 向后移动
 * <kbd>E</kbd> 向上移动，<kbd>C</kbd> 向下移动
 
-并可通过鼠标滚轮来缩放场景。
-
 怎么样，是不是很简单、直观、易用？如果你感兴趣的话，就让我们开始接下来的 3D 渲染之旅吧！
 
 * Github 项目主页：<https://github.com/Time-Coder/Glass-Engine>
@@ -56,6 +54,9 @@ camera.screen.show() # 相机显示屏显示渲染结果
 * 文档：<https://glass-engine-doc.readthedocs.io/zh/latest/>
 
 ## Release notes
+
+* version 0.1.36
+    * 修复纹理数超过硬件限制问题
 
 * version 0.1.35
     * 修改 PyPI 主页文档
@@ -70,6 +71,7 @@ camera.screen.show() # 相机显示屏显示渲染结果
     * 将 OpenGL 封装模块分离出来并单独打包为 [python-glass](https://pypi.org/project/python-glass/)
     * 将模型加载模块分离出来并单独打包为 [assimpy](https://pypi.org/project/assimpy/)
     * 模型加载支持内置纹理
+    * 添加对 metallic-roughness map 的支持
 
 * version 0.1.30:
     * 兼容了 AMD 显卡
