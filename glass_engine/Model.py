@@ -235,13 +235,15 @@ class Model(SceneNode):
                 len(assimp_material.metallic_map) > 0 and \
                 assimp_material.ao_map[0].key == assimp_material.metallic_map[0].key):
                 self._set_texture(material, "arm_map", assimp_material.ao_map[0])
+                material.arm_use_a = True
                 use_arm = True
 
             if not use_arm and \
                (len(assimp_material.roughness_map) > 0 and \
                 len(assimp_material.metallic_map) > 0 and \
                 assimp_material.roughness_map[0].key == assimp_material.metallic_map[0].key):
-                self._set_texture(material, "mr_map", assimp_material.roughness_map[0])
+                self._set_texture(material, "arm_map", assimp_material.roughness_map[0])
+                material.arm_use_a = False
                 use_mr = True
             
             for texture_name in texture_names:

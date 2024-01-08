@@ -123,7 +123,7 @@ class DeferredRenderer(CommonRenderer):
                 fbo.attach(0, sampler2DMS, GL.GL_RGBA32F) # view_pos_and_alpha
                 fbo.attach(1, sampler2DMS, GL.GL_RGBA32F) # view_normal_and_emission_r
                 fbo.attach(2, sampler2DMS, GL.GL_RGBA32F) # ambient_and_emission_g
-                fbo.attach(3, sampler2DMS, GL.GL_RGBA32F) # diffuse_or_base_color_and_emission_b
+                fbo.attach(3, sampler2DMS, GL.GL_RGBA32F) # base_color_and_emission_b
                 fbo.attach(4, sampler2DMS, GL.GL_RGBA32F) # specular_and_shininess
                 fbo.attach(5, sampler2DMS, GL.GL_RGBA32F) # reflection
                 fbo.attach(6, sampler2DMS, GL.GL_RGBA32F) # env_center_and_mixed_value
@@ -141,7 +141,7 @@ class DeferredRenderer(CommonRenderer):
                 fbo.attach(0, sampler2D, GL.GL_RGBA32F) # view_pos_and_alpha
                 fbo.attach(1, sampler2D, GL.GL_RGBA32F) # view_normal_and_emission_r
                 fbo.attach(2, sampler2D, GL.GL_RGBA32F) # ambient_and_emission_g
-                fbo.attach(3, sampler2D, GL.GL_RGBA32F) # diffuse_or_base_color_and_emission_b
+                fbo.attach(3, sampler2D, GL.GL_RGBA32F) # base_color_and_emission_b
                 fbo.attach(4, sampler2D, GL.GL_RGBA32F) # specular_and_shininess
                 fbo.attach(5, sampler2D, GL.GL_RGBA32F) # reflection
                 fbo.attach(6, sampler2D, GL.GL_RGBA32F) # env_center_and_mixed_value

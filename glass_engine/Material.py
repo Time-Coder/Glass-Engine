@@ -20,9 +20,9 @@ def param_setter(func):
 
         should_test_transparent = False
         if func.__name__ in \
-            ["diffuse_map", "ambient_map", "specular_map", "emission_map",
+           ["ambient_map", "specular_map", "emission_map",
             "reflection_map", "refractive_index", "base_color_map"] and \
-            not self._opacity_user_set and self._opacity == 0:
+           not self._opacity_user_set and self._opacity == 0:
             self._opacity = 1
             should_test_transparent = True
 
@@ -43,7 +43,6 @@ def param_setter(func):
                     
                     old_should_callback = self._should_callback
                     self._should_callback = False
-                    self.diffuse = used_color
                     self.base_color = used_color
                     self._should_callback = old_should_callback
 
@@ -127,7 +126,7 @@ class Material(metaclass=MetaInstancesRecorder):
         self._shading_model:Material.ShadingModel = Material.ShadingModel.PhongBlinn
 
         self._ambient:callback_vec3 = callback_vec3(0, 0, 0, self._color_change_callback)
-        self._diffuse:callback_vec3 = callback_vec3(0.396, 0.74151, 0.69102, self._color_change_callback)
+        self._base_color:callback_vec3 = callback_vec3(0.396, 0.74151, 0.69102, self._color_change_callback)
         self._specular:callback_vec3 = callback_vec3(0.3, 0.3, 0.3, self._color_change_callback)
         self._shininess:float = 0.6*128
         self._shininess_strength:float = 1
@@ -135,7 +134,6 @@ class Material(metaclass=MetaInstancesRecorder):
         self._emission_strength:float = 1
         self._opacity:float = 0
         self._height_scale:float = 0.05
-        self._base_color:callback_vec3 = callback_vec3(0.5, 0.5, 0.5, self._color_change_callback)
         self._metallic:float = 0.5
         self._roughness:float = 0
         self._recv_shadows:bool = True
@@ -154,10 +152,8 @@ class Material(metaclass=MetaInstancesRecorder):
         self._auto_update_env_map:bool = False
 
         self._ambient_map:sampler2D = None
-        self._diffuse_map:sampler2D = None
         self._specular_map:sampler2D = None
         self._shininess_map:sampler2D = None
-        self._glossiness_map:sampler2D = None
         self._emission_map:sampler2D = None
         self._normal_map:sampler2D = None
         self._height_map:sampler2D = None
@@ -168,8 +164,8 @@ class Material(metaclass=MetaInstancesRecorder):
         self._metallic_map:sampler2D = None
         self._roughness_map:sampler2D = None
         self._arm_map:sampler2D = None
-        self._mr_map:sampler2D = None
 
+        self.arm_use_a:bool = True
         self._opacity_user_set:bool = False
         self._reflection_user_set:bool = False
         self._has_transparent:bool = True
@@ -226,9 +222,6 @@ class Material(metaclass=MetaInstancesRecorder):
 
                 if colors is not None and colors.size > 0 and np.all(colors == colors[0, :]):
                     used_color = glm.vec3(colors[0, 0], colors[0, 1], colors[0, 2])
-                    if self._prop_name != "diffuse":
-                        self.diffuse = used_color
-
                     if self._prop_name != "base_color":
                         self.base_color = used_color
 
@@ -406,21 +399,11 @@ class Material(metaclass=MetaInstancesRecorder):
 
     @property
     def diffuse(self)->callback_vec3:
-        self._prop_name = "diffuse"
-
-        return self._diffuse
+        return self.base_color
     
     @diffuse.setter
     def diffuse(self, diffuse:glm.vec3)->None:
-        self._prop_name = "diffuse"
-
-        old_should_callback = self._should_callback
-        self._should_callback = False
-        self._diffuse.r = diffuse.r
-        self._diffuse.g = diffuse.g
-        self._should_callback = old_should_callback
-
-        self._diffuse.b = diffuse.b
+        self.base_color = diffuse
 
     @property
     def specular(self)->callback_vec3:
@@ -617,20 +600,11 @@ class Material(metaclass=MetaInstancesRecorder):
 
     @property
     def diffuse_map(self):
-        return self._diffuse_map
+        return self.base_color_map
     
     @diffuse_map.setter
-    @param_setter
     def diffuse_map(self, diffuse_map:(sampler2D,str,np.ndarray)):
-        if isinstance(diffuse_map, sampler2D) or diffuse_map is None:
-            self._diffuse_map = diffuse_map
-        elif isinstance(diffuse_map, (str,np.ndarray)):
-            if self._diffuse_map is None:
-                self._diffuse_map = sampler2D(diffuse_map)
-            else:
-                self._diffuse_map.image = diffuse_map
-
-        self._test_transparent()
+        self.base_color_map = diffuse_map
 
     @property
     def specular_map(self):
@@ -661,21 +635,6 @@ class Material(metaclass=MetaInstancesRecorder):
                 self._shininess_map = sampler2D(shininess_map)
             else:
                 self._shininess_map.image = shininess_map
-
-    @property
-    def glossiness_map(self):
-        return self._glossiness_map
-    
-    @glossiness_map.setter
-    @param_setter
-    def glossiness_map(self, glossiness_map:(sampler2D,str,np.ndarray)):
-        if isinstance(glossiness_map, sampler2D) or glossiness_map is None:
-            self._glossiness_map = glossiness_map
-        elif isinstance(glossiness_map, (str,np.ndarray)):
-            if self._glossiness_map is None:
-                self._glossiness_map = sampler2D(glossiness_map)
-            else:
-                self._glossiness_map.image = glossiness_map
 
     @property
     def emission_map(self):
@@ -769,21 +728,6 @@ class Material(metaclass=MetaInstancesRecorder):
                 self._arm_map = sampler2D(arm_map)
             else:
                 self._arm_map.image = arm_map
-
-    @property
-    def mr_map(self):
-        return self._mr_map
-    
-    @mr_map.setter
-    @param_setter
-    def mr_map(self, mr_map:(sampler2D,str,np.ndarray)):
-        if isinstance(mr_map, sampler2D) or mr_map is None:
-            self._mr_map = mr_map
-        elif isinstance(mr_map, (str,np.ndarray)):
-            if self._mr_map is None:
-                self._mr_map = sampler2D(mr_map)
-            else:
-                self._mr_map.image = mr_map
 
     @property
     def reflection_map(self):

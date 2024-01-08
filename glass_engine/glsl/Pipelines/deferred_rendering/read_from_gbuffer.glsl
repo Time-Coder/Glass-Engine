@@ -24,7 +24,7 @@ PostShadingInfo read_from_gbuffer(
     vec4 view_pos_and_alpha = texture(view_pos_and_alpha_map, fs_in.tex_coord);
     vec4 view_normal_and_emission_r = texture(view_normal_and_emission_r_map, fs_in.tex_coord);
     vec4 ambient_and_emission_g = max(texture(ambient_and_emission_g_map, fs_in.tex_coord), 0.0);
-    vec4 diffuse_or_base_color_and_emission_b = max(texture(diffuse_or_base_color_and_emission_b_map, fs_in.tex_coord), 0.0);
+    vec4 base_color_and_emission_b = max(texture(diffuse_or_base_color_and_emission_b_map, fs_in.tex_coord), 0.0);
     vec4 specular_and_shininess = max(texture(specular_and_shininess_map, fs_in.tex_coord), 0.0);
     uvec4 mixed_uint = texture(mixed_uint_map, fs_in.tex_coord);
     shading_info.material.reflection = max(texture(reflection_map, fs_in.tex_coord), 0.0);
@@ -61,7 +61,7 @@ PostShadingInfo read_from_gbuffer(
     shading_info.material.specular_bands = get_digit(Toon_bands, 10);
     shading_info.material.diffuse_softness = 0.05;
     shading_info.material.specular_softness = 0.02;
-    shading_info.material.emission = vec3(view_normal_and_emission_r.a, ambient_and_emission_g.a, diffuse_or_base_color_and_emission_b.a);
+    shading_info.material.emission = vec3(view_normal_and_emission_r.a, ambient_and_emission_g.a, base_color_and_emission_b.a);
     shading_info.material.opacity = view_pos_and_alpha.a;
     shading_info.material.ambient = ambient_and_emission_g.rgb;
 
@@ -70,11 +70,11 @@ PostShadingInfo read_from_gbuffer(
         shading_info.material.shading_model == SHADING_MODEL_FLAT ||
         shading_info.material.shading_model == SHADING_MODEL_GOURAUD)
     {
-        shading_info.material.base_color = diffuse_or_base_color_and_emission_b.rgb;
+        shading_info.material.base_color = base_color_and_emission_b.rgb;
     }
     else
     {
-        shading_info.material.diffuse = diffuse_or_base_color_and_emission_b.rgb;
+        shading_info.material.base_color = base_color_and_emission_b.rgb;
         shading_info.material.specular = specular_and_shininess.rgb;
         shading_info.material.shininess = specular_and_shininess.a;
     }

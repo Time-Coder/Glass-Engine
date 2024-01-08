@@ -9,7 +9,7 @@ void write_to_gbuffer(
 
     in bool is_sphere,
     out vec4 view_pos_and_alpha, out vec4 view_normal_and_emission_r,
-    out vec4 ambient_and_emission_g, out vec4 diffuse_or_base_color_and_emission_b,
+    out vec4 ambient_and_emission_g, out vec4 base_color_and_emission_b,
     out vec4 specular_and_shininess, out vec4 reflection,
     out vec4 env_center_and_mixed_value, out uvec4 mixed_uint)
 {
@@ -29,15 +29,15 @@ void write_to_gbuffer(
         internal_material.shading_model == SHADING_MODEL_FLAT ||
         internal_material.shading_model == SHADING_MODEL_GOURAUD)
     {
-        diffuse_or_base_color_and_emission_b.rgb = internal_material.base_color;
+        base_color_and_emission_b.rgb = internal_material.base_color;
     }
     else
     {
-        diffuse_or_base_color_and_emission_b.rgb = internal_material.diffuse;
+        base_color_and_emission_b.rgb = internal_material.base_color;
     }
 
     ambient_and_emission_g.a = internal_material.emission.g;
-    diffuse_or_base_color_and_emission_b.a = internal_material.emission.b;
+    base_color_and_emission_b.a = internal_material.emission.b;
     specular_and_shininess.rgb = internal_material.specular;
     specular_and_shininess.a = internal_material.shininess;
     reflection = internal_material.reflection;

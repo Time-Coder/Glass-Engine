@@ -15,7 +15,7 @@ struct Material
 	uint shading_model;
     bool recv_shadows;
 	vec3 ambient;
-	vec3 diffuse;
+	vec3 base_color;
 	vec3 specular;
 	vec3 emission;
 	vec4 reflection;
@@ -25,7 +25,6 @@ struct Material
 	float opacity;
 	float height_scale;
 	float refractive_index;
-	vec3 base_color;
 	float metallic;
 	float roughness;
     int diffuse_bands;
@@ -36,22 +35,20 @@ struct Material
     bool fog;
     bool env_mix_diffuse;
 	bool dynamic_env_mapping;
+	bool arm_use_a;
 	sampler2D ambient_map;
-	sampler2D diffuse_map;
+	sampler2D base_color_map;
 	sampler2D specular_map;
 	sampler2D emission_map;
 	sampler2D shininess_map;
-	sampler2D glossiness_map;
 	sampler2D normal_map;
 	sampler2D height_map;
 	sampler2D opacity_map;
 	sampler2D reflection_map;
-	sampler2D base_color_map;
     sampler2D ao_map;
     sampler2D roughness_map;
 	sampler2D metallic_map;
     sampler2D arm_map;
-	sampler2D mr_map;
 };
 
 struct InternalMaterial
@@ -59,10 +56,9 @@ struct InternalMaterial
 	uint shading_model;
     bool recv_shadows;
 	vec3 ambient;
-	vec3 diffuse;
+	vec3 base_color;
 	vec3 specular;
 	vec3 emission;
-	vec3 base_color;
 	vec4 reflection;
 	float refractive_index;
 	float shininess;

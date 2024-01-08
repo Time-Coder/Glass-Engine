@@ -22,7 +22,7 @@ in flat uvec2 env_map_handle;
 layout(location=3) out vec4 view_pos_and_alpha;
 layout(location=4) out vec4 view_normal_and_emission_r;
 layout(location=2) out vec4 ambient_and_emission_g;
-layout(location=0) out vec4 diffuse_or_base_color_and_emission_b;
+layout(location=0) out vec4 base_color_and_emission_b;
 layout(location=1) out vec4 specular_and_shininess;
 layout(location=5) out vec4 reflection;
 layout(location=6) out vec4 env_center_and_mixed_value;
@@ -85,7 +85,7 @@ void main()
 
         is_sphere,
         view_pos_and_alpha, view_normal_and_emission_r, ambient_and_emission_g,
-        diffuse_or_base_color_and_emission_b, specular_and_shininess,
+        base_color_and_emission_b, specular_and_shininess,
         reflection, env_center_and_mixed_value, mixed_uint
     );
 }

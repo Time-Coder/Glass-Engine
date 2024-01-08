@@ -8,5 +8,5 @@ float Fresnel_diffuse(vec3 to_camera, vec3 normal, float rim_power)
 
 vec3 Fresnel_lighting(vec3 to_light, vec3 to_camera, vec3 normal, InternalMaterial material)
 {
-    return material.diffuse * Fresnel_diffuse(to_camera, normal, material.rim_power);
+    return material.base_color * Fresnel_diffuse(to_camera, normal, material.rim_power);
 }
