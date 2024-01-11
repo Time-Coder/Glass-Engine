@@ -6,32 +6,48 @@ import glm
 import os
 from OpenGL import GL
 
-class _MetaFrame:
+class _MetaFrame(type):
 
-    def __init__(cls):
-        cls.vertices = Vertices()
-        cls.indices = Indices()
-
-        cls.vertices[0] = Vertex(position=glm.vec2(-1, -1))
-        cls.vertices[1] = Vertex(position=glm.vec2(1, -1))
-        cls.vertices[2] = Vertex(position=glm.vec2(1, 1))
-        cls.vertices[3] = Vertex(position=glm.vec2(-1, 1))
-
-        cls.indices[0] = glm.uvec3(0, 1, 2)
-        cls.indices[1] = glm.uvec3(0, 2, 3)
-        cls._program = None
-
+    vertices = None
+    indices = None
+    program = None
+    
     @property
     def program(cls):
         if cls._program is None:
             self_folder = os.path.dirname(os.path.abspath(__file__)).replace("\\", "/")
-            cls.draw_frame_vs = os.path.abspath(self_folder + "/glsl/Pipelines/draw_frame.vs")
-            cls.draw_frame_fs = os.path.abspath(self_folder + "/glsl/Pipelines/draw_frame.fs")
+            _MetaFrame.draw_frame_vs = os.path.abspath(self_folder + "/glsl/Pipelines/draw_frame.vs")
+            _MetaFrame.draw_frame_fs = os.path.abspath(self_folder + "/glsl/Pipelines/draw_frame.fs")
 
-            cls.program = ShaderProgram()
-            cls.program.compile(cls.draw_frame_vs)
-            cls.program.compile(cls.draw_frame_fs)
-            cls.program.uniform_not_set_warning = False
+            _MetaFrame.program = ShaderProgram()
+            _MetaFrame.program.compile(cls.draw_frame_vs)
+            _MetaFrame.program.compile(cls.draw_frame_fs)
+            _MetaFrame.program.uniform_not_set_warning = False
+
+        return _MetaFrame.program
+    
+    @property
+    def vertices(cls):
+        if _MetaFrame.vertices is None:
+            _MetaFrame.vertices = Vertices()
+            
+
+            _MetaFrame.vertices[0] = Vertex(position=glm.vec2(-1, -1))
+            _MetaFrame.vertices[1] = Vertex(position=glm.vec2(1, -1))
+            _MetaFrame.vertices[2] = Vertex(position=glm.vec2(1, 1))
+            _MetaFrame.vertices[3] = Vertex(position=glm.vec2(-1, 1))
+
+        return _MetaFrame.vertices
+    
+    @property
+    def indices(cls):
+        if _MetaFrame.indices is None:
+            _MetaFrame.indices = Indices()
+            _MetaFrame.indices[0] = glm.uvec3(0, 1, 2)
+            _MetaFrame.indices[1] = glm.uvec3(0, 2, 3)
+
+        return _MetaFrame.indices
+
 
 class Frame(metaclass=_MetaFrame):
 

@@ -16,7 +16,12 @@ if op_system == 'Windows':
     getCurrentContext = WGL.wglGetCurrentContext
 elif op_system == 'Linux':
     from OpenGL import EGL
-    getCurrentContext = EGL.eglGetCurrentContext
+    def _get_current_context():
+        try:
+            return EGL.eglGetCurrentContext().address
+        except:
+            return 0
+    getCurrentContext = _get_current_context
 
 class StencilFunc:
 
@@ -566,6 +571,7 @@ class _MetaGLConfig(type):
 
     @property
     def current_context(cls):
+        context = getCurrentContext()
         return getCurrentContext()
         
     @property
