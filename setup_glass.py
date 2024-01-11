@@ -10,8 +10,7 @@ def find_files(module, directory):
                 file_list.append(file_path.replace("\\", "/"))
     return file_list
 
-extra_files = ["tree-sitter-glsl/glsl.dll"]
-extra_files.extend(find_files("glass", "glass/glsl"))
+extra_files = find_files("glass", "glass/glsl")
 
 with open("glass/README_PYPI.md", "r", encoding='utf-8') as in_file:
     long_description = in_file.read()
@@ -39,7 +38,6 @@ setuptools.setup(
         "PyGLM",
         "numpy",
         "opencv-python",
-        "Pillow",
         "maxminddb-geolite2",
         "wget",
         "requests",
