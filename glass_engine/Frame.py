@@ -6,31 +6,34 @@ import glm
 import os
 from OpenGL import GL
 
-def _init_Frame(cls):
-    cls.vertices = Vertices()
-    cls.indices = Indices()
+class _MetaFrame:
 
-    cls.vertices[0] = Vertex(position=glm.vec2(-1, -1))
-    cls.vertices[1] = Vertex(position=glm.vec2(1, -1))
-    cls.vertices[2] = Vertex(position=glm.vec2(1, 1))
-    cls.vertices[3] = Vertex(position=glm.vec2(-1, 1))
+    def __init__(cls):
+        cls.vertices = Vertices()
+        cls.indices = Indices()
 
-    cls.indices[0] = glm.uvec3(0, 1, 2)
-    cls.indices[1] = glm.uvec3(0, 2, 3)
+        cls.vertices[0] = Vertex(position=glm.vec2(-1, -1))
+        cls.vertices[1] = Vertex(position=glm.vec2(1, -1))
+        cls.vertices[2] = Vertex(position=glm.vec2(1, 1))
+        cls.vertices[3] = Vertex(position=glm.vec2(-1, 1))
 
-    self_folder = os.path.dirname(os.path.abspath(__file__)).replace("\\", "/")
-    cls.draw_frame_vs = os.path.abspath(self_folder + "/glsl/Pipelines/draw_frame.vs")
-    cls.draw_frame_fs = os.path.abspath(self_folder + "/glsl/Pipelines/draw_frame.fs")
+        cls.indices[0] = glm.uvec3(0, 1, 2)
+        cls.indices[1] = glm.uvec3(0, 2, 3)
+        cls._program = None
 
-    cls.program = ShaderProgram()
-    cls.program.compile(cls.draw_frame_vs)
-    cls.program.compile(cls.draw_frame_fs)
-    cls.program.uniform_not_set_warning = False
+    @property
+    def program(cls):
+        if cls._program is None:
+            self_folder = os.path.dirname(os.path.abspath(__file__)).replace("\\", "/")
+            cls.draw_frame_vs = os.path.abspath(self_folder + "/glsl/Pipelines/draw_frame.vs")
+            cls.draw_frame_fs = os.path.abspath(self_folder + "/glsl/Pipelines/draw_frame.fs")
 
-    return cls
+            cls.program = ShaderProgram()
+            cls.program.compile(cls.draw_frame_vs)
+            cls.program.compile(cls.draw_frame_fs)
+            cls.program.uniform_not_set_warning = False
 
-@_init_Frame
-class Frame:
+class Frame(metaclass=_MetaFrame):
 
     __array_geo_shader_template_content = None
 
