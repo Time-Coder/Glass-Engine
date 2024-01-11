@@ -3,6 +3,7 @@ from .pcpp import pcmd
 import sys
 import os
 import io
+import platform
 
 def macros_expand(code:str, defines:dict=None)->str:
     output = io.StringIO()
@@ -87,15 +88,33 @@ def _remove_segments(content, segments):
     return result
 
 glsl_parser = None
-def treeshake(code:str, defines:dict=None)->str:
+def _create_glsl_parser():
     global glsl_parser
-    if glsl_parser is None:
-        self_folder = os.path.dirname(os.path.abspath(__file__))
-        GLSL_LANGUAGE = Language(self_folder + "/tree-sitter-glsl/glsl.dll", 'glsl')
-        glsl_parser = Parser()
-        glsl_parser.set_language(GLSL_LANGUAGE)
+    if glsl_parser is not None:
+        return
+    
+    self_folder = os.path.dirname(os.path.abspath(__file__))
+    platform_system = platform.system()
+    if platform_system == "Linux":
+        dll_suffix += ".so"
+    elif platform_system == "Darwin":
+        dll_suffix += ".dylib"
+    else:
+        dll_suffix += ".dll"
+    dll_file = self_folder + "/tree-sitter-glsl/bin/glsl" + dll_suffix
+    src_file = self_folder + "/tree-sitter-glsl/src/parser.c"
+    if not os.path.isfile(dll_file):
+        if not os.path.isfile(src_file):
+            pass
 
+    GLSL_LANGUAGE = Language(dll_file, 'glsl')
+    glsl_parser = Parser()
+    glsl_parser.set_language(GLSL_LANGUAGE)
+
+def treeshake(code:str, defines:dict=None)->str:
     code = macros_expand(code, defines)
+
+    _create_glsl_parser()
     tree = glsl_parser.parse(bytes(code, sys.getdefaultencoding()))
     root_node = tree.root_node
     

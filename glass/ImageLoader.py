@@ -1,7 +1,6 @@
 import os
 os.environ["OPENCV_IO_ENABLE_OPENEXR"] = "1"
 import cv2
-from PIL import Image
 import numpy as np
 
 from .utils import extname, printable_path, is_url, md5s
@@ -35,9 +34,6 @@ class ImageLoader:
         image = None
         image = ImageLoader.cv2_load(file_name)
         if image is None:
-            image = ImageLoader.PIL_load(file_name)
-
-        if image is None:
             if GlassConfig.print:
                 print("")
             raise ValueError(f"not supported image format: '{file_name}'")
@@ -68,29 +64,6 @@ class ImageLoader:
                 image = cv2.cvtColor(image, cv2.COLOR_BGRA2RGBA)
 
             return image
-        except:
-            return None
-
-    @staticmethod
-    def PIL_load(file_name):
-        try:
-            pil_image = Image.open(file_name)
-            should_convert = False
-            dest_mode = pil_image.mode
-            if pil_image.mode == "CMYK":
-                dest_mode = "RGBA"
-                should_convert = True
-            elif pil_image.mode == "P":
-                dest_mode = "RGBA"
-                should_convert = True
-            elif pil_image.mode == "1":
-                dest_mode = "L"
-                should_convert = True
-
-            if should_convert:
-                pil_image = pil_image.convert(dest_mode)
-
-            return np.array(pil_image)
         except:
             return None
     
