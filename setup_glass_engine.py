@@ -18,7 +18,7 @@ extra_files.extend(find_files("glass_engine", "glass_engine/glsl"))
 
 setuptools.setup(
     name="glass_engine",
-    version="0.1.36",
+    version="0.1.38",
     author="王炳辉 (BingHui-WANG)",
     author_email="binghui.wang@foxmail.com",
     description="An easy-to-use 3D rendering engine for Python",

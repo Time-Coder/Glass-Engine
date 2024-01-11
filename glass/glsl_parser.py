@@ -17,11 +17,16 @@ def create_glsl_parser():
         dll_suffix = ".dylib"
     else:
         dll_suffix = ".dll"
+
+    if platform.architecture()[0] == "64bit":
+        plat = "x64"
+    else:
+        plat = "x86"
         
-    dll_file = self_folder + "/glsl/glsl" + dll_suffix
+    dll_file = self_folder + "/glsl/glsl-" + plat + dll_suffix
     if not os.path.isfile(dll_file):
         Language.build_library(dll_file, [self_folder + "/tree-sitter-glsl"])
-        trash_files = glob.glob(self_folder + "/glsl/glsl.*")
+        trash_files = glob.glob(self_folder + f"/glsl/glsl-{plat}.*")
         for trash_file in trash_files:
             if os.path.abspath(trash_file) != os.path.abspath(dll_file):
                 os.remove(trash_file)

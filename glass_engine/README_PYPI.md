@@ -55,6 +55,9 @@ camera.screen.show() # 相机显示屏显示渲染结果
 
 ## Release notes
 
+* version 0.1.38
+    * 兼容 Linux
+
 * version 0.1.36
     * 修复纹理数超过硬件限制问题
 

@@ -9,7 +9,7 @@ class Background:
     def __init__(self):
         self._skybox:SkyBox = SkyBox()
         self._skydome:SkyDome = SkyDome()
-        self._color:glm.vec4 = glm.vec4(0)
+        self._color:glm.vec4 = glm.vec4(0,0,0,1)
         self._distance:float = 100.0
 
     @property
