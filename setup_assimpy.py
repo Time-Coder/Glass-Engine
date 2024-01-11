@@ -22,7 +22,10 @@ def find_files(module, directory):
                 file_list.append(file_path.replace("\\", "/"))
     return file_list
 
-plat = "x64" if platform.architecture()[0] == "64bit" else "win32"
+if platform.architecture()[0] == "64bit":
+    plat = "x64"
+else:
+    plat = "x86"
 ext_modules = [
     Pybind11Extension(
         name="assimpy",
@@ -54,12 +57,11 @@ setup(
     long_description_content_type="text/markdown",
     url="https://github.com/Time-Coder/Glass-Engine",
     include_package_data=False,
-    platforms=["win_amd64", "win32"],
     python_requires=">=3.7",
     classifiers=[
         "Programming Language :: Python :: 3",
         "License :: OSI Approved :: MIT License",
-        "Operating System :: Microsoft :: Windows",
+        'Operating System :: OS Independent',
     ],
     ext_modules=ext_modules
 )

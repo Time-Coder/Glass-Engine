@@ -30,7 +30,6 @@ setuptools.setup(
         'glass_engine': extra_files,
     },
     include_package_data=False,
-    platforms=["win_amd64", "win32"],
     python_requires=">=3.7",
     install_requires=[
         "python-glass",
@@ -39,6 +38,6 @@ setuptools.setup(
     classifiers=[
         "Programming Language :: Python :: 3",
         "License :: OSI Approved :: MIT License",
-        "Operating System :: Microsoft :: Windows",
+        'Operating System :: OS Independent',
     ],
 )

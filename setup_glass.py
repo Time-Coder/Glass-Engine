@@ -17,7 +17,7 @@ with open("glass/README_PYPI.md", "r", encoding='utf-8') as in_file:
 
 setuptools.setup(
     name="python_glass",
-    version="0.1.34",
+    version="0.1.37",
     author="王炳辉 (BingHui-WANG)",
     author_email="binghui.wang@foxmail.com",
     description="OpenGL wrapper for Glass-Engine",
@@ -29,7 +29,6 @@ setuptools.setup(
         'glass': extra_files
     },
     include_package_data=False,
-    platforms=["win_amd64", "win32"],
     python_requires=">=3.7",
     install_requires=[
         "PyOpenGL",
@@ -47,6 +46,6 @@ setuptools.setup(
     classifiers=[
         "Programming Language :: Python :: 3",
         "License :: OSI Approved :: MIT License",
-        "Operating System :: Microsoft :: Windows",
+        'Operating System :: OS Independent',
     ],
 )

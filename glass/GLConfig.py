@@ -15,8 +15,8 @@ if op_system == 'Windows':
     from OpenGL import WGL
     getCurrentContext = WGL.wglGetCurrentContext
 elif op_system == 'Linux':
-    from OpenGL import GLX
-    getCurrentContext = GLX.glXGetCurrentContext
+    from OpenGL import EGL
+    getCurrentContext = EGL.eglGetCurrentContext
 
 class StencilFunc:
 

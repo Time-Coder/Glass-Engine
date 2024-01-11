@@ -2,6 +2,8 @@ import subprocess
 import sys
 import os
 import shutil
+import platform
+import glob
 
 if os.path.isdir("build"):
     shutil.rmtree("build")
@@ -32,8 +34,14 @@ subprocess.call([sys.executable, "-m", "pip", "install", "pip", "--upgrade", "-i
 subprocess.call([sys.executable, "-m", "pip", "install", "-r", "requirements.txt", "--upgrade", "-i", "https://pypi.tuna.tsinghua.edu.cn/simple"])
 subprocess.call([sys.executable, "-m", "build", "--config-setting=-i", "--config-setting=https://pypi.tuna.tsinghua.edu.cn/simple"])
 
-with open("README_GlassEngine.rst", "r", encoding="utf-8") as in_file:
+with open("README_glass_engine.rst", "r", encoding="utf-8") as in_file:
     content = in_file.read()
 
 with open("README.rst", "w", encoding="utf-8") as out_file:
     out_file.write(content)
+
+if platform.system() == "Linux":
+    files = glob.glob("dist/assimpy-*-linux_x86_64.whl")
+    for file in files:
+        subprocess.call([sys.executable, "-m", "auditwheel", "repair", file, "--plat=manylinux_2_35_x86_64", "-w", "dist"])
+        os.remove(file)
