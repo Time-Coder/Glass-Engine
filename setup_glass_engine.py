@@ -6,6 +6,10 @@ def find_files(module, directory):
     for root, _, files in os.walk(directory):
         for file in files:
             file_path = os.path.join(root, file)[(len(module) + 1) :]
+            abs_file_path = os.path.abspath(os.path.join(root, file)).replace("\\", "/")
+            if not os.path.isfile(abs_file_path):
+                continue
+
             if "__glcache__" not in file_path:
                 file_list.append(file_path.replace("\\", "/"))
     return file_list
@@ -13,8 +17,8 @@ def find_files(module, directory):
 with open("glass_engine/README_PYPI.md", "r", encoding='utf-8') as fh:
     long_description = fh.read()
 
-extra_files = ["images/glass_engine_logo64.png"]
-extra_files.extend(find_files("glass_engine", "glass_engine/glsl"))
+extra_files = ["images/glass_engine_logo64.png", "LICENSE"]
+extra_files += find_files("glass_engine", "glass_engine/glsl")
 
 setuptools.setup(
     name="glass_engine",

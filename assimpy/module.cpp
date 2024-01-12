@@ -1,9 +1,9 @@
-#include "assimpy.h"
+#include "assimpy_ext.h"
 
 #include <pybind11/pybind11.h>
 #include <pybind11/stl.h>
 
-PYBIND11_MODULE(assimpy, m)
+PYBIND11_MODULE(assimpy_ext, m)
 {
     pybind11::class_<aiColor3D>(m, "aiColor3D")
         .def_readwrite("r", &aiColor3D::r)

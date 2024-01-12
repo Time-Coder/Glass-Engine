@@ -5,7 +5,6 @@ tree-sitter
 PyGLM
 numpy
 opencv-python
-Pillow
 maxminddb-geolite2
 wget
 requests
@@ -16,3 +15,4 @@ twine
 wheel
 pybind11
 pyflakes
+pyinstaller

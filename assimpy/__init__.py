@@ -1,0 +1,1 @@
+from assimpy_ext import load

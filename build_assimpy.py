@@ -25,13 +25,14 @@ with open("setup.py", "w", encoding="utf-8") as out_file:
 
 with open("MANIFEST.in", "w") as out_file:
     out_file.write(
-"""include assimpy/README_PYPI.md
-include assimpy/assimpy.h
+"""include assimpy/LICENSE
+include assimpy/README_PYPI.md
+include assimpy/assimpy_ext.h
 recursive-include assimpy/assimp *
 """)
 
-subprocess.call([sys.executable, "-m", "pip", "install", "pip", "--upgrade", "-i", "https://pypi.tuna.tsinghua.edu.cn/simple"])
-subprocess.call([sys.executable, "-m", "pip", "install", "-r", "requirements.txt", "--upgrade", "-i", "https://pypi.tuna.tsinghua.edu.cn/simple"])
+# subprocess.call([sys.executable, "-m", "pip", "install", "pip", "--upgrade", "-i", "https://pypi.tuna.tsinghua.edu.cn/simple"])
+# subprocess.call([sys.executable, "-m", "pip", "install", "-r", "requirements.txt", "--upgrade", "-i", "https://pypi.tuna.tsinghua.edu.cn/simple"])
 subprocess.call([sys.executable, "-m", "build", "--config-setting=-i", "--config-setting=https://pypi.tuna.tsinghua.edu.cn/simple"])
 
 with open("README_glass_engine.rst", "r", encoding="utf-8") as in_file:

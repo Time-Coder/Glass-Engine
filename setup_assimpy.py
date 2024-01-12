@@ -1,4 +1,4 @@
-from setuptools import setup
+import setuptools
 import os
 
 import platform
@@ -13,23 +13,15 @@ except:
 
 from pybind11.setup_helpers import Pybind11Extension
 
-def find_files(module, directory):
-    file_list = []
-    for root, _, files in os.walk(directory):
-        for file in files:
-            file_path = os.path.join(root, file)[(len(module) + 1) :]
-            if "__glcache__" not in file_path:
-                file_list.append(file_path.replace("\\", "/"))
-    return file_list
-
 if platform.architecture()[0] == "64bit":
     plat = "x64"
 else:
     plat = "x86"
+
 ext_modules = [
     Pybind11Extension(
-        name="assimpy",
-        sources=sorted(["assimpy/assimpy.cpp", "assimpy/module.cpp"]),  # Sort source files for reproducibility
+        name="assimpy_ext",
+        sources=sorted(["assimpy/assimpy_ext.cpp", "assimpy/module.cpp"]),  # Sort source files for reproducibility
         include_dirs=[
             os.path.dirname(os.path.abspath(pybind11.__file__)).replace("\\", "/") + "/include",
             "assimpy/assimp/include"
@@ -44,12 +36,14 @@ ext_modules = [
     ),
 ]
 
+extra_files = ["LICENSE", "assimp/LICENSE"]
+
 with open("assimpy/README_PYPI.md", "r", encoding='utf-8') as in_file:
     long_description = in_file.read()
 
-setup(
+setuptools.setup(
     name="assimpy",
-    version="5.3.1.1",
+    version="5.3.1.2",
     author="王炳辉 (BingHui-WANG)",
     author_email="binghui.wang@foxmail.com",
     description="3D model loader for Glass-Engine",
@@ -63,6 +57,10 @@ setup(
         "License :: OSI Approved :: MIT License",
         'Operating System :: OS Independent',
     ],
+    packages=["assimpy", "assimpy/__pyinstaller"],
+    package_data={
+        'assimpy': extra_files,
+    },
     ext_modules=ext_modules,
     entry_points={'pyinstaller40': ['hook-dirs = assimpy.__pyinstaller:get_hook_dirs']}
 )

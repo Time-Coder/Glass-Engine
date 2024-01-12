@@ -571,7 +571,6 @@ class _MetaGLConfig(type):
 
     @property
     def current_context(cls):
-        context = getCurrentContext()
         return getCurrentContext()
         
     @property

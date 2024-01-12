@@ -26,6 +26,7 @@ with open("MANIFEST.in", "w", encoding="utf-8") as out_file:
 """include glass_engine/images/glass_engine_logo256.png
 include glass_engine/images/start.png
 include glass_engine/README_PYPI.md
+include glass_engine/LICENSE
 """)
 
 subprocess.call([sys.executable, "-m", "build", "--config-setting=-i", "--config-setting=https://pypi.tuna.tsinghua.edu.cn/simple"])

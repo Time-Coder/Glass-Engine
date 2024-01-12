@@ -27,6 +27,7 @@ with open("setup.py", "w", encoding="utf-8") as out_file:
 with open("MANIFEST.in", "w", encoding="utf-8") as out_file:
     out_file.write(
 """include glass/README_PYPI.md
+include glass/LICENSE
 """)
 
 subprocess.call([sys.executable, "-m", "build", "--config-setting=-i", "--config-setting=https://pypi.tuna.tsinghua.edu.cn/simple"])
