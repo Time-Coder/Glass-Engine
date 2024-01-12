@@ -63,5 +63,6 @@ setup(
         "License :: OSI Approved :: MIT License",
         'Operating System :: OS Independent',
     ],
-    ext_modules=ext_modules
+    ext_modules=ext_modules,
+    entry_points={'pyinstaller40': ['hook-dirs = assimpy.__pyinstaller:get_hook_dirs']}
 )
