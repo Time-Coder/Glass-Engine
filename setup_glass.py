@@ -38,7 +38,6 @@ setuptools.setup(
     install_requires=[
         "PyOpenGL",
         "PyOpenGL_accelerate",
-        "moderngl",
         "PyGLM",
         "numpy",
         "opencv-python",

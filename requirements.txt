@@ -1,6 +1,5 @@
 PyOpenGL
 PyOpenGL_accelerate
-moderngl
 tree-sitter
 PyGLM
 numpy
