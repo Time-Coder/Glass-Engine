@@ -184,8 +184,10 @@ class ShaderProgram(GPUProgram):
             shader_storage_block_var.unbind()
             shader_storage_block_var.bind(bound_var)
         
-    def compile(self, file_name:str, shader_type:GLInfo.shader_types=None):        
-        if not os.path.isfile(file_name):
+    def compile(self, file_name:str, shader_type:GLInfo.shader_types=None):
+        abs_file_name = os.path.abspath(file_name).replace("\\", "/")
+
+        if not os.path.isfile(abs_file_name):
             raise FileNotFoundError(file_name)
 
         if shader_type is None:

@@ -13,7 +13,7 @@ from datetime import datetime
 class ShaderEffect(PostProcessEffect):
 
     __template_content = ""
-    __template_filename = os.path.dirname(os.path.abspath(__file__)) + "/../glsl/PostProcessEffects/shader_effect_template.glsl"
+    __template_filename = os.path.abspath(os.path.dirname(os.path.abspath(__file__)) + "/../glsl/PostProcessEffects/shader_effect_template.glsl").replace("\\", "/")
 
     @checktype
     def __init__(self, shader_path:str=None, internal_format:GLInfo.internal_formats=GL.GL_RGBA32F, generate_mipmap:bool=False):
@@ -53,14 +53,11 @@ class ShaderEffect(PostProcessEffect):
     @shader_path.setter
     @checktype
     def shader_path(self, shader_path:str):
-        current_file_path = os.path.dirname(os.path.abspath(__file__))
-        if not os.path.isfile(shader_path) and not os.path.isabs(shader_path):
-            shader_path = current_file_path + "/" + shader_path
+        shader_path = os.path.abspath(shader_path).replace("\\", "/")
 
         if not os.path.isfile(shader_path):
             raise FileNotFoundError(shader_path)
-
-        shader_path = os.path.abspath(shader_path).replace("\\", "/")
+        
         if shader_path == self._shader_path:
             return
         

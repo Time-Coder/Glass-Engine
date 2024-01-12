@@ -234,11 +234,12 @@ class BaseShader(GLObject):
 		if self.is_compiled and not self._compiled_but_not_applied:
 			self.delete()
 
-		if not os.path.isfile(file_name):
+		abs_name = os.path.abspath(file_name).replace("\\", "/")
+
+		if not os.path.isfile(abs_name):
 			raise FileNotFoundError(file_name)
 		
 		rel_name = relative_path(file_name)
-		abs_name = os.path.abspath(file_name).replace("\\", "/")
 		used_name = rel_name if len(rel_name) < len(abs_name) else abs_name
 		self._file_name = used_name
 		base_name = os.path.basename(abs_name)

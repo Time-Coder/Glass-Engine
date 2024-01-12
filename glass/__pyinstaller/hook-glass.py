@@ -1,4 +1,5 @@
 import os
+import platform
 
 def find_files(directory):
     file_list = []
@@ -16,3 +17,5 @@ def find_files(directory):
 
 datas = find_files('glsl')
 datas.append((os.path.abspath(os.path.dirname(os.path.abspath(__file__)) + "/../LICENSE").replace("\\", "/"), "glass"))
+if platform.system() == "Linux":
+    hiddenimports = ["OpenGL.platform.egl"]
