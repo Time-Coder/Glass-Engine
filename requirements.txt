@@ -16,3 +16,4 @@ wheel
 pybind11
 pyflakes
 pyinstaller
+auditwheel
