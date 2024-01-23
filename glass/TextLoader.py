@@ -162,7 +162,10 @@ class TextLoader:
             return TextLoader._image_map[key]
 
         t = Font[font_family].text(content, point_size)
-        image = cv2.merge((color.r * t.bitmap, color.g * t.bitmap, color.b * t.bitmap, color.a * t.bitmap))
+        image = cv2.merge((255 * color.r * np.ones(t.bitmap.shape),
+                           255 * color.g * np.ones(t.bitmap.shape),
+                           255 * color.b * np.ones(t.bitmap.shape),
+                           color.a * t.bitmap))
         image = cv2.flip(image.astype(np.uint8), 0)
         TextLoader._image_map[key] = image
         return image

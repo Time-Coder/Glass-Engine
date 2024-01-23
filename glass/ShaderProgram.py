@@ -7,6 +7,7 @@ import struct
 import copy
 import ctypes
 
+from .VAO import VAO
 from .Uniform import Uniform
 from .GPUProgram import GPUProgram, LinkError, LinkWarning
 from .Shaders import VertexShader, FragmentShader, GeometryShader, TessControlShader, TessEvaluationShader
@@ -628,7 +629,7 @@ class ShaderProgram(GPUProgram):
                 
             warnings.warn(warning_message, category=RuntimeWarning)
 
-    def __preprocess_before_draw(self, primitive_type, vertices, indices, instances, start_index, total, times, is_patch):
+    def __preprocess_before_draw(self, primitive_type, vertices, indices, instances, vao, start_index, total, times, is_patch):
         if GlassConfig.debug:
             if is_patch:
                 if not self.tess_ctrl_shader.is_compiled:
@@ -645,9 +646,9 @@ class ShaderProgram(GPUProgram):
                primitive_type not in self._acceptable_primitives:
                 raise RuntimeError(f"geometry shader {self.geometry_shader.file_name}\nonly accept: {self._acceptable_primitives}, but {primitive_type.__repr__()} was given")
 
-        if indices is None:
+        if vertices is not None and indices is None:
             total = self.__check_vertices(vertices, start_index, total)
-        else:
+        elif indices is not None:
             total = self.__check_indices(indices, total)
 
         if times is None and instances is not None:
@@ -674,6 +675,11 @@ class ShaderProgram(GPUProgram):
                     vertices._vao_map[key].setEBO(indices.ebo)
                 else:
                     total = 0
+
+        if vao is not None:
+            vao.bind()
+            if vao.ebo is not None:
+                vao.ebo.bind()
 
         return total, times
 
@@ -768,10 +774,11 @@ class ShaderProgram(GPUProgram):
 
     def draw_patches(self,
           vertices:Vertices=None, indices:Indices=None, instances:Instances=None,
+          vao:VAO=None,
           start_index:int=0, total:int=None, times:int=None):
 
         total, times = self.__preprocess_before_draw(
-            None, vertices, indices, instances,
+            None, vertices, indices, instances, vao,
             start_index, total, times, True)
         
         if (total is not None and total <= 0) or \
@@ -799,11 +806,12 @@ class ShaderProgram(GPUProgram):
 
     def draw_triangles(self,
             vertices:Vertices=None, indices:Indices=None, instances:Instances=None,
+            vao:VAO=None,
             primitive_type:GLInfo.triangle_types=GL.GL_TRIANGLES,
             start_index:int=0, total:int=None, times:int=None):
 
         total, times = self.__preprocess_before_draw(
-            primitive_type, vertices, indices, instances,
+            primitive_type, vertices, indices, instances, vao,
             start_index, total, times, False)
         
         if (total is not None and total <= 0) or \
@@ -827,10 +835,11 @@ class ShaderProgram(GPUProgram):
 
     def draw_points(self,
         vertices:Vertices=None, instances:Instances=None,
+        vao:VAO=None,
         start_index:int=0, total:int=None, times:int=None):
 
         total, times = self.__preprocess_before_draw(
-            GL.GL_POINTS, vertices, None, instances,
+            GL.GL_POINTS, vertices, None, instances, vao, None,
             start_index, total, times, False)
         
         if (total is not None and total <= 0) or \
@@ -850,11 +859,12 @@ class ShaderProgram(GPUProgram):
 
     def draw_lines(self,
         vertices:Vertices=None, indices:Indices=None, instances:Instances=None,
+        vao:VAO=None,
         primitive_type:GLInfo.line_types=GL.GL_LINE_STRIP,
         start_index:int=0, total:int=None, times:int=None):
 
         total, times = self.__preprocess_before_draw(
-            primitive_type, vertices, indices, instances,
+            primitive_type, vertices, indices, instances, vao,
             start_index, total, times, False)
         
         if (total is not None and total <= 0) or \
