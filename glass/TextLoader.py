@@ -5,6 +5,8 @@ import numpy as np
 import glm
 import cv2
 
+from .sampler2D import sampler2D
+
 class MetaFont(type):
 
     _font_map = {}
@@ -147,18 +149,33 @@ class Font(metaclass=MetaFont):
 
 class TextLoader:
 
-    _text_map = {}
+    _image_map = {}
+    _sampler_map = {}
 
+    @staticmethod
     def load(content:str, font_family:str='Microsoft YaHei', point_size:int=48, color:glm.vec4=glm.vec4(1,1,1,1)):
         if isinstance(color, glm.vec3):
             color = glm.vec4(color, 1)
 
         key = (content, font_family, point_size, color)
-        if key in TextLoader._text_map:
-            return TextLoader._text_map[key]
+        if key in TextLoader._image_map:
+            return TextLoader._image_map[key]
 
         t = Font[font_family].text(content, point_size)
         image = cv2.merge((color.r * t.bitmap, color.g * t.bitmap, color.b * t.bitmap, color.a * t.bitmap))
         image = cv2.flip(image.astype(np.uint8), 0)
-        TextLoader._text_map[key] = image
+        TextLoader._image_map[key] = image
         return image
+    
+    @staticmethod
+    def load_sampler(content:str, font_family:str='Microsoft YaHei', point_size:int=48, color:glm.vec4=glm.vec4(1,1,1,1)):
+        if isinstance(color, glm.vec3):
+            color = glm.vec4(color, 1)
+
+        key = (content, font_family, point_size, color)
+        if key in TextLoader._sampler_map:
+            return TextLoader._sampler_map[key]
+        
+        sampler = sampler2D(TextLoader.load(content, font_family, point_size, color))
+        TextLoader._sampler_map[key] = sampler
+        return sampler
