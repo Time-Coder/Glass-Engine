@@ -839,7 +839,7 @@ class ShaderProgram(GPUProgram):
         start_index:int=0, total:int=None, times:int=None):
 
         total, times = self.__preprocess_before_draw(
-            GL.GL_POINTS, vertices, None, instances, vao, None,
+            GL.GL_POINTS, vertices, None, instances, vao,
             start_index, total, times, False)
         
         if (total is not None and total <= 0) or \
