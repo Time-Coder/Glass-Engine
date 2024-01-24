@@ -821,16 +821,16 @@ class Mesh(SceneNode):
 
         with self.render_hints:
             if self.__primitive in GLInfo.triangle_types:
-                program.draw_triangles(self._vertices, self._indices, instances, self.__primitive)
+                program.draw_triangles(vertices=self._vertices, indices=self._indices, instances=instances, primitive_type=self.__primitive)
             elif self.__primitive in GLInfo.line_types:
                 if self.__primitive in [GL.GL_LINE_STRIP, GL.GL_LINE_LOOP]:
-                    program.draw_lines(self._vertices, None, instances, self.__primitive)
+                    program.draw_lines(vertices=self._vertices, instances=instances, primitive_type=self.__primitive)
                 else:
-                    program.draw_lines(self._vertices, self._indices, instances, self.__primitive)
+                    program.draw_lines(vertices=self._vertices, indices=self._indices, instances=instances, primitive_type=self.__primitive)
             elif self.__primitive == GL.GL_POINTS:
-                program.draw_points(self._vertices, instances)
+                program.draw_points(vertices=self._vertices, instances=instances)
             elif self.__primitive == GL.GL_PATCHES:
-                program.draw_patches(self._vertices, self._indices, instances)
+                program.draw_patches(vertices=self._vertices, indices=self._indices, instances=instances)
 
     def _test_transparent(self):
         if not self._vertices:

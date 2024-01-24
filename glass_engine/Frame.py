@@ -77,7 +77,7 @@ class Frame(metaclass=_MetaFrame):
             Frame.program["gray"] = gray
             Frame.program["invert"] = invert
             Frame.program["index"] = index
-            Frame.program.draw_triangles(Frame.vertices, Frame.indices)
+            Frame.program.draw_triangles(vertices=Frame.vertices, indices=Frame.indices)
 
     @staticmethod
     def draw_frame_array_gs(layers):

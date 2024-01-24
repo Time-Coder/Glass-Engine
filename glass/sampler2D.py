@@ -578,6 +578,6 @@ class sampler2D(FBOAttachment):
                 
                 self._shadertoy_last_frame_time = current_time
                 self._shadertoy_frame_index += 1
-                self._shadertoy_program.draw_triangles(self._frame_vertices, self._frame_indices)
+                self._shadertoy_program.draw_triangles(vertices=self._frame_vertices, indices=self._frame_indices)
         
         self._should_update_shadertoy = True

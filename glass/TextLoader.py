@@ -31,10 +31,14 @@ class MetaFont(type):
                     MetaFont._font_map[file_name] = font
                     MetaFont._font_map[file_path] = font
                     MetaFont._font_map[os.path.basename(file_name).lower()] = font
-                    name = face.family_name.decode("utf-8")
-                    MetaFont._font_map[name.lower()] = font
                     MetaFont._font_files.append(file_path)
-                    MetaFont._font_names.append(name)
+
+                    try:
+                        name = face.family_name.decode("utf-8")
+                        MetaFont._font_map[name.lower()] = font
+                        MetaFont._font_names.append(name)
+                    except:
+                        pass
 
     def __getitem__(cls, font_name:str):
         cls._init()
@@ -153,7 +157,13 @@ class TextLoader:
     _sampler_map = {}
 
     @staticmethod
-    def load(content:str, font_family:str='Microsoft YaHei', point_size:int=48, color:glm.vec4=glm.vec4(1,1,1,1)):
+    def load(content:str, font_family:str=None, point_size:int=48, color:glm.vec4=glm.vec4(1,1,1,1)):
+        if font_family is None:
+            if platform.system() == "Windows":
+                font_family = "Microsoft YaHei"
+            else:
+                font_family = "DejaVu Sans Mono"
+
         if isinstance(color, glm.vec3):
             color = glm.vec4(color, 1)
 
@@ -171,7 +181,13 @@ class TextLoader:
         return image
     
     @staticmethod
-    def load_sampler(content:str, font_family:str='Microsoft YaHei', point_size:int=48, color:glm.vec4=glm.vec4(1,1,1,1)):
+    def load_sampler(content:str, font_family:str=None, point_size:int=48, color:glm.vec4=glm.vec4(1,1,1,1)):
+        if font_family is None:
+            if platform.system() == "Windows":
+                font_family = "Microsoft YaHei"
+            else:
+                font_family = "DejaVu Sans Mono"
+                
         if isinstance(color, glm.vec3):
             color = glm.vec4(color, 1)
 

@@ -52,7 +52,7 @@ OpenGL 函数的底层接口的设计为了跨平台，牺牲了易用性。
     indices.append(glm.uvec3(0, 1, 2))
 
     # 绘制三角形
-    program.draw_triangles(vertices, indices)
+    program.draw_triangles(vertices=vertices, indices=indices)
 
     # vertices 和 indices 可在任意时刻动态修改内部元素，以及动态增加删除元素
     # 所有修改将在下次绘制时同步到显存

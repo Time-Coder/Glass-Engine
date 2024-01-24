@@ -71,12 +71,12 @@ class DOFEffect(PostProcessEffect):
             with self.horizontal_fbo:
                 self.program["screen_image"] = screen_image
                 self.program["horizontal"] = True
-                self.program.draw_triangles(Frame.vertices, Frame.indices)
+                self.program.draw_triangles(vertices=Frame.vertices, indices=Frame.indices)
 
             with self.vertical_fbo:
                 self.program["screen_image"] = self.horizontal_fbo.color_attachment(0)
                 self.program["horizontal"] = False
-                self.program.draw_triangles(Frame.vertices, Frame.indices)
+                self.program.draw_triangles(vertices=Frame.vertices, indices=Frame.indices)
 
         return self.vertical_fbo.color_attachment(0)
 
@@ -91,12 +91,12 @@ class DOFEffect(PostProcessEffect):
             with self.horizontal_fbo:
                 self.program["screen_image"] = screen_image
                 self.program["horizontal"] = True
-                self.program.draw_triangles(Frame.vertices, Frame.indices)
+                self.program.draw_triangles(vertices=Frame.vertices, indices=Frame.indices)
 
             GLConfig.clear_buffers()
             self.program["screen_image"] = self.horizontal_fbo.color_attachment(0)
             self.program["horizontal"] = False
-            self.program.draw_triangles(Frame.vertices, Frame.indices)
+            self.program.draw_triangles(vertices=Frame.vertices, indices=Frame.indices)
     
     @property
     def should_update(self) -> bool:

@@ -22,14 +22,14 @@ with open("glass/README_PYPI.md", "r", encoding='utf-8') as in_file:
 
 setuptools.setup(
     name="python_glass",
-    version="0.1.45",
+    version="0.1.46",
     author="王炳辉 (BingHui-WANG)",
     author_email="binghui.wang@foxmail.com",
     description="OpenGL wrapper for Glass-Engine",
     long_description=long_description,
     long_description_content_type="text/markdown",
     url="https://github.com/Time-Coder/Glass-Engine",
-    packages=setuptools.find_packages(exclude=['*glass_engine*']),
+    packages=setuptools.find_packages(exclude=['*glass_engine*', '*assimpy*']),
     package_data={
         'glass': extra_files
     },

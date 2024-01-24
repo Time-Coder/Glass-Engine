@@ -123,12 +123,12 @@ class GaussBlur(PostProcessEffect):
                 with self.horizontal_fbo:
                     program["screen_image"] = screen_image
                     program["horizontal"] = True
-                    program.draw_triangles(Frame.vertices, Frame.indices)
+                    program.draw_triangles(vertices=Frame.vertices, indices=Frame.indices)
 
                 with self.vertical_fbo:
                     program["screen_image"] = self.horizontal_fbo.color_attachment(0)
                     program["horizontal"] = False
-                    program.draw_triangles(Frame.vertices, Frame.indices)
+                    program.draw_triangles(vertices=Frame.vertices, indices=Frame.indices)
 
             return self.vertical_fbo.color_attachment(0)
         elif isinstance(screen_image, sampler2DArray):
@@ -146,12 +146,12 @@ class GaussBlur(PostProcessEffect):
                 with self.horizontal_array_fbo:
                     program["screen_image"] = screen_image
                     program["horizontal"] = True
-                    program.draw_triangles(Frame.vertices, Frame.indices)
+                    program.draw_triangles(vertices=Frame.vertices, indices=Frame.indices)
 
                 with self.vertical_array_fbo:
                     program["screen_image"] = self.horizontal_array_fbo.color_attachment(0)
                     program["horizontal"] = False
-                    program.draw_triangles(Frame.vertices, Frame.indices)
+                    program.draw_triangles(vertices=Frame.vertices, indices=Frame.indices)
 
             return self.vertical_array_fbo.color_attachment(0)
         elif isinstance(screen_image, samplerCube):
@@ -169,12 +169,12 @@ class GaussBlur(PostProcessEffect):
                 with self.horizontal_cube_fbo:
                     program["screen_image"] = screen_image
                     program["horizontal"] = True
-                    program.draw_triangles(Frame.vertices, Frame.indices)
+                    program.draw_triangles(vertices=Frame.vertices, indices=Frame.indices)
 
                 with self.vertical_cube_fbo:
                     program["screen_image"] = self.horizontal_cube_fbo.color_attachment(0)
                     program["horizontal"] = False
-                    program.draw_triangles(Frame.vertices, Frame.indices)
+                    program.draw_triangles(vertices=Frame.vertices, indices=Frame.indices)
 
             return self.vertical_cube_fbo.color_attachment(0)
     
@@ -198,12 +198,12 @@ class GaussBlur(PostProcessEffect):
             with self.horizontal_fbo:
                 program["screen_image"] = screen_image
                 program["horizontal"] = True
-                program.draw_triangles(Frame.vertices, Frame.indices)
+                program.draw_triangles(vertices=Frame.vertices, indices=Frame.indices)
 
             GLConfig.clear_buffers()
             program["screen_image"] = self.horizontal_fbo.color_attachment(0)
             program["horizontal"] = False
-            program.draw_triangles(Frame.vertices, Frame.indices)
+            program.draw_triangles(vertices=Frame.vertices, indices=Frame.indices)
 
     @property
     def kernel_shape(self)->tuple:

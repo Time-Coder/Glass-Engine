@@ -127,7 +127,7 @@ class ShaderEffect(PostProcessEffect):
             self._last_frame_time = current_time
             self._frame_index += 1
             
-        self.program.draw_triangles(Frame.vertices, Frame.indices)
+        self.program.draw_triangles(vertices=Frame.vertices, indices=Frame.indices)
 
     def draw_to_active(self, screen_image:sampler2D)->None:
         with GLConfig.LocalConfig(cull_face=None, polygon_mode=GL.GL_FILL):

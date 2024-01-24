@@ -103,7 +103,7 @@ class KernelFilter(PostProcessEffect):
             with GLConfig.LocalConfig(depth_test=False, cull_face=None, polygon_mode=GL.GL_FILL):
                 with self.fbo:
                     self.program["screen_image"] = screen_image
-                    self.program.draw_triangles(Frame.vertices, Frame.indices)
+                    self.program.draw_triangles(vertices=Frame.vertices, indices=Frame.indices)
 
             return self.fbo.color_attachment(0)
         elif isinstance(screen_image, sampler2DArray):
@@ -112,7 +112,7 @@ class KernelFilter(PostProcessEffect):
             with GLConfig.LocalConfig(depth_test=False, cull_face=None, polygon_mode=GL.GL_FILL):
                 with self.array_fbo:
                     program["screen_image"] = screen_image
-                    program.draw_triangles(Frame.vertices, Frame.indices)
+                    program.draw_triangles(vertices=Frame.vertices, indices=Frame.indices)
 
             return self.array_fbo.color_attachment(0)
         elif isinstance(screen_image, samplerCube):
@@ -120,14 +120,14 @@ class KernelFilter(PostProcessEffect):
             with GLConfig.LocalConfig(depth_test=False, cull_face=None, polygon_mode=GL.GL_FILL):
                 with self.cube_fbo:
                     self.cube_program["screen_image"] = screen_image
-                    self.cube_program.draw_triangles(Frame.vertices, Frame.indices)
+                    self.cube_program.draw_triangles(vertices=Frame.vertices, indices=Frame.indices)
 
             return self.cube_fbo.color_attachment(0)
         
     def draw_to_active(self, screen_image: sampler2D) -> None:
         with GLConfig.LocalConfig(depth_test=False, cull_face=None, polygon_mode=GL.GL_FILL):
             self.program["screen_image"] = screen_image
-            self.program.draw_triangles(Frame.vertices, Frame.indices)
+            self.program.draw_triangles(vertices=Frame.vertices, indices=Frame.indices)
 
     @property
     def kernel(self)->np.ndarray:

@@ -763,14 +763,14 @@ class CommonRenderer(Renderer):
                     self.env_OIT_blend_program["opaque_color_map"] = opaque_color_map
                     self.env_OIT_blend_program["accum_map"] = accum_map
                     self.env_OIT_blend_program["reveal_map"] = reveal_map
-                    self.env_OIT_blend_program.draw_triangles(Frame.vertices, Frame.indices)
+                    self.env_OIT_blend_program.draw_triangles(vertices=Frame.vertices, indices=Frame.indices)
 
             env_map = env_OIT_blend_fbo.color_attachment(0)
             instance.user_data["env_bake_state"] = "baked"
             env_FXAA_fbo = self.env_FXAA_fbo(instance)
             with env_FXAA_fbo:
                 FXAAEffect.program()["screen_image"] = env_map
-                FXAAEffect.program().draw_triangles(Frame.vertices, Frame.indices)
+                FXAAEffect.program().draw_triangles(vertices=Frame.vertices, indices=Frame.indices)
             env_map = env_FXAA_fbo.color_attachment(0)
             instance.user_data["env_bake_state"] = "filtered"
             instance.env_map_handle = env_map.handle
@@ -950,7 +950,7 @@ class CommonRenderer(Renderer):
         ):
             self.OIT_blend_program["accum_map"] = accum_map
             self.OIT_blend_program["reveal_map"] = reveal_map
-            self.OIT_blend_program.draw_triangles(Frame.vertices, Frame.indices)
+            self.OIT_blend_program.draw_triangles(vertices=Frame.vertices, indices=Frame.indices)
 
         if self.camera.screen.post_process_effects.need_pos_info:
             used_fbo = None
