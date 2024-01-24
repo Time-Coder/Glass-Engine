@@ -19,22 +19,22 @@ class MetaFont(type):
             return
 
         for folder in cls.font_folders:
-            file_names = os.listdir(folder)
-            for file_name in file_names:
-                file_path = folder + "/" + file_name
-                try:
-                    face = freetype.Face(file_path)
-                except:
-                    continue
+            for root, dirs, files in os.walk(folder):
+                for file_name in files:
+                    file_path = root + "/" + file_name
+                    try:
+                        face = freetype.Face(file_path)
+                    except:
+                        continue
 
-                font = cls(face)
-                MetaFont._font_map[file_name] = font
-                MetaFont._font_map[file_path] = font
-                MetaFont._font_map[os.path.basename(file_name).lower()] = font
-                name = face.family_name.decode("utf-8")
-                MetaFont._font_map[name.lower()] = font
-                MetaFont._font_files.append(file_path)
-                MetaFont._font_names.append(name)
+                    font = cls(face)
+                    MetaFont._font_map[file_name] = font
+                    MetaFont._font_map[file_path] = font
+                    MetaFont._font_map[os.path.basename(file_name).lower()] = font
+                    name = face.family_name.decode("utf-8")
+                    MetaFont._font_map[name.lower()] = font
+                    MetaFont._font_files.append(file_path)
+                    MetaFont._font_names.append(name)
 
     def __getitem__(cls, font_name:str):
         cls._init()
