@@ -607,7 +607,6 @@ class _MetaGLConfig(type):
     def renderer(cls)->str:
         if _MetaGLConfig.__gl_renderer is None:
             _MetaGLConfig.__gl_renderer = GL.glGetString(GL.GL_RENDERER).decode("utf-8")
-            _MetaGLConfig.__gl_renderer = _MetaGLConfig.__gl_renderer.replace("\\", " ").replace("/", " ")
 
         return _MetaGLConfig.__gl_renderer
 
