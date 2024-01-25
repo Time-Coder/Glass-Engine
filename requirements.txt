@@ -8,6 +8,7 @@ maxminddb-geolite2
 wget
 requests
 chardet
+freetype-py
 build
 setuptools
 twine

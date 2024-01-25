@@ -42,7 +42,8 @@ with open("README.rst", "w", encoding="utf-8") as out_file:
     out_file.write(content)
 
 if platform.system() == "Linux":
-    files = glob.glob("dist/assimpy-*-linux_x86_64.whl")
+    machine = platform.machine()
+    files = glob.glob(f"dist/assimpy-*-linux_{machine}.whl")
     for file in files:
-        subprocess.call([sys.executable, "-m", "auditwheel", "repair", file, "--plat=manylinux_2_35_x86_64", "-w", "dist"])
+        subprocess.call([sys.executable, "-m", "auditwheel", "repair", file, f"--plat=manylinux_2_35_{machine}", "-w", "dist"])
         os.remove(file)

@@ -14,3 +14,5 @@ generate_md5.py
 used_shaders
 setup.py
 MANIFEST.in
+glass/tree-sitter-glsl
+assimpy-*

@@ -17,24 +17,25 @@ machine = platform.machine()
 plat_sys = platform.system()
 bits = platform.architecture()[0]
 
-ext_modules = [
-    Pybind11Extension(
-        name="assimpy_ext",
-        sources=sorted(["assimpy/assimpy_ext.cpp", "assimpy/module.cpp"]),  # Sort source files for reproducibility
-        include_dirs=[
-            os.path.dirname(os.path.abspath(pybind11.__file__)).replace("\\", "/") + "/include",
-            "assimpy/assimp/include"
-        ],
-        library_dirs=[
-            f"assimpy/assimp/lib/{machine}/{plat_sys}/{bits}"
-        ],
-        libraries=[
-            "assimp", "zlibstatic"
-        ],
-        extra_compile_args=["-std=c++11"]
-    ),
-]
+ext = Pybind11Extension(
+    name="assimpy_ext",
+    sources=sorted(["assimpy/assimpy_ext.cpp", "assimpy/module.cpp"]),  # Sort source files for reproducibility
+    include_dirs=[
+        os.path.dirname(os.path.abspath(pybind11.__file__)).replace("\\", "/") + "/include",
+        "assimpy/assimp/include"
+    ],
+    library_dirs=[
+        f"assimpy/assimp/lib/{machine}/{plat_sys}/{bits}"
+    ],
+    libraries=[
+        "assimp", "zlibstatic"
+    ]
+)
 
+if plat_sys != "Windows":
+    ext.extra_compile_args = ["-std=c++11"]
+
+ext_modules = [ext]
 extra_files = ["LICENSE", "assimp/LICENSE"]
 
 with open("assimpy/README_PYPI.md", "r", encoding='utf-8') as in_file:
