@@ -33,7 +33,7 @@ class Animation(metaclass=MetaInstancesRecorder):
 
     def start(self):
         if self._timer.status == Chronoscope.Status.Stop:
-            self._running_thread = threading.Thread(target=self._run, args=())
+            self._running_thread = threading.Thread(target=self._run, args=(), daemon=True)
             self._running_thread.start()
         self._timer.start()
 
@@ -119,13 +119,22 @@ class Animation(metaclass=MetaInstancesRecorder):
             if self.target is not None:
                 setattr(self.target, self.attr, self.start_value + mapped_progress * (self.end_value - self.start_value))
 
-            if self.callback is not None:
-                self.callback(progress * self.duration)
+            if self.running_callback is not None:
+                self.running_callback(progress * self.duration)
 
             if self._running:
-                time.sleep(next_time - time.perf_counter())
+                dt = next_time - time.perf_counter()
+                if dt > 0:
+                    time.sleep(dt)
 
         self._timer.stop()
         if self.done_callback is not None:
             self.done_callback()
     
+    @staticmethod
+    def has_valid():
+        for animation in Animation.all_instances:
+            if animation.status != Chronoscope.Status.Stop:
+                return True
+            
+        return False

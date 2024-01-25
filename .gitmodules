@@ -1,3 +1,0 @@
-[submodule "glass/tree-sitter-glsl"]
-	path = glass/tree-sitter-glsl
-	url = https://github.com/theHamsta/tree-sitter-glsl.git

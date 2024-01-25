@@ -15,9 +15,10 @@ class SequentialAnimation:
     def __init__(self, *animations):
         self.animations = animations
         for i in range(len(animations)):
-            animations[i].done_callback = SequentialAnimation.DoneCallback(self, animations[i+1])
             if i == len(animations) - 1:
                 animations[i].done_callback = SequentialAnimation.DoneCallback(self, animations[0], should_start=False)
+            else:
+                animations[i].done_callback = SequentialAnimation.DoneCallback(self, animations[i+1])
 
         self._active_animation = None
         if len(self.animations) > 0:

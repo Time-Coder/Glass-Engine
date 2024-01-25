@@ -3,6 +3,7 @@ from ..Renderers.Renderer import Renderer
 from ..PostProcessEffects import PostProcessEffects, BloomEffect, ACESToneMapper, FXAAEffect, DOFEffect, SSAOEffect, ExplosureAdaptor
 from ..SlideAverageFilter import SlideAverageFilter
 from ..VideoRecorder import VideoRecorder, convert_to_image
+from ..Animations import Animation
 
 from glass import ShaderProgram, GLConfig, GlassConfig, FBO, RBO, sampler2DMS, sampler2D, RenderHints, SSBO, UBO, VAO
 from glass.utils import extname, di
@@ -275,7 +276,7 @@ def paintGL(self)->None:
     self._calc_fps()
     self.frame_ended.emit()
 
-    if should_update_scene or should_update_PPEs:
+    if should_update_scene or should_update_PPEs or Animation.has_valid():
         if should_update_scene:
             self._before_PPE_image = None
             
