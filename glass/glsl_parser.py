@@ -12,21 +12,23 @@ def create_glsl_parser():
     self_folder = os.path.dirname(os.path.abspath(__file__))
     platform_system = platform.system()
     if platform_system == "Linux":
-        dll_suffix = ".so"
+        dll_suffix = "so"
     elif platform_system == "Darwin":
-        dll_suffix = ".dylib"
+        dll_suffix = "dylib"
     else:
-        dll_suffix = ".dll"
+        dll_suffix = "dll"
 
-    if platform.architecture()[0] == "64bit":
-        plat = "x64"
-    else:
-        plat = "x86"
+    machine = platform.machine()
+    bits = platform.architecture()[0]
         
-    dll_file = self_folder + "/glsl/glsl-" + plat + dll_suffix
+    dll_file = f"{self_folder}/glsl/parser/{machine}/{platform_system}/{bits}/glsl.{dll_suffix}"
+    dll_folder = os.path.dirname(dll_file)
+    if not os.path.isdir(dll_folder):
+        os.makedirs(dll_folder)
+
     if not os.path.isfile(dll_file):
         Language.build_library(dll_file, [self_folder + "/tree-sitter-glsl"])
-        trash_files = glob.glob(self_folder + f"/glsl/glsl-{plat}.*")
+        trash_files = glob.glob(f"{self_folder}/glsl/parser/{machine}/{platform_system}/{bits}/glsl.*")
         for trash_file in trash_files:
             if os.path.abspath(trash_file) != os.path.abspath(dll_file):
                 os.remove(trash_file)

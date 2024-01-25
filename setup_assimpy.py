@@ -13,10 +13,9 @@ except:
 
 from pybind11.setup_helpers import Pybind11Extension
 
-if platform.architecture()[0] == "64bit":
-    plat = "x64"
-else:
-    plat = "x86"
+machine = platform.machine()
+plat_sys = platform.system()
+bits = platform.architecture()[0]
 
 ext_modules = [
     Pybind11Extension(
@@ -27,12 +26,12 @@ ext_modules = [
             "assimpy/assimp/include"
         ],
         library_dirs=[
-            "assimpy/assimp/lib"
+            f"assimpy/assimp/lib/{machine}/{plat_sys}/{bits}"
         ],
         libraries=[
-            f"assimp-{plat}",
-            f"zlibstatic-{plat}"
-        ]
+            "assimp", "zlibstatic"
+        ],
+        extra_compile_args=["-std=c++11"]
     ),
 ]
 
@@ -43,7 +42,7 @@ with open("assimpy/README_PYPI.md", "r", encoding='utf-8') as in_file:
 
 setuptools.setup(
     name="assimpy",
-    version="5.3.1.2",
+    version="5.3.1.3",
     author="王炳辉 (BingHui-WANG)",
     author_email="binghui.wang@foxmail.com",
     description="3D model loader for Glass-Engine",

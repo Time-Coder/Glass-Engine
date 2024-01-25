@@ -626,3 +626,7 @@ def defines_key(*args):
         defines_str += (":" + part)
 
     return defines_str
+
+def sanitize_filename(filename):
+    illegal_chars = r'[\\/:*?"<>|]'
+    return re.sub(illegal_chars, ' ', filename)

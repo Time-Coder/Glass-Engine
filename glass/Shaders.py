@@ -5,11 +5,10 @@ import re
 import copy
 import warnings
 import sys
-import pathvalidate
 
 from .minifyc import minifyc
 from .treeshake import treeshake, macros_expand
-from .utils import di, defines_key, delete, md5s, modify_time, load_var, save_var, cat, relative_path, printable_path, printable_size
+from .utils import di, defines_key, delete, md5s, modify_time, load_var, save_var, cat, relative_path, printable_path, printable_size, sanitize_filename
 from .GlassConfig import GlassConfig
 from .GLConfig import GLConfig
 from .GLObject import GLObject
@@ -246,7 +245,7 @@ class BaseShader(GLObject):
 		base_name = os.path.basename(abs_name)
 
 		md5_value = md5s(f"{abs_name}{defines_key(self.defines)}")
-		self._meta_file_name = f"{GlassConfig.cache_folder}/{pathvalidate.sanitize_filename(GLConfig.renderer)}/{base_name}_{md5_value}.meta"
+		self._meta_file_name = f"{GlassConfig.cache_folder}/{sanitize_filename(GLConfig.renderer)}/{base_name}_{md5_value}.meta"
 
 		if self._test_should_recompile():
 			self._collect_info(file_name)

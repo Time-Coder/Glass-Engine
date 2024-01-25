@@ -6,7 +6,6 @@ import warnings
 import struct
 import copy
 import ctypes
-import pathvalidate
 
 from .VAO import VAO
 from .Uniform import Uniform
@@ -15,7 +14,7 @@ from .Shaders import VertexShader, FragmentShader, GeometryShader, TessControlSh
 from .Vertices import Vertices
 from .Indices import Indices
 from .Instances import Instances
-from .utils import defines_key, checktype, subscript, md5s, modify_time, save_var, load_var, printable_path
+from .utils import defines_key, checktype, subscript, md5s, modify_time, save_var, load_var, printable_path, sanitize_filename
 from .GLInfo import GLInfo
 from .GLConfig import GLConfig
 from .GlassConfig import GlassConfig
@@ -384,7 +383,7 @@ class ShaderProgram(GPUProgram):
         if self.fragment_shader._max_modify_time > max_modify_time:
             max_modify_time = self.fragment_shader._max_modify_time
 
-        base = f"{GlassConfig.cache_folder}/{pathvalidate.sanitize_filename(GLConfig.renderer)}/{binary_name}_{md5s(shaders_key)}"
+        base = f"{GlassConfig.cache_folder}/{sanitize_filename(GLConfig.renderer)}/{binary_name}_{md5s(shaders_key)}"
         self._binary_file_name = base + ".bin"
         self._meta_file_name = base + ".meta"
 

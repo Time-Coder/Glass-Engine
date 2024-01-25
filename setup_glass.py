@@ -45,8 +45,7 @@ setuptools.setup(
         "requests",
         "chardet",
         "tree-sitter",
-        "freetype-py",
-        "pathvalidate"
+        "freetype-py"
     ],
     classifiers=[
         "Programming Language :: Python :: 3",
