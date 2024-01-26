@@ -16,6 +16,7 @@ def find_files(directory):
     return file_list
 
 datas = find_files('glsl')
+datas += find_files("tree-sitter-glsl")
 datas.append((os.path.abspath(os.path.dirname(os.path.abspath(__file__)) + "/../LICENSE").replace("\\", "/"), "glass"))
 if platform.system() == "Linux":
     hiddenimports = ["OpenGL.platform.egl"]
