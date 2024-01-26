@@ -9,6 +9,7 @@ wget
 requests
 chardet
 freetype-py
+pytweening
 build
 setuptools
 twine

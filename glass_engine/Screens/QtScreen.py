@@ -184,11 +184,14 @@ def render_hints(self, hint:RenderHints)->None:
     self._render_hints = hint
 
 def initializeGL(self)->None:
-    if GLConfig.major_version < 4:
-        raise RuntimeError(f"Current OpenGL version ({GLConfig.version}) is lower than minimum version require (OpenGL 4.3)")
+    try:
+        if GLConfig.major_version < 4:
+            raise RuntimeError(f"Current OpenGL version ({GLConfig.version}) is lower than minimum version require (OpenGL 4.3)")
 
-    if GLConfig.minor_version < 3:
-        raise RuntimeError(f"Current OpenGL version ({GLConfig.version}) is lower than minimum version require (OpenGL 4.3)")
+        if GLConfig.minor_version < 3:
+            raise RuntimeError(f"Current OpenGL version ({GLConfig.version}) is lower than minimum version require (OpenGL 4.3)")
+    except:
+        pass
 
     if GlassConfig.warning and "GL_ARB_bindless_texture" not in GLConfig.available_extensions:
         warning_message = """

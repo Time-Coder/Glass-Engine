@@ -21,6 +21,14 @@ elif op_system == 'Linux':
         except:
             return 0
     getCurrentContext = _get_current_context
+elif op_system == 'Darwin':
+    from OpenGL.platform import PLATFORM
+    def _get_current_context():
+        try:
+            return PLATFORM.GetCurrentContext().address
+        except:
+            return 0
+    getCurrentContext = _get_current_context
 
 class StencilFunc:
 
