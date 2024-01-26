@@ -4,4 +4,7 @@ set python_versions=3.7.9 3.7.9-win32 3.8.10 3.8.10-win32 3.9.13 3.9.13-win32 3.
 
 for %%v in (%python_versions%) do (
     pyenv install %%v
+    pyenv local %%v
+    python -m pip install pip --upgrade -i https://pypi.tuna.tsinghua.edu.cn/simple
+    python -m pip install -r requirements.txt --upgrade -i https://pypi.tuna.tsinghua.edu.cn/simple
 )

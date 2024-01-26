@@ -11,7 +11,7 @@ struct aiTexel;
 class Texture
 {
 public:
-	Texture(const std::string& _file_name): file_name(_file_name), key(_file_name) {}
+	Texture(const std::string& _file_name): key(_file_name), file_name(_file_name) {}
 	Texture(aiTexel* pcData, unsigned _width, unsigned _height);
 
 public:

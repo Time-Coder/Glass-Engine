@@ -31,8 +31,6 @@ include assimpy/assimpy_ext.h
 recursive-include assimpy/assimp *
 """)
 
-subprocess.call([sys.executable, "-m", "pip", "install", "pip", "--upgrade", "-i", "https://pypi.tuna.tsinghua.edu.cn/simple"])
-subprocess.call([sys.executable, "-m", "pip", "install", "-r", "requirements.txt", "--upgrade", "-i", "https://pypi.tuna.tsinghua.edu.cn/simple"])
 subprocess.call([sys.executable, "-m", "build", "--config-setting=-i", "--config-setting=https://pypi.tuna.tsinghua.edu.cn/simple"])
 
 with open("README_glass_engine.rst", "r", encoding="utf-8") as in_file:
