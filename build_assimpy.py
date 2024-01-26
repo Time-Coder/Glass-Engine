@@ -45,5 +45,5 @@ if platform.system() == "Linux":
     machine = platform.machine()
     files = glob.glob(f"dist/assimpy-*-linux_{machine}.whl")
     for file in files:
-        subprocess.call([sys.executable, "-m", "auditwheel", "repair", file, f"--plat=manylinux_2_35_{machine}", "-w", "dist"])
+        subprocess.call([sys.executable, "-m", "auditwheel", "repair", file, f"--plat=manylinux_2_34_{machine}", "-w", "dist"])
         os.remove(file)
