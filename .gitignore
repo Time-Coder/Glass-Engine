@@ -1,7 +1,6 @@
 __pycache__
 __glcache__
 workspace
-*.c
 *.pyd/*
 build
 dist
