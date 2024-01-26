@@ -7,6 +7,56 @@ import cv2
 
 from .sampler2D import sampler2D
 
+def edtaa(a:np.ndarray):
+    gx = cv2.Sobel(a, cv2.CV_64F, 1, 0, ksize=3)
+    gy = cv2.Sobel(a, cv2.CV_64F, 0, 1, ksize=3)
+    df = 1000000 * np.ones(a.shape)
+
+    condition1 = ((gx == 0) | (gy == 0))
+    condition2 = ((gx != 0) & (gy != 0))
+    # df[condition1] = 0.5 - a[condition1]
+
+    glength = np.sqrt(gx**2 + gy**2)
+    condition3 = condition2 & (glength > 0)
+    divisor = glength[condition3]
+    gx[condition3] /= divisor
+    gy[condition3] /= divisor
+
+    gx[condition2] = np.abs(gx[condition2])
+    gy[condition2] = np.abs(gy[condition2])
+    condition4 = (condition2 & (gx < gy))
+    gx[condition4], gy[condition4] = gy[condition4], gx[condition4]
+    a1 = np.zeros(a.shape)
+    a1[condition2] = 0.5*gy[condition2]/gx[condition2]
+
+    condition5 = condition2 & (a < a1)
+    condition6 = condition2 & (a1 <= a) & (a < (1.0-a1))
+    condition7 = condition2 & (1-a1 < a) & (a <= 1)
+    gx5 = gx[condition5]
+    gy5 = gy[condition5]
+    a5 = a[condition5]
+
+    gx6 = gx[condition6]
+    a6 = a[condition6]
+
+    gx7 = gx[condition7]
+    gy7 = gy[condition7]
+    a7 = a[condition7]
+
+    df[condition5] = 0.5*(gx5 + gy5) - np.sqrt(2*gx5*gy5*a5)
+    df[condition6] = (0.5 - a6) * gx6
+    df[condition7] = -0.5*(gx7 + gy7) + np.sqrt(2*gx7*gy7*(1-a7))
+    return df
+    
+def octSSEDT(a, df):
+    for i in range(a.shape[0]):
+        for j in range(a.shape[1]):
+            if df[i,j] > 100000:
+                df_left = df[i,j-1] if j-1 >= 0 else 1000000
+                df_left_top = df[i-1,j-1] if i-1 >= 0 and j-1 >= 0 else 1000000
+                df_top = df[i-1,j] if i-1 >= 0 else 1000000
+                df_right_top = df[i-1,j+1] if i-1 >= 0 and j+1 < a.shape[1] else 1000000
+
 class MetaFont(type):
 
     _font_map = {}
@@ -82,6 +132,7 @@ class Font(metaclass=MetaFont):
             self.bearing = (0,0)
             self.advance = (0,0)
             self.bitmap = None
+            self.sdf = None
 
     class Text:
 
@@ -110,6 +161,7 @@ class Font(metaclass=MetaFont):
         char.bearing = (self.face.glyph.bitmap_left, self.face.glyph.bitmap_top)
         char.advance = (self.face.glyph.advance.x//64, self.face.glyph.advance.y//64)
         char.bitmap = np.array(self.face.glyph.bitmap.buffer, dtype=np.uint8).reshape((self.face.glyph.bitmap.rows, self.face.glyph.bitmap.width))
+        char.sdf = edtaa(char.bitmap/255)
         Font._char_map[key] = char
 
         return char
