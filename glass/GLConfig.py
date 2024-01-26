@@ -1,34 +1,19 @@
 import OpenGL
 from OpenGL import GL
+from OpenGL.platform import PLATFORM
 import glm
 import numpy as np
-import platform
 import inspect
 
 from .GLInfo import GLInfo
 from .helper import glGetEnum, glGetEnumi
 
-op_system = platform.system()
-getCurrentContext = None
-if op_system == 'Windows':
-    from OpenGL import WGL
-    getCurrentContext = WGL.wglGetCurrentContext
-elif op_system == 'Linux':
-    from OpenGL import EGL
-    def _get_current_context():
-        try:
-            return EGL.eglGetCurrentContext().address
-        except:
-            return 0
-    getCurrentContext = _get_current_context
-elif op_system == 'Darwin':
-    from OpenGL.platform import PLATFORM
-    def _get_current_context():
-        try:
-            return PLATFORM.GetCurrentContext().address
-        except:
-            return 0
-    getCurrentContext = _get_current_context
+def getCurrentContext():
+    try:
+        context = PLATFORM.GetCurrentContext()
+        return context if isinstance(context, int) else context.address
+    except:
+        return 0
 
 class StencilFunc:
 
