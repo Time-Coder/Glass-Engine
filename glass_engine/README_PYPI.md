@@ -55,6 +55,11 @@ camera.screen.show() # 相机显示屏显示渲染结果
 
 ## Release notes
 
+* version 0.1.51
+    * 修复相机挂载到有缩放的节点位置不对的 bug
+    * 将所有屏幕四边形绘制取消依赖顶点和索引
+    * 去除不必要的 FBO
+
 * version 0.1.39
     * 兼容 Linux
     * 支持 PyInstaller 无配置打包
