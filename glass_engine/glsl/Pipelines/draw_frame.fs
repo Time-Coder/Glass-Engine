@@ -2,11 +2,7 @@
 
 #extension GL_EXT_texture_array : require
 
-in TexCoord
-{
-    vec2 tex_coord;
-} fs_in;
-
+in vec2 tex_coord;
 out vec4 frag_color;
 
 uniform sampler2D screen_image;
@@ -19,9 +15,9 @@ uniform bool invert;
 void main()
 { 
     if (layer < 0)
-        frag_color = max(texture(screen_image, fs_in.tex_coord), 0.0);
+        frag_color = max(texture(screen_image, tex_coord), 0.0);
     else
-        frag_color = max(texture(screen_image_array, vec3(fs_in.tex_coord, layer)), 0.0);
+        frag_color = max(texture(screen_image_array, vec3(tex_coord, layer)), 0.0);
     
     if (gray)
         frag_color = vec4(vec3(frag_color[index]), 1);

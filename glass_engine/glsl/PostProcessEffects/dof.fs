@@ -1,10 +1,6 @@
 #version 430 core
 
-in TexCoord
-{
-    vec2 tex_coord;
-} fs_in;
-
+in vec2 tex_coord;
 out vec4 frag_color;
 
 #include "../include/Camera.glsl"
@@ -22,7 +18,7 @@ buffer CurrentFocus
 
 void main()
 {
-    vec3 view_pos = textureLod(view_pos_map, fs_in.tex_coord, 0).xyz;
+    vec3 view_pos = textureLod(view_pos_map, tex_coord, 0).xyz;
     float target_focus = camera.lens.focus;
     if (camera.lens.auto_focus)
     {
@@ -77,7 +73,7 @@ void main()
     float coc_in_pixel = pixel_per_meter * abs(camera.lens.aperture*(1-camera.near*factor));
     if (coc_in_pixel <= 1)
     {
-        frag_color = max(texture(screen_image, fs_in.tex_coord), 0.0);
+        frag_color = max(texture(screen_image, tex_coord), 0.0);
         return;
     }
 
@@ -86,13 +82,13 @@ void main()
     float double_sigma2 = 2*sigma*sigma;
     if (horizontal)
     {
-        float t = fs_in.tex_coord.t;
+        float t = tex_coord.t;
         float weight_sum = 0;
         for(int j = 0; j < coc_in_pixel; j++)
         {
             float dj = j - 0.5*(coc_in_pixel-1);
             float ds = dj*tex_offset.x;
-            float s = fs_in.tex_coord.s + ds;
+            float s = tex_coord.s + ds;
             float weight = exp(-dj*dj/double_sigma2);
             frag_color += weight * max(texture(screen_image, vec2(s, t)), 0.0);
             weight_sum += weight;
@@ -101,13 +97,13 @@ void main()
     }
     else
     {
-        float s = fs_in.tex_coord.s;
+        float s = tex_coord.s;
         float weight_sum = 0;
         for(int i = 0; i < coc_in_pixel; i++)
         {
             float di = i - 0.5*(coc_in_pixel-1);
             float dt = di*tex_offset.t;
-            float t = fs_in.tex_coord.t + dt;
+            float t = tex_coord.t + dt;
             float weight = exp(-di*di/double_sigma2);
             frag_color += weight * max(texture(screen_image, vec2(s, t)), 0.0);
             weight_sum += weight;

@@ -240,7 +240,7 @@ class DeferredRenderer(CommonRenderer):
             self.deferred_render_program["background"] = self.scene.background
             if GlassEngineConfig["USE_FOG"]:
                 self.deferred_render_program["fog"] = self.scene.fog
-            self.deferred_render_program.draw_triangles(vertices=Frame.vertices, indices=Frame.indices)
+            self.deferred_render_program.draw_triangles(start_index=0, total=6)
 
         self.gbuffer.draw_to_active(GL.GL_DEPTH_ATTACHMENT)
 

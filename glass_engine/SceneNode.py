@@ -24,6 +24,9 @@ class SceneNode(metaclass=MetaInstancesRecorder):
         self._scale:callback_vec3 = callback_vec3(1, 1, 1, callback=self._set_dirty)
         self._yaw_pitch_roll:glm.vec3 = glm.vec3(0, 0, 0)
 
+        self.abs_position = glm.vec3(0, 0, 0)
+        self.abs_orientation = glm.quat(1, 0, 0, 0)
+
         self._parents:DictList = DictList(weak_ref=True)
         self._children:DictList = DictList()
         self._scenes:WeakSet = WeakSet()
@@ -394,7 +397,11 @@ class SceneNode(metaclass=MetaInstancesRecorder):
             parent._set_upstream_dirty(scenes)
 
     def _set_transform_dirty(self, scenes):
-        return False
+        if self.__class__.__name__ == "SceneNode":
+            return False
+        else:
+            self._transform_dirty.update(scenes)
+            return True
 
     def _set_dirty(self, self_transform_dirty=True, upstream=True, scenes=None):
         if scenes is None:
@@ -427,18 +434,6 @@ class SceneNode(metaclass=MetaInstancesRecorder):
     def scene(self):        
         for scene in self._scenes:
             return scene
-        
-    @property
-    def abs_scale(self)->glm.vec3:
-        return SceneNode.__abs_scale(self)
-    
-    @property
-    def abs_orientation(self)->glm.quat:
-        return SceneNode.__abs_orientation(self)
-    
-    @property
-    def abs_position(self)->glm.vec3:
-        return SceneNode.__abs_position(self)
 
     @property
     def path(self)->list:
@@ -448,39 +443,6 @@ class SceneNode(metaclass=MetaInstancesRecorder):
         path = self.parent.paths[0]
         path.append(self)
         return path
-
-    @staticmethod
-    def __abs_orientation(node)->glm.quat:
-        try:
-            parent = node.parents[0]
-        except IndexError:
-            return node._orientation.flat
-
-        parent_abs_orientation = SceneNode.__abs_orientation(parent)
-        return parent_abs_orientation * node._orientation.flat
-
-    @staticmethod
-    def __abs_position(node)->glm.vec3:
-        try:
-            parent = node.parents[0]
-        except:
-            return node._position.flat
-
-        parent_abs_orientation = SceneNode.__abs_orientation(parent)
-        parent_abs_scale = SceneNode.__abs_scale(parent)
-        parent_abs_position = SceneNode.__abs_position(parent)
-        
-        return parent_abs_orientation * (parent_abs_scale * node._position.flat) + parent_abs_position
-
-    @staticmethod
-    def __abs_scale(node)->glm.vec3:
-        try:
-            parent = node.parents[0]
-        except:
-            return node._scale.flat
-        
-        parent_abs_scale = SceneNode.__abs_scale(parent)
-        return parent_abs_scale * node._scale.flat
 
     def _add_as_child_callback(self)->None:
         if self._unique_path:

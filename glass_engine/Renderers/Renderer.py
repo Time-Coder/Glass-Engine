@@ -14,6 +14,10 @@ class Renderer(ABC):
     @property
     def scene(self):        
         return self.camera.scene
+    
+    @property
+    def screen(self):
+        return self.camera.screen
         
     def startup(self):
         pass

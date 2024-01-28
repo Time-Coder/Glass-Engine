@@ -2,11 +2,7 @@
 
 #extension GL_EXT_texture_array : require
 
-in TexCoord
-{
-    vec2 tex_coord;
-} fs_in;
-
+in vec2 tex_coord;
 out vec4 frag_color;
 
 #include "../include/FXAA.glsl"
@@ -15,5 +11,5 @@ uniform samplerCube screen_image;
 
 void main()
 {
-    frag_color = textureCubeFaceFXAA(screen_image, fs_in.tex_coord, gl_Layer);
+    frag_color = textureCubeFaceFXAA(screen_image, tex_coord, gl_Layer);
 }

@@ -8,7 +8,7 @@ import sys
 
 from .minifyc import minifyc
 from .treeshake import treeshake, macros_expand
-from .utils import di, defines_key, delete, md5s, modify_time, load_var, save_var, cat, relative_path, printable_path, printable_size, sanitize_filename
+from .utils import di, defines_key, delete, md5s, modify_time, load_var, save_var, cat, relative_path, printable_path, printable_size
 from .GlassConfig import GlassConfig
 from .GLConfig import GLConfig
 from .GLObject import GLObject
@@ -245,7 +245,7 @@ class BaseShader(GLObject):
 		base_name = os.path.basename(abs_name)
 
 		md5_value = md5s(f"{abs_name}{defines_key(self.defines)}")
-		self._meta_file_name = f"{GlassConfig.cache_folder}/{sanitize_filename(GLConfig.renderer)}/{base_name}_{md5_value}.meta"
+		self._meta_file_name = f"{GlassConfig.cache_folder}/{base_name}_{md5_value}.meta"
 
 		if self._test_should_recompile():
 			self._collect_info(file_name)
@@ -368,6 +368,9 @@ class BaseShader(GLObject):
 			if value is None:
 				defines_str += f"#define {name}\n"
 			else:
+				if isinstance(value, str):
+					value = f'"{value}"'
+
 				defines_str += f"#define {name} {value}\n"
 		lines_of_defines_str = ShaderParser.lines(defines_str)
 		
@@ -429,24 +432,36 @@ class BaseShader(GLObject):
 
 			pos_filename_start = pos_include_start + len_include
 			pos_filename_start = ShaderParser.skip_space(self._code, pos_filename_start)
-			if self._code[pos_filename_start] != '<' and self._code[pos_filename_start] != '"':
-				line_num = ShaderParser.line_of(self._code, pos_filename_start)
-				raise CompileError("\n" + self._line_message_map[line_num].format(message_type="error") + '#include file name must be enveloped by <...> or "..."')
 			
 			start_char = self._code[pos_filename_start]
-			end_char = ('>' if start_char == '<' else '"')
-			pos_filename_start += 1
-			pos_filename_start = ShaderParser.skip_space(self._code, pos_filename_start)
+			if start_char == '<':
+				end_char = '>'
+			elif start_char == '"':
+				end_char = '"'
+			else:
+				end_char = "\n"
+
+			if end_char != "\n":
+				pos_filename_start += 1
+				pos_filename_start = ShaderParser.skip_space(self._code, pos_filename_start)
+			
 			pos_filename_end = self._code.find(end_char, pos_filename_start)
 			if pos_filename_end == -1:
 				line_num = ShaderParser.line_of(self._code, pos_filename_start)
-				raise CompileError("\n" + self._line_message_map[line_num].format(message_type="error") + '#include file name must be enveloped by <...> or "..."')
+				raise CompileError("\n" + self._line_message_map[line_num].format(message_type="error") + '#include format wrong')
 			
-			pos_include_end = pos_filename_end + 1
+			if end_char != "\n":
+				pos_include_end = pos_filename_end + 1
+			else:
+				pos_include_end = pos_filename_end
+
 			pos_filename_end -= 1
 			pos_filename_end = ShaderParser.skip_space_reverse(self._code, pos_filename_end)
 			include_filename = self._code[pos_filename_start : pos_filename_end+1]
 			found = False
+
+			if end_char == "\n":
+				include_filename = self.defines[include_filename]
 
 			for include_path in self.include_paths:
 				if include_path and not os.path.isdir(include_path):

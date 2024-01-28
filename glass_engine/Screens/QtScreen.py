@@ -256,9 +256,13 @@ def paintGL(self)->None:
     
     if self._video_recorders:
         should_update_scene = self._draw_to_before_PPE(should_update_scene)
-        self._assign_values_to_PPEs()
-        screen_image = self._post_process_effects.apply(self._before_PPE_image)
-        should_update_PPEs = self._post_process_effects.should_update
+        if self._post_process_effects.has_valid:
+            self._assign_values_to_PPEs()
+            screen_image = self._post_process_effects.apply(self._before_PPE_image)
+            should_update_PPEs = self._post_process_effects.should_update
+        else:
+            screen_image = self._before_PPE_image
+
         screen_image.fbo.draw_to_active(0)
 
         if self._paint_times > 0:

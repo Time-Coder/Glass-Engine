@@ -37,10 +37,6 @@ class Light(SceneNode):
         elif cls_name == "SpotLight":
             GlassEngineConfig._update_spot_lights()
 
-    def _set_transform_dirty(self, scenes):
-        self._transform_dirty.update(scenes)
-        return True
-
     @property
     def color(self):
         return self._color

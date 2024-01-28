@@ -86,7 +86,7 @@ class BloomEffect(PostProcessEffect):
                     self.down_program["threshold"] = self.threshold
                     self.down_program["mip_level"] = i
                     self.down_program["screen_image"] = screen_image
-                    self.down_program.draw_triangles(vertices=Frame.vertices, indices=Frame.indices)
+                    self.down_program.draw_triangles(start_index=0, total=6)
                 screen_image = down_fbo.color_attachment(0)
                 current_index = i
 
@@ -98,7 +98,7 @@ class BloomEffect(PostProcessEffect):
                     with down_fbo:
                         self.up_program["filter_radius"] = 0.02 * self.strength
                         self.up_program["screen_image"] = screen_image
-                        self.up_program.draw_triangles(vertices=Frame.vertices, indices=Frame.indices)
+                        self.up_program.draw_triangles(start_index=0, total=6)
                     screen_image = down_fbo.color_attachment(0)
 
         return screen_image
@@ -108,7 +108,7 @@ class BloomEffect(PostProcessEffect):
         with GLConfig.LocalConfig(cull_face=None, polygon_mode=GL.GL_FILL):
             self.mix_program["screen_image"] = screen_image
             self.mix_program["bloom_image"] = bloom_image
-            self.mix_program.draw_triangles(vertices=Frame.vertices, indices=Frame.indices)
+            self.mix_program.draw_triangles(start_index=0, total=6)
 
     def apply(self, screen_image:sampler2D)->sampler2D:
         bloom_image = self.__get_bloom_image(screen_image)
@@ -117,7 +117,7 @@ class BloomEffect(PostProcessEffect):
             with self.mix_fbo:
                 self.mix_program["screen_image"] = screen_image
                 self.mix_program["bloom_image"] = bloom_image
-                self.mix_program.draw_triangles(vertices=Frame.vertices, indices=Frame.indices)
+                self.mix_program.draw_triangles(start_index=0, total=6)
         return self.mix_fbo.color_attachment(0)
 
     def __update_fbo_list(self, src_width:int, src_height:int):

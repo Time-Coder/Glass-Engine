@@ -8,13 +8,6 @@ import inspect
 from .GLInfo import GLInfo
 from .helper import glGetEnum, glGetEnumi
 
-def getCurrentContext():
-    try:
-        context = PLATFORM.GetCurrentContext()
-        return context if isinstance(context, int) else context.address
-    except:
-        return 0
-
 class StencilFunc:
 
     def __init__(self, func:[*GLInfo.stencil_funcs, *GLInfo.stencil_func_strs]=None, ref:int=None, mask:int=None):
@@ -562,7 +555,11 @@ class _MetaGLConfig(type):
 
     @property
     def current_context(cls):
-        return getCurrentContext()
+        try:
+            context = PLATFORM.GetCurrentContext()
+            return context if isinstance(context, int) else context.address
+        except:
+            return 0
         
     @property
     def buffered_current_context(cls):

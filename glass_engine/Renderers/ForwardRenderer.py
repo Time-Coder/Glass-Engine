@@ -13,45 +13,57 @@ class ForwardRenderer(CommonRenderer):
         if not screen._samples_set_by_user and not screen._is_gl_init:
             screen._set_samples(4)
 
+    def _draw_opaque(self):
+        GLConfig.clear_buffers()
+
+        if self._opaque_meshes:
+            self.prepare_forward_draw_mesh(True)
+            for mesh, instances in self._opaque_meshes:
+                self.forward_draw_mesh(mesh, instances)
+
+        if self._opaque_lines:
+            self.prepare_forward_draw_lines(True)
+            for mesh, instances in self._opaque_lines:
+                self.forward_draw_lines(mesh, instances)
+
+        if self._opaque_points:
+            self.prepare_forward_draw_points(True)
+            for mesh, instances in self._opaque_points:
+                self.forward_draw_points(mesh, instances)
+
+        # 绘制天空盒
+        if self.scene.skybox.is_completed:
+            self.scene.skybox.draw(self.camera)
+
+        # 绘制天空穹顶
+        elif self.scene.skydome.is_completed:
+            self.scene.skydome.draw(self.camera)
+
     def draw_opaque(self):
         if not self._opaque_meshes and \
            not self._opaque_lines and \
            not self._opaque_points:
             return
 
+        need_fbo = (self._transparent_meshes or
+                    self._transparent_points or
+                    self._transparent_lines or
+                    self.screen._post_process_effects.has_valid)
+
         with GLConfig.LocalConfig(depth_test=True, blend=False):
-            with self.OIT_fbo:
-                GLConfig.clear_buffers()
+            if need_fbo:
+                with self.OIT_fbo:
+                    self._draw_opaque()
+            else:
+                self._draw_opaque()
 
-                if self._opaque_meshes:
-                    self.prepare_forward_draw_mesh(True)
-                    for mesh, instances in self._opaque_meshes:
-                        self.forward_draw_mesh(mesh, instances)
+        if need_fbo:
+            self.OIT_fbo.draw_to_active(0)
 
-                if self._opaque_lines:
-                    self.prepare_forward_draw_lines(True)
-                    for mesh, instances in self._opaque_lines:
-                        self.forward_draw_lines(mesh, instances)
-
-                if self._opaque_points:
-                    self.prepare_forward_draw_points(True)
-                    for mesh, instances in self._opaque_points:
-                        self.forward_draw_points(mesh, instances)
-
-                # 绘制天空盒
-                if self.scene.skybox.is_completed:
-                    self.scene.skybox.draw(self.camera)
-
-                # 绘制天空穹顶
-                elif self.scene.skydome.is_completed:
-                    self.scene.skydome.draw(self.camera)
-
-        self.OIT_fbo.draw_to_active(0)
-
-        resolved = self.OIT_fbo.resolved
-        self._depth_map = resolved.depth_attachment
-        self._view_pos_map = resolved.color_attachment(3)
-        self._view_normal_map = resolved.color_attachment(4)
+            resolved = self.OIT_fbo.resolved
+            self._depth_map = resolved.depth_attachment
+            self._view_pos_map = resolved.color_attachment(3)
+            self._view_normal_map = resolved.color_attachment(4)
     
     def render(self):
         # profiler.enable()

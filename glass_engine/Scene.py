@@ -1,5 +1,6 @@
 from .SceneNode import SceneNode
 from .Mesh import Mesh
+from .Camera import Camera
 from .Lights.PointLight import PointLights, PointLight, FlatPointLight
 from .Lights.DirLight import DirLights, DirLight, FlatDirLight
 from .Lights.SpotLight import SpotLights, SpotLight, FlatSpotLight
@@ -185,6 +186,10 @@ class Scene:
 
                 self.__anything_changed = True
                 self._dir_lights_changed = True
+            elif isinstance(scene_node, Camera):
+                camera = scene_node
+                camera.abs_position = new_mat[3].xyz
+                camera.abs_orientation = new_quat
 
         if self in scene_node._children_transform_dirty:
             for child in scene_node._children_transform_dirty[self]:

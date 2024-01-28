@@ -1,10 +1,6 @@
 #version 430 core
 
-in TexCoord
-{
-    vec2 tex_coord;
-} fs_in;
-
+in vec2 tex_coord;
 out vec4 frag_color;
 
 #include "../include/Camera.glsl"
@@ -77,9 +73,9 @@ vec2 world_pos_to_tex_coord(vec3 world_pos)
     return 0.5*(NDC.xy/NDC.w + 1);
 }
 
-#include "{file_name}"
+#include FILE_NAME
 
 void main()
 { 
-    frag_color = post_process(screen_image, fs_in.tex_coord);
+    frag_color = post_process(screen_image, tex_coord);
 }

@@ -1,10 +1,6 @@
 #version 430 core
 
-in TexCoord
-{
-    vec2 tex_coord;
-} fs_in;
-
+in vec2 tex_coord;
 out vec4 frag_color;
 
 uniform sampler2D screen_image;
@@ -49,22 +45,22 @@ void main()
     // - l - m -
     // g - h - i
     // === ('e' is the current texel) ===
-    vec4 a = textureAll(screen_image, vec2(fs_in.tex_coord.x - 2*dx, fs_in.tex_coord.y + 2*dy));
-    vec4 b = textureAll(screen_image, vec2(fs_in.tex_coord.x,        fs_in.tex_coord.y + 2*dy));
-    vec4 c = textureAll(screen_image, vec2(fs_in.tex_coord.x + 2*dx, fs_in.tex_coord.y + 2*dy));
+    vec4 a = textureAll(screen_image, vec2(tex_coord.x - 2*dx, tex_coord.y + 2*dy));
+    vec4 b = textureAll(screen_image, vec2(tex_coord.x,        tex_coord.y + 2*dy));
+    vec4 c = textureAll(screen_image, vec2(tex_coord.x + 2*dx, tex_coord.y + 2*dy));
 
-    vec4 d = textureAll(screen_image, vec2(fs_in.tex_coord.x - 2*dx, fs_in.tex_coord.y));
-    vec4 e = textureAll(screen_image, vec2(fs_in.tex_coord.x,        fs_in.tex_coord.y));
-    vec4 f = textureAll(screen_image, vec2(fs_in.tex_coord.x + 2*dx, fs_in.tex_coord.y));
+    vec4 d = textureAll(screen_image, vec2(tex_coord.x - 2*dx, tex_coord.y));
+    vec4 e = textureAll(screen_image, vec2(tex_coord.x,        tex_coord.y));
+    vec4 f = textureAll(screen_image, vec2(tex_coord.x + 2*dx, tex_coord.y));
 
-    vec4 g = textureAll(screen_image, vec2(fs_in.tex_coord.x - 2*dx, fs_in.tex_coord.y - 2*dy));
-    vec4 h = textureAll(screen_image, vec2(fs_in.tex_coord.x,        fs_in.tex_coord.y - 2*dy));
-    vec4 i = textureAll(screen_image, vec2(fs_in.tex_coord.x + 2*dx, fs_in.tex_coord.y - 2*dy));
+    vec4 g = textureAll(screen_image, vec2(tex_coord.x - 2*dx, tex_coord.y - 2*dy));
+    vec4 h = textureAll(screen_image, vec2(tex_coord.x,        tex_coord.y - 2*dy));
+    vec4 i = textureAll(screen_image, vec2(tex_coord.x + 2*dx, tex_coord.y - 2*dy));
 
-    vec4 j = textureAll(screen_image, vec2(fs_in.tex_coord.x - dx, fs_in.tex_coord.y + dy));
-    vec4 k = textureAll(screen_image, vec2(fs_in.tex_coord.x + dx, fs_in.tex_coord.y + dy));
-    vec4 l = textureAll(screen_image, vec2(fs_in.tex_coord.x - dx, fs_in.tex_coord.y - dy));
-    vec4 m = textureAll(screen_image, vec2(fs_in.tex_coord.x + dx, fs_in.tex_coord.y - dy));
+    vec4 j = textureAll(screen_image, vec2(tex_coord.x - dx, tex_coord.y + dy));
+    vec4 k = textureAll(screen_image, vec2(tex_coord.x + dx, tex_coord.y + dy));
+    vec4 l = textureAll(screen_image, vec2(tex_coord.x - dx, tex_coord.y - dy));
+    vec4 m = textureAll(screen_image, vec2(tex_coord.x + dx, tex_coord.y - dy));
 
     frag_color = e*0.125;
     frag_color += (a+c+g+i)*0.03125;

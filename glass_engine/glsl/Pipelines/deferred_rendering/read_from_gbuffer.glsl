@@ -21,14 +21,14 @@ PostShadingInfo read_from_gbuffer(
     shading_info.world_normal = vec3(0);
     shading_info.env_center = vec3(0);
 
-    vec4 view_pos_and_alpha = texture(view_pos_and_alpha_map, fs_in.tex_coord);
-    vec4 view_normal_and_emission_r = texture(view_normal_and_emission_r_map, fs_in.tex_coord);
-    vec4 ambient_and_emission_g = max(texture(ambient_and_emission_g_map, fs_in.tex_coord), 0.0);
-    vec4 base_color_and_emission_b = max(texture(diffuse_or_base_color_and_emission_b_map, fs_in.tex_coord), 0.0);
-    vec4 specular_and_shininess = max(texture(specular_and_shininess_map, fs_in.tex_coord), 0.0);
-    uvec4 mixed_uint = texture(mixed_uint_map, fs_in.tex_coord);
-    shading_info.material.reflection = max(texture(reflection_map, fs_in.tex_coord), 0.0);
-    vec4 env_center_and_mixed_value = texture(env_center_and_mixed_value_map, fs_in.tex_coord);
+    vec4 view_pos_and_alpha = texture(view_pos_and_alpha_map, tex_coord);
+    vec4 view_normal_and_emission_r = texture(view_normal_and_emission_r_map, tex_coord);
+    vec4 ambient_and_emission_g = max(texture(ambient_and_emission_g_map, tex_coord), 0.0);
+    vec4 base_color_and_emission_b = max(texture(diffuse_or_base_color_and_emission_b_map, tex_coord), 0.0);
+    vec4 specular_and_shininess = max(texture(specular_and_shininess_map, tex_coord), 0.0);
+    uvec4 mixed_uint = texture(mixed_uint_map, tex_coord);
+    shading_info.material.reflection = max(texture(reflection_map, tex_coord), 0.0);
+    vec4 env_center_and_mixed_value = texture(env_center_and_mixed_value_map, tex_coord);
 
     vec3 view_pos = view_pos_and_alpha.xyz;
     if (hasnan(view_pos) || length(view_pos) < 1E-6)

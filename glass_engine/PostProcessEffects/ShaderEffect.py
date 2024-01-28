@@ -12,9 +12,6 @@ from datetime import datetime
 
 class ShaderEffect(PostProcessEffect):
 
-    __template_content = ""
-    __template_filename = os.path.abspath(os.path.dirname(os.path.abspath(__file__)) + "/../glsl/PostProcessEffects/shader_effect_template.glsl").replace("\\", "/")
-
     @checktype
     def __init__(self, shader_path:str=None, internal_format:GLInfo.internal_formats=GL.GL_RGBA32F, generate_mipmap:bool=False):
         PostProcessEffect.__init__(self)
@@ -61,23 +58,23 @@ class ShaderEffect(PostProcessEffect):
         if shader_path == self._shader_path:
             return
         
-        file_base_name = os.path.basename(shader_path)
-        dest_file_name = GlassConfig.cache_folder + "/" + file_base_name + "_" + md5s(shader_path) + ".glsl"
-        if modify_time(ShaderEffect.__template_filename) > modify_time(dest_file_name):
-            out_file = open(dest_file_name, "w")
-            out_file.write(ShaderEffect.__template(shader_path))
-            out_file.close()
-
-        self._fragment_filename = dest_file_name
         self._shader_path = shader_path
 
     @property
     def program(self):
-        if self._fragment_filename:
-            self._program = ShaderProgram()
-            self._program.compile(Frame.draw_frame_vs)
-            self._program.compile(self._fragment_filename, GL.GL_FRAGMENT_SHADER)
-            self._fragment_filename = ""
+        if self._shader_path:
+            if self._program is None:
+                self_folder = os.path.dirname(os.path.abspath(__file__)).replace("\\", "/")
+                template_filename = self_folder + "/../glsl/PostProcessEffects/shader_effect_template.fs"
+                self._program = ShaderProgram()
+                self._program.define("FILE_NAME", self._shader_path)
+                self._program.compile(Frame.draw_frame_vs)
+                self._program.compile(template_filename)
+            else:
+                if "FILE_NAME" not in self._program.defines or \
+                   self._program.defines["FILE_NAME"] != self._shader_path:
+                    self._program.define("FILE_NAME", self._shader_path)
+                    self._program.reload()
 
         if self._uniforms and self._program is not None:
             for name, value in self._uniforms.items():
@@ -127,7 +124,7 @@ class ShaderEffect(PostProcessEffect):
             self._last_frame_time = current_time
             self._frame_index += 1
             
-        self.program.draw_triangles(vertices=Frame.vertices, indices=Frame.indices)
+        self.program.draw_triangles(start_index=0, total=6)
 
     def draw_to_active(self, screen_image:sampler2D)->None:
         with GLConfig.LocalConfig(cull_face=None, polygon_mode=GL.GL_FILL):
@@ -168,11 +165,3 @@ class ShaderEffect(PostProcessEffect):
         return (self.program["view_pos_map"].location >= 0 or \
                 self.program["view_normal_map"].location >= 0 or \
                 self.program["depth_map"].location >= 0)
-
-    @staticmethod
-    def __template(file_name):
-        if not ShaderEffect.__template_content:
-            ShaderEffect.__template_content = cat(ShaderEffect.__template_filename)
-        
-        rel_path = relative_path(file_name, GlassConfig.cache_folder)
-        return ShaderEffect.__template_content.replace("{file_name}", rel_path)

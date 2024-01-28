@@ -5,11 +5,7 @@
 #endif
 #extension GL_EXT_texture_array : require
 
-in TexCoord
-{
-    vec2 tex_coord;
-} fs_in;
-
+in vec2 tex_coord;
 out vec4 out_color;
 
 #include "../../include/shading_all.glsl"
@@ -36,7 +32,7 @@ void main()
         view_pos_and_alpha_map, view_normal_and_emission_r_map,
         ambient_and_emission_g_map, diffuse_or_base_color_and_emission_b_map,
         specular_and_shininess_map, reflection_map,
-        env_center_and_mixed_value_map, mixed_uint_map, fs_in.tex_coord
+        env_center_and_mixed_value_map, mixed_uint_map, tex_coord
     );
 
     out_color = post_shading_all(camera, camera, background

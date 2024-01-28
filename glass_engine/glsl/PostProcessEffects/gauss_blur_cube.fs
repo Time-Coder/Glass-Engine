@@ -1,10 +1,6 @@
 #version 430 core
 
-in TexCoord
-{
-    vec2 tex_coord;
-} fs_in;
-
+in vec2 tex_coord;
 out vec4 frag_color;
 
 #include "../include/sampling.glsl"
@@ -24,12 +20,12 @@ void main()
     if (horizontal)
     {
         float double_sigma_x2 = 2*sigma.x*sigma.x;
-        float t = fs_in.tex_coord.t;
+        float t = tex_coord.t;
         float weight_sum = 0;
         for(int j = 0; j < kernel_shape.x; j++)
         {
             float d = (j - 0.5*(kernel_shape.x-1))*tex_offset.x;
-            float s = fs_in.tex_coord.s + d;
+            float s = tex_coord.s + d;
             float weight = exp(-d*d/double_sigma_x2);
             vec4 current_value = max(textureCubeFace(screen_image, vec2(s, t), gl_Layer), 0.0);
             if (channels == 1)
@@ -45,12 +41,12 @@ void main()
     else
     {
         float double_sigma_y2 = 2*sigma.y*sigma.y;
-        float s = fs_in.tex_coord.s;
+        float s = tex_coord.s;
         float weight_sum = 0;
         for(int i = 0; i < kernel_shape.y; i++)
         {
             float d = (i - 0.5*(kernel_shape.y-1))*tex_offset.y;
-            float t = fs_in.tex_coord.t + d;
+            float t = tex_coord.t + d;
             float weight = exp(-d*d/double_sigma_y2);
             vec4 current_value = max(textureCubeFace(screen_image, vec2(s, t), gl_Layer), 0.0);
             if (channels == 1)

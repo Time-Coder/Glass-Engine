@@ -1,10 +1,6 @@
 #version 430 core
 
-in TexCoord
-{
-    vec2 tex_coord;
-} fs_in;
-
+in vec2 tex_coord;
 out vec4 frag_color;
 
 uniform float filter_radius;
@@ -22,17 +18,17 @@ void main()
     // d - e - f
     // g - h - i
     // === ('e' is the current texel) ===
-    vec4 a = textureLod(screen_image, vec2(fs_in.tex_coord.x - dx, fs_in.tex_coord.y + dy), 0);
-    vec4 b = textureLod(screen_image, vec2(fs_in.tex_coord.x,      fs_in.tex_coord.y + dy), 0);
-    vec4 c = textureLod(screen_image, vec2(fs_in.tex_coord.x + dx, fs_in.tex_coord.y + dy), 0);
+    vec4 a = textureLod(screen_image, vec2(tex_coord.x - dx, tex_coord.y + dy), 0);
+    vec4 b = textureLod(screen_image, vec2(tex_coord.x,      tex_coord.y + dy), 0);
+    vec4 c = textureLod(screen_image, vec2(tex_coord.x + dx, tex_coord.y + dy), 0);
 
-    vec4 d = textureLod(screen_image, vec2(fs_in.tex_coord.x - dx, fs_in.tex_coord.y), 0);
-    vec4 e = textureLod(screen_image, vec2(fs_in.tex_coord.x,      fs_in.tex_coord.y), 0);
-    vec4 f = textureLod(screen_image, vec2(fs_in.tex_coord.x + dx, fs_in.tex_coord.y), 0);
+    vec4 d = textureLod(screen_image, vec2(tex_coord.x - dx, tex_coord.y), 0);
+    vec4 e = textureLod(screen_image, vec2(tex_coord.x,      tex_coord.y), 0);
+    vec4 f = textureLod(screen_image, vec2(tex_coord.x + dx, tex_coord.y), 0);
 
-    vec4 g = textureLod(screen_image, vec2(fs_in.tex_coord.x - dx, fs_in.tex_coord.y - dy), 0);
-    vec4 h = textureLod(screen_image, vec2(fs_in.tex_coord.x,      fs_in.tex_coord.y - dy), 0);
-    vec4 i = textureLod(screen_image, vec2(fs_in.tex_coord.x + dx, fs_in.tex_coord.y - dy), 0);
+    vec4 g = textureLod(screen_image, vec2(tex_coord.x - dx, tex_coord.y - dy), 0);
+    vec4 h = textureLod(screen_image, vec2(tex_coord.x,      tex_coord.y - dy), 0);
+    vec4 i = textureLod(screen_image, vec2(tex_coord.x + dx, tex_coord.y - dy), 0);
 
     // Apply weighted distribution, by using a 3x3 tent filter:
     //  1   | 1 2 1 |

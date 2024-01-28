@@ -76,10 +76,6 @@ class Mesh(SceneNode):
     def __hash__(self):
         return id(self)
 
-    def _set_transform_dirty(self, scenes):
-        self._transform_dirty.update(scenes)
-        return True
-
     @property
     def self_calculated_normal(self):
         return self.__self_calculated_normal

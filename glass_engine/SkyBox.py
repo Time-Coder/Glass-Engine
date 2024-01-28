@@ -125,10 +125,12 @@ class SkyBox(Mesh):
     @property
     def program(self):
         if self.__program is None:
-            self.__program = ShaderProgram()
             self_folder = os.path.dirname(os.path.abspath(__file__))
-            self.__program.compile(self_folder + "/glsl/Pipelines/skybox/skybox.vs")
-            self.__program.compile(self_folder + "/glsl/Pipelines/skybox/skybox.fs")
+            program = ShaderProgram()
+            GlassEngineConfig.define_for_program(program)
+            program.compile(self_folder + "/glsl/Pipelines/skybox/skybox.vs")
+            program.compile(self_folder + "/glsl/Pipelines/skybox/skybox.fs")
+            self.__program = program
 
         return self.__program
     

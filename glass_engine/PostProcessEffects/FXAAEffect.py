@@ -9,23 +9,6 @@ class FXAAEffect(PostProcessEffect):
     __array_programs = {}
     __program = None
     __cube_program = None
-
-    @staticmethod
-    def program():
-        if FXAAEffect.__program is None:
-            FXAAEffect.__program = ShaderProgram()
-            FXAAEffect.__program.compile(Frame.draw_frame_vs)
-            FXAAEffect.__program.compile(os.path.dirname(os.path.abspath(__file__)) + "/../glsl/PostProcessEffects/FXAA.fs")
-        return FXAAEffect.__program
-    
-    @staticmethod
-    def cube_program():
-        if FXAAEffect.__cube_program is None:
-            FXAAEffect.__cube_program = ShaderProgram()
-            FXAAEffect.__cube_program.compile(Frame.draw_frame_vs)
-            FXAAEffect.__cube_program.compile(Frame.draw_frame_array_gs(6))
-            FXAAEffect.__cube_program.compile(os.path.dirname(os.path.abspath(__file__)) + "/../glsl/PostProcessEffects/FXAA_cube_filter.fs")
-        return FXAAEffect.__cube_program
     
     def __init__(self, internal_format:GLInfo.internal_formats=None):
         PostProcessEffect.__init__(self)
@@ -34,6 +17,14 @@ class FXAAEffect(PostProcessEffect):
         self._fbo = None
         self._array_fbo = None
         self._cube_fbo = None
+
+    @staticmethod
+    def program():
+        if FXAAEffect.__program is None:
+            FXAAEffect.__program = ShaderProgram()
+            FXAAEffect.__program.compile(Frame.draw_frame_vs)
+            FXAAEffect.__program.compile(os.path.dirname(os.path.abspath(__file__)) + "/../glsl/PostProcessEffects/FXAA.fs")
+        return FXAAEffect.__program
 
     @property
     def fbo(self):
@@ -64,14 +55,14 @@ class FXAAEffect(PostProcessEffect):
             self.fbo.resize(screen_image.width, screen_image.height)
             with self.fbo:
                 FXAAEffect.program()["screen_image"] = screen_image
-                FXAAEffect.program().draw_triangles(vertices=Frame.vertices, indices=Frame.indices)
+                FXAAEffect.program().draw_triangles(start_index=0, total=6)
                 
             return self.fbo.color_attachment(0)
         elif isinstance(screen_image, samplerCube):
             self.cube_fbo.resize(screen_image.width, screen_image.height)
             with self.cube_fbo:
                 FXAAEffect.cube_program()["screen_image"] = screen_image
-                FXAAEffect.cube_program().draw_triangles(vertices=Frame.vertices, indices=Frame.indices)
+                FXAAEffect.cube_program().draw_triangles(start_index=0, total=6)
 
             return self.cube_fbo.color_attachment(0)
         elif isinstance(screen_image, sampler2DArray):
@@ -79,24 +70,10 @@ class FXAAEffect(PostProcessEffect):
             with self.array_fbo:
                 program = FXAAEffect.array_program(screen_image.layers)
                 program["screen_image"] = screen_image
-                program.draw_triangles(vertices=Frame.vertices, indices=Frame.indices)
+                program.draw_triangles(start_index=0, total=6)
 
             return self.array_fbo.color_attachment(0)
     
     def draw_to_active(self, screen_image: sampler2D) -> None:
         FXAAEffect.program()["screen_image"] = screen_image
-        FXAAEffect.program().draw_triangles(vertices=Frame.vertices, indices=Frame.indices)
-    
-    @staticmethod
-    def array_program(layers):
-        if layers in FXAAEffect.__array_programs:
-            return FXAAEffect.__array_programs[layers]
-
-        program = ShaderProgram()
-        program.compile(Frame.draw_frame_vs)
-        program.compile(Frame.draw_frame_array_gs(layers))
-        program.compile(os.path.dirname(os.path.abspath(__file__)) + "/../glsl/PostProcessEffects/FXAA_array_filter.fs")
-
-        FXAAEffect.__array_programs[layers] = program
-
-        return program
+        FXAAEffect.program().draw_triangles(start_index=0, total=6)

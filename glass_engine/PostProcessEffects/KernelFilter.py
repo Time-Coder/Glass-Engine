@@ -67,16 +67,6 @@ class KernelFilter(PostProcessEffect):
         return self._program
 
     @property
-    def cube_program(self):
-        if self._cube_program is None:
-            self._cube_program = ShaderProgram()
-            self._cube_program.compile(Frame.draw_frame_vs)
-            self._cube_program.compile(Frame.draw_frame_array_gs(6))
-            self._cube_program.compile(os.path.dirname(os.path.abspath(__file__)) + "/../glsl/PostProcessEffects/kernel_cube_filter.fs")
-            self._cube_program["Kernel"].bind(self._kernel)
-        return self._cube_program
-
-    @property
     def fbo(self):
         if self._fbo is None:
             self._fbo = FBO()
@@ -103,7 +93,7 @@ class KernelFilter(PostProcessEffect):
             with GLConfig.LocalConfig(depth_test=False, cull_face=None, polygon_mode=GL.GL_FILL):
                 with self.fbo:
                     self.program["screen_image"] = screen_image
-                    self.program.draw_triangles(vertices=Frame.vertices, indices=Frame.indices)
+                    self.program.draw_triangles(start_index=0, total=6)
 
             return self.fbo.color_attachment(0)
         elif isinstance(screen_image, sampler2DArray):
@@ -112,7 +102,7 @@ class KernelFilter(PostProcessEffect):
             with GLConfig.LocalConfig(depth_test=False, cull_face=None, polygon_mode=GL.GL_FILL):
                 with self.array_fbo:
                     program["screen_image"] = screen_image
-                    program.draw_triangles(vertices=Frame.vertices, indices=Frame.indices)
+                    program.draw_triangles(start_index=0, total=6)
 
             return self.array_fbo.color_attachment(0)
         elif isinstance(screen_image, samplerCube):
@@ -120,14 +110,14 @@ class KernelFilter(PostProcessEffect):
             with GLConfig.LocalConfig(depth_test=False, cull_face=None, polygon_mode=GL.GL_FILL):
                 with self.cube_fbo:
                     self.cube_program["screen_image"] = screen_image
-                    self.cube_program.draw_triangles(vertices=Frame.vertices, indices=Frame.indices)
+                    self.cube_program.draw_triangles(start_index=0, total=6)
 
             return self.cube_fbo.color_attachment(0)
         
     def draw_to_active(self, screen_image: sampler2D) -> None:
         with GLConfig.LocalConfig(depth_test=False, cull_face=None, polygon_mode=GL.GL_FILL):
             self.program["screen_image"] = screen_image
-            self.program.draw_triangles(vertices=Frame.vertices, indices=Frame.indices)
+            self.program.draw_triangles(start_index=0, total=6)
 
     @property
     def kernel(self)->np.ndarray:
@@ -136,18 +126,4 @@ class KernelFilter(PostProcessEffect):
     @kernel.setter
     def kernel(self, kernel:np.ndarray):
         self._kernel.kernel = kernel
-    
-    def array_program(self, layers):
-        if layers in self.__array_programs:
-            return self.__array_programs[layers]
-
-        program = ShaderProgram()
-        program.compile(Frame.draw_frame_vs)
-        program.compile(Frame.draw_frame_array_gs(layers))
-        program.compile(os.path.dirname(os.path.abspath(__file__)) + "/../glsl/PostProcessEffects/kernel_array_filter.fs")
-        program["Kernel"].bind(self._kernel)
-
-        self.__array_programs[layers] = program
-
-        return program
     

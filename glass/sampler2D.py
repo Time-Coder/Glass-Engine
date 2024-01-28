@@ -27,8 +27,6 @@ class sampler2D(FBOAttachment):
 
     _sampler2D_map = {}
     _should_update = False
-    __shadertoy_template_content = ""
-    __shadertoy_template_filename = os.path.dirname(os.path.abspath(__file__)) + "/glsl/shadertoy_template.glsl"
 
     _basic_info = \
     {
@@ -72,8 +70,6 @@ class sampler2D(FBOAttachment):
         self._shadertoy_last_frame_time = 0
         self._shadertoy_frame_index = 0
         self._should_update_shadertoy = True
-        self.__frame_vertices = None
-        self.__frame_indices = None
 
         if image is not None:
             self.image = image
@@ -493,49 +489,16 @@ class sampler2D(FBOAttachment):
             raise FileNotFoundError(shader_path)
         
         shader_path = os.path.abspath(shader_path).replace("\\", "/")
-        base_name = os.path.basename(shader_path)
-        out_file_name = GlassConfig.cache_folder + "/" + base_name + "_" + md5s(shader_path) + ".glsl"
-        if modify_time(sampler2D.__shadertoy_template_filename) > modify_time(out_file_name):
-            out_file = open(out_file_name, "w")
-            out_file.write(sampler2D.__shadertoy_template(shader_path))
-            out_file.close()
-
+        self_folder = os.path.dirname(os.path.abspath(__file__))
         program = ShaderProgram()
-        program.compile(os.path.dirname(os.path.abspath(__file__)) + "/glsl/draw_frame.vs")
-        program.compile(out_file_name, GL.GL_FRAGMENT_SHADER)
+        program.define("FILE_NAME", shader_path)
+        program.compile(self_folder + "/glsl/draw_frame.vs")
+        program.compile(self_folder + "/glsl/shadertoy_template.fs")
 
         fbo = FBO(self.width, self.height)
         fbo.attach(0, attachment=self)
 
         self._shadertoy_program = program
-
-    @staticmethod
-    def __shadertoy_template(file_name):
-        if not sampler2D.__shadertoy_template_content:
-            sampler2D.__shadertoy_template_content = cat(sampler2D.__shadertoy_template_filename)
-        
-        rel_path = relative_path(file_name, GlassConfig.cache_folder)
-        return sampler2D.__shadertoy_template_content.replace("{file_name}", rel_path)
-
-    @property
-    def _frame_vertices(self):
-        if self.__frame_vertices is None:
-            self.__frame_vertices = Vertices()
-            self.__frame_vertices[0] = Vertex(position=glm.vec2(-1, -1))
-            self.__frame_vertices[1] = Vertex(position=glm.vec2(1, -1))
-            self.__frame_vertices[2] = Vertex(position=glm.vec2(1, 1))
-            self.__frame_vertices[3] = Vertex(position=glm.vec2(-1, 1))
-
-        return self.__frame_vertices
-    
-    @property
-    def _frame_indices(self):
-        if self.__frame_indices is None:
-            self.__frame_indices = Indices()
-            self.__frame_indices[0] = glm.uvec3(0, 1, 2)
-            self.__frame_indices[1] = glm.uvec3(0, 2, 3)
-
-        return self.__frame_indices
 
     def __update_shadertoy(self):
         self._should_update_shadertoy = False
@@ -578,6 +541,6 @@ class sampler2D(FBOAttachment):
                 
                 self._shadertoy_last_frame_time = current_time
                 self._shadertoy_frame_index += 1
-                self._shadertoy_program.draw_triangles(vertices=self._frame_vertices, indices=self._frame_indices)
+                self._shadertoy_program.draw_triangles(start_index=0, total=6)
         
         self._should_update_shadertoy = True

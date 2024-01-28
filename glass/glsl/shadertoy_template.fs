@@ -15,7 +15,7 @@ uniform sampler2D iChannel0, iChannel1, iChannel2, iChannel3; // input channel. 
 uniform vec4 iDate; // (year, month, day, time in seconds)
 uniform float iSampleRate; // sound sample rate (i.e., 44100)
 
-#include "{file_name}"
+#include FILE_NAME
 
 void main()
 {
