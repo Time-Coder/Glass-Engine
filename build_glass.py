@@ -30,7 +30,7 @@ with open("MANIFEST.in", "w", encoding="utf-8") as out_file:
 include glass/LICENSE
 """)
 
-subprocess.call([sys.executable, "-m", "build", "--config-setting=-i", "--config-setting=https://pypi.tuna.tsinghua.edu.cn/simple"])
+subprocess.call([sys.executable, "setup.py", "sdist", "bdist_wheel"])
 
 with open("README_glass_engine.rst", "r", encoding="utf-8") as in_file:
     content = in_file.read()

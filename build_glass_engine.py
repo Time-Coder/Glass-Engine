@@ -29,4 +29,4 @@ include glass_engine/README_PYPI.md
 include glass_engine/LICENSE
 """)
 
-subprocess.call([sys.executable, "-m", "build", "--config-setting=-i", "--config-setting=https://pypi.tuna.tsinghua.edu.cn/simple"])
+subprocess.call([sys.executable, "setup.py", "sdist", "bdist_wheel"])

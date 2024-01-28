@@ -8,6 +8,8 @@ import sys
 import subprocess
 from .GlassConfig import GlassConfig
 
+import pip._internal
+
 def md5(file_name):
     if not os.path.isfile(file_name):
         return ""
@@ -81,18 +83,10 @@ def is_China_user():
     return is_China_ip(public_ip())
 
 def pip_install(package_name:str):
-    if "/" not in package_name:
-        install_cmd = [sys.executable, "-m", "pip", "install", package_name]
-        if is_China_user():
-            install_cmd = [sys.executable, "-m", "pip", "install", package_name, "-i", "https://pypi.tuna.tsinghua.edu.cn/simple"]
-        
-        return_code = subprocess.call(install_cmd)
-        if return_code != 0:
-            raise RuntimeError(f"failed to install {package_name}")
-    else:
-        target_file = GlassConfig.cache_folder + "/packages/" + os.path.basename(package_name)
-        download(package_name, target_file)
-        install_cmd = [sys.executable, "-m", "pip", "install", target_file]
-        return_code = subprocess.call(install_cmd)
-        if return_code != 0:
-            raise RuntimeError(f"failed to install {package_name}")
+    install_cmd = [sys.executable, "-m", "pip", "install", package_name]
+    if is_China_user():
+        install_cmd = [sys.executable, "-m", "pip", "install", package_name, "-i", "https://pypi.tuna.tsinghua.edu.cn/simple"]
+    
+    return_code = subprocess.call(install_cmd)
+    if return_code != 0:
+        raise RuntimeError(f"failed to install {package_name}")
