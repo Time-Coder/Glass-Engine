@@ -11,11 +11,9 @@ Assimpy -- 为 Glass Engine 提供 3D 模型加载功能
 但不建议你这么做。因为其初衷是为 **Glass Engine** 提供 3D 模型的加载功能，
 因此不过多介绍 **Assimpy** 的用法，欢迎访问 **Glass Engine** 项目：
 
-- 文档：https://glass-engine-doc.readthedocs.io/zh/latest/
-- Github 项目主页：https://github.com/Time-Coder/Glass-Engine
-- Gitee 项目主页：https://gitee.com/time-coder/Glass-Engine
-- PyPI 索引：https://pypi.org/project/glass-engine/
+- `文档 <https://glass-engine-doc.readthedocs.io/zh/latest/>`_
+- `Github 项目主页 <https://github.com/Time-Coder/Glass-Engine>`_
+- `Gitee 项目主页 <https://gitee.com/time-coder/Glass-Engine>`_
+- `PyPI 索引 <https://pypi.org/project/glass-engine/>`_
 
-**Glass Engine** 中的模型加载功能用法请参考：
-
-https://glass-engine-doc.readthedocs.io/zh/latest/model/model.html
+**Glass Engine** 中的模型加载功能用法请参考 `Glass Engine 文档的模型加载章节 <https://glass-engine-doc.readthedocs.io/zh/latest/model/model.html>`_

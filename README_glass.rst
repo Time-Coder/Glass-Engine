@@ -60,7 +60,7 @@ OpenGL 函数的底层接口的设计为了跨平台，牺牲了易用性。
 你可以在任意需要使用 OpenGL 的地方使用 **Glass**，
 但其初衷是为 **Glass Engine** 提供 OpenGL 的封装，因此不过多介绍 **Glass** 的用法，欢迎访问 **Glass Engine** 项目：
 
-- 文档：https://glass-engine-doc.readthedocs.io/zh/latest/
-- Github 项目主页：https://github.com/Time-Coder/Glass-Engine
-- Gitee 项目主页：https://gitee.com/time-coder/Glass-Engine
-- PyPI 索引：https://pypi.org/project/glass-engine/
+- `文档 <https://glass-engine-doc.readthedocs.io/zh/latest/>`_
+- `Github 项目主页 <https://github.com/Time-Coder/Glass-Engine>`_
+- `Gitee 项目主页 <https://gitee.com/time-coder/Glass-Engine>`_
+- `PyPI 索引 <https://pypi.org/project/glass-engine/>`_

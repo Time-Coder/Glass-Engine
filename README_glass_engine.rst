@@ -58,5 +58,5 @@ Glass Engine -- 易用的 Python 3D 渲染引擎
 
 怎么样，是不是很简单、直观、易用？如果你感兴趣的话，就让我们开始接下来的 3D 渲染之旅吧！
 
-- 文档：https://glass-engine-doc.readthedocs.io/zh/latest/
-- PyPI 索引：https://pypi.org/project/glass-engine
+- `文档 <https://glass-engine-doc.readthedocs.io/zh/latest/>`_
+- `PyPI 索引 <https://pypi.org/project/glass-engine>`_

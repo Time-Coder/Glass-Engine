@@ -49,9 +49,9 @@ camera.screen.show() # 相机显示屏显示渲染结果
 
 怎么样，是不是很简单、直观、易用？如果你感兴趣的话，就让我们开始接下来的 3D 渲染之旅吧！
 
-* Github 项目主页：<https://github.com/Time-Coder/Glass-Engine>
-* Gitee 项目主页：<https://gitee.com/time-coder/Glass-Engine>
-* 文档：<https://glass-engine-doc.readthedocs.io/zh/latest/>
+* [Github 项目主页](https://github.com/Time-Coder/Glass-Engine)
+* [Gitee 项目主页](https://gitee.com/time-coder/Glass-Engine)
+* [文档](https://glass-engine-doc.readthedocs.io/zh/latest/)
 
 ## Release notes
 
