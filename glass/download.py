@@ -6,9 +6,7 @@ import requests
 from geolite2 import geolite2
 import sys
 import subprocess
-from .GlassConfig import GlassConfig
 
-import pip._internal
 
 def md5(file_name):
     if not os.path.isfile(file_name):
@@ -20,7 +18,8 @@ def md5(file_name):
 
     return md5_hash.hexdigest()
 
-def download(url, target_file, md5_str:str=""):
+
+def download(url, target_file, md5_str: str = ""):
     target_folder = os.path.dirname(os.path.abspath(target_file))
     if not os.path.isdir(target_folder):
         os.makedirs(target_folder)
@@ -42,7 +41,7 @@ def download(url, target_file, md5_str:str=""):
             respond = requests.get(url)
             if respond.status_code != 200:
                 raise RuntimeError(respond.content)
-            
+
             out_file = open(target_file, "wb")
             out_file.write(respond.content)
             out_file.close()
@@ -63,12 +62,14 @@ def download(url, target_file, md5_str:str=""):
         else:
             print("download failed, retry...")
 
+
 def public_ip():
     try:
-        response = requests.get('https://httpbin.org/ip')
-        return response.json().get('origin')
+        response = requests.get("https://httpbin.org/ip")
+        return response.json().get("origin")
     except:
         return "127.0.0.1"
+
 
 def is_China_ip(ip_address):
     if ip_address == "127.0.0.1":
@@ -76,17 +77,27 @@ def is_China_ip(ip_address):
 
     reader = geolite2.reader()
     location = reader.get(ip_address)
-    country = location.get('country', {}).get('iso_code') if location else None
-    return country == 'CN'
+    country = location.get("country", {}).get("iso_code") if location else None
+    return country == "CN"
+
 
 def is_China_user():
     return is_China_ip(public_ip())
 
-def pip_install(package_name:str):
+
+def pip_install(package_name: str):
     install_cmd = [sys.executable, "-m", "pip", "install", package_name]
     if is_China_user():
-        install_cmd = [sys.executable, "-m", "pip", "install", package_name, "-i", "https://pypi.tuna.tsinghua.edu.cn/simple"]
-    
+        install_cmd = [
+            sys.executable,
+            "-m",
+            "pip",
+            "install",
+            package_name,
+            "-i",
+            "https://pypi.tuna.tsinghua.edu.cn/simple",
+        ]
+
     return_code = subprocess.call(install_cmd)
     if return_code != 0:
         raise RuntimeError(f"failed to install {package_name}")

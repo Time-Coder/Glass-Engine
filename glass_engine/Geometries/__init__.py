@@ -45,11 +45,11 @@ from .SphericalCap import SphericalCap
 from .SphericalCapTop import SphericalCapTop
 
 # 正多面体
-from .Tetrahedron import Tetrahedron # 正四面体
-from .Hexahedron import Hexahedron # 正六面体
-from .Octahedron import Octahedron # 正八面体
-from .Dodecahedron import Dodecahedron # 正十二面体
-from .Icosahedron import Icosahedron # 正二十面体
+from .Tetrahedron import Tetrahedron  # 正四面体
+from .Hexahedron import Hexahedron  # 正六面体
+from .Octahedron import Octahedron  # 正八面体
+from .Dodecahedron import Dodecahedron  # 正十二面体
+from .Icosahedron import Icosahedron  # 正二十面体
 
 # 通用函数曲面
 from .Surf import Surf

@@ -6,13 +6,24 @@ from glass import Vertex
 import glm
 import math
 
+
 class PyramidTrustum(Mesh):
 
     @checktype
-    def __init__(self, n_sides:int=5, start_side:int=0, total_sides:int=None,
-                 bottom_radius:float=2, top_radius:float=1, height:float=1,
-                 color:(glm.vec3,glm.vec4)=glm.vec4(0.396, 0.74151, 0.69102, 1), back_color:(glm.vec3,glm.vec4)=None,
-                 normalize_tex_coord:bool=False, name:str="", block:bool=True):
+    def __init__(
+        self,
+        n_sides: int = 5,
+        start_side: int = 0,
+        total_sides: int = None,
+        bottom_radius: float = 2,
+        top_radius: float = 1,
+        height: float = 1,
+        color: (glm.vec3, glm.vec4) = glm.vec4(0.396, 0.74151, 0.69102, 1),
+        back_color: (glm.vec3, glm.vec4) = None,
+        normalize_tex_coord: bool = False,
+        name: str = "",
+        block: bool = True,
+    ):
         Mesh.__init__(self, color=color, back_color=back_color, name=name, block=block)
         self.__bottom_radius = bottom_radius
         self.__top_radius = top_radius
@@ -59,9 +70,12 @@ class PyramidTrustum(Mesh):
         vertices[i_vertex] = vertex_bottom_center
         i_vertex += 1
 
-        half_top_side_width = top_radius * math.sin(math.pi/n_sides)
-        half_bottom_side_width = bottom_radius * math.sin(math.pi/n_sides)
-        side_height = math.sqrt(height**2 + ((bottom_radius-top_radius)*math.cos(math.pi/n_sides))**2)
+        half_top_side_width = top_radius * math.sin(math.pi / n_sides)
+        half_bottom_side_width = bottom_radius * math.sin(math.pi / n_sides)
+        side_height = math.sqrt(
+            height**2
+            + ((bottom_radius - top_radius) * math.cos(math.pi / n_sides)) ** 2
+        )
         s1_top = 0.5 - half_top_side_width
         s2_top = 0.5 + half_top_side_width
         s1_bottom = 0.5 - half_bottom_side_width
@@ -69,21 +83,21 @@ class PyramidTrustum(Mesh):
         t = side_height
         if normalize_tex_coord:
             t = 1
-            s1_top = 0.5 - half_top_side_width/side_height
-            s2_top = 0.5 + half_top_side_width/side_height
-            s1_bottom = 0.5 - half_bottom_side_width/side_height
-            s2_bottom = 0.5 + half_bottom_side_width/side_height
+            s1_top = 0.5 - half_top_side_width / side_height
+            s2_top = 0.5 + half_top_side_width / side_height
+            s1_bottom = 0.5 - half_bottom_side_width / side_height
+            s2_bottom = 0.5 + half_bottom_side_width / side_height
 
         tex_coord_bottom_radius = 0.5
         if not normalize_tex_coord:
             tex_coord_bottom_radius = bottom_radius
 
-        tex_coord_top_radius = 0.5/bottom_radius*top_radius
+        tex_coord_top_radius = 0.5 / bottom_radius * top_radius
         if not normalize_tex_coord:
             tex_coord_top_radius = top_radius
 
-        for j in range(total_sides+1):
-            theta = 2*math.pi*(j+start_side)/n_sides
+        for j in range(total_sides + 1):
+            theta = 2 * math.pi * (j + start_side) / n_sides
             cos_theta = math.cos(theta)
             sin_theta = math.sin(theta)
 
@@ -93,7 +107,11 @@ class PyramidTrustum(Mesh):
             vertex_top_top = Vertex()
             vertex_top_top.position = top
             vertex_top_top.normal = glm.vec3(0, 0, 1)
-            vertex_top_top.tex_coord = glm.vec3(0.5+tex_coord_top_radius*cos_theta, 0.5+tex_coord_top_radius*sin_theta, 0)
+            vertex_top_top.tex_coord = glm.vec3(
+                0.5 + tex_coord_top_radius * cos_theta,
+                0.5 + tex_coord_top_radius * sin_theta,
+                0,
+            )
 
             vertex_side_top1 = Vertex()
             vertex_side_top1.position = top
@@ -114,63 +132,75 @@ class PyramidTrustum(Mesh):
             vertex_bottom_bottom = Vertex()
             vertex_bottom_bottom.position = bottom
             vertex_bottom_bottom.normal = glm.vec3(0, 0, -1)
-            vertex_bottom_bottom.tex_coord = glm.vec3(0.5+tex_coord_bottom_radius*cos_theta, 0.5+tex_coord_bottom_radius*sin_theta, 0)
+            vertex_bottom_bottom.tex_coord = glm.vec3(
+                0.5 + tex_coord_bottom_radius * cos_theta,
+                0.5 + tex_coord_bottom_radius * sin_theta,
+                0,
+            )
 
-            vertices[i_vertex] = vertex_top_top # 2 + 6*j
+            vertices[i_vertex] = vertex_top_top  # 2 + 6*j
             i_vertex += 1
 
-            vertices[i_vertex] = vertex_side_top1 # 2 + 6*j + 1
+            vertices[i_vertex] = vertex_side_top1  # 2 + 6*j + 1
             i_vertex += 1
 
-            vertices[i_vertex] = vertex_side_top2 # 2 + 6*j + 2
+            vertices[i_vertex] = vertex_side_top2  # 2 + 6*j + 2
             i_vertex += 1
 
-            vertices[i_vertex] = vertex_side_bottom1 # 2 + 6*j + 3
+            vertices[i_vertex] = vertex_side_bottom1  # 2 + 6*j + 3
             i_vertex += 1
 
-            vertices[i_vertex] = vertex_side_bottom2 # 2 + 6*j + 4
+            vertices[i_vertex] = vertex_side_bottom2  # 2 + 6*j + 4
             i_vertex += 1
 
-            vertices[i_vertex] = vertex_bottom_bottom # 2 + 6*j + 5
+            vertices[i_vertex] = vertex_bottom_bottom  # 2 + 6*j + 5
             i_vertex += 1
 
             if j > 0:
                 # 棱台顶面
                 triangle = glm.uvec3(0, 0, 0)
-                triangle[0] = 2 + 6*j
+                triangle[0] = 2 + 6 * j
                 triangle[1] = 0
-                triangle[2] = 2 + 6*j - 6
+                triangle[2] = 2 + 6 * j - 6
                 indices[i_index] = triangle
                 i_index += 1
-                self.generate_temp_TBN(vertices[triangle[0]], vertices[triangle[1]], vertices[triangle[2]])
+                self.generate_temp_TBN(
+                    vertices[triangle[0]], vertices[triangle[1]], vertices[triangle[2]]
+                )
 
                 # 棱台侧面 1
                 triangle = glm.uvec3(0, 0, 0)
-                triangle[0] = 2 + 6*j + 3
-                triangle[1] = 2 + 6*j + 1
-                triangle[2] = 2 + 6*j - 4
+                triangle[0] = 2 + 6 * j + 3
+                triangle[1] = 2 + 6 * j + 1
+                triangle[2] = 2 + 6 * j - 4
                 indices[i_index] = triangle
                 i_index += 1
-                self.generate_temp_TBN(vertices[triangle[0]], vertices[triangle[1]], vertices[triangle[2]])
+                self.generate_temp_TBN(
+                    vertices[triangle[0]], vertices[triangle[1]], vertices[triangle[2]]
+                )
 
                 # 棱台侧面 2
                 triangle = glm.uvec3(0, 0, 0)
-                triangle[0] = 2 + 6*j + 3
-                triangle[1] = 2 + 6*j - 4
-                triangle[2] = 2 + 6*j - 2
+                triangle[0] = 2 + 6 * j + 3
+                triangle[1] = 2 + 6 * j - 4
+                triangle[2] = 2 + 6 * j - 2
                 indices[i_index] = triangle
                 i_index += 1
-                self.generate_temp_TBN(vertices[triangle[0]], vertices[triangle[1]], vertices[triangle[2]])
+                self.generate_temp_TBN(
+                    vertices[triangle[0]], vertices[triangle[1]], vertices[triangle[2]]
+                )
 
                 # 棱台底面
                 triangle = glm.uvec3(0, 0, 0)
-                triangle[0] = 2 + 6*j + 5
-                triangle[1] = 2 + 6*j - 1
+                triangle[0] = 2 + 6 * j + 5
+                triangle[1] = 2 + 6 * j - 1
                 triangle[2] = 1
                 indices[i_index] = triangle
                 i_index += 1
-                self.generate_temp_TBN(vertices[triangle[0]], vertices[triangle[1]], vertices[triangle[2]])
-            
+                self.generate_temp_TBN(
+                    vertices[triangle[0]], vertices[triangle[1]], vertices[triangle[2]]
+                )
+
                 yield
 
         del vertices[i_vertex:]
@@ -179,19 +209,19 @@ class PyramidTrustum(Mesh):
     @property
     def n_sides(self):
         return self.__n_sides
-    
+
     @n_sides.setter
     @Mesh.param_setter
-    def n_sides(self, n_sides:int):
+    def n_sides(self, n_sides: int):
         self.__n_sides = n_sides
 
     @property
     def start_side(self):
         return self.__start_side
-    
+
     @start_side.setter
     @Mesh.param_setter
-    def start_side(self, start_side:int):
+    def start_side(self, start_side: int):
         self.__start_side = start_side
 
     @property
@@ -200,41 +230,41 @@ class PyramidTrustum(Mesh):
 
     @total_sides.setter
     @Mesh.param_setter
-    def total_sides(self, total_sides:int):
+    def total_sides(self, total_sides: int):
         self.__total_sides = total_sides
 
     @property
     def bottom_radius(self):
         return self.__bottom_radius
-    
+
     @bottom_radius.setter
     @Mesh.param_setter
-    def bottom_radius(self, bottom_radius:float):
+    def bottom_radius(self, bottom_radius: float):
         self.__bottom_radius = bottom_radius
 
     @property
     def top_radius(self):
         return self.__top_radius
-    
+
     @top_radius.setter
     @Mesh.param_setter
-    def top_radius(self, top_radius:float):
+    def top_radius(self, top_radius: float):
         self.__top_radius = top_radius
 
     @property
     def height(self):
         return self.__height
-    
+
     @height.setter
     @Mesh.param_setter
-    def height(self, height:float):
+    def height(self, height: float):
         self.__height = height
 
     @property
     def normalize_tex_coord(self):
         return self.__normalize_tex_coord
-    
+
     @normalize_tex_coord.setter
     @Mesh.param_setter
-    def normalize_tex_coord(self, flag:bool):
+    def normalize_tex_coord(self, flag: bool):
         self.__normalize_tex_coord = flag

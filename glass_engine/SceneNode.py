@@ -9,33 +9,38 @@ from glass.WeakDict import WeakDict
 from glass.MetaInstancesRecorder import MetaInstancesRecorder
 from .callback_vec import callback_quat, callback_vec3
 
+
 class SceneNode(metaclass=MetaInstancesRecorder):
 
     @MetaInstancesRecorder.init
-    def __init__(self, name:str="", unique_path:bool=False):
+    def __init__(self, name: str = "", unique_path: bool = False):
         if name:
             self._name = name
         else:
             self._name = self.__class__.__name__ + "_" + str(uuid.uuid1())
 
-        self._unique_path:bool = unique_path
-        self._position:callback_vec3 = callback_vec3(0, 0, 0, callback=self._set_dirty)
-        self._orientation:callback_quat = callback_quat(1, 0, 0, 0, callback=self._update_yaw_pitch_roll)
-        self._scale:callback_vec3 = callback_vec3(1, 1, 1, callback=self._set_dirty)
-        self._yaw_pitch_roll:glm.vec3 = glm.vec3(0, 0, 0)
+        self._unique_path: bool = unique_path
+        self._position: callback_vec3 = callback_vec3(0, 0, 0, callback=self._set_dirty)
+        self._orientation: callback_quat = callback_quat(
+            1, 0, 0, 0, callback=self._update_yaw_pitch_roll
+        )
+        self._scale: callback_vec3 = callback_vec3(1, 1, 1, callback=self._set_dirty)
+        self._yaw_pitch_roll: glm.vec3 = glm.vec3(0, 0, 0)
 
         self.abs_position = glm.vec3(0, 0, 0)
         self.abs_orientation = glm.quat(1, 0, 0, 0)
 
-        self._parents:DictList = DictList(weak_ref=True)
-        self._children:DictList = DictList()
-        self._scenes:WeakSet = WeakSet()
-        self._transform_dirty:WeakSet = WeakSet()
-        self._children_transform_dirty:WeakDict = WeakDict(weak_ref_keys=True, weak_ref_values=False)
-        self._should_update_yaw_pitch_roll:bool = True
+        self._parents: DictList = DictList(weak_ref=True)
+        self._children: DictList = DictList()
+        self._scenes: WeakSet = WeakSet()
+        self._transform_dirty: WeakSet = WeakSet()
+        self._children_transform_dirty: WeakDict = WeakDict(
+            weak_ref_keys=True, weak_ref_values=False
+        )
+        self._should_update_yaw_pitch_roll: bool = True
 
-        self._propagation_props:dict = {}
-        self._block_propagation:set = set()
+        self._propagation_props: dict = {}
+        self._block_propagation: set = set()
 
         self._propagation_props["visible"] = True
 
@@ -44,19 +49,19 @@ class SceneNode(metaclass=MetaInstancesRecorder):
         pass
 
     @property
-    def unique_path(self)->bool:
+    def unique_path(self) -> bool:
         return self._unique_path
 
     @unique_path.setter
-    def unique_path(self, flag:bool)->None:
+    def unique_path(self, flag: bool) -> None:
         self._unique_path = flag
 
     @property
     def visible(self):
         return self.propagation_prop("visible")
-    
+
     @visible.setter
-    def visible(self, visible:bool):
+    def visible(self, visible: bool):
         self.set_propagation_prop("visible", visible)
 
     def hide(self):
@@ -76,20 +81,22 @@ class SceneNode(metaclass=MetaInstancesRecorder):
     @property
     def children(self):
         return self._children
-    
-    def block_propagation(self, name:str, flag:bool=True):
+
+    def block_propagation(self, name: str, flag: bool = True):
         if flag:
             self._block_propagation.add(name)
         elif name in self._block_propagation:
             self._block_propagation.remove(name)
 
-    def propagation_prop(self, name:str):
+    def propagation_prop(self, name: str):
         if name not in self._propagation_props:
             return None
-        
+
         return self._propagation_props[name]
 
-    def set_propagation_prop(self, name:str, value, callback=None, args:tuple=(), kwargs:dict={}):
+    def set_propagation_prop(
+        self, name: str, value, callback=None, args: tuple = (), kwargs: dict = {}
+    ):
         parent_queues = [self]
         is_self_set = False
         while parent_queues:
@@ -117,10 +124,10 @@ class SceneNode(metaclass=MetaInstancesRecorder):
                 child_queues.extend(child._children)
 
     def has_parent(self, parent):
-        return (parent in self._parents)
+        return parent in self._parents
 
     def has_child(self, child):
-        return (child in self._children)
+        return child in self._children
 
     def add_child(self, node):
         if node.has_parent(self):
@@ -172,7 +179,7 @@ class SceneNode(metaclass=MetaInstancesRecorder):
 
         if detached_node is None:
             return None
-        
+
         detached_node._update_scenes()
         for scene in self.scenes:
             scene._remove_paths_prefix(paths_prefix)
@@ -189,7 +196,7 @@ class SceneNode(metaclass=MetaInstancesRecorder):
     def __hash__(self):
         return id(self)
 
-    def __getitem__(self, name:(str,int)):
+    def __getitem__(self, name: (str, int)):
         if isinstance(name, str):
             if name not in self._children:
                 self.add_child(SceneNode(name))
@@ -199,7 +206,7 @@ class SceneNode(metaclass=MetaInstancesRecorder):
 
         return self._children[name]
 
-    def __setitem__(self, name:str, node):
+    def __setitem__(self, name: str, node):
         if name in self._children:
             if self._children[name] is node:
                 return
@@ -208,13 +215,13 @@ class SceneNode(metaclass=MetaInstancesRecorder):
         node.name = name
         self.add_child(node)
 
-    def __delitem__(self, name:str):
+    def __delitem__(self, name: str):
         self.remove_child(name)
 
     def __to_string(self, indent):
         result = indent * "  " + self.name
         for child in self._children:
-            result += ("\n" + child.__to_string(indent+1))
+            result += "\n" + child.__to_string(indent + 1)
         return result
 
     def __repr__(self):
@@ -225,7 +232,7 @@ class SceneNode(metaclass=MetaInstancesRecorder):
         return self._name
 
     @name.setter
-    def name(self, name:str):
+    def name(self, name: str):
         if name == self._name:
             return
 
@@ -235,7 +242,9 @@ class SceneNode(metaclass=MetaInstancesRecorder):
 
         for parent in self._parents:
             if name in parent._children:
-                raise NameError("parent node already has one child named '" + name + "'")
+                raise NameError(
+                    "parent node already has one child named '" + name + "'"
+                )
 
             del parent._children[self._name]
             parent._children[name] = self
@@ -247,7 +256,7 @@ class SceneNode(metaclass=MetaInstancesRecorder):
         return self._position
 
     @position.setter
-    def position(self, position:glm.vec3):
+    def position(self, position: glm.vec3):
         self._position.x = position.x
         self._position.y = position.y
         self._position.z = position.z
@@ -257,8 +266,8 @@ class SceneNode(metaclass=MetaInstancesRecorder):
         return self._scale
 
     @scale.setter
-    def scale(self, scale:(glm.vec3, float)):
-        if isinstance(scale, (int,float)):
+    def scale(self, scale: (glm.vec3, float)):
+        if isinstance(scale, (int, float)):
             self._scale.x = scale
             self._scale.y = scale
             self._scale.z = scale
@@ -272,7 +281,7 @@ class SceneNode(metaclass=MetaInstancesRecorder):
         return self._orientation
 
     @orientation.setter
-    def orientation(self, orientation:glm.quat):
+    def orientation(self, orientation: glm.quat):
         self._orientation.w = orientation.w
         self._orientation.x = orientation.x
         self._orientation.y = orientation.y
@@ -286,21 +295,31 @@ class SceneNode(metaclass=MetaInstancesRecorder):
     def _update_yaw_pitch_roll(self):
         if not self._should_update_yaw_pitch_roll:
             return
-        
+
         q0 = self._orientation.w
         q1 = self._orientation.x
         q2 = self._orientation.y
         q3 = self._orientation.z
-        self._yaw_pitch_roll[0] = math.atan2(2 * (q0*q3 - q1*q2), 1 - 2 * (q1*q1 + q3*q3))/math.pi*180
-        self._yaw_pitch_roll[1] = math.asin(np.clip(2 * (q0*q1 + q2*q3), -1, 1))/math.pi*180
-        self._yaw_pitch_roll[2] = math.atan2(2 * (q0*q2 - q1*q3), 1 - 2 * (q1*q1 + q2*q2))/math.pi*180
+        self._yaw_pitch_roll[0] = (
+            math.atan2(2 * (q0 * q3 - q1 * q2), 1 - 2 * (q1 * q1 + q3 * q3))
+            / math.pi
+            * 180
+        )
+        self._yaw_pitch_roll[1] = (
+            math.asin(np.clip(2 * (q0 * q1 + q2 * q3), -1, 1)) / math.pi * 180
+        )
+        self._yaw_pitch_roll[2] = (
+            math.atan2(2 * (q0 * q2 - q1 * q3), 1 - 2 * (q1 * q1 + q2 * q2))
+            / math.pi
+            * 180
+        )
 
         self._set_dirty()
 
     def _update_orientation(self):
-        yaw = self._yaw_pitch_roll[0]/180*math.pi
-        pitch = self._yaw_pitch_roll[1]/180*math.pi
-        roll = self._yaw_pitch_roll[2]/180*math.pi
+        yaw = self._yaw_pitch_roll[0] / 180 * math.pi
+        pitch = self._yaw_pitch_roll[1] / 180 * math.pi
+        roll = self._yaw_pitch_roll[2] / 180 * math.pi
 
         quat1 = glm.quat(math.cos(yaw / 2), 0, 0, math.sin(yaw / 2))
         quat2 = glm.quat(math.cos(pitch / 2), math.sin(pitch / 2), 0, 0)
@@ -317,7 +336,7 @@ class SceneNode(metaclass=MetaInstancesRecorder):
         return self._yaw_pitch_roll[0]
 
     @yaw.setter
-    def yaw(self, yaw:float):
+    def yaw(self, yaw: float):
         self._yaw_pitch_roll[0] = yaw
         self._update_orientation()
 
@@ -326,7 +345,7 @@ class SceneNode(metaclass=MetaInstancesRecorder):
         return self._yaw_pitch_roll[1]
 
     @pitch.setter
-    def pitch(self, pitch:float):
+    def pitch(self, pitch: float):
         self._yaw_pitch_roll[1] = pitch
         self._update_orientation()
 
@@ -335,15 +354,15 @@ class SceneNode(metaclass=MetaInstancesRecorder):
         return self._yaw_pitch_roll[2]
 
     @roll.setter
-    def roll(self, roll:float):
+    def roll(self, roll: float):
         self._yaw_pitch_roll[2] = roll
         self._update_orientation()
-    
+
     @property
     def paths(self):
         if not self.parents:
             return [[self]]
-        
+
         all_paths = []
         for parent in self.parents:
             parent_paths = parent.paths
@@ -352,12 +371,12 @@ class SceneNode(metaclass=MetaInstancesRecorder):
             all_paths.extend(parent_paths)
 
         return all_paths
-    
+
     @property
     def paths_str(self):
         if not self.parents:
             return ["/" + self.name]
-        
+
         all_paths_str = []
         for parent in self.parents:
             parent_paths_str = parent.paths_str
@@ -429,27 +448,27 @@ class SceneNode(metaclass=MetaInstancesRecorder):
     def parent(self):
         for parent in self._parents:
             return parent
-    
+
     @property
-    def scene(self):        
+    def scene(self):
         for scene in self._scenes:
             return scene
 
     @property
-    def path(self)->list:
+    def path(self) -> list:
         if self.parent is None:
             return [self]
-        
+
         path = self.parent.paths[0]
         path.append(self)
         return path
 
-    def _add_as_child_callback(self)->None:
+    def _add_as_child_callback(self) -> None:
         if self._unique_path:
             len_parents = len(self._parents)
             i = 0
             for parent in self._parents:
-                if i >= len_parents-1:
+                if i >= len_parents - 1:
                     break
 
                 parent.remove_child(self)
@@ -458,8 +477,8 @@ class SceneNode(metaclass=MetaInstancesRecorder):
             node = self
             while True:
                 if len(node._parents) > 1:
-                    raise RuntimeError('SceneNode can only have one path to root')
-                
+                    raise RuntimeError("SceneNode can only have one path to root")
+
                 try:
                     node = node._parents[0]
                 except IndexError:

@@ -2,7 +2,7 @@ class SequentialAnimation:
 
     class DoneCallback:
 
-        def __init__(self, sequential_animation, animation, should_start:bool=True):
+        def __init__(self, sequential_animation, animation, should_start: bool = True):
             self.sequential_animation = sequential_animation
             self.animation = animation
             self.should_start = should_start
@@ -16,9 +16,13 @@ class SequentialAnimation:
         self.animations = animations
         for i in range(len(animations)):
             if i == len(animations) - 1:
-                animations[i].done_callback = SequentialAnimation.DoneCallback(self, animations[0], should_start=False)
+                animations[i].done_callback = SequentialAnimation.DoneCallback(
+                    self, animations[0], should_start=False
+                )
             else:
-                animations[i].done_callback = SequentialAnimation.DoneCallback(self, animations[i+1])
+                animations[i].done_callback = SequentialAnimation.DoneCallback(
+                    self, animations[i + 1]
+                )
 
         self._active_animation = None
         if len(self.animations) > 0:
@@ -27,7 +31,7 @@ class SequentialAnimation:
     def start(self):
         if self._active_animation is not None:
             self._active_animation.start()
-        
+
     def pause(self):
         if self._active_animation is not None:
             self._active_animation.pause()
@@ -36,7 +40,7 @@ class SequentialAnimation:
         for animation in self.animations:
             animation.stop()
 
-    def goto(self, t:float):
+    def goto(self, t: float):
         start_time = 0
         active_status = self._active_animation.status
         to_end = True

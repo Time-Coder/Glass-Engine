@@ -4,15 +4,16 @@ from ..Frame import Frame
 
 import os
 
+
 class FXAAEffect(PostProcessEffect):
 
     __array_programs = {}
     __program = None
     __cube_program = None
-    
-    def __init__(self, internal_format:GLInfo.internal_formats=None):
+
+    def __init__(self, internal_format: GLInfo.internal_formats = None):
         PostProcessEffect.__init__(self)
-        
+
         self._internal_format = internal_format
         self._fbo = None
         self._array_fbo = None
@@ -23,7 +24,10 @@ class FXAAEffect(PostProcessEffect):
         if FXAAEffect.__program is None:
             FXAAEffect.__program = ShaderProgram()
             FXAAEffect.__program.compile(Frame.draw_frame_vs)
-            FXAAEffect.__program.compile(os.path.dirname(os.path.abspath(__file__)) + "/../glsl/PostProcessEffects/FXAA.fs")
+            FXAAEffect.__program.compile(
+                os.path.dirname(os.path.abspath(__file__))
+                + "/../glsl/PostProcessEffects/FXAA.fs"
+            )
         return FXAAEffect.__program
 
     @property
@@ -50,13 +54,15 @@ class FXAAEffect(PostProcessEffect):
     def need_pos_info(self) -> bool:
         return False
 
-    def apply(self, screen_image:(sampler2D,samplerCube,sampler2DArray))->(sampler2D,samplerCube,sampler2DArray):
+    def apply(
+        self, screen_image: (sampler2D, samplerCube, sampler2DArray)
+    ) -> (sampler2D, samplerCube, sampler2DArray):
         if isinstance(screen_image, sampler2D):
             self.fbo.resize(screen_image.width, screen_image.height)
             with self.fbo:
                 FXAAEffect.program()["screen_image"] = screen_image
                 FXAAEffect.program().draw_triangles(start_index=0, total=6)
-                
+
             return self.fbo.color_attachment(0)
         elif isinstance(screen_image, samplerCube):
             self.cube_fbo.resize(screen_image.width, screen_image.height)
@@ -66,14 +72,16 @@ class FXAAEffect(PostProcessEffect):
 
             return self.cube_fbo.color_attachment(0)
         elif isinstance(screen_image, sampler2DArray):
-            self.array_fbo.resize(screen_image.width, screen_image.height, layers=screen_image.layers)
+            self.array_fbo.resize(
+                screen_image.width, screen_image.height, layers=screen_image.layers
+            )
             with self.array_fbo:
                 program = FXAAEffect.array_program(screen_image.layers)
                 program["screen_image"] = screen_image
                 program.draw_triangles(start_index=0, total=6)
 
             return self.array_fbo.color_attachment(0)
-    
+
     def draw_to_active(self, screen_image: sampler2D) -> None:
         FXAAEffect.program()["screen_image"] = screen_image
         FXAAEffect.program().draw_triangles(start_index=0, total=6)

@@ -7,47 +7,57 @@ SpotLight = None
 Material = None
 Fog = None
 
+
 def import_DirLight():
     global DirLight
     if DirLight is None:
         DirLight = importlib.import_module(".Lights.DirLight", "glass_engine").DirLight
 
+
 def import_PointLight():
     global PointLight
     if PointLight is None:
-        PointLight = importlib.import_module(".Lights.PointLight", "glass_engine").PointLight
+        PointLight = importlib.import_module(
+            ".Lights.PointLight", "glass_engine"
+        ).PointLight
+
 
 def import_SpotLight():
     global SpotLight
     if SpotLight is None:
-        SpotLight = importlib.import_module(".Lights.SpotLight", "glass_engine").SpotLight
+        SpotLight = importlib.import_module(
+            ".Lights.SpotLight", "glass_engine"
+        ).SpotLight
+
 
 def import_Material():
     global Material
     if Material is None:
         Material = importlib.import_module(".Material", "glass_engine").Material
 
+
 def import_Fog():
     global Fog
     if Fog is None:
         Fog = importlib.import_module(".Fog", "glass_engine").Fog
 
+
 class GlassEngineConfig:
 
     def __init__(self):
-        self._has_material_recv_shadows:bool = False
-        self._has_material_cast_shadows:bool = False
-        self._has_material_recv_fog:bool = False
+        self._has_material_recv_shadows: bool = False
+        self._has_material_cast_shadows: bool = False
+        self._has_material_recv_fog: bool = False
 
-        self._has_dir_lights:bool = False
-        self._has_point_lights:bool = False
-        self._has_spot_lights:bool = False
+        self._has_dir_lights: bool = False
+        self._has_point_lights: bool = False
+        self._has_spot_lights: bool = False
 
-        self._has_dir_lights_generate_shadows:bool = False
-        self._has_point_lights_generate_shadows:bool = False
-        self._has_spot_lights_generate_shadows:bool = False
+        self._has_dir_lights_generate_shadows: bool = False
+        self._has_point_lights_generate_shadows: bool = False
+        self._has_spot_lights_generate_shadows: bool = False
 
-        self._has_fog:bool = False
+        self._has_fog: bool = False
 
         self._dict = {}
         self._dict["USE_DYNAMIC_ENV_MAPPING"] = False
@@ -70,16 +80,16 @@ class GlassEngineConfig:
         self._dict["USE_SHADING_MODEL_FRESNEL"] = False
         self._dict["USE_BINDLESS_TEXTURE"] = False
 
-    def __getitem__(self, name:str):
+    def __getitem__(self, name: str):
         return self._dict[name]
-    
-    def __setitem__(self, name:str, value:bool):
+
+    def __setitem__(self, name: str, value: bool):
         if name not in self._dict:
             return
 
         if self._dict[name] == value:
             return
-        
+
         if not value:
             for program in ShaderProgram.all_instances:
                 if self.__has_macro(program):
@@ -89,13 +99,23 @@ class GlassEngineConfig:
             self._dict[name] = value
             for program in ShaderProgram.all_instances:
                 self.__reload_program(program)
-    
+
     def define_for_program(self, program):
-        has_bindless_extension = ("GL_ARB_bindless_texture" in GLConfig.available_extensions)
+        has_bindless_extension = (
+            "GL_ARB_bindless_texture" in GLConfig.available_extensions
+        )
         is_valid = False
         for name in self._dict:
-            if name in ["USE_DYNAMIC_ENV_MAPPING", "USE_DIR_LIGHT_SHADOW", "USE_POINT_LIGHT_SHADOW", "USE_SPOT_LIGHT_SHADOW"] and \
-               not has_bindless_extension:
+            if (
+                name
+                in [
+                    "USE_DYNAMIC_ENV_MAPPING",
+                    "USE_DIR_LIGHT_SHADOW",
+                    "USE_POINT_LIGHT_SHADOW",
+                    "USE_SPOT_LIGHT_SHADOW",
+                ]
+                and not has_bindless_extension
+            ):
                 is_valid = program.undef(name) or is_valid
                 continue
 
@@ -122,11 +142,11 @@ class GlassEngineConfig:
     def __reload_program(self, program):
         if not self.__has_macro(program):
             return
-        
+
         if self.define_for_program(program):
             program.reload()
 
-    def _update_dynamic_env(self, flag:bool):
+    def _update_dynamic_env(self, flag: bool):
         import_Material()
 
         has_dynamic_env_mapping = flag
@@ -138,10 +158,10 @@ class GlassEngineConfig:
                         break
             except:
                 pass
-        
+
         self["USE_DYNAMIC_ENV_MAPPING"] = has_dynamic_env_mapping
 
-    def _update_recv_shadows(self, flag:bool):
+    def _update_recv_shadows(self, flag: bool):
         import_Material()
 
         has_material_recv_shadows = flag
@@ -150,7 +170,7 @@ class GlassEngineConfig:
                 if material.recv_shadows:
                     has_material_recv_shadows = True
                     break
-        
+
         if self._has_material_recv_shadows == has_material_recv_shadows:
             return
 
@@ -168,7 +188,7 @@ class GlassEngineConfig:
             self["USE_POINT_LIGHT_SHADOW"] = False
             self["USE_SPOT_LIGHT_SHADOW"] = False
 
-    def _update_cast_shadows(self, flag:bool):
+    def _update_cast_shadows(self, flag: bool):
         import_Material()
 
         has_material_cast_shadows = flag
@@ -177,7 +197,7 @@ class GlassEngineConfig:
                 if material.cast_shadows:
                     has_material_cast_shadows = True
                     break
-        
+
         if self._has_material_cast_shadows == has_material_cast_shadows:
             return
 
@@ -195,7 +215,7 @@ class GlassEngineConfig:
             self["USE_POINT_LIGHT_SHADOW"] = False
             self["UES_SPOT_LIGHT_SHADOW"] = False
 
-    def _update_recv_fog(self, flag:bool):
+    def _update_recv_fog(self, flag: bool):
         import_Material()
 
         has_material_recv_fog = flag
@@ -204,7 +224,7 @@ class GlassEngineConfig:
                 if material.fog:
                     has_material_recv_fog = True
                     break
-        
+
         if self._has_material_recv_fog == has_material_recv_fog:
             return
 
@@ -220,8 +240,7 @@ class GlassEngineConfig:
 
         has_fog = False
         for fog in Fog.all_instances:
-            if fog.extinction_density > 1E-6 and \
-               fog.inscattering_density > 1E-6:
+            if fog.extinction_density > 1e-6 and fog.inscattering_density > 1e-6:
                 has_fog = True
                 break
 
@@ -250,7 +269,7 @@ class GlassEngineConfig:
 
         self["USE_SPOT_LIGHT"] = bool(SpotLight.all_instances)
 
-    def _update_dir_lights_generate_shadows(self, flag:bool):
+    def _update_dir_lights_generate_shadows(self, flag: bool):
         import_DirLight()
 
         has_dir_lights_generate_shadows = flag
@@ -270,7 +289,7 @@ class GlassEngineConfig:
         else:
             self["USE_DIR_LIGHT_SHADOW"] = False
 
-    def _update_point_lights_generate_shadows(self, flag:bool):
+    def _update_point_lights_generate_shadows(self, flag: bool):
         import_PointLight()
 
         has_point_lights_generate_shadows = flag
@@ -290,7 +309,7 @@ class GlassEngineConfig:
         else:
             self["USE_POINT_LIGHT_SHADOW"] = False
 
-    def _update_spot_lights_generate_shadows(self, flag:bool):
+    def _update_spot_lights_generate_shadows(self, flag: bool):
         import_SpotLight()
 
         has_spot_lights_generate_shadows = flag
@@ -345,10 +364,16 @@ class GlassEngineConfig:
             elif material.shading_model == Material.ShadingModel.Minnaert:
                 has_Minnaert = True
 
-            elif material.shading_model in [Material.ShadingModel.CookTorrance, Material.ShadingModel.PBR]:
+            elif material.shading_model in [
+                Material.ShadingModel.CookTorrance,
+                Material.ShadingModel.PBR,
+            ]:
                 has_CookTorrance = True
 
-            elif material.shading_model in [Material.ShadingModel.NoShading, Material.ShadingModel.Unlit]:
+            elif material.shading_model in [
+                Material.ShadingModel.NoShading,
+                Material.ShadingModel.Unlit,
+            ]:
                 has_Unlit = True
 
             elif material.shading_model == Material.ShadingModel.Fresnel:
@@ -364,5 +389,6 @@ class GlassEngineConfig:
         self["USE_SHADING_MODEL_COOK_TORRANCE"] = has_CookTorrance
         self["USE_SHADING_MODEL_UNLIT"] = has_Unlit
         self["USE_SHADING_MODEL_FRESNEL"] = has_Fresnel
+
 
 GlassEngineConfig = GlassEngineConfig()

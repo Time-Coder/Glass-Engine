@@ -7,26 +7,33 @@ from ..GlassEngineConfig import GlassEngineConfig
 
 import glm
 
+
 class Light(SceneNode):
 
-    def __init__(self, name:str=""):
+    def __init__(self, name: str = ""):
         SceneNode.__init__(self, name)
-        self._color:callback_vec3 = callback_vec3(1, 1, 1, callback=self._update_color)
-        self._intensity:float = 1.0
-        self._generate_shadows:bool = True
-        self._rim_power:float = 0.3
-        self._flats:set = set()
+        self._color: callback_vec3 = callback_vec3(1, 1, 1, callback=self._update_color)
+        self._intensity: float = 1.0
+        self._generate_shadows: bool = True
+        self._rim_power: float = 0.3
+        self._flats: set = set()
 
         cls_name = self.__class__.__name__
         if cls_name == "DirLight":
             GlassEngineConfig._update_dir_lights()
-            GlassEngineConfig._update_dir_lights_generate_shadows(self._generate_shadows)
+            GlassEngineConfig._update_dir_lights_generate_shadows(
+                self._generate_shadows
+            )
         elif cls_name == "PointLight":
             GlassEngineConfig._update_point_lights()
-            GlassEngineConfig._update_point_lights_generate_shadows(self._generate_shadows)
+            GlassEngineConfig._update_point_lights_generate_shadows(
+                self._generate_shadows
+            )
         elif cls_name == "SpotLight":
             GlassEngineConfig._update_spot_lights()
-            GlassEngineConfig._update_spot_lights_generate_shadows(self._generate_shadows)
+            GlassEngineConfig._update_spot_lights_generate_shadows(
+                self._generate_shadows
+            )
 
     def __del__(self):
         cls_name = self.__class__.__name__
@@ -43,10 +50,10 @@ class Light(SceneNode):
 
     @color.setter
     @checktype
-    def color(self, color:glm.vec3):
+    def color(self, color: glm.vec3):
         if self._color == color:
             return
-        
+
         self._color.r = color.r
         self._color.g = color.g
         self._color.b = color.b
@@ -57,7 +64,7 @@ class Light(SceneNode):
 
     @intensity.setter
     @checktype
-    def intensity(self, intensity:float):
+    def intensity(self, intensity: float):
         if self._intensity == intensity:
             return
 
@@ -70,28 +77,34 @@ class Light(SceneNode):
     @property
     def generate_shadows(self):
         return self._generate_shadows
-    
+
     @generate_shadows.setter
     @checktype
-    def generate_shadows(self, flag:bool):
+    def generate_shadows(self, flag: bool):
         self._generate_shadows = flag
         self._update_generate_shadows()
 
         cls_name = self.__class__.__name__
         if cls_name == "DirLight":
-            GlassEngineConfig._update_dir_lights_generate_shadows(self._generate_shadows)
+            GlassEngineConfig._update_dir_lights_generate_shadows(
+                self._generate_shadows
+            )
         elif cls_name == "PointLight":
-            GlassEngineConfig._update_point_lights_generate_shadows(self._generate_shadows)
+            GlassEngineConfig._update_point_lights_generate_shadows(
+                self._generate_shadows
+            )
         elif cls_name == "SpotLight":
-            GlassEngineConfig._update_spot_lights_generate_shadows(self._generate_shadows)
+            GlassEngineConfig._update_spot_lights_generate_shadows(
+                self._generate_shadows
+            )
 
     @property
     def rim_power(self):
         return self._rim_power
-    
+
     @rim_power.setter
     @checktype
-    def rim_power(self, rim_power:float):
+    def rim_power(self, rim_power: float):
         if self._rim_power == rim_power:
             return
 
@@ -122,9 +135,10 @@ class Light(SceneNode):
 
         self._update_scene_lights()
 
+
 class FlatLight:
 
-    def __init__(self, light:Light):
+    def __init__(self, light: Light):
         self.depth_fbo_map = {}
         self.depth_map_handle = 0
         self._source_id = 0
@@ -133,22 +147,22 @@ class FlatLight:
     @property
     def depth_fbo(self):
         return self.depth_fbo_map.get(GLConfig.buffered_current_context, None)
-    
+
     @depth_fbo.setter
     def depth_fbo(self, fbo):
         self.depth_fbo_map[GLConfig.buffered_current_context] = fbo
 
-    def update(self, light:Light):
+    def update(self, light: Light):
         self.color = light._intensity * light._color.flat
         self.generate_shadows = light._generate_shadows
         self.rim_power = light._rim_power
-        
+
         self._source_id = id(light)
         light._flats.add(self)
 
     def before_del(self):
         if self._source_id == 0:
             return
-        
+
         light = di(self._source_id)
         light._flats.remove(self)

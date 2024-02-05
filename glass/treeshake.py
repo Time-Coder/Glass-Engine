@@ -1,9 +1,10 @@
 from .pcpp import pcmd
 import sys
 import io
-from .glsl_parser import get_glsl_parser 
+from .glsl_parser import get_glsl_parser
 
-def macros_expand(code:str, defines:dict=None)->str:
+
+def macros_expand(code: str, defines: dict = None) -> str:
     output = io.StringIO()
     input = io.StringIO(code)
     input.name = "<string>"
@@ -21,7 +22,8 @@ def macros_expand(code:str, defines:dict=None)->str:
     pcmd.CmdPreprocessor(cmds, input, output)
     return output.getvalue()
 
-def _find_func_defs(node, func_defs:dict):
+
+def _find_func_defs(node, func_defs: dict):
     if node.grammar_name == "function_definition":
         func_name = str(node.children[1].children[0].text, encoding="utf-8")
         args = []
@@ -29,7 +31,11 @@ def _find_func_defs(node, func_defs:dict):
         for child in node.children[1].children[1].children:
             if child.grammar_name == "parameter_declaration":
                 arg = {}
-                if child.children[0].grammar_name in ["identifier", "type_identifier", "primitive_type"]:
+                if child.children[0].grammar_name in [
+                    "identifier",
+                    "type_identifier",
+                    "primitive_type",
+                ]:
                     arg["modifier"] = "in"
                     arg["type"] = str(child.children[0].text, encoding="utf-8")
                     arg["name"] = str(child.children[1].text, encoding="utf-8")
@@ -41,8 +47,7 @@ def _find_func_defs(node, func_defs:dict):
                 args.append(arg)
                 arg_types.append(arg["type"])
 
-        func = \
-        {
+        func = {
             "signature": f"{func_name}({', '.join(arg_types)})",
             "name": func_name,
             "args": args,
@@ -51,7 +56,7 @@ def _find_func_defs(node, func_defs:dict):
             "body": str(node.children[2].text, encoding="utf-8"),
             "node": node,
             "body_node": node.children[2],
-            "used": False
+            "used": False,
         }
         if func_name not in func_defs:
             func_defs[func_name] = []
@@ -62,7 +67,8 @@ def _find_func_defs(node, func_defs:dict):
     for child in node.children:
         _find_func_defs(child, func_defs)
 
-def _find_func_calls(node, func_calls:list):
+
+def _find_func_calls(node, func_calls: list):
     if node.grammar_name == "call_expression":
         func_call = {}
         func_call["name"] = str(node.children[0].text, encoding="utf-8")
@@ -78,6 +84,7 @@ def _find_func_calls(node, func_calls:list):
     for child in node.children:
         _find_func_calls(child, func_calls)
 
+
 def _remove_segments(content, segments):
     segments.sort(reverse=True, key=lambda x: x[0])
     result = content
@@ -85,13 +92,14 @@ def _remove_segments(content, segments):
         result = result[:start] + result[end:]
     return result
 
-def treeshake(code:str, defines:dict=None)->str:
+
+def treeshake(code: str, defines: dict = None) -> str:
     code = macros_expand(code, defines)
 
     parser = get_glsl_parser()
     tree = parser.parse(bytes(code, sys.getdefaultencoding()))
     root_node = tree.root_node
-    
+
     func_defs = {}
     _find_func_defs(root_node, func_defs)
 
@@ -118,11 +126,11 @@ def treeshake(code:str, defines:dict=None)->str:
                 signature = func["signature"]
                 if signature in used_funcs:
                     continue
-                
+
                 func["used"] = True
                 func_stack.append(func)
                 used_funcs.add(signature)
-    
+
     segments_to_remove = []
     for funcs in func_defs.values():
         for func in funcs:

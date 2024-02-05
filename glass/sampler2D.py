@@ -1,4 +1,5 @@
 import os
+
 os.environ["OPENCV_IO_ENABLE_OPENEXR"] = "1"
 import cv2
 import numpy as np
@@ -10,13 +11,11 @@ from datetime import datetime
 
 from .FBOAttachment import FBOAttachment
 from .GLInfo import GLInfo
-from .utils import checktype, cat, modify_time, md5s, relative_path, is_text_file
+from .utils import checktype, is_text_file
 from .helper import get_external_format, width_adapt, get_dtype, get_channels
 from .ImageLoader import ImageLoader
-from .Indices import Indices
-from .Vertices import Vertices, Vertex
 from .GLConfig import GLConfig
-from .GlassConfig import GlassConfig
+
 
 class sampler2D(FBOAttachment):
 
@@ -28,8 +27,7 @@ class sampler2D(FBOAttachment):
     _sampler2D_map = {}
     _should_update = False
 
-    _basic_info = \
-    {
+    _basic_info = {
         "gen_func": GL.glGenTextures,
         "bind_func": GL.glBindTexture,
         "del_func": GL.glDeleteTextures,
@@ -39,9 +37,15 @@ class sampler2D(FBOAttachment):
     }
 
     @checktype
-    def __init__(self, image:(str,np.ndarray)=None, width:int=None, height:int=None, internal_format:GLInfo.internal_formats=None):
+    def __init__(
+        self,
+        image: (str, np.ndarray) = None,
+        width: int = None,
+        height: int = None,
+        internal_format: GLInfo.internal_formats = None,
+    ):
         FBOAttachment.__init__(self)
-        
+
         self._handle = 0
         self._file_name = ""
         self._image = None
@@ -118,14 +122,14 @@ class sampler2D(FBOAttachment):
         FBOAttachment.__del__(self)
 
     @property
-    def is_shadertoy(self)->bool:
+    def is_shadertoy(self) -> bool:
         return bool(self._shadertoy_path)
 
     @classmethod
-    def load(cls, file_name:str, internal_format:GLInfo.internal_formats=None):
+    def load(cls, file_name: str, internal_format: GLInfo.internal_formats = None):
         if not os.path.isfile(file_name):
             raise FileNotFoundError("not a valid image file: " + file_name)
-        
+
         file_name = os.path.abspath(file_name).replace("\\", "/")
         if file_name not in sampler2D._sampler2D_map:
             sampler = cls(file_name, internal_format=internal_format)
@@ -138,19 +142,26 @@ class sampler2D(FBOAttachment):
     def handle(self):
         if not bt.glGetTextureHandleARB:
             return 0
-        
+
         self.bind()
         if self._handle == 0:
             self._handle = bt.glGetTextureHandleARB(self._id)
             if self._handle == 0:
                 raise RuntimeError(f"failed to create sampler2D {self._id}'s handle")
-            bt.glMakeTextureHandleResidentARB(self._handle)            
+            bt.glMakeTextureHandleResidentARB(self._handle)
             self._dynamic = False
 
         return self._handle
 
-    def bind(self, update_fbo:bool=False, force_update_image:bool=False):
-        if self._should_update_shadertoy and self._shadertoy_program is not None and (self.fbo.context == 0 or self.fbo.context == GLConfig.buffered_current_context):
+    def bind(self, update_fbo: bool = False, force_update_image: bool = False):
+        if (
+            self._should_update_shadertoy
+            and self._shadertoy_program is not None
+            and (
+                self.fbo.context == 0
+                or self.fbo.context == GLConfig.buffered_current_context
+            )
+        ):
             self.__update_shadertoy()
 
         FBOAttachment.bind(self, update_fbo)
@@ -162,30 +173,55 @@ class sampler2D(FBOAttachment):
             GL.glTexParameteri(GL.GL_TEXTURE_2D, GL.GL_TEXTURE_WRAP_T, self._wrap_t)
             self._wrap_t_changed = False
         if self._border_color_changed:
-            GL.glTexParameterfv(GL.GL_TEXTURE_2D, GL.GL_TEXTURE_BORDER_COLOR, glm.value_ptr(self._border_color))
+            GL.glTexParameterfv(
+                GL.GL_TEXTURE_2D,
+                GL.GL_TEXTURE_BORDER_COLOR,
+                glm.value_ptr(self._border_color),
+            )
             self._border_color_changed = False
 
         if self._filter_min_changed:
-            GL.glTexParameteri(GL.GL_TEXTURE_2D, GL.GL_TEXTURE_MIN_FILTER, self._get_filter_min())
+            GL.glTexParameteri(
+                GL.GL_TEXTURE_2D, GL.GL_TEXTURE_MIN_FILTER, self._get_filter_min()
+            )
             self._filter_min_changed = False
         if self._filter_mag_changed:
-            GL.glTexParameteri(GL.GL_TEXTURE_2D, GL.GL_TEXTURE_MAG_FILTER, self._filter_mag)
+            GL.glTexParameteri(
+                GL.GL_TEXTURE_2D, GL.GL_TEXTURE_MAG_FILTER, self._filter_mag
+            )
             self._filter_mag_changed = False
 
         generated_mipmap = False
         if force_update_image or self._image_changed:
             external_format = get_external_format(self._internal_format)
             width_adapt(self._width)
-            GL.glTexImage2D(GL.GL_TEXTURE_2D, 0, self._internal_format,
-                            self._width, self._height, 0, external_format, self.dtype, self._image)
-            
-            if not update_fbo and self._filter_mipmap is not None and self._image is not None:
+            GL.glTexImage2D(
+                GL.GL_TEXTURE_2D,
+                0,
+                self._internal_format,
+                self._width,
+                self._height,
+                0,
+                external_format,
+                self.dtype,
+                self._image,
+            )
+
+            if (
+                not update_fbo
+                and self._filter_mipmap is not None
+                and self._image is not None
+            ):
                 self.generate_mipmap()
                 generated_mipmap = True
 
             self._image_changed = False
 
-        if not update_fbo and not generated_mipmap and not self._fbo_image_generated_mipmap:
+        if (
+            not update_fbo
+            and not generated_mipmap
+            and not self._fbo_image_generated_mipmap
+        ):
             if self._filter_mipmap is not None:
                 self.generate_mipmap()
 
@@ -210,11 +246,13 @@ class sampler2D(FBOAttachment):
 
     @width.setter
     @FBOAttachment.param_setter
-    def width(self, width:int):
+    def width(self, width: int):
         self._width = width
         if self._image is not None:
             if len(self._image.shape) > 2:
-                cv2.resize(self._image, (width, self._image.shape[0], self._image.shape[2]))
+                cv2.resize(
+                    self._image, (width, self._image.shape[0], self._image.shape[2])
+                )
             else:
                 cv2.resize(self._image, (width, self._image.shape[0]))
 
@@ -226,11 +264,13 @@ class sampler2D(FBOAttachment):
 
     @height.setter
     @FBOAttachment.param_setter
-    def height(self, height:int):
+    def height(self, height: int):
         self._height = height
         if self._image is not None:
             if len(self._image.shape) > 2:
-                cv2.resize(self._image, (self._image.shape[1], height, self._image.shape[2]))
+                cv2.resize(
+                    self._image, (self._image.shape[1], height, self._image.shape[2])
+                )
             else:
                 cv2.resize(self._image, (self._image.shape[1], height))
 
@@ -250,24 +290,34 @@ class sampler2D(FBOAttachment):
         if self._image is not None:
             old_channels = self._image.shape[2] if len(self._image.shape) > 2 else 1
             new_channels = get_channels(internal_format)
-            convert_map = \
-            {
-                (1,3): cv2.COLOR_GRAY2RGB,
-                (1,4): cv2.COLOR_GRAY2RGBA,
-                (3,1): cv2.COLOR_RGB2GRAY,
-                (3,4): cv2.COLOR_RGB2RGBA,
-                (4,1): cv2.COLOR_RGBA2GRAY,
-                (4,3): cv2.COLOR_RGBA2RGB
+            convert_map = {
+                (1, 3): cv2.COLOR_GRAY2RGB,
+                (1, 4): cv2.COLOR_GRAY2RGBA,
+                (3, 1): cv2.COLOR_RGB2GRAY,
+                (3, 4): cv2.COLOR_RGB2RGBA,
+                (4, 1): cv2.COLOR_RGBA2GRAY,
+                (4, 3): cv2.COLOR_RGBA2RGB,
             }
-            if (old_channels,new_channels) in convert_map:
-                conversion = convert_map[(old_channels,new_channels)]
+            if (old_channels, new_channels) in convert_map:
+                conversion = convert_map[(old_channels, new_channels)]
                 self._image = cv2.cvtColor(self._image, conversion)
             elif old_channels == 1:
                 if len(self._image.shape) == 2:
                     self._image = np.expand_dims(self._image, axis=2)
                 self._image = self._image.repeat(new_channels, axis=2)
             elif new_channels > old_channels:
-                self._image = np.append(self._image, np.zeros((self._image.shape[0], self._image.shape[1], new_channels-old_channels), dtype=self._image.dtype), axis=2)
+                self._image = np.append(
+                    self._image,
+                    np.zeros(
+                        (
+                            self._image.shape[0],
+                            self._image.shape[1],
+                            new_channels - old_channels,
+                        ),
+                        dtype=self._image.dtype,
+                    ),
+                    axis=2,
+                )
             elif new_channels < old_channels:
                 self._image = self._image[:, :, :new_channels]
 
@@ -286,7 +336,7 @@ class sampler2D(FBOAttachment):
 
     @internal_format.setter
     @FBOAttachment.param_setter
-    def internal_format(self, internal_format:GLInfo.internal_formats):
+    def internal_format(self, internal_format: GLInfo.internal_formats):
         self._set_internal_format(internal_format)
 
     @property
@@ -295,7 +345,7 @@ class sampler2D(FBOAttachment):
 
     @wrap_s.setter
     @FBOAttachment.param_setter
-    def wrap_s(self, wrap_type:GLInfo.wrap_types):
+    def wrap_s(self, wrap_type: GLInfo.wrap_types):
         self._wrap_s = wrap_type
         self._wrap_s_changed = True
 
@@ -305,7 +355,7 @@ class sampler2D(FBOAttachment):
 
     @wrap_t.setter
     @FBOAttachment.param_setter
-    def wrap_t(self, wrap_type:GLInfo.wrap_types):
+    def wrap_t(self, wrap_type: GLInfo.wrap_types):
         self._wrap_t = wrap_type
         self._wrap_t_changed = True
 
@@ -329,7 +379,7 @@ class sampler2D(FBOAttachment):
 
     @filter_min.setter
     @FBOAttachment.param_setter
-    def filter_min(self, filter_type:GLInfo.filter_types):
+    def filter_min(self, filter_type: GLInfo.filter_types):
         self._filter_min = filter_type
         self._filter_min_changed = True
 
@@ -339,7 +389,7 @@ class sampler2D(FBOAttachment):
 
     @filter_mag.setter
     @FBOAttachment.param_setter
-    def filter_mag(self, filter_type:GLInfo.filter_types):
+    def filter_mag(self, filter_type: GLInfo.filter_types):
         self._filter_mag = filter_type
         self._filter_mag_changed = True
 
@@ -349,7 +399,7 @@ class sampler2D(FBOAttachment):
 
     @filter_mipmap.setter
     @FBOAttachment.param_setter
-    def filter_mipmap(self, filter_type:GLInfo.filter_types):
+    def filter_mipmap(self, filter_type: GLInfo.filter_types):
         self._filter_mipmap = filter_type
         self._filter_min_changed = True
         self._filter_mag_changed = True
@@ -359,7 +409,7 @@ class sampler2D(FBOAttachment):
             return self._filter_min
         else:
             return GLInfo.mipmap_filter_map[(self._filter_min, self._filter_mipmap)]
-        
+
     @property
     def filter(self):
         return self._filter_min, self._filter_mag, self._filter_mipmap
@@ -383,7 +433,7 @@ class sampler2D(FBOAttachment):
 
     @border_color.setter
     @FBOAttachment.param_setter
-    def border_color(self, color:(glm.vec3, glm.vec4)):
+    def border_color(self, color: (glm.vec3, glm.vec4)):
         if isinstance(color, glm.vec3):
             color = glm.vec4(color, 1)
 
@@ -405,7 +455,7 @@ class sampler2D(FBOAttachment):
 
     @image.setter
     @FBOAttachment.param_setter
-    def image(self, image:(np.ndarray,str)):
+    def image(self, image: (np.ndarray, str)):
         if isinstance(image, str):
             self._file_name = os.path.abspath(image).replace("\\", "/")
         else:
@@ -433,13 +483,22 @@ class sampler2D(FBOAttachment):
             self._height = self._image.shape[0]
 
             channels = self._image.shape[2] if len(self._image.shape) > 2 else 1
-            self._internal_format = GLInfo.internal_formats_map[self._image.dtype][channels]
+            self._internal_format = GLInfo.internal_formats_map[self._image.dtype][
+                channels
+            ]
             self._image_changed = True
         else:
             self.__init_shadertoy(image)
 
     @checktype
-    def malloc(self, width:int, height:int, samples:int=None, layers:int=None, internal_format:GLInfo.internal_formats=None):        
+    def malloc(
+        self,
+        width: int,
+        height: int,
+        samples: int = None,
+        layers: int = None,
+        internal_format: GLInfo.internal_formats = None,
+    ):
         self.width = width
         self.height = height
 
@@ -453,26 +512,26 @@ class sampler2D(FBOAttachment):
 
     @property
     def is_completed(self):
-        return (self._width > 0 and self._height > 0)
-    
-    def __getitem__(self, name:str):
+        return self._width > 0 and self._height > 0
+
+    def __getitem__(self, name: str):
         if self._shadertoy_program is None:
             raise RuntimeError("not a shader defined sampler2D")
-        
+
         return self._shadertoy_program[name]
-    
-    def __setitem__(self, name:str, value):
+
+    def __setitem__(self, name: str, value):
         if self._shadertoy_program is None:
             raise RuntimeError("not a shader defined sampler2D")
-        
+
         self._shadertoy_program[name] = value
 
     @property
     def samples(self):
         return None
-    
+
     @samples.setter
-    def samples(self, samples:int):
+    def samples(self, samples: int):
         pass
 
     def __init_shadertoy(self, shader_path):
@@ -487,7 +546,7 @@ class sampler2D(FBOAttachment):
         self._shadertoy_path = shader_path
         if not os.path.isfile(shader_path):
             raise FileNotFoundError(shader_path)
-        
+
         shader_path = os.path.abspath(shader_path).replace("\\", "/")
         self_folder = os.path.dirname(os.path.abspath(__file__))
         program = ShaderProgram()
@@ -503,12 +562,14 @@ class sampler2D(FBOAttachment):
     def __update_shadertoy(self):
         self._should_update_shadertoy = False
 
-        is_dynamic = (self._shadertoy_program["iTime"].location != -1 or \
-                      self._shadertoy_program["iTimeDelta"].location != -1 or \
-                      self._shadertoy_program["iFrameRate"].location != -1 or \
-                      self._shadertoy_program["iFrame"].location != -1 or \
-                      self._shadertoy_program["iChannelTime"].location != -1 or \
-                      self._shadertoy_program["iDate"].location != -1)
+        is_dynamic = (
+            self._shadertoy_program["iTime"].location != -1
+            or self._shadertoy_program["iTimeDelta"].location != -1
+            or self._shadertoy_program["iFrameRate"].location != -1
+            or self._shadertoy_program["iFrame"].location != -1
+            or self._shadertoy_program["iChannelTime"].location != -1
+            or self._shadertoy_program["iDate"].location != -1
+        )
         if is_dynamic:
             sampler2D._should_update = True
 
@@ -519,13 +580,13 @@ class sampler2D(FBOAttachment):
             self._shadertoy_start_time = current_time
         if self._shadertoy_last_frame_time == 0:
             self._shadertoy_last_frame_time = current_time
-        
+
         time_delta = current_time - self._shadertoy_last_frame_time
         fps = 60
         if time_delta > 0:
-            fps = 1/time_delta
+            fps = 1 / time_delta
         t = current_time - self._shadertoy_start_time
-        
+
         with GLConfig.LocalConfig(cull_face=None, polygon_mode=GL.GL_FILL):
             with self.fbo:
                 resolution = glm.vec3(self._width, self._height, 1)
@@ -536,11 +597,13 @@ class sampler2D(FBOAttachment):
                 self._shadertoy_program["iFrameRate"] = fps
                 self._shadertoy_program["iFrame"] = self._shadertoy_frame_index
                 self._shadertoy_program["iChannelTime"] = [t, t, t, t]
-                self._shadertoy_program["iDate"] = glm.vec4(now.year, now.month, now.day, now.second + now.microsecond/1000)
+                self._shadertoy_program["iDate"] = glm.vec4(
+                    now.year, now.month, now.day, now.second + now.microsecond / 1000
+                )
                 self._shadertoy_program["iSampleRate"] = 44100
-                
+
                 self._shadertoy_last_frame_time = current_time
                 self._shadertoy_frame_index += 1
                 self._shadertoy_program.draw_triangles(start_index=0, total=6)
-        
+
         self._should_update_shadertoy = True

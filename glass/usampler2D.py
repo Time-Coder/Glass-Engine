@@ -6,6 +6,7 @@ import numpy as np
 from OpenGL import GL
 import OpenGL.GL.ARB.bindless_texture as bt
 
+
 class usampler2D(sampler2D):
 
     _default_internal_format = GL.GL_RGBA32UI
@@ -14,7 +15,13 @@ class usampler2D(sampler2D):
     _default_filter_mipmap = None
 
     @checktype
-    def __init__(self, image:(str,np.ndarray)=None, width:int=None, height:int=None, internal_format:GLInfo.usampler_internal_formats=None):
+    def __init__(
+        self,
+        image: (str, np.ndarray) = None,
+        width: int = None,
+        height: int = None,
+        internal_format: GLInfo.usampler_internal_formats = None,
+    ):
         if internal_format is None:
             internal_format = GL.GL_RGBA32UI
 
@@ -26,14 +33,14 @@ class usampler2D(sampler2D):
 
     @internal_format.setter
     @sampler2D.param_setter
-    def internal_format(self, internal_format:GLInfo.usampler_internal_formats):
+    def internal_format(self, internal_format: GLInfo.usampler_internal_formats):
         self._set_internal_format(internal_format)
 
     @property
     def handle(self):
         if not bt.glGetTextureHandleARB:
             return 0
-        
+
         self.bind()
         if self._handle == 0:
             self._handle = bt.glGetTextureHandleARB(self._id)

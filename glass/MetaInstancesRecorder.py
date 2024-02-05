@@ -2,21 +2,22 @@ from .WeakSet import WeakSet
 import functools
 import copy
 
+
 class MetaInstancesRecorder(type):
 
     _all_instances = {}
-    
+
     @property
     def all_instances(cls):
         if cls not in MetaInstancesRecorder._all_instances:
             MetaInstancesRecorder._all_instances[cls] = WeakSet()
 
         return MetaInstancesRecorder._all_instances[cls]
-    
+
     @property
     def all_instances_copy(cls):
         return copy.deepcopy(cls.all_instances)
-    
+
     @staticmethod
     def init(func):
         @functools.wraps(func)
@@ -29,7 +30,7 @@ class MetaInstancesRecorder(type):
             return func(*args, **kwargs)
 
         return wrapper
-    
+
     @staticmethod
     def delete(func):
 
@@ -38,7 +39,7 @@ class MetaInstancesRecorder(type):
             self = args[0]
             if self.__class__ in MetaInstancesRecorder._all_instances:
                 MetaInstancesRecorder._all_instances[self.__class__].remove(self)
-            
+
             return func(*args, **kwargs)
 
         return wrapper

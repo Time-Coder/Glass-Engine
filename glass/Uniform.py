@@ -21,8 +21,9 @@ from .ACBO import ACBO
 from .GlassConfig import GlassConfig
 from .utils import subscript
 
+
 class Uniform:
-    
+
     _bound_vars = {}
     # {
     #     "<id_normal_var>":
@@ -38,9 +39,19 @@ class Uniform:
     _set_atom_map = {}
 
     class Variable:
-        _all_attrs = {"__init__", "__getitem__", "__setitem__", "__getattr__", "__setattr__",
-                      "_uniform_id", "_name", "_bound_var",
-                      "bind", "unbind", "location"}
+        _all_attrs = {
+            "__init__",
+            "__getitem__",
+            "__setitem__",
+            "__getattr__",
+            "__setattr__",
+            "_uniform_id",
+            "_name",
+            "_bound_var",
+            "bind",
+            "unbind",
+            "location",
+        }
 
         def __init__(self, uniform_id, name):
             self._uniform_id = uniform_id
@@ -56,9 +67,9 @@ class Uniform:
 
         def __hash__(self):
             return id(self)
-        
+
         def __eq__(self, other):
-            return (id(self) == id(other))
+            return id(self) == id(other)
 
         @property
         def location(self):
@@ -123,61 +134,71 @@ class Uniform:
                     del var_info[atom_name]
                 if not var_info:
                     del Uniform._bound_vars[id_var]
-            
+
             self._bound_var = None
 
-        def __contains__(self, name:(str, int)):
+        def __contains__(self, name: (str, int)):
             full_name = self._name
             if isinstance(name, str):
-                full_name += ("." + name)
+                full_name += "." + name
             elif isinstance(name, int):
                 full_name += "[" + str(name) + "]"
 
-            return (full_name in self.uniform.program._uniform_map)
+            return full_name in self.uniform.program._uniform_map
 
-        def __getitem__(self, name:(str, int)):
+        def __getitem__(self, name: (str, int)):
             full_name = self._name
             if isinstance(name, str):
-                full_name += ("." + name)
+                full_name += "." + name
             elif isinstance(name, int):
                 full_name += "[" + str(name) + "]"
 
             uniform = self.uniform
             program = uniform.program
             if GlassConfig.debug and full_name not in program._uniform_map:
-                error_message = "uniform variable '" + full_name + "' is not defined in following files:\n"
+                error_message = (
+                    "uniform variable '"
+                    + full_name
+                    + "' is not defined in following files:\n"
+                )
                 error_message += "\n".join(program.related_files)
                 raise NameError(error_message)
-            
+
             if full_name not in uniform._uniform_var_map:
-                uniform._uniform_var_map[full_name] = Uniform.Variable(self._uniform_id, full_name)
+                uniform._uniform_var_map[full_name] = Uniform.Variable(
+                    self._uniform_id, full_name
+                )
 
             return uniform._uniform_var_map[full_name]
 
         @checktype
-        def __setitem__(self, name:(str, int), value):
+        def __setitem__(self, name: (str, int), value):
             full_name = self._name
             if isinstance(name, str):
-                full_name += ("." + name)
+                full_name += "." + name
             elif isinstance(name, int):
                 full_name += "[" + str(name) + "]"
 
             uniform = self.uniform
             program = uniform.program
             if GlassConfig.debug and full_name not in program._uniform_map:
-                error_message = "uniform variable '" + full_name + "' is not defined in following files:\n"
+                error_message = (
+                    "uniform variable '"
+                    + full_name
+                    + "' is not defined in following files:\n"
+                )
                 error_message += "\n".join(program.related_files)
                 raise NameError(error_message)
 
             uniform[full_name] = value
 
-        def __getattr__(self, name:str):
+        def __getattr__(self, name: str):
             if name in Uniform.Variable._all_attrs:
                 return super().__getattr__(name)
 
             return self.__getitem__(name)
 
-        def __setattr__(self, name:str, value):
+        def __setattr__(self, name: str, value):
             if name in Uniform.Variable._all_attrs:
                 return super().__setattr__(name, value)
 
@@ -195,10 +216,12 @@ class Uniform:
     def program(self):
         return di(self._program_id)
 
-    def __getitem__(self, name:str):
+    def __getitem__(self, name: str):
         program = self.program
         if GlassConfig.debug and name not in program._uniform_map:
-            error_message = f"uniform variable '{name}' is not defined in following files:\n"
+            error_message = (
+                f"uniform variable '{name}' is not defined in following files:\n"
+            )
             error_message += "\n".join(program.related_files)
             raise NameError(error_message)
 
@@ -207,10 +230,12 @@ class Uniform:
 
         return self._uniform_var_map[name]
 
-    def __setitem__(self, name:str, value):
+    def __setitem__(self, name: str, value):
         program = self.program
         if GlassConfig.debug and name not in program._uniform_map:
-            error_message = f"uniform variable '{name}' is not defined in following files:\n"
+            error_message = (
+                f"uniform variable '{name}' is not defined in following files:\n"
+            )
             error_message += "\n".join(program.related_files)
             raise NameError(error_message)
 
@@ -219,8 +244,8 @@ class Uniform:
             self._set_atom(atom["name"], atom_value)
 
     @checktype
-    def __contains__(self, name:str):
-        return (name in self.program._uniform_map)
+    def __contains__(self, name: str):
+        return name in self.program._uniform_map
 
     @staticmethod
     def _copy(value):
@@ -230,12 +255,12 @@ class Uniform:
         else:
             return copy.copy(value)
 
-    def _set_atom(self, name:str, value):
+    def _set_atom(self, name: str, value):
         if name in self._atom_value_map and self._atom_value_map[name] == value:
             if isinstance(value, FBOAttachment):
                 value.bind()
             return
-        
+
         if GL.glGetUniformLocation:
             program = self.program
             program.use()
@@ -252,7 +277,7 @@ class Uniform:
 
                 if location == -1:
                     return
-                
+
                 self._current_atom_name = name
                 func = getattr(self, "_set_" + uniform_type)
                 func(location, value)
@@ -264,13 +289,13 @@ class Uniform:
         else:
             self._atoms_to_update[name] = Uniform._copy(value)
 
-    def _set_bool(self, location:int, value):
+    def _set_bool(self, location: int, value):
         if not isinstance(value, int):
             value = int(value)
 
         GL.glUniform1i(location, value)
 
-    def _set_int(self, location:int, value):
+    def _set_int(self, location: int, value):
         if isinstance(value, Enum):
             value = int(value.value)
 
@@ -279,70 +304,70 @@ class Uniform:
 
         GL.glUniform1i(location, value)
 
-    def _set_uint(self, location:int, value):
+    def _set_uint(self, location: int, value):
         if isinstance(value, Enum):
             value = int(value.value)
 
         if not isinstance(value, int):
             value = int(value)
-            
+
         GL.glUniform1ui(location, value)
 
-    def _set_uint64_t(self, location:int, value):
+    def _set_uint64_t(self, location: int, value):
         if not isinstance(value, int):
             value = int(value)
 
         gsi64.glUniform1ui64ARB(location, value)
 
-    def _set_float(self, location:int, value):
+    def _set_float(self, location: int, value):
         if not isinstance(value, float):
             value = float(value)
 
         GL.glUniform1f(location, value)
 
-    def _set_double(self, location:int, value):
+    def _set_double(self, location: int, value):
         if not isinstance(value, float):
             value = float(value)
 
         GL.glUniform1d(location, value)
 
-    def _set_bvec2(self, location:int, value:glm.bvec2):
+    def _set_bvec2(self, location: int, value: glm.bvec2):
         if not isinstance(value, glm.bvec2):
             value = glm.bvec2(value)
 
         GL.glUniform2i(location, int(value.x), int(value.y))
 
-    def _set_bvec3(self, location:int, value:glm.bvec3):
+    def _set_bvec3(self, location: int, value: glm.bvec3):
         if not isinstance(value, glm.bvec3):
             value = glm.bvec3(value)
 
         GL.glUniform3i(location, int(value.x), int(value.y), int(value.z))
 
-    def _set_bvec4(self, location:int, value:glm.bvec4):
+    def _set_bvec4(self, location: int, value: glm.bvec4):
         if not isinstance(value, glm.bvec4):
             value = glm.bvec4(value)
 
         GL.glUniform4i(location, int(value.x), int(value.y), int(value.z), int(value.w))
 
-    def _set_ivec2(self, location:int, value:glm.ivec2):
+    def _set_ivec2(self, location: int, value: glm.ivec2):
         if not isinstance(value, glm.ivec2):
             value = glm.ivec2(value)
 
         GL.glUniform2i(location, value.x, value.y)
-        
-    def _set_ivec3(self, location:int, value:glm.ivec3):
+
+    def _set_ivec3(self, location: int, value: glm.ivec3):
         if not isinstance(value, glm.ivec3):
             value = glm.ivec3(value)
 
         GL.glUniform3i(location, value.x, value.y, value.z)
-        
-    def _set_ivec4(self, location:int, value:glm.ivec4):
+
+    def _set_ivec4(self, location: int, value: glm.ivec4):
         if not isinstance(value, glm.ivec4):
             value = glm.ivec4(value)
 
         GL.glUniform4i(location, value.x, value.y, value.z, value.w)
-            
-    def _set_uvec2(self, location:int, value:(glm.uvec2,int)):
+
+    def _set_uvec2(self, location: int, value: (glm.uvec2, int)):
         if isinstance(value, glm.uvec2):
             GL.glUniform2ui(location, value.x, value.y)
         else:
@@ -351,201 +376,206 @@ class Uniform:
 
             used_value = uint64_to_uvec2(value)
             GL.glUniform2ui(location, used_value.x, used_value.y)
-            
-    def _set_uvec3(self, location:int, value:glm.uvec3):
+
+    def _set_uvec3(self, location: int, value: glm.uvec3):
         if not isinstance(value, glm.uvec3):
             value = glm.uvec3(value)
 
         GL.glUniform3ui(location, value.x, value.y, value.z)
-            
-    def _set_uvec4(self, location:int, value:glm.uvec4):
+
+    def _set_uvec4(self, location: int, value: glm.uvec4):
         if not isinstance(value, glm.uvec4):
             value = glm.uvec4(value)
 
         GL.glUniform4ui(location, value.x, value.y, value.z, value.w)
-            
-    def _set_vec2(self, location:int, value:glm.vec2):
+
+    def _set_vec2(self, location: int, value: glm.vec2):
         if not isinstance(value, glm.vec2):
             value = glm.vec2(value)
 
         GL.glUniform2f(location, value.x, value.y)
-        
-    def _set_vec3(self, location:int, value:glm.vec3):
+
+    def _set_vec3(self, location: int, value: glm.vec3):
         if not isinstance(value, glm.vec3):
             value = glm.vec3(value)
 
         GL.glUniform3f(location, value.x, value.y, value.z)
-            
-    def _set_vec4(self, location:int, value:glm.vec4):
+
+    def _set_vec4(self, location: int, value: glm.vec4):
         if not isinstance(value, glm.vec4):
             value = glm.vec4(value)
 
         GL.glUniform4f(location, value.x, value.y, value.z, value.w)
-        
-    def _set_dvec2(self, location:int, value:glm.dvec2):
+
+    def _set_dvec2(self, location: int, value: glm.dvec2):
         if not isinstance(value, glm.dvec2):
             value = glm.dvec2(value)
 
         GL.glUniform2d(location, value.x, value.y)
-        
-    def _set_dvec3(self, location:int, value:glm.dvec3):
+
+    def _set_dvec3(self, location: int, value: glm.dvec3):
         if not isinstance(value, glm.dvec3):
             value = glm.dvec3(value)
 
         GL.glUniform3d(location, value.x, value.y, value.z)
-            
-    def _set_dvec4(self, location:int, value:glm.dvec4):
+
+    def _set_dvec4(self, location: int, value: glm.dvec4):
         if not isinstance(value, glm.dvec4):
             value = glm.dvec4(value)
 
         GL.glUniform4d(location, value.x, value.y, value.z, value.w)
-            
-    def _set_mat2(self, location:int, value:glm.mat2):
+
+    def _set_mat2(self, location: int, value: glm.mat2):
         if not isinstance(value, glm.mat2):
             value = glm.mat2(value)
 
         GL.glUniformMatrix2fv(location, 1, False, glm.value_ptr(value))
-            
-    def _set_mat3x2(self, location:int, value:glm.mat3x2):
+
+    def _set_mat3x2(self, location: int, value: glm.mat3x2):
         if not isinstance(value, glm.mat3x2):
             value = glm.mat3x2(value)
 
         GL.glUniformMatrix3x2fv(location, 1, False, glm.value_ptr(value))
-        
-    def _set_mat4x2(self, location:int, value:glm.mat4x2):
+
+    def _set_mat4x2(self, location: int, value: glm.mat4x2):
         if not isinstance(value, glm.mat4x2):
             value = glm.mat4x2(value)
 
         GL.glUniformMatrix4x2fv(location, 1, False, glm.value_ptr(value))
-        
-    def _set_mat2x3(self, location:int, value:glm.mat2x3):
+
+    def _set_mat2x3(self, location: int, value: glm.mat2x3):
         if not isinstance(value, glm.mat2x3):
             value = glm.mat2x3(value)
 
         GL.glUniformMatrix2x3fv(location, 1, False, glm.value_ptr(value))
-            
-    def _set_mat3(self, location:int, value:glm.mat3x3):
+
+    def _set_mat3(self, location: int, value: glm.mat3x3):
         if not isinstance(value, glm.mat3x3):
             value = glm.mat3x3(value)
 
         GL.glUniformMatrix3fv(location, 1, False, glm.value_ptr(value))
-            
-    def _set_mat4x3(self, location:int, value:glm.mat4x3):
+
+    def _set_mat4x3(self, location: int, value: glm.mat4x3):
         if not isinstance(value, glm.mat4x3):
             value = glm.mat4x3(value)
 
         GL.glUniformMatrix4x3fv(location, 1, False, glm.value_ptr(value))
-            
-    def _set_mat2x4(self, location:int, value:glm.mat2x4):
+
+    def _set_mat2x4(self, location: int, value: glm.mat2x4):
         if not isinstance(value, glm.mat2x4):
             value = glm.mat2x4(value)
 
         GL.glUniformMatrix2x4fv(location, 1, False, glm.value_ptr(value))
-            
-    def _set_mat3x4(self, location:int, value:glm.mat3x4):
+
+    def _set_mat3x4(self, location: int, value: glm.mat3x4):
         if not isinstance(value, glm.mat3x4):
             value = glm.mat3x4(value)
 
         GL.glUniformMatrix3x4fv(location, 1, False, glm.value_ptr(value))
-            
-    def _set_mat4(self, location:int, value:glm.mat4x4):
+
+    def _set_mat4(self, location: int, value: glm.mat4x4):
         if not isinstance(value, glm.mat4x4):
             value = glm.mat4x4(value)
 
         GL.glUniformMatrix4fv(location, 1, False, glm.value_ptr(value))
-        
-    def _set_mat2x2(self, location:int, value:glm.mat2x2):
+
+    def _set_mat2x2(self, location: int, value: glm.mat2x2):
         if not isinstance(value, glm.mat2x2):
             value = glm.mat2x2(value)
 
         GL.glUniformMatrix2fv(location, 1, False, glm.value_ptr(value))
-        
-    def _set_mat3x3(self, location:int, value:glm.mat3x3):
+
+    def _set_mat3x3(self, location: int, value: glm.mat3x3):
         if not isinstance(value, glm.mat3x3):
             value = glm.mat3x3(value)
 
         GL.glUniformMatrix3fv(location, 1, False, glm.value_ptr(value))
-        
-    def _set_mat4x4(self, location:int, value:glm.mat4x4):
+
+    def _set_mat4x4(self, location: int, value: glm.mat4x4):
         if not isinstance(value, glm.mat4x4):
             value = glm.mat4x4(value)
 
         GL.glUniformMatrix4fv(location, 1, False, glm.value_ptr(value))
-        
-    def _set_dmat2(self, location:int, value:glm.dmat2):
+
+    def _set_dmat2(self, location: int, value: glm.dmat2):
         if not isinstance(value, glm.dmat2):
             value = glm.dmat2(value)
 
         GL.glUniformMatrix2dv(location, 1, False, glm.value_ptr(value))
-            
-    def _set_dmat3x2(self, location:int, value:glm.dmat3x2):
+
+    def _set_dmat3x2(self, location: int, value: glm.dmat3x2):
         if not isinstance(value, glm.dmat3x2):
             value = glm.dmat3x2(value)
 
         GL.glUniformMatrix3x2dv(location, 1, False, glm.value_ptr(value))
-        
-    def _set_dmat4x2(self, location:int, value:glm.dmat4x2):
+
+    def _set_dmat4x2(self, location: int, value: glm.dmat4x2):
         if not isinstance(value, glm.dmat4x2):
             value = glm.dmat4x2(value)
 
         GL.glUniformMatrix4x2dv(location, 1, False, glm.value_ptr(value))
-        
-    def _set_dmat2x3(self, location:int, value:glm.dmat2x3):
+
+    def _set_dmat2x3(self, location: int, value: glm.dmat2x3):
         if not isinstance(value, glm.dmat2x3):
             value = glm.dmat2x3(value)
 
         GL.glUniformMatrix2x3dv(location, 1, False, glm.value_ptr(value))
-            
-    def _set_dmat3(self, location:int, value:glm.dmat3x3):
+
+    def _set_dmat3(self, location: int, value: glm.dmat3x3):
         if not isinstance(value, glm.dmat3x3):
             value = glm.dmat3x3(value)
 
         GL.glUniformMatrix3dv(location, 1, False, glm.value_ptr(value))
-            
-    def _set_dmat4x3(self, location:int, value:glm.dmat4x3):
+
+    def _set_dmat4x3(self, location: int, value: glm.dmat4x3):
         if not isinstance(value, glm.dmat4x3):
             value = glm.dmat4x3(value)
 
         GL.glUniformMatrix4x3dv(location, 1, False, glm.value_ptr(value))
-            
-    def _set_dmat2x4(self, location:int, value:glm.dmat2x4):
+
+    def _set_dmat2x4(self, location: int, value: glm.dmat2x4):
         if not isinstance(value, glm.dmat2x4):
             value = glm.dmat2x4(value)
 
         GL.glUniformMatrix2x4dv(location, 1, False, glm.value_ptr(value))
-            
-    def _set_dmat3x4(self, location:int, value:glm.dmat3x4):
+
+    def _set_dmat3x4(self, location: int, value: glm.dmat3x4):
         if not isinstance(value, glm.dmat3x4):
             value = glm.dmat3x4(value)
 
         GL.glUniformMatrix3x4dv(location, 1, False, glm.value_ptr(value))
-            
-    def _set_dmat4(self, location:int, value:glm.dmat4):
+
+    def _set_dmat4(self, location: int, value: glm.dmat4):
         if not isinstance(value, glm.dmat4):
             value = glm.dmat4(value)
 
         GL.glUniformMatrix4dv(location, 1, False, glm.value_ptr(value))
-        
-    def _set_dmat2x2(self, location:int, value:glm.dmat2x2):
+
+    def _set_dmat2x2(self, location: int, value: glm.dmat2x2):
         if not isinstance(value, glm.dmat2x2):
             value = glm.dmat2x2(value)
 
         GL.glUniformMatrix2dv(location, 1, False, glm.value_ptr(value))
-        
-    def _set_dmat3x3(self, location:int, value:glm.dmat3x3):
+
+    def _set_dmat3x3(self, location: int, value: glm.dmat3x3):
         if not isinstance(value, glm.dmat3x3):
             value = glm.dmat3x3(value)
 
         GL.glUniformMatrix3dv(location, 1, False, glm.value_ptr(value))
-        
-    def _set_dmat4x4(self, location:int, value:glm.dmat4x4):
+
+    def _set_dmat4x4(self, location: int, value: glm.dmat4x4):
         if not isinstance(value, glm.dmat4x4):
             value = glm.dmat4x4(value)
 
         GL.glUniformMatrix4dv(location, 1, False, glm.value_ptr(value))
-        
+
     @checktype
-    def _set_sampler2D(self, location:int, value:(sampler2D,str), sampler_type:[sampler2D,isampler2D,usampler2D]=sampler2D):
+    def _set_sampler2D(
+        self,
+        location: int,
+        value: (sampler2D, str),
+        sampler_type: [sampler2D, isampler2D, usampler2D] = sampler2D,
+    ):
         if isinstance(value, str):
             value = sampler_type.load(value)
 
@@ -555,34 +585,17 @@ class Uniform:
         program = self.program
         program._sampler_map[self._current_atom_name]["location"] = location
         program._sampler_map[self._current_atom_name]["sampler"] = value
-        
+
     @checktype
-    def _set_isampler2D(self, location:int, value:(isampler2D,str)):
+    def _set_isampler2D(self, location: int, value: (isampler2D, str)):
         self._set_sampler2D(location, value, isampler2D)
-        
+
     @checktype
-    def _set_usampler2D(self, location:int, value:(usampler2D,str)):
+    def _set_usampler2D(self, location: int, value: (usampler2D, str)):
         self._set_sampler2D(location, value, usampler2D)
-        
-    @checktype
-    def _set_sampler2DMS(self, location:int, value:sampler2DMS):
-        if value is not None:
-            value.bind()
 
-        program = self.program
-        program._sampler_map[self._current_atom_name]["location"] = location
-        program._sampler_map[self._current_atom_name]["sampler"] = value
-        
     @checktype
-    def _set_isampler2DMS(self, location:int, value:isampler2DMS):
-        self._set_sampler2DMS(location, value)
-        
-    @checktype
-    def _set_usampler2DMS(self, location:int, value:usampler2DMS):
-        self._set_sampler2DMS(location, value)
-        
-    @checktype
-    def _set_sampler2DArray(self, location:int, value:sampler2DArray):
+    def _set_sampler2DMS(self, location: int, value: sampler2DMS):
         if value is not None:
             value.bind()
 
@@ -590,44 +603,74 @@ class Uniform:
         program._sampler_map[self._current_atom_name]["location"] = location
         program._sampler_map[self._current_atom_name]["sampler"] = value
 
-    def __set_general_image2D(self, location:int, value:(image2D,iimage2D,uimage2D,str), image_type:[image2D,iimage2D,uimage2D]=image2D):
+    @checktype
+    def _set_isampler2DMS(self, location: int, value: isampler2DMS):
+        self._set_sampler2DMS(location, value)
+
+    @checktype
+    def _set_usampler2DMS(self, location: int, value: usampler2DMS):
+        self._set_sampler2DMS(location, value)
+
+    @checktype
+    def _set_sampler2DArray(self, location: int, value: sampler2DArray):
+        if value is not None:
+            value.bind()
+
+        program = self.program
+        program._sampler_map[self._current_atom_name]["location"] = location
+        program._sampler_map[self._current_atom_name]["sampler"] = value
+
+    def __set_general_image2D(
+        self,
+        location: int,
+        value: (image2D, iimage2D, uimage2D, str),
+        image_type: [image2D, iimage2D, uimage2D] = image2D,
+    ):
         if isinstance(value, str):
-            value = image_type.load(value, internal_format=self._current_internal_format)
+            value = image_type.load(
+                value, internal_format=self._current_internal_format
+            )
 
         access = GL.GL_READ_WRITE
         program = self.program
-        memory_qualifiers = program._uniform_map[self._current_atom_name]["memory_qualifiers"]
-        internal_format = program._uniform_map[self._current_atom_name]["internal_format"]
+        memory_qualifiers = program._uniform_map[self._current_atom_name][
+            "memory_qualifiers"
+        ]
+        internal_format = program._uniform_map[self._current_atom_name][
+            "internal_format"
+        ]
         if value is not None:
             if GlassConfig.debug and internal_format != value.internal_format:
-                raise ValueError(f"uniform image2D {self._current_atom_name} need format {internal_format}, {value.internal_format} were given")
+                raise ValueError(
+                    f"uniform image2D {self._current_atom_name} need format {internal_format}, {value.internal_format} were given"
+                )
 
             access = GL.GL_READ_WRITE
             if "readonly" in memory_qualifiers:
                 access = GL.GL_READ_ONLY
             elif "writeonly" in memory_qualifiers:
                 access = GL.GL_WRITE_ONLY
-            
+
             value.bind()
-            
+
         program._sampler_map[self._current_atom_name]["location"] = location
         program._sampler_map[self._current_atom_name]["access"] = access
         program._sampler_map[self._current_atom_name]["sampler"] = value
-        
+
     @checktype
-    def _set_iimage2D(self, location:int, value:(iimage2D,str)):
+    def _set_iimage2D(self, location: int, value: (iimage2D, str)):
         self.__set_general_image2D(location, value, image_type=iimage2D)
-        
+
     @checktype
-    def _set_uimage2D(self, location:int, value:(uimage2D,str)):
+    def _set_uimage2D(self, location: int, value: (uimage2D, str)):
         self.__set_general_image2D(location, value, image_type=uimage2D)
-        
+
     @checktype
-    def _set_image2D(self, location:int, value:(image2D,str)):
+    def _set_image2D(self, location: int, value: (image2D, str)):
         self.__set_general_image2D(location, value, image_type=image2D)
-        
+
     @checktype
-    def _set_samplerCube(self, location:int, value:samplerCube):
+    def _set_samplerCube(self, location: int, value: samplerCube):
         if value is not None and not value.is_completed:
             raise RuntimeError("not completed samplerCube")
 

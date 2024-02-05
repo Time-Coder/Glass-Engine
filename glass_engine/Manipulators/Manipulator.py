@@ -3,23 +3,24 @@ from enum import Flag, IntEnum
 
 import glm
 
+
 class Manipulator:
 
     class MouseButton(Flag):
         LeftButton = 1
-        RightButton = 2      
-        MiddleButton = 4     
+        RightButton = 2
+        MiddleButton = 4
         XButton1 = 8
-        XButton2 = 16        
-        TaskButton = 32      
-        ExtraButton4 = 64    
-        ExtraButton5 = 128   
-        ExtraButton6 = 256   
-        ExtraButton7 = 512   
-        ExtraButton8 = 1024  
-        ExtraButton9 = 2048  
-        ExtraButton10 = 4096 
-        ExtraButton11 = 8192 
+        XButton2 = 16
+        TaskButton = 32
+        ExtraButton4 = 64
+        ExtraButton5 = 128
+        ExtraButton6 = 256
+        ExtraButton7 = 512
+        ExtraButton8 = 1024
+        ExtraButton9 = 2048
+        ExtraButton10 = 4096
+        ExtraButton11 = 8192
         ExtraButton12 = 16384
         ExtraButton13 = 32768
         ExtraButton14 = 65536
@@ -35,20 +36,20 @@ class Manipulator:
         ExtraButton24 = 67108864
 
     class Key(IntEnum):
-        Key_Escape = 16777216   
-        Key_Tab = 16777217      
-        Key_Backtab = 16777218  
+        Key_Escape = 16777216
+        Key_Tab = 16777217
+        Key_Backtab = 16777218
         Key_Backspace = 16777219
-        Key_Return = 16777220   
-        Key_Enter = 16777221    
-        Key_Insert = 16777222   
-        Key_Delete = 16777223   
-        Key_Pause = 16777224    
-        Key_Print = 16777225    
-        Key_SysReq = 16777226   
-        Key_Clear = 16777227    
-        Key_Home = 16777232     
-        Key_End = 16777233      
+        Key_Return = 16777220
+        Key_Enter = 16777221
+        Key_Insert = 16777222
+        Key_Delete = 16777223
+        Key_Pause = 16777224
+        Key_Print = 16777225
+        Key_SysReq = 16777226
+        Key_Clear = 16777227
+        Key_Home = 16777232
+        Key_End = 16777233
         Key_Left = 16777234
         Key_Up = 16777235
         Key_Right = 16777236
@@ -508,32 +509,40 @@ class Manipulator:
         self._camera_id = id(None)
 
     @property
-    def camera(self):        
+    def camera(self):
         return di(self._camera_id)
 
-    def startup(self)->bool:
+    def startup(self) -> bool:
         return False
 
-    def on_mouse_pressed(self, button:MouseButton, screen_pos:glm.vec2, global_pos:glm.vec2)->bool:
+    def on_mouse_pressed(
+        self, button: MouseButton, screen_pos: glm.vec2, global_pos: glm.vec2
+    ) -> bool:
         return False
 
-    def on_mouse_released(self, button:MouseButton, screen_pos:glm.vec2, global_pos:glm.vec2)->bool:
-        return False
-    
-    def on_mouse_double_clicked(self, button:MouseButton, screen_pos:glm.vec2, global_pos:glm.vec2)->bool:
-        return False
-
-    def on_mouse_moved(self, screen_pos:glm.vec2, global_pos:glm.vec2)->bool:
+    def on_mouse_released(
+        self, button: MouseButton, screen_pos: glm.vec2, global_pos: glm.vec2
+    ) -> bool:
         return False
 
-    def on_wheel_scrolled(self, angle:glm.vec2, screen_pos:glm.vec2, global_pos:glm.vec2)->bool:
+    def on_mouse_double_clicked(
+        self, button: MouseButton, screen_pos: glm.vec2, global_pos: glm.vec2
+    ) -> bool:
         return False
 
-    def on_key_pressed(self, key:Key)->bool:
+    def on_mouse_moved(self, screen_pos: glm.vec2, global_pos: glm.vec2) -> bool:
         return False
 
-    def on_key_released(self, key:Key)->bool:
+    def on_wheel_scrolled(
+        self, angle: glm.vec2, screen_pos: glm.vec2, global_pos: glm.vec2
+    ) -> bool:
         return False
 
-    def on_key_repeated(self, keys:set)->bool:
+    def on_key_pressed(self, key: Key) -> bool:
+        return False
+
+    def on_key_released(self, key: Key) -> bool:
+        return False
+
+    def on_key_repeated(self, keys: set) -> bool:
         return False

@@ -7,6 +7,7 @@ from .utils import checktype
 import random
 from functools import wraps
 
+
 class FBOAttachment(GLObject):
 
     def __init__(self):
@@ -44,7 +45,9 @@ class FBOAttachment(GLObject):
                 return
 
             if not self.dynamic:
-                raise RuntimeError(f"none dynamic {self.__class__.__name__} cannot change any parameters")
+                raise RuntimeError(
+                    f"none dynamic {self.__class__.__name__} cannot change any parameters"
+                )
 
             safe_func = checktype(func)
             return_value = safe_func(*args, **kwargs)
@@ -53,10 +56,17 @@ class FBOAttachment(GLObject):
 
         return wrapper
 
-    def malloc(self, width:int, height:int, samples:int=None, layers:int=None, internal_format:GLInfo.internal_formats=None):
+    def malloc(
+        self,
+        width: int,
+        height: int,
+        samples: int = None,
+        layers: int = None,
+        internal_format: GLInfo.internal_formats = None,
+    ):
         pass
 
-    def resize(self, width:int, height:int, samples:int=None, layers:int=None):
+    def resize(self, width: int, height: int, samples: int = None, layers: int = None):
         if not self._can_resize:
             return
 
@@ -75,7 +85,7 @@ class FBOAttachment(GLObject):
     def fbo(self):
         return self._fbo
 
-    def bind(self, update_fbo:bool=False, force_update_image:bool=False):
+    def bind(self, update_fbo: bool = False, force_update_image: bool = False):
         cls_name = self.__class__.__name__
         target_type = self.__class__._basic_info["target_type"]
         if "sampler" in cls_name:
@@ -88,15 +98,15 @@ class FBOAttachment(GLObject):
                     texture_unit = TextureUnits.available_unit
 
             if texture_unit is None:
-                texture_unit = random.randint(0, GLConfig.max_texture_units-1)
+                texture_unit = random.randint(0, GLConfig.max_texture_units - 1)
 
             GLConfig.active_texture_unit = texture_unit
-            
+
         GLObject.bind(self)
         if update_fbo:
             self._fbo_image_changed = True
             self._fbo_image_generated_mipmap = False
-        
+
         if "sampler" in cls_name:
             TextureUnits[texture_unit] = (target_type, self._id)
 
@@ -109,7 +119,7 @@ class FBOAttachment(GLObject):
             TextureUnits.current_texture = (target_type, 0)
 
         return success
-    
+
     def __del__(self):
         self.unbind()
         GLObject.__del__(self)

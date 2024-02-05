@@ -1,9 +1,10 @@
 from .WeakRef import WeakRef
 
+
 class WeakDict:
 
     class iterator:
-        def __init__(self, weak_ref,  _iterator):
+        def __init__(self, weak_ref, _iterator):
             self._iterator = _iterator
             self._weak_ref = weak_ref
 
@@ -13,10 +14,10 @@ class WeakDict:
                 value = value.value
 
             return value
-        
+
         def __iter__(self):
             return self
-        
+
     class items_iterator:
         def __init__(self, weak_ref_keys, weak_ref_values, _iterator):
             self._iterator = _iterator
@@ -30,7 +31,7 @@ class WeakDict:
             if self._weak_ref_values:
                 value = value.value
             return key, value
-        
+
         def __iter__(self):
             return self
 
@@ -42,19 +43,19 @@ class WeakDict:
     def __iter__(self):
         result = WeakDict.iterator(self._weak_ref_keys, self._dict.__iter__())
         return result
-    
+
     def __len__(self):
         return len(self._dict)
-    
+
     def __bool__(self):
         return bool(self._dict)
-    
+
     def __contains__(self, key):
         if self._weak_ref_keys:
             key = WeakRef(key)
-            
+
         return key in self._dict
-    
+
     def __getitem__(self, key):
         if self._weak_ref_keys:
             key = WeakRef(key)
@@ -62,7 +63,7 @@ class WeakDict:
         value = self._dict[key]
         if self._weak_ref_values:
             value = value.value
-            
+
         return value
 
     def __setitem__(self, key, value):
@@ -90,7 +91,7 @@ class WeakDict:
         value = self._dict.pop(key)
         if self._weak_ref_values:
             value = value.value
-            
+
         return value
 
     def clear(self):
@@ -99,16 +100,17 @@ class WeakDict:
     def update(self, _dict):
         for key, value in _dict.items():
             self[key] = value
-    
+
     def keys(self):
         result = WeakDict.iterator(self._weak_ref_keys, self._dict.keys())
         return result
-    
+
     def values(self):
         result = WeakDict.iterator(self._weak_ref_values, self._dict.values())
         return result
-    
+
     def items(self):
-        result = WeakDict.items_iterator(self._weak_ref_keys, self._weak_ref_values, self._dict.items())
+        result = WeakDict.items_iterator(
+            self._weak_ref_keys, self._weak_ref_values, self._dict.items()
+        )
         return result
-    

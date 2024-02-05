@@ -7,15 +7,18 @@ import numpy as np
 import os
 from OpenGL import GL
 
+
 class LUTEffect(ShaderEffect):
 
-    def __init__(self, LUT:(str, np.ndarray, sampler2D), contribute:float=1.0):
+    def __init__(self, LUT: (str, np.ndarray, sampler2D), contribute: float = 1.0):
         self_folder = os.path.dirname(os.path.abspath(__file__))
-        ShaderEffect.__init__(self, self_folder + "/../glsl/PostProcessEffects/lut.glsl")
+        ShaderEffect.__init__(
+            self, self_folder + "/../glsl/PostProcessEffects/lut.glsl"
+        )
 
         if isinstance(LUT, str) and extname(LUT) == "cube":
             LUT = lut.cube_to_LUT(LUT)
-        
+
         if not isinstance(LUT, sampler2D):
             LUT = sampler2D(LUT)
 
@@ -28,12 +31,12 @@ class LUTEffect(ShaderEffect):
     @property
     def LUT(self):
         return self.__LUT
-    
+
     @LUT.setter
-    def LUT(self, LUT:(str, np.ndarray, sampler2D)):
+    def LUT(self, LUT: (str, np.ndarray, sampler2D)):
         if isinstance(LUT, str) and extname(LUT) == "cube":
             LUT = lut.cube_to_LUT(LUT)
-        
+
         if not isinstance(LUT, sampler2D):
             LUT = sampler2D(LUT)
 
@@ -44,8 +47,8 @@ class LUTEffect(ShaderEffect):
     @property
     def contribute(self):
         return self.__contribute
-    
+
     @contribute.setter
-    def contribute(self, contribute:float):
+    def contribute(self, contribute: float):
         self.__contribute = contribute
         self["contribute"] = contribute

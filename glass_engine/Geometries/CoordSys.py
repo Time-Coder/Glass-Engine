@@ -4,9 +4,17 @@ from ..SceneNode import SceneNode
 
 import glm
 
+
 class CoordSys(SceneNode):
 
-    def __init__(self, x_length:float=1, y_length:float=None, z_length:float=None, alpha:float=1, name:str=""):
+    def __init__(
+        self,
+        x_length: float = 1,
+        y_length: float = None,
+        z_length: float = None,
+        alpha: float = 1,
+        name: str = "",
+    ):
         SceneNode.__init__(self, name=name)
 
         if y_length is None:
@@ -27,7 +35,7 @@ class CoordSys(SceneNode):
         self.add_child(z_axis)
 
     @staticmethod
-    def create_axis(length:float, color:glm.vec4):
+    def create_axis(length: float, color: glm.vec4):
         axis = Cylinder(0.015, length, color=color)
         arrow = Cone(0.04, 0.15, color=color)
         arrow.position.z = length

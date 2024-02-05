@@ -6,8 +6,9 @@
 from __future__ import generators, print_function, absolute_import, division
 
 import sys, os, re, codecs
-if __name__ == '__main__' and __package__ is None:
-    sys.path.append( os.path.dirname( os.path.dirname( os.path.abspath(__file__) ) ) )
+
+if __name__ == "__main__" and __package__ is None:
+    sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from .ply import yacc
 from .parser import STRING_TYPES, default_lexer, in_production
 
@@ -24,20 +25,24 @@ else:
 # Precompile the regular expression for correctly expanding unicode escape
 # sequences in Python 2 and 3. See https://stackoverflow.com/questions/4020539/process-escape-sequences-in-a-string-in-python
 # for more information.
-_expand_escape_sequences_pat = re.compile(r'''
+_expand_escape_sequences_pat = re.compile(
+    r"""
     ( \\U........      # 8-digit hex escapes
     | \\u....          # 4-digit hex escapes
     | \\x..            # 2-digit hex escapes
     | \\[0-7]{1,3}     # Octal escapes
     | \\N\{[^}]+\}     # Unicode characters by name
     | \\[\\'"abfnrtv]  # Single-character escapes
-)''', re.UNICODE | re.VERBOSE)
+)""",
+    re.UNICODE | re.VERBOSE,
+)
+
 
 class Value(INTBASETYPE):
     """A signed or unsigned integer within a preprocessor expression, bounded
     to within INT_MIN and INT_MAX, or 0 and UINT_MAX. Signed overflow is handled
     like a two's complement CPU, despite being UB, as that's what GCC and clang do.
-    
+
     >>> Value(5)
     Value(5)
     >>> Value('5L')
@@ -121,146 +126,210 @@ class Value(INTBASETYPE):
     ...
     SyntaxError: Empty character escape sequence
     """
+
     INT_MIN = -(1 << (INTMAXBITS - 1))
     INT_MAX = (1 << (INTMAXBITS - 1)) - 1
     INT_MASK = (1 << INTMAXBITS) - 1
     UINT_MIN = 0
     UINT_MAX = (1 << INTMAXBITS) - 1
+
     @classmethod
     def __sclamp(cls, value):
         value = INTBASETYPE(value)
         return ((value - cls.INT_MIN) & cls.INT_MASK) + cls.INT_MIN
+
     @classmethod
     def __uclamp(cls, value):
         value = INTBASETYPE(value)
         return value & cls.UINT_MAX
-    def __new__(cls, value, unsigned = False, exception = None):
+
+    def __new__(cls, value, unsigned=False, exception=None):
         if isinstance(value, Value):
             unsigned = value.unsigned
             exception = value.exception
-        elif isinstance(value, INTBASETYPE) or isinstance(value, int) or isinstance(value, float):
+        elif (
+            isinstance(value, INTBASETYPE)
+            or isinstance(value, int)
+            or isinstance(value, float)
+        ):
             value = cls.__uclamp(value) if unsigned else cls.__sclamp(value)
         elif isinstance(value, STRING_TYPES):
             if (value.startswith("L'") or value[0] == "'") and value[-1] == "'":
                 startidx = 2 if value.startswith("L'") else 1
-                #print("1. ***", value, file = sys.stderr)
+                # print("1. ***", value, file = sys.stderr)
                 value = value[startidx:-1]
                 if len(value) == 0:
-                    raise SyntaxError('Empty character escape sequence')
-                #print("2. ***", value, file = sys.stderr)
-                value = _expand_escape_sequences_pat.sub(lambda x: codecs.decode(x.group(0), 'unicode-escape'), value)
-                #print("3. ***", value, file = sys.stderr)
+                    raise SyntaxError("Empty character escape sequence")
+                # print("2. ***", value, file = sys.stderr)
+                value = _expand_escape_sequences_pat.sub(
+                    lambda x: codecs.decode(x.group(0), "unicode-escape"), value
+                )
+                # print("3. ***", value, file = sys.stderr)
                 x = INTBASETYPE(ord(value))
-                #print("4. ***", x, file = sys.stderr)
-            elif value.startswith('0x') or value.startswith('0X'):
+                # print("4. ***", x, file = sys.stderr)
+            elif value.startswith("0x") or value.startswith("0X"):
                 # Strip any terminators
-                while not ((value[-1] >= '0' and value[-1] <= '9') or (value[-1] >= 'a' and value[-1] <= 'f') or (value[-1] >= 'A' and value[-1] <= 'F')):
-                    if value[-1] == 'u' or value[-1] == 'U':
+                while not (
+                    (value[-1] >= "0" and value[-1] <= "9")
+                    or (value[-1] >= "a" and value[-1] <= "f")
+                    or (value[-1] >= "A" and value[-1] <= "F")
+                ):
+                    if value[-1] == "u" or value[-1] == "U":
                         unsigned = True
                     value = value[:-1]
-                x = INTBASETYPE(value, base = 16)
-            elif value.startswith('0'):
+                x = INTBASETYPE(value, base=16)
+            elif value.startswith("0"):
                 # Strip any terminators
-                while not (value[-1] >= '0' and value[-1] <= '7'):
-                    if value[-1] == 'u' or value[-1] == 'U':
+                while not (value[-1] >= "0" and value[-1] <= "7"):
+                    if value[-1] == "u" or value[-1] == "U":
                         unsigned = True
                     value = value[:-1]
-                x = INTBASETYPE(value, base = 8)
+                x = INTBASETYPE(value, base=8)
             else:
                 # Strip any terminators
-                while not (value[-1] >= '0' and value[-1] <= '9'):
-                    if value[-1] == 'u' or value[-1] == 'U':
+                while not (value[-1] >= "0" and value[-1] <= "9"):
+                    if value[-1] == "u" or value[-1] == "U":
                         unsigned = True
                     value = value[:-1]
                 x = INTBASETYPE(value)
             value = cls.__uclamp(x) if unsigned else cls.__sclamp(x)
-            #assert x == value
+            # assert x == value
         else:
-            print('Unknown value type: %s' % repr(type(value)), file = sys.stderr)
+            print("Unknown value type: %s" % repr(type(value)), file=sys.stderr)
             assert False  # Input is an unrecognised type
         inst = super(Value, cls).__new__(cls, value)
         inst.unsigned = unsigned
         inst.exception = exception
         return inst
+
     def value(self):
         if self.exception is not None:
             raise self.exception
         return INTBASETYPE(self)
+
     def __add__(self, other):
         if self.exception is not None:
             return self
         other = Value(other)
         if other.exception is not None:
             return other
-        return Value(self.__uclamp(self) + self.__uclamp(other), True) if (self.unsigned or other.unsigned) else Value(super(Value, self).__add__(other))
+        return (
+            Value(self.__uclamp(self) + self.__uclamp(other), True)
+            if (self.unsigned or other.unsigned)
+            else Value(super(Value, self).__add__(other))
+        )
+
     def __sub__(self, other):
         if self.exception is not None:
             return self
         other = Value(other)
         if other.exception is not None:
             return other
-        return Value(self.__uclamp(self) - self.__uclamp(other), True) if (self.unsigned or other.unsigned) else Value(super(Value, self).__sub__(other))
+        return (
+            Value(self.__uclamp(self) - self.__uclamp(other), True)
+            if (self.unsigned or other.unsigned)
+            else Value(super(Value, self).__sub__(other))
+        )
+
     def __mul__(self, other):
         if self.exception is not None:
             return self
         other = Value(other)
         if other.exception is not None:
             return other
-        return Value(self.__uclamp(self) * self.__uclamp(other), True) if (self.unsigned or other.unsigned) else Value(super(Value, self).__mul__(other))
+        return (
+            Value(self.__uclamp(self) * self.__uclamp(other), True)
+            if (self.unsigned or other.unsigned)
+            else Value(super(Value, self).__mul__(other))
+        )
+
     def __div__(self, other):
         if self.exception is not None:
             return self
         other = Value(other)
         if other.exception is not None:
             return other
-        return Value(self.__uclamp(self) / self.__uclamp(other), True) if (self.unsigned or other.unsigned) else Value(super(Value, self).__div__(other))
+        return (
+            Value(self.__uclamp(self) / self.__uclamp(other), True)
+            if (self.unsigned or other.unsigned)
+            else Value(super(Value, self).__div__(other))
+        )
+
     def __truediv__(self, other):
         if self.exception is not None:
             return self
         other = Value(other)
         if other.exception is not None:
             return other
-        return Value(self.__uclamp(self) / self.__uclamp(other), True) if (self.unsigned or other.unsigned) else Value(super(Value, self).__truediv__(other))
+        return (
+            Value(self.__uclamp(self) / self.__uclamp(other), True)
+            if (self.unsigned or other.unsigned)
+            else Value(super(Value, self).__truediv__(other))
+        )
+
     def __mod__(self, other):
         if self.exception is not None:
             return self
         other = Value(other)
         if other.exception is not None:
             return other
-        return Value(self.__uclamp(self) % self.__uclamp(other), True) if (self.unsigned or other.unsigned) else Value(super(Value, self).__mod__(other))
+        return (
+            Value(self.__uclamp(self) % self.__uclamp(other), True)
+            if (self.unsigned or other.unsigned)
+            else Value(super(Value, self).__mod__(other))
+        )
+
     def __neg__(self):
         if self.exception is not None:
             return self
         return Value(super(Value, self).__neg__(), self.unsigned)
+
     def __invert__(self):
         if self.exception is not None:
             return self
         return Value(super(Value, self).__invert__(), self.unsigned)
+
     def __and__(self, other):
         if self.exception is not None:
             return self
         other = Value(other)
         if other.exception is not None:
             return other
-        return Value(self.__uclamp(self) & self.__uclamp(other), True) if (self.unsigned or other.unsigned) else Value(super(Value, self).__and__(other))
+        return (
+            Value(self.__uclamp(self) & self.__uclamp(other), True)
+            if (self.unsigned or other.unsigned)
+            else Value(super(Value, self).__and__(other))
+        )
+
     def __or__(self, other):
         if self.exception is not None:
             return self
         other = Value(other)
         if other.exception is not None:
             return other
-        return Value(self.__uclamp(self) | self.__uclamp(other), True) if (self.unsigned or other.unsigned) else Value(super(Value, self).__or__(other))
+        return (
+            Value(self.__uclamp(self) | self.__uclamp(other), True)
+            if (self.unsigned or other.unsigned)
+            else Value(super(Value, self).__or__(other))
+        )
+
     def __pos__(self):
         if self.exception is not None:
             return self
         return Value(super(Value, self).__pos__())
+
     def __pow__(self, other):
         if self.exception is not None:
             return self
         other = Value(other)
         if other.exception is not None:
             return other
-        return Value(self.__uclamp(self) ** self.__uclamp(other), True) if (self.unsigned or other.unsigned) else Value(super(Value, self).__pow__(other))
+        return (
+            Value(self.__uclamp(self) ** self.__uclamp(other), True)
+            if (self.unsigned or other.unsigned)
+            else Value(super(Value, self).__pow__(other))
+        )
+
     def __lshift__(self, other):
         if self.exception is not None:
             return self
@@ -268,7 +337,12 @@ class Value(INTBASETYPE):
         other = Value(other)
         if other.exception is not None:
             return other
-        return Value(self.__uclamp(self) << self.__uclamp(other), True) if (self.unsigned) else Value(super(Value, self).__lshift__(other))
+        return (
+            Value(self.__uclamp(self) << self.__uclamp(other), True)
+            if (self.unsigned)
+            else Value(super(Value, self).__lshift__(other))
+        )
+
     def __rshift__(self, other):
         if self.exception is not None:
             return self
@@ -276,14 +350,24 @@ class Value(INTBASETYPE):
         other = Value(other)
         if other.exception is not None:
             return other
-        return Value(self.__uclamp(self) >> self.__uclamp(other), True) if (self.unsigned) else Value(super(Value, self).__rshift__(other))
+        return (
+            Value(self.__uclamp(self) >> self.__uclamp(other), True)
+            if (self.unsigned)
+            else Value(super(Value, self).__rshift__(other))
+        )
+
     def __xor__(self, other):
         if self.exception is not None:
             return self
         other = Value(other)
         if other.exception is not None:
             return other
-        return Value(self.__uclamp(self) ^ self.__uclamp(other), True) if (self.unsigned or other.unsigned) else Value(super(Value, self).__xor__(other))
+        return (
+            Value(self.__uclamp(self) ^ self.__uclamp(other), True)
+            if (self.unsigned or other.unsigned)
+            else Value(super(Value, self).__xor__(other))
+        )
+
     def __repr__(self):
         if self.exception is not None:
             return "Exception(%s)" % repr(self.exception)
@@ -291,56 +375,89 @@ class Value(INTBASETYPE):
             return "Value(%dU)" % INTBASETYPE(self)
         else:
             return "Value(%d)" % INTBASETYPE(self)
+
     def __bool__(self):
         assert False  # Do not use Python logical operations
+
     def __nonzero__(self):
         assert False  # Do not use Python logical operations
+
     def __cmp__(self, other):
         assert False
+
     def __lt__(self, other):
         if self.exception is not None:
             return self
         other = Value(other)
         if other.exception is not None:
             return other
-        return Value(self.__uclamp(self) < self.__uclamp(other), True) if (self.unsigned or other.unsigned) else Value(self.__sclamp(self) < self.__sclamp(other), False)
+        return (
+            Value(self.__uclamp(self) < self.__uclamp(other), True)
+            if (self.unsigned or other.unsigned)
+            else Value(self.__sclamp(self) < self.__sclamp(other), False)
+        )
+
     def __le__(self, other):
         if self.exception is not None:
             return self
         other = Value(other)
         if other.exception is not None:
             return other
-        return Value(self.__uclamp(self) <= self.__uclamp(other), True) if (self.unsigned or other.unsigned) else Value(self.__sclamp(self) <= self.__sclamp(other), False)
+        return (
+            Value(self.__uclamp(self) <= self.__uclamp(other), True)
+            if (self.unsigned or other.unsigned)
+            else Value(self.__sclamp(self) <= self.__sclamp(other), False)
+        )
+
     def __eq__(self, other):
         if self.exception is not None:
             return self
         other = Value(other)
         if other.exception is not None:
             return other
-        return Value(self.__uclamp(self) == self.__uclamp(other), True) if (self.unsigned or other.unsigned) else Value(self.__sclamp(self) == self.__sclamp(other), False)
+        return (
+            Value(self.__uclamp(self) == self.__uclamp(other), True)
+            if (self.unsigned or other.unsigned)
+            else Value(self.__sclamp(self) == self.__sclamp(other), False)
+        )
+
     def __ne__(self, other):
         if self.exception is not None:
             return self
         other = Value(other)
         if other.exception is not None:
             return other
-        return Value(self.__uclamp(self) != self.__uclamp(other), True) if (self.unsigned or other.unsigned) else Value(self.__sclamp(self) != self.__sclamp(other), False)
+        return (
+            Value(self.__uclamp(self) != self.__uclamp(other), True)
+            if (self.unsigned or other.unsigned)
+            else Value(self.__sclamp(self) != self.__sclamp(other), False)
+        )
+
     def __ge__(self, other):
         if self.exception is not None:
             return self
         other = Value(other)
         if other.exception is not None:
             return other
-        return Value(self.__uclamp(self) >= self.__uclamp(other), True) if (self.unsigned or other.unsigned) else Value(self.__sclamp(self) >= self.__sclamp(other), False)
+        return (
+            Value(self.__uclamp(self) >= self.__uclamp(other), True)
+            if (self.unsigned or other.unsigned)
+            else Value(self.__sclamp(self) >= self.__sclamp(other), False)
+        )
+
     def __gt__(self, other):
         if self.exception is not None:
             return self
         other = Value(other)
         if other.exception is not None:
             return other
-        return Value(self.__uclamp(self) > self.__uclamp(other), True) if (self.unsigned or other.unsigned) else Value(self.__sclamp(self) > self.__sclamp(other), False)
+        return (
+            Value(self.__uclamp(self) > self.__uclamp(other), True)
+            if (self.unsigned or other.unsigned)
+            else Value(self.__sclamp(self) > self.__sclamp(other), False)
+        )
 
-        
+
 # PLY yacc specification
 # Valid C preprocessor expression items:
 #   - Integer constants
@@ -358,35 +475,56 @@ class Value(INTBASETYPE):
 
 # The subset of tokens from Preprocessor used in preprocessor expressions
 tokens = (
-   'CPP_ID', 'CPP_INTEGER', 'CPP_CHAR', 'CPP_STRING',
-   'CPP_PLUS', 'CPP_MINUS', 'CPP_STAR', 'CPP_FSLASH', 'CPP_PERCENT', 'CPP_BAR',
-   'CPP_AMPERSAND', 'CPP_TILDE', 'CPP_HAT', 'CPP_LESS', 'CPP_GREATER', 'CPP_EXCLAMATION',
-   'CPP_QUESTION', 'CPP_LPAREN', 'CPP_RPAREN',
-   'CPP_COMMA', 'CPP_COLON',
-
-   'CPP_LSHIFT', 'CPP_LESSEQUAL', 'CPP_RSHIFT',
-   'CPP_GREATEREQUAL', 'CPP_LOGICALOR', 'CPP_LOGICALAND', 'CPP_EQUALITY',
-   'CPP_INEQUALITY'
+    "CPP_ID",
+    "CPP_INTEGER",
+    "CPP_CHAR",
+    "CPP_STRING",
+    "CPP_PLUS",
+    "CPP_MINUS",
+    "CPP_STAR",
+    "CPP_FSLASH",
+    "CPP_PERCENT",
+    "CPP_BAR",
+    "CPP_AMPERSAND",
+    "CPP_TILDE",
+    "CPP_HAT",
+    "CPP_LESS",
+    "CPP_GREATER",
+    "CPP_EXCLAMATION",
+    "CPP_QUESTION",
+    "CPP_LPAREN",
+    "CPP_RPAREN",
+    "CPP_COMMA",
+    "CPP_COLON",
+    "CPP_LSHIFT",
+    "CPP_LESSEQUAL",
+    "CPP_RSHIFT",
+    "CPP_GREATEREQUAL",
+    "CPP_LOGICALOR",
+    "CPP_LOGICALAND",
+    "CPP_EQUALITY",
+    "CPP_INEQUALITY",
 )
 # 'CPP_WS', 'CPP_EQUAL',  'CPP_BSLASH', 'CPP_SQUOTE',
 
 precedence = (
-    ('left', 'CPP_COMMA'),                                                     # 15
-                                                                               # 14 (assignments, unused)
-    ('left', 'CPP_QUESTION', 'CPP_COLON'),                                     # 13
-    ('left', 'CPP_LOGICALOR'),                                                 # 12
-    ('left', 'CPP_LOGICALAND'),                                                # 11
-    ('left', 'CPP_BAR'),                                                       # 10
-    ('left', 'CPP_HAT'),                                                       # 9
-    ('left', 'CPP_AMPERSAND'),                                                 # 8
-    ('left', 'CPP_EQUALITY', 'CPP_INEQUALITY'),                                # 7
-    ('left', 'CPP_LESS', 'CPP_LESSEQUAL', 'CPP_GREATER', 'CPP_GREATEREQUAL'),  # 6
-    ('left', 'CPP_LSHIFT', 'CPP_RSHIFT'),                                      # 5
-    ('left', 'CPP_PLUS', 'CPP_MINUS'),                                         # 4
-    ('left', 'CPP_STAR', 'CPP_FSLASH', 'CPP_PERCENT'),                         # 3
-    ('right', 'UPLUS', 'UMINUS', 'CPP_EXCLAMATION', 'CPP_TILDE'),              # 2
-                                                                               # 1 (unused in the C preprocessor)
+    ("left", "CPP_COMMA"),  # 15
+    # 14 (assignments, unused)
+    ("left", "CPP_QUESTION", "CPP_COLON"),  # 13
+    ("left", "CPP_LOGICALOR"),  # 12
+    ("left", "CPP_LOGICALAND"),  # 11
+    ("left", "CPP_BAR"),  # 10
+    ("left", "CPP_HAT"),  # 9
+    ("left", "CPP_AMPERSAND"),  # 8
+    ("left", "CPP_EQUALITY", "CPP_INEQUALITY"),  # 7
+    ("left", "CPP_LESS", "CPP_LESSEQUAL", "CPP_GREATER", "CPP_GREATEREQUAL"),  # 6
+    ("left", "CPP_LSHIFT", "CPP_RSHIFT"),  # 5
+    ("left", "CPP_PLUS", "CPP_MINUS"),  # 4
+    ("left", "CPP_STAR", "CPP_FSLASH", "CPP_PERCENT"),  # 3
+    ("right", "UPLUS", "UMINUS", "CPP_EXCLAMATION", "CPP_TILDE"),  # 2
+    # 1 (unused in the C preprocessor)
 )
+
 
 def p_error(p):
     if p:
@@ -394,13 +532,16 @@ def p_error(p):
     else:
         raise SyntaxError("at EOF")
 
+
 def p_expression_number(p):
-    'expression : CPP_INTEGER'
+    "expression : CPP_INTEGER"
     p[0] = Value(p[1])
 
+
 def p_expression_character(p):
-    'expression : CPP_CHAR'
+    "expression : CPP_CHAR"
     p[0] = Value(p[1])
+
 
 def p_expression_string(p):
     """
@@ -409,17 +550,21 @@ def p_expression_string(p):
     """
     p[0] = p[1]
 
+
 def p_expression_group(t):
-    'expression : CPP_LPAREN expression CPP_RPAREN'
+    "expression : CPP_LPAREN expression CPP_RPAREN"
     t[0] = t[2]
 
+
 def p_expression_uplus(p):
-    'expression : CPP_PLUS expression %prec UPLUS'
+    "expression : CPP_PLUS expression %prec UPLUS"
     p[0] = +Value(p[2])
 
+
 def p_expression_uminus(p):
-    'expression : CPP_MINUS expression %prec UMINUS'
+    "expression : CPP_MINUS expression %prec UMINUS"
     p[0] = -Value(p[2])
+
 
 def p_expression_unop(p):
     """
@@ -427,12 +572,13 @@ def p_expression_unop(p):
               | CPP_TILDE expression
     """
     try:
-        if p[1] == '!':
-            p[0] = Value(0) if (Value(p[2]).value()!=0) else Value(1)
-        elif p[1] == '~':
+        if p[1] == "!":
+            p[0] = Value(0) if (Value(p[2]).value() != 0) else Value(1)
+        elif p[1] == "~":
             p[0] = ~Value(p[2])
     except Exception as e:
-        p[0] = Value(0, exception = e)
+        p[0] = Value(0, exception=e)
+
 
 def p_expression_binop(p):
     """
@@ -458,77 +604,90 @@ def p_expression_binop(p):
     """
     # print [repr(p[i]) for i in range(0,4)]
     try:
-        if p[2] == '*':
+        if p[2] == "*":
             p[0] = Value(p[1]) * Value(p[3])
-        elif p[2] == '/':
+        elif p[2] == "/":
             p[0] = Value(p[1]) / Value(p[3])
-        elif p[2] == '%':
+        elif p[2] == "%":
             p[0] = Value(p[1]) % Value(p[3])
-        elif p[2] == '+':
+        elif p[2] == "+":
             p[0] = Value(p[1]) + Value(p[3])
-        elif p[2] == '-':
+        elif p[2] == "-":
             p[0] = Value(p[1]) - Value(p[3])
-        elif p[2] == '<<':
+        elif p[2] == "<<":
             p[0] = Value(p[1]) << Value(p[3])
-        elif p[2] == '>>':
+        elif p[2] == ">>":
             p[0] = Value(p[1]) >> Value(p[3])
-        elif p[2] == '<':
+        elif p[2] == "<":
             p[0] = Value(p[1]) < Value(p[3])
-        elif p[2] == '<=':
+        elif p[2] == "<=":
             p[0] = Value(p[1]) <= Value(p[3])
-        elif p[2] == '>':
+        elif p[2] == ">":
             p[0] = Value(p[1]) > Value(p[3])
-        elif p[2] == '>=':
+        elif p[2] == ">=":
             p[0] = Value(p[1]) >= Value(p[3])
-        elif p[2] == '==':
+        elif p[2] == "==":
             p[0] = Value(p[1]) == Value(p[3])
-        elif p[2] == '!=':
+        elif p[2] == "!=":
             p[0] = Value(p[1]) != Value(p[3])
-        elif p[2] == '&':
+        elif p[2] == "&":
             p[0] = Value(p[1]) & Value(p[3])
-        elif p[2] == '^':
+        elif p[2] == "^":
             p[0] = Value(p[1]) ^ Value(p[3])
-        elif p[2] == '|':
+        elif p[2] == "|":
             p[0] = Value(p[1]) | Value(p[3])
-        elif p[2] == '&&':
-            p[0] = Value(1) if (Value(p[1]).value()!=0 and Value(p[3]).value()!=0) else Value(0)
-        elif p[2] == '||':
-            p[0] = Value(1) if (Value(p[1]).value()!=0 or Value(p[3]).value()!=0) else Value(0)
-        elif p[2] == ',':
+        elif p[2] == "&&":
+            p[0] = (
+                Value(1)
+                if (Value(p[1]).value() != 0 and Value(p[3]).value() != 0)
+                else Value(0)
+            )
+        elif p[2] == "||":
+            p[0] = (
+                Value(1)
+                if (Value(p[1]).value() != 0 or Value(p[3]).value() != 0)
+                else Value(0)
+            )
+        elif p[2] == ",":
             p[0] = Value(p[3])
     except Exception as e:
-        p[0] = Value(0, exception = e)
+        p[0] = Value(0, exception=e)
+
 
 def p_expression_conditional(p):
-    'expression : expression CPP_QUESTION expression CPP_COLON expression'
+    "expression : expression CPP_QUESTION expression CPP_COLON expression"
     try:
         # Output type must cast up to unsigned if either input is unsigned
-        p[0] = Value(p[3]) if (Value(p[1]).value()!=0) else Value(p[5])
+        p[0] = Value(p[3]) if (Value(p[1]).value() != 0) else Value(p[5])
         try:
-            p[0] = Value(p[0].value(), unsigned = Value(p[3]).unsigned or Value(p[5]).unsigned)
+            p[0] = Value(
+                p[0].value(), unsigned=Value(p[3]).unsigned or Value(p[5]).unsigned
+            )
         except:
             pass
     except Exception as e:
-        p[0] = Value(0, exception = e)
+        p[0] = Value(0, exception=e)
+
 
 def p_expression_function_call(p):
     "expression : CPP_ID CPP_LPAREN expression CPP_RPAREN"
     try:
         p.lexer.on_function_call(p)
     except Exception as e:
-        p[0] = Value(0, exception = e)
+        p[0] = Value(0, exception=e)
+
 
 def p_expression_identifier(p):
     "expression : CPP_ID"
     try:
         p.lexer.on_identifier(p)
     except Exception as e:
-        p[0] = Value(0, exception = e)
+        p[0] = Value(0, exception=e)
 
 
 class Evaluator(object):
     """Evaluator of #if C preprocessor expressions.
-    
+
     >>> e = Evaluator()
     >>> e('5')
     Value(5)
@@ -671,12 +830,17 @@ class Evaluator(object):
     >>> e('5  // /* comment */')
     Value(5)
     """
-#    >>> e('defined X', functions={'defined':lambda x: 55})
-#    Value(55)
 
-    def __init__(self, lexer = None):
+    #    >>> e('defined X', functions={'defined':lambda x: 55})
+    #    Value(55)
+
+    def __init__(self, lexer=None):
         self.lexer = lexer if lexer is not None else default_lexer()
-        self.parser = yacc.yacc(optimize=in_production,debug=not in_production,write_tables=not in_production)
+        self.parser = yacc.yacc(
+            optimize=in_production,
+            debug=not in_production,
+            write_tables=not in_production,
+        )
 
     class __lexer(object):
 
@@ -686,7 +850,14 @@ class Evaluator(object):
             self.__identifiers = identifiers
 
         def input(self, toks):
-            self.__toks = [tok for tok in toks if tok.type != 'CPP_WS' and tok.type != 'CPP_LINECONT' and tok.type != 'CPP_COMMENT1' and tok.type != 'CPP_COMMENT2']
+            self.__toks = [
+                tok
+                for tok in toks
+                if tok.type != "CPP_WS"
+                and tok.type != "CPP_LINECONT"
+                and tok.type != "CPP_COMMENT1"
+                and tok.type != "CPP_COMMENT2"
+            ]
             self.__idx = 0
 
         def token(self):
@@ -697,19 +868,19 @@ class Evaluator(object):
 
         def on_function_call(self, p):
             if p[1] not in self.__functions:
-                raise SyntaxError('Unknown function %s' % p[1])
+                raise SyntaxError("Unknown function %s" % p[1])
             p[0] = Value(self.__functions[p[1]](p[3]))
 
         def on_identifier(self, p):
             if p[1] not in self.__identifiers:
-                raise SyntaxError('Unknown identifier %s' % p[1])
+                raise SyntaxError("Unknown identifier %s" % p[1])
             p[0] = Value(self.__identifiers[p[1]])
-            
-    def __call__(self, input, functions = {}, identifiers = {}):
+
+    def __call__(self, input, functions={}, identifiers={}):
         """Execute a fully macro expanded set of tokens representing an expression,
         returning the result of the evaluation.
         """
-        if not isinstance(input,list):
+        if not isinstance(input, list):
             self.lexer.input(input)
             input = []
             while True:
@@ -717,10 +888,10 @@ class Evaluator(object):
                 if not tok:
                     break
                 input.append(tok)
-        return self.parser.parse(input, lexer = self.__lexer(functions, identifiers))
+        return self.parser.parse(input, lexer=self.__lexer(functions, identifiers))
 
 
 if __name__ == "__main__":
     import doctest
-    doctest.testmod()
 
+    doctest.testmod()

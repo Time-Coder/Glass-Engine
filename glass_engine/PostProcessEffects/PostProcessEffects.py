@@ -4,6 +4,7 @@ from .PostProcessEffect import PostProcessEffect
 
 from ..Frame import Frame
 
+
 class PostProcessEffects(DictList):
 
     def __init__(self):
@@ -17,31 +18,31 @@ class PostProcessEffects(DictList):
         self.depth_map = None
 
     @property
-    def has_valid(self)->bool:
+    def has_valid(self) -> bool:
         for effect in self:
             if effect.enabled:
                 return True
-            
+
         return False
-    
+
     @property
-    def need_pos_info(self)->bool:
+    def need_pos_info(self) -> bool:
         for effect in self:
             if effect.enabled and effect.need_pos_info():
                 return True
-            
+
         return False
 
     @property
-    def last_valid(self)->PostProcessEffect:
-        for i in range(len(self)-1, -1, -1):
+    def last_valid(self) -> PostProcessEffect:
+        for i in range(len(self) - 1, -1, -1):
             effect = self[i]
             if effect.enabled:
                 return effect
-            
+
         return None
 
-    def apply(self, screen_image:sampler2D)->sampler2D:
+    def apply(self, screen_image: sampler2D) -> sampler2D:
         self._should_update = False
         for effect in self:
             if not effect.enabled:
@@ -57,16 +58,16 @@ class PostProcessEffects(DictList):
             effect.should_update = False
 
         return screen_image
-    
+
     @property
-    def should_update(self)->bool:
+    def should_update(self) -> bool:
         return self._should_update
 
-    def draw_to_active(self, screen_image:sampler2D)->bool:
+    def draw_to_active(self, screen_image: sampler2D) -> bool:
         should_update = False
         last_effect = None
         last_effect_index = -1
-        for i in range(len(self)-1, -1, -1):
+        for i in range(len(self) - 1, -1, -1):
             effect = self[i]
             if effect.enabled:
                 last_effect = effect
@@ -81,7 +82,7 @@ class PostProcessEffects(DictList):
             effect = self[i]
             if not effect.enabled:
                 continue
-            
+
             effect.depth_map = self.depth_map
             effect.camera = self.camera
             effect.view_pos_map = self.view_pos_map
@@ -101,14 +102,13 @@ class PostProcessEffects(DictList):
         last_effect.should_update = False
 
         return should_update
-    
+
     @property
-    def screen_update_time(self)->float:
+    def screen_update_time(self) -> float:
         return self._screen_update_time
-    
+
     @screen_update_time.setter
-    def screen_update_time(self, screen_update_time:float)->None:
+    def screen_update_time(self, screen_update_time: float) -> None:
         self._screen_update_time = screen_update_time
         for effect in self:
             effect.screen_update_time = screen_update_time
-    

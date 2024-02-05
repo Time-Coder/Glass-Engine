@@ -1,7 +1,7 @@
 from .CommonRenderer import CommonRenderer
 from glass import GLConfig, sampler2D
 
-        
+
 class ForwardRenderer(CommonRenderer):
 
     def __init__(self):
@@ -40,15 +40,19 @@ class ForwardRenderer(CommonRenderer):
             self.scene.skydome.draw(self.camera)
 
     def draw_opaque(self):
-        if not self._opaque_meshes and \
-           not self._opaque_lines and \
-           not self._opaque_points:
+        if (
+            not self._opaque_meshes
+            and not self._opaque_lines
+            and not self._opaque_points
+        ):
             return
 
-        need_fbo = (self._transparent_meshes or
-                    self._transparent_points or
-                    self._transparent_lines or
-                    self.screen._post_process_effects.has_valid)
+        need_fbo = (
+            self._transparent_meshes
+            or self._transparent_points
+            or self._transparent_lines
+            or self.screen._post_process_effects.has_valid
+        )
 
         with GLConfig.LocalConfig(depth_test=True, blend=False):
             if need_fbo:
@@ -64,7 +68,7 @@ class ForwardRenderer(CommonRenderer):
             self._depth_map = resolved.depth_attachment
             self._view_pos_map = resolved.color_attachment(3)
             self._view_normal_map = resolved.color_attachment(4)
-    
+
     def render(self):
         # profiler.enable()
         self._should_update = False
@@ -76,4 +80,4 @@ class ForwardRenderer(CommonRenderer):
         self.draw_opaque()
         self.draw_transparent()
         # profiler.disable()
-        return (self._should_update or sampler2D._should_update)
+        return self._should_update or sampler2D._should_update

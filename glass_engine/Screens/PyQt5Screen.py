@@ -12,11 +12,16 @@ from PyQt5.QtWidgets import QOpenGLWidget
 
 import glm
 
+
 @init_QtScreen
 class PyQt5Screen(QOpenGLWidget):
     mouse_pressed = PyQt5.QtCore.pyqtSignal(Manipulator.MouseButton, glm.vec2, glm.vec2)
-    mouse_released = PyQt5.QtCore.pyqtSignal(Manipulator.MouseButton, glm.vec2, glm.vec2)
-    mouse_double_clicked = PyQt5.QtCore.pyqtSignal(Manipulator.MouseButton, glm.vec2, glm.vec2)
+    mouse_released = PyQt5.QtCore.pyqtSignal(
+        Manipulator.MouseButton, glm.vec2, glm.vec2
+    )
+    mouse_double_clicked = PyQt5.QtCore.pyqtSignal(
+        Manipulator.MouseButton, glm.vec2, glm.vec2
+    )
     mouse_moved = PyQt5.QtCore.pyqtSignal(glm.vec2, glm.vec2)
     wheel_scrolled = PyQt5.QtCore.pyqtSignal(glm.vec2, glm.vec2, glm.vec2)
     key_pressed = PyQt5.QtCore.pyqtSignal(Manipulator.Key)

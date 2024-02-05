@@ -8,6 +8,7 @@ from glass import Vertices, sampler2D, Indices, GLInfo
 from glass.ImageLoader import ImageLoader
 
 import os
+
 os.environ["OPENCV_IO_ENABLE_OPENEXR"] = "1"
 import cv2
 import numpy as np
@@ -17,13 +18,19 @@ import glm
 from OpenGL import GL
 from enum import Flag
 
+
 class AssimpImportError(Exception):
     pass
+
 
 class ModelMesh(Mesh):
 
     def __init__(self, assimp_mesh):
-        Mesh.__init__(self, name=assimp_mesh.name, primitive_type=GLInfo.enum_map[assimp_mesh.primitive_type])
+        Mesh.__init__(
+            self,
+            name=assimp_mesh.name,
+            primitive_type=GLInfo.enum_map[assimp_mesh.primitive_type],
+        )
         self.__assimp_mesh = assimp_mesh
         self.start_building()
 
@@ -43,12 +50,12 @@ class ModelMesh(Mesh):
             tangent=AttrList.frombuffer(assimp_mesh.tangent_buffer, glm.vec3),
             bitangent=AttrList.frombuffer(assimp_mesh.bitangent_buffer, glm.vec3),
             normal=AttrList.frombuffer(assimp_mesh.normal_buffer, glm.vec3),
-
             tex_coord=AttrList.frombuffer(assimp_mesh.tex_coord_buffers[0], glm.vec3),
             color=AttrList.frombuffer(assimp_mesh.color_buffers[0], glm.vec4),
-            back_color=AttrList.frombuffer(assimp_mesh.color_buffers[1], glm.vec4)
+            back_color=AttrList.frombuffer(assimp_mesh.color_buffers[1], glm.vec4),
         )
         self.indices = Indices.frombuffer(assimp_mesh.indices_buffer, glm.uvec3)
+
 
 class Model(SceneNode):
 
@@ -75,31 +82,39 @@ class Model(SceneNode):
         GenUVCoords = 0x40000
         TransformUVCoords = 0x80000
         FindInstances = 0x100000
-        OptimizeMeshes  = 0x200000
-        OptimizeGraph  = 0x400000
+        OptimizeMeshes = 0x200000
+        OptimizeGraph = 0x400000
         FlipUVs = 0x800000
-        FlipWindingOrder  = 0x1000000
-        SplitByBoneCount  = 0x2000000
-        Debone  = 0x4000000
+        FlipWindingOrder = 0x1000000
+        SplitByBoneCount = 0x2000000
+        Debone = 0x4000000
         GlobalScale = 0x8000000
-        EmbedTextures  = 0x10000000
+        EmbedTextures = 0x10000000
         ForceGenNormals = 0x20000000
         DropNormals = 0x40000000
         GenBoundingBoxes = 0x80000000
 
-        default = (SortByPType |
-                   ValidateDataStructure |
-                   SplitLargeMeshes |
-                   JoinIdenticalVertices |
-                   Triangulate |
-                   CalcTangentSpace |
-                   GenNormals |
-                   GenBoundingBoxes |
-                   GenUVCoords)
+        default = (
+            SortByPType
+            | ValidateDataStructure
+            | SplitLargeMeshes
+            | JoinIdenticalVertices
+            | Triangulate
+            | CalcTangentSpace
+            | GenNormals
+            | GenBoundingBoxes
+            | GenUVCoords
+        )
 
     @checktype
-    def __init__(self, file_name:str="", flags:PostProcessSteps=PostProcessSteps.default, extra_flags:PostProcessSteps=PostProcessSteps.Nothing, exclude_flags:PostProcessSteps=PostProcessSteps.Nothing):
-        self.__flags = ((flags | extra_flags) & (~exclude_flags))
+    def __init__(
+        self,
+        file_name: str = "",
+        flags: PostProcessSteps = PostProcessSteps.default,
+        extra_flags: PostProcessSteps = PostProcessSteps.Nothing,
+        exclude_flags: PostProcessSteps = PostProcessSteps.Nothing,
+    ):
+        self.__flags = (flags | extra_flags) & (~exclude_flags)
 
         if file_name:
             name = os.path.basename(file_name)
@@ -107,7 +122,7 @@ class Model(SceneNode):
             self.load(file_name, flags=self.__flags)
         else:
             SceneNode.__init__(self, "")
-    
+
     @property
     def flags(self):
         return self.__flags
@@ -123,17 +138,22 @@ class Model(SceneNode):
                     threshold = 127
 
                 if image.max() > threshold:
-                    image = (0.2*image).astype(image_dtype)
+                    image = (0.2 * image).astype(image_dtype)
 
                 material.ambient_map = sampler2D(image)
             else:
                 setattr(material, texture_name, sampler2D.load(image_path))
         else:
             if assimp_texture.height == 0:
-                image = cv2.imdecode(np.asarray(bytearray(assimp_texture.content), dtype=np.uint8), cv2.IMREAD_UNCHANGED)
+                image = cv2.imdecode(
+                    np.asarray(bytearray(assimp_texture.content), dtype=np.uint8),
+                    cv2.IMREAD_UNCHANGED,
+                )
                 image = cv2.cvtColor(image, cv2.COLOR_BGRA2RGBA)
             else:
-                image = np.frombuffer(assimp_texture.content, dtype=np.uint8).reshape(assimp_texture.height, assimp_texture.width, 4)
+                image = np.frombuffer(assimp_texture.content, dtype=np.uint8).reshape(
+                    assimp_texture.height, assimp_texture.width, 4
+                )
             image = cv2.flip(image, 0)
             sampler = sampler2D(image)
 
@@ -144,18 +164,24 @@ class Model(SceneNode):
                     threshold = 127
 
                 if image.max() > threshold:
-                    image = (0.2*image).astype(image_dtype)
+                    image = (0.2 * image).astype(image_dtype)
 
                 material.ambient_map = sampler
             else:
                 setattr(material, texture_name, sampler)
 
     @checktype
-    def load(self, file_name:str, flags:PostProcessSteps=PostProcessSteps.default, extra_flags:PostProcessSteps=PostProcessSteps.Nothing, exclude_flags:PostProcessSteps=PostProcessSteps.Nothing):
+    def load(
+        self,
+        file_name: str,
+        flags: PostProcessSteps = PostProcessSteps.default,
+        extra_flags: PostProcessSteps = PostProcessSteps.Nothing,
+        exclude_flags: PostProcessSteps = PostProcessSteps.Nothing,
+    ):
         if not os.path.isfile(file_name):
             raise FileNotFoundError(file_name)
-        
-        self.__flags = ((flags | extra_flags) & (~exclude_flags))
+
+        self.__flags = (flags | extra_flags) & (~exclude_flags)
         self.__file_name = os.path.abspath(file_name)
         self.__dir_name = os.path.dirname(file_name)
 
@@ -167,19 +193,45 @@ class Model(SceneNode):
 
         if not assimp_model.success:
             raise AssimpImportError(assimp_model.error_message)
-        if not assimp_model.nodes or \
-           (not assimp_model.nodes[0].children and not assimp_model.nodes[0].meshes):
+        if not assimp_model.nodes or (
+            not assimp_model.nodes[0].children and not assimp_model.nodes[0].meshes
+        ):
             return
 
         for assimp_material in assimp_model.materials:
             material = Material(name=assimp_material.name)
 
-            ambient = glm.vec3(assimp_material.ambient.r, assimp_material.ambient.g, assimp_material.ambient.b)
-            diffuse = glm.vec3(assimp_material.diffuse.r, assimp_material.diffuse.g, assimp_material.diffuse.b)
-            specular = glm.vec3(assimp_material.specular.r, assimp_material.specular.g, assimp_material.specular.b)
-            emission = glm.vec3(assimp_material.emission.r, assimp_material.emission.g, assimp_material.emission.b)
-            reflection = glm.vec4(assimp_material.reflection.r, assimp_material.reflection.g, assimp_material.reflection.b, assimp_material.reflection.a)
-            base_color = glm.vec3(assimp_material.base_color.r, assimp_material.base_color.g, assimp_material.base_color.b)
+            ambient = glm.vec3(
+                assimp_material.ambient.r,
+                assimp_material.ambient.g,
+                assimp_material.ambient.b,
+            )
+            diffuse = glm.vec3(
+                assimp_material.diffuse.r,
+                assimp_material.diffuse.g,
+                assimp_material.diffuse.b,
+            )
+            specular = glm.vec3(
+                assimp_material.specular.r,
+                assimp_material.specular.g,
+                assimp_material.specular.b,
+            )
+            emission = glm.vec3(
+                assimp_material.emission.r,
+                assimp_material.emission.g,
+                assimp_material.emission.b,
+            )
+            reflection = glm.vec4(
+                assimp_material.reflection.r,
+                assimp_material.reflection.g,
+                assimp_material.reflection.b,
+                assimp_material.reflection.a,
+            )
+            base_color = glm.vec3(
+                assimp_material.base_color.r,
+                assimp_material.base_color.g,
+                assimp_material.base_color.b,
+            )
             shininess = assimp_material.shininess
             shininess_strength = assimp_material.shininess_strength
             opacity = assimp_material.opacity
@@ -214,45 +266,65 @@ class Model(SceneNode):
             if shininess_strength > 0:
                 material.shininess_strength = shininess_strength
 
-            material.shading_model = Material.ShadingModel(assimp_material.shading_model.value)
+            material.shading_model = Material.ShadingModel(
+                assimp_material.shading_model.value
+            )
             material.roughness = roughness
             material.metallic = metallic
             material.opacity = opacity
-            texture_names = \
-            [
-                "ambient_map", "diffuse_map", "specular_map",
-                "shininess_map", "emission_map", "height_map",
-                "normal_map", "opacity_map", "reflection_map",
-                "base_color_map", "ao_map", "roughness_map", "metallic_map"
+            texture_names = [
+                "ambient_map",
+                "diffuse_map",
+                "specular_map",
+                "shininess_map",
+                "emission_map",
+                "height_map",
+                "normal_map",
+                "opacity_map",
+                "reflection_map",
+                "base_color_map",
+                "ao_map",
+                "roughness_map",
+                "metallic_map",
             ]
 
             use_arm = False
             use_mr = False
-            if (len(assimp_material.ao_map) > 0 and \
-                len(assimp_material.roughness_map) > 0 and \
-                assimp_material.ao_map[0].key == assimp_material.roughness_map[0].key) or \
-               (len(assimp_material.ao_map) > 0 and \
-                len(assimp_material.metallic_map) > 0 and \
-                assimp_material.ao_map[0].key == assimp_material.metallic_map[0].key):
+            if (
+                len(assimp_material.ao_map) > 0
+                and len(assimp_material.roughness_map) > 0
+                and assimp_material.ao_map[0].key
+                == assimp_material.roughness_map[0].key
+            ) or (
+                len(assimp_material.ao_map) > 0
+                and len(assimp_material.metallic_map) > 0
+                and assimp_material.ao_map[0].key == assimp_material.metallic_map[0].key
+            ):
                 self._set_texture(material, "arm_map", assimp_material.ao_map[0])
                 material.arm_use_a = True
                 use_arm = True
 
-            if not use_arm and \
-               (len(assimp_material.roughness_map) > 0 and \
-                len(assimp_material.metallic_map) > 0 and \
-                assimp_material.roughness_map[0].key == assimp_material.metallic_map[0].key):
+            if not use_arm and (
+                len(assimp_material.roughness_map) > 0
+                and len(assimp_material.metallic_map) > 0
+                and assimp_material.roughness_map[0].key
+                == assimp_material.metallic_map[0].key
+            ):
                 self._set_texture(material, "arm_map", assimp_material.roughness_map[0])
                 material.arm_use_a = False
                 use_mr = True
-            
+
             for texture_name in texture_names:
                 assimp_textures = getattr(assimp_material, texture_name)
 
                 if not assimp_textures:
                     continue
 
-                if use_arm and texture_name in ["ao_map", "roughness_map", "metallic_map"]:
+                if use_arm and texture_name in [
+                    "ao_map",
+                    "roughness_map",
+                    "metallic_map",
+                ]:
                     continue
 
                 if use_mr and texture_name in ["roughness_map", "metallic_map"]:
@@ -274,11 +346,11 @@ class Model(SceneNode):
                     mesh.render_hints.polygon_mode = GL.GL_LINE
                 if assimp_material.twoside:
                     mesh.render_hints.cull_face = None
-            
+
             self.__meshes.append(mesh)
 
         self.__load_node(assimp_model.nodes[0], assimp_model, self["root"])
-    
+
     def __load_node(self, assimp_node, assimp_model, parent_node=None):
         node = parent_node
         if node is None:
@@ -303,5 +375,7 @@ class Model(SceneNode):
             assimp_child = assimp_model.nodes[node_index]
             if not assimp_child.meshes and not assimp_child.children:
                 continue
-            node.add_child(self.__load_node(assimp_model.nodes[node_index], assimp_model))
+            node.add_child(
+                self.__load_node(assimp_model.nodes[node_index], assimp_model)
+            )
         return node

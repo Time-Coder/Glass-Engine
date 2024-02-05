@@ -4,6 +4,7 @@ from OpenGL import GL
 from .GLConfig import GLConfig
 from .MetaInstancesRecorder import MetaInstancesRecorder
 
+
 class MetaGLObject(MetaInstancesRecorder):
 
     @property
@@ -13,6 +14,7 @@ class MetaGLObject(MetaInstancesRecorder):
         except:
             return 0
 
+
 class GLObject(metaclass=MetaGLObject):
 
     @MetaGLObject.init
@@ -21,16 +23,16 @@ class GLObject(metaclass=MetaGLObject):
         self._context_shared = context_shared
         self._context = 0
 
-    def __hash__(self)->int:
+    def __hash__(self) -> int:
         return id(self)
-    
-    def __eq__(self, _value)->bool:
-        return (id(self) == id(_value))
+
+    def __eq__(self, _value) -> bool:
+        return id(self) == id(_value)
 
     @property
     def context_shared(self):
         return self._context_shared
-    
+
     @property
     def context(self):
         return self._context
@@ -38,7 +40,7 @@ class GLObject(metaclass=MetaGLObject):
     @property
     def id(self):
         return self._id
-    
+
     def delete(self):
         if self._id == 0:
             return
@@ -98,7 +100,9 @@ class GLObject(metaclass=MetaGLObject):
     def bind(self):
         current_context = GLConfig.buffered_current_context
         if self._context != 0 and current_context != self._context:
-            raise RuntimeError(f"try to bind context({self._context})'s {self.__class__.__name__}({self.id}) in context({current_context})")
+            raise RuntimeError(
+                f"try to bind context({self._context})'s {self.__class__.__name__}({self.id}) in context({current_context})"
+            )
 
         if self._id == 0:
             gen_func = self.__class__._basic_info["gen_func"]
@@ -142,5 +146,4 @@ class GLObject(metaclass=MetaGLObject):
 
     @property
     def is_bound(self):
-        return (self._id != 0 and self.__class__.active_id == self._id)
-    
+        return self._id != 0 and self.__class__.active_id == self._id

@@ -9,6 +9,7 @@ from OpenGL import GL
 import time
 import os
 
+
 class DOFEffect(PostProcessEffect):
 
     class CurrentFocus(ShaderStorageBlock.HostClass):
@@ -20,10 +21,10 @@ class DOFEffect(PostProcessEffect):
         @property
         def current_focus(self):
             return self._current_focus
-        
+
         @current_focus.setter
         @ShaderStorageBlock.HostClass.not_const
-        def current_focus(self, focus:float):
+        def current_focus(self, focus: float):
             self._current_focus = focus
 
     def __init__(self):
@@ -56,11 +57,14 @@ class DOFEffect(PostProcessEffect):
         if self._program is None:
             self._program = ShaderProgram()
             self._program.compile(Frame.draw_frame_vs)
-            self._program.compile(os.path.dirname(os.path.abspath(__file__)) + "/../glsl/PostProcessEffects/dof.fs")
+            self._program.compile(
+                os.path.dirname(os.path.abspath(__file__))
+                + "/../glsl/PostProcessEffects/dof.fs"
+            )
             self._program["CurrentFocus"].bind(self.current_focus)
         return self._program
-    
-    def apply(self, screen_image:sampler2D)->sampler2D:
+
+    def apply(self, screen_image: sampler2D) -> sampler2D:
         self.horizontal_fbo.resize(screen_image.width, screen_image.height)
         self.vertical_fbo.resize(screen_image.width, screen_image.height)
 
@@ -80,7 +84,7 @@ class DOFEffect(PostProcessEffect):
 
         return self.vertical_fbo.color_attachment(0)
 
-    def draw_to_active(self, screen_image:sampler2D)->None:
+    def draw_to_active(self, screen_image: sampler2D) -> None:
         self.horizontal_fbo.resize(screen_image.width, screen_image.height)
         self.vertical_fbo.resize(screen_image.width, screen_image.height)
 
@@ -97,18 +101,22 @@ class DOFEffect(PostProcessEffect):
             self.program["screen_image"] = self.horizontal_fbo.color_attachment(0)
             self.program["horizontal"] = False
             self.program.draw_triangles(start_index=0, total=6)
-    
+
     @property
     def should_update(self) -> bool:
         if not self._enabled:
             return False
-        
+
         if not self.camera.lens.auto_focus:
             return False
 
-        return (self.screen_update_time == 0 or time.time()-self.screen_update_time <= self.camera.lens.focus_change_time+1)
-    
+        return (
+            self.screen_update_time == 0
+            or time.time() - self.screen_update_time
+            <= self.camera.lens.focus_change_time + 1
+        )
+
     @should_update.setter
     @checktype
-    def should_update(self, flag:bool):
+    def should_update(self, flag: bool):
         pass

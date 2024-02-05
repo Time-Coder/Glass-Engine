@@ -10,20 +10,59 @@ from .AttrList import AttrList
 from .GLInfo import GLInfo
 from .SameTypeList import SameTypeList
 
+
 class Vertex(dict):
-    _all_attrs = \
-    {
-        '__class__', '__contains__', '__delattr__', '__delitem__',
-        '__dict__', '__dir__', '__doc__', '__eq__', '__format__',
-        '__ge__', '__getattribute__', '__getitem__', '__gt__',
-        '__hash__', '__init__', '__init_subclass__', '__iter__',
-        '__le__', '__len__', '__lt__', '__module__', '__ne__', '__new__',
-        '__reduce__', '__reduce_ex__', '__repr__', '__setattr__',
-        '__setitem__', '__sizeof__', '__str__', '__subclasshook__',
-        '__weakref__', '__getattr__', '__setattr__', '__deepcopy__', '__setstate__',
-        'clear', 'copy', 'fromkeys', 'get', 'items', 'keys',
-        'pop', 'popitem', 'setdefault', 'update', 'values',
-        '_array_index_map', '_add_array_index', "user_data"
+    _all_attrs = {
+        "__class__",
+        "__contains__",
+        "__delattr__",
+        "__delitem__",
+        "__dict__",
+        "__dir__",
+        "__doc__",
+        "__eq__",
+        "__format__",
+        "__ge__",
+        "__getattribute__",
+        "__getitem__",
+        "__gt__",
+        "__hash__",
+        "__init__",
+        "__init_subclass__",
+        "__iter__",
+        "__le__",
+        "__len__",
+        "__lt__",
+        "__module__",
+        "__ne__",
+        "__new__",
+        "__reduce__",
+        "__reduce_ex__",
+        "__repr__",
+        "__setattr__",
+        "__setitem__",
+        "__sizeof__",
+        "__str__",
+        "__subclasshook__",
+        "__weakref__",
+        "__getattr__",
+        "__setattr__",
+        "__deepcopy__",
+        "__setstate__",
+        "clear",
+        "copy",
+        "fromkeys",
+        "get",
+        "items",
+        "keys",
+        "pop",
+        "popitem",
+        "setdefault",
+        "update",
+        "values",
+        "_array_index_map",
+        "_add_array_index",
+        "user_data",
     }
 
     def __init__(self, **kwargs):
@@ -59,7 +98,7 @@ class Vertex(dict):
 
         self[name] = value
 
-    def __setitem__(self, name:str, value):
+    def __setitem__(self, name: str, value):
         dict.__setitem__(self, name, value)
 
         for id_parent_array, index_set in self._array_index_map.items():
@@ -70,7 +109,7 @@ class Vertex(dict):
             for index in index_set:
                 parent_array._attr_list_map[name][index] = value
 
-    def __getitem__(self, name:str):
+    def __getitem__(self, name: str):
         for id_parent_array, index_set in self._array_index_map.items():
             parent_array = di(id_parent_array)
             if name not in parent_array._attr_list_map:
@@ -83,16 +122,24 @@ class Vertex(dict):
                 value = parent_array._attr_list_map[name][index]
                 dict.__setitem__(self, name, value)
                 return value
-            
+
         return dict.__getitem__(self, name)
 
+
 dtype_uint64 = np.array([], dtype=np.uint64).dtype
+
+
 class Vertices:
 
     element_type = Vertex
 
     @checktype
-    def __init__(self, _list:list=None, draw_type:GLInfo.draw_types=GL.GL_STATIC_DRAW, **kwargs):
+    def __init__(
+        self,
+        _list: list = None,
+        draw_type: GLInfo.draw_types = GL.GL_STATIC_DRAW,
+        **kwargs,
+    ):
         self._attr_list_map = {}
         self._vao_map = {}
         self._index_vertex_map = {}
@@ -103,16 +150,16 @@ class Vertices:
         self._front_has_opaque = True
         self._back_has_transparent = False
         self._back_has_opaque = True
-        
+
         if _list is not None:
             for value in _list:
                 self.append(value)
         else:
             self._attr_list_map = kwargs
 
-    def hasattr(self, attr_name:str):
-        return (attr_name in self._attr_list_map)
-    
+    def hasattr(self, attr_name: str):
+        return attr_name in self._attr_list_map
+
     def reset(self, **kwargs):
         self._attr_list_map = kwargs
         self._vao_map = {}
@@ -130,10 +177,10 @@ class Vertices:
 
     @draw_type.setter
     @checktype
-    def draw_type(self, value:GLInfo.draw_types):
+    def draw_type(self, value: GLInfo.draw_types):
         self._draw_type = value
 
-    def _first_apply(self, program, instances)->bool:
+    def _first_apply(self, program, instances) -> bool:
         current_context = GLConfig.buffered_current_context
         key = (current_context, program, instances)
         if key in self._vao_map or not self:
@@ -155,7 +202,10 @@ class Vertices:
             feed_type = attr_list.dtype
             need_type = program._attributes_info[key]["python_type"]
             if feed_type != need_type:
-                if feed_type in GLInfo.primary_types and need_type in GLInfo.primary_types:
+                if (
+                    feed_type in GLInfo.primary_types
+                    and need_type in GLInfo.primary_types
+                ):
                     attr_list.dtype = need_type
                     feed_type = need_type
                 elif feed_type == int and need_type == glm.uvec2:
@@ -166,21 +216,21 @@ class Vertices:
                 else:
                     error_message = f"vertex attribute '{key}' need type {need_type}, {feed_type} value were given"
                     raise TypeError(error_message)
-            
+
             vao[location].interp(attr_list._vbo, feed_type, attr_list.stride, 0)
             if divisor is not None:
                 vao[location].divisor = divisor
 
             attr_list.is_new_vbo = False
 
-    def _apply_increment(self, instances)->bool:
+    def _apply_increment(self, instances) -> bool:
         for key, attr_list in self._attr_list_map.items():
             attr_list._apply()
             self._update_VAOs(key, attr_list)
 
         if instances is None:
             return True
-        
+
         for key, attr_list in instances._attr_list_map.items():
             attr_list._apply()
             self._update_VAOs(key, attr_list, instances.divisor)
@@ -212,21 +262,23 @@ class Vertices:
             while stop < 0:
                 stop += len_self
 
-        if start < 0: start = 0
-        if stop > len_self: stop = len_self
+        if start < 0:
+            start = 0
+        if stop > len_self:
+            stop = len_self
 
         return start, stop, step
 
-    def __len__(self):        
+    def __len__(self):
         for attr_list in self._attr_list_map.values():
             return len(attr_list)
-        
+
         return 0
-    
+
     def __bool__(self):
         for attr_list in self._attr_list_map.values():
             return bool(attr_list)
-        
+
         return False
 
     def append(self, vertex):
@@ -242,19 +294,19 @@ class Vertices:
         vertex._add_array_index(self, len_self)
         self._index_vertex_map[len_self] = vertex
 
-    def __contains__(self, value:(Vertex,str)):
+    def __contains__(self, value: (Vertex, str)):
         if isinstance(value, str):
-            return (value in self._attr_list_map)
+            return value in self._attr_list_map
         else:
-            return (self.index(value) != -1)
+            return self.index(value) != -1
 
     def __iter__(self):
         return SameTypeList.iterator(self)
-    
+
     def const_items(self):
         return SameTypeList.const_iterator(self)
 
-    def const_get(self, index:(int,slice)):
+    def const_get(self, index: (int, slice)):
         result = None
         if isinstance(index, slice):
             result = []
@@ -268,7 +320,7 @@ class Vertices:
 
         return result
 
-    def __getitem__(self, index:(int,slice,str)):
+    def __getitem__(self, index: (int, slice, str)):
         if isinstance(index, str):
             return self._attr_list_map[index]
 
@@ -293,7 +345,7 @@ class Vertices:
 
         return result
 
-    def __setitem__(self, index:(int,slice), value:Vertex):
+    def __setitem__(self, index: (int, slice), value: Vertex):
         for key in set.union(set(value.keys()), set(self._attr_list_map.keys())):
             if key not in self._attr_list_map:
                 self._attr_list_map[key] = AttrList(dtype=type(value[key]))
@@ -316,7 +368,7 @@ class Vertices:
         else:
             raise TypeError(index)
 
-    def __delitem(self, index:int):
+    def __delitem(self, index: int):
         if index in self._index_vertex_map:
             vertex = self._index_vertex_map[index]
             vertex._array_index_map[self].remove(index)
@@ -330,14 +382,14 @@ class Vertices:
             if sub_index > index:
                 should_update_index.append(sub_index)
                 vertex._array_index_map[self].remove(sub_index)
-                vertex._array_index_map[self].add(sub_index-1)
+                vertex._array_index_map[self].add(sub_index - 1)
 
         for sub_index in should_update_index:
             vertex = self._index_vertex_map[sub_index]
             del self._index_vertex_map[sub_index]
-            self._index_vertex_map[sub_index-1] = vertex
+            self._index_vertex_map[sub_index - 1] = vertex
 
-    def __delitem__(self, index:(str,int,slice)):
+    def __delitem__(self, index: (str, int, slice)):
         if isinstance(index, str):
             del self._attr_list_map[index]
             return
@@ -361,13 +413,13 @@ class Vertices:
 
         self._index_vertex_map.clear()
 
-    def pop(self, index:int)->Vertex:
+    def pop(self, index: int) -> Vertex:
         vertex = self[index]
         del self[index]
 
         return vertex
-    
-    def index(self, vertex:Vertex)->int:
+
+    def index(self, vertex: Vertex) -> int:
         for key in vertex:
             if key not in self._attr_list_map:
                 return -1
@@ -380,21 +432,21 @@ class Vertices:
                     break
             if is_equal:
                 return i
-            
+
         return -1
-    
-    def remove(self, vertex:Vertex):
+
+    def remove(self, vertex: Vertex):
         i = self.index(vertex)
         if i == -1:
             raise ValueError(vertex)
-        
+
         del self[i]
-    
+
     def extend(self, _list):
         for vertex in _list:
             self.append(vertex)
 
-    def insert(self, index:int, vertex:Vertex)->None:
+    def insert(self, index: int, vertex: Vertex) -> None:
         for key in set.union(set(vertex.keys()), set(self._attr_list_map.keys())):
             if key not in vertex:
                 vertex[key] = self._attr_list_map[key].dtype()
@@ -412,12 +464,12 @@ class Vertices:
             if sub_index >= index:
                 should_update_index.append(sub_index)
                 sub_vertex._array_index_map[self].remove(sub_index)
-                sub_vertex._array_index_map[self].add(sub_index+1)
+                sub_vertex._array_index_map[self].add(sub_index + 1)
 
         for sub_index in should_update_index:
             sub_vertex = self._index_vertex_map[sub_index]
             del self._index_vertex_map[sub_index]
-            self._index_vertex_map[sub_index+1] = sub_vertex
+            self._index_vertex_map[sub_index + 1] = sub_vertex
 
         vertex._add_array_index(self, index)
         self._index_vertex_map[index] = self
@@ -427,7 +479,7 @@ class Vertices:
         len_self = len(self)
         if len_list < len_self:
             del self[len_list:]
-        
+
         for i in range(len_self):
             self[i] = _list[i]
 
@@ -436,10 +488,13 @@ class Vertices:
 
     def _test_front_transparent(self):
         if "color" in self._attr_list_map:
-            if not self._tested_front_transparent or self._attr_list_map["color"]._should_retest:
-                front_alpha = self._attr_list_map["color"].ndarray[:,3]
-                self._front_has_transparent = np.any(front_alpha < 1-1E-6)
-                self._front_has_opaque = np.any(front_alpha >= 1-1E-6)
+            if (
+                not self._tested_front_transparent
+                or self._attr_list_map["color"]._should_retest
+            ):
+                front_alpha = self._attr_list_map["color"].ndarray[:, 3]
+                self._front_has_transparent = np.any(front_alpha < 1 - 1e-6)
+                self._front_has_opaque = np.any(front_alpha >= 1 - 1e-6)
                 self._attr_list_map["color"]._should_retest = False
         else:
             self._front_has_transparent = False
@@ -449,10 +504,13 @@ class Vertices:
 
     def _test_back_transparent(self):
         if "back_color" in self._attr_list_map:
-            if not self._tested_back_transparent or self._attr_list_map["back_color"]._should_retest:
-                back_alpha = self._attr_list_map["back_color"].ndarray[:,3]
-                self._back_has_transparent = np.any(back_alpha < 1-1E-6)
-                self._back_has_opaque = np.any(back_alpha >= 1-1E-6)
+            if (
+                not self._tested_back_transparent
+                or self._attr_list_map["back_color"]._should_retest
+            ):
+                back_alpha = self._attr_list_map["back_color"].ndarray[:, 3]
+                self._back_has_transparent = np.any(back_alpha < 1 - 1e-6)
+                self._back_has_opaque = np.any(back_alpha >= 1 - 1e-6)
                 self._attr_list_map["back_color"]._should_retest = False
         else:
             self._back_has_transparent = False
@@ -464,7 +522,7 @@ class Vertices:
     def front_has_transparent(self):
         self._test_front_transparent()
         return self._front_has_transparent
-    
+
     @property
     def front_has_opaque(self):
         self._test_front_transparent()
@@ -474,7 +532,7 @@ class Vertices:
     def back_has_transparent(self):
         self._test_back_transparent()
         return self._back_has_transparent
-    
+
     @property
     def back_has_opaque(self):
         self._test_back_transparent()

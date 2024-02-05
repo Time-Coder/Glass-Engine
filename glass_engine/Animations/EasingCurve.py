@@ -1,6 +1,7 @@
 from enum import Enum
 import pytweening
 
+
 class EasingCurve(Enum):
 
     Linear = 0
@@ -45,11 +46,10 @@ class EasingCurve(Enum):
     InOutBounce = 39
     OutInBounce = 40
 
-    def __call__(self, progress:float)->float:
+    def __call__(self, progress: float) -> float:
         if self == EasingCurve.Linear:
             return progress
-        
-        func_name = "ease" + str(self)[len("EasingCurve."):]
+
+        func_name = "ease" + str(self)[len("EasingCurve.") :]
         func = getattr(pytweening, func_name)
         return func(progress)
-        

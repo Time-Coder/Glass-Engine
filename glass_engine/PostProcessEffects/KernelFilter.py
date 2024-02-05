@@ -1,49 +1,58 @@
 from .PostProcessEffect import PostProcessEffect
 from ..Frame import Frame
 from glass.utils import checktype
-from glass import ShaderProgram, FBO, sampler2D, sampler2DArray, samplerCube, GLConfig, ShaderStorageBlock
+from glass import (
+    ShaderProgram,
+    FBO,
+    sampler2D,
+    sampler2DArray,
+    samplerCube,
+    GLConfig,
+    ShaderStorageBlock,
+)
 
 import numpy as np
 from OpenGL import GL
 import os
 
+
 class KernelFilter(PostProcessEffect):
 
     class Kernel(ShaderStorageBlock.HostClass):
-        def __init__(self, kernel:np.ndarray):
+        def __init__(self, kernel: np.ndarray):
             ShaderStorageBlock.HostClass.__init__(self)
-            
+
             self._rows = kernel.shape[0]
             self._cols = kernel.shape[1]
             self._data = list(kernel.flatten())
             self._kernel = kernel
-        
+
         @property
         def rows(self):
             return self._rows
-        
+
         @property
         def cols(self):
             return self._cols
-        
+
         @property
         def data(self):
             return self._data
-        
+
         @property
         def kernel(self):
             return self._kernel
 
         @kernel.setter
         @ShaderStorageBlock.HostClass.not_const
-        def kernel(self, kernel:np.ndarray):
+        def kernel(self, kernel: np.ndarray):
             self.rows = kernel.shape[0]
             self.cols = kernel.shape[1]
             self.data = list(kernel.flatten())
             self._kernel = kernel
 
     @checktype
-    def __init__(self, kernel:np.ndarray):
+    def __init__(self, kernel: np.ndarray):
         PostProcessEffect.__init__(self)
         self._kernel = KernelFilter.Kernel(kernel)
 
@@ -62,7 +71,10 @@ class KernelFilter(PostProcessEffect):
         if self._program is None:
             self._program = ShaderProgram()
             self._program.compile(Frame.draw_frame_vs)
-            self._program.compile(os.path.dirname(os.path.abspath(__file__)) + "/../glsl/PostProcessEffects/kernel_filter.fs")
+            self._program.compile(
+                os.path.dirname(os.path.abspath(__file__))
+                + "/../glsl/PostProcessEffects/kernel_filter.fs"
+            )
             self._program["Kernel"].bind(self._kernel)
         return self._program
 
@@ -87,19 +99,27 @@ class KernelFilter(PostProcessEffect):
             self._cube_fbo.attach(0, samplerCube)
         return self._cube_fbo
 
-    def __call__(self, screen_image:(sampler2D,sampler2DArray,samplerCube))->(sampler2D,sampler2DArray,samplerCube):
+    def __call__(
+        self, screen_image: (sampler2D, sampler2DArray, samplerCube)
+    ) -> (sampler2D, sampler2DArray, samplerCube):
         if isinstance(screen_image, sampler2D):
             self.fbo.resize(screen_image.width, screen_image.height)
-            with GLConfig.LocalConfig(depth_test=False, cull_face=None, polygon_mode=GL.GL_FILL):
+            with GLConfig.LocalConfig(
+                depth_test=False, cull_face=None, polygon_mode=GL.GL_FILL
+            ):
                 with self.fbo:
                     self.program["screen_image"] = screen_image
                     self.program.draw_triangles(start_index=0, total=6)
 
             return self.fbo.color_attachment(0)
         elif isinstance(screen_image, sampler2DArray):
-            self.array_fbo.resize(screen_image.width, screen_image.height, layers=screen_image.layers)
+            self.array_fbo.resize(
+                screen_image.width, screen_image.height, layers=screen_image.layers
+            )
             program = self.array_program(screen_image.layers)
-            with GLConfig.LocalConfig(depth_test=False, cull_face=None, polygon_mode=GL.GL_FILL):
+            with GLConfig.LocalConfig(
+                depth_test=False, cull_face=None, polygon_mode=GL.GL_FILL
+            ):
                 with self.array_fbo:
                     program["screen_image"] = screen_image
                     program.draw_triangles(start_index=0, total=6)
@@ -107,23 +127,26 @@ class KernelFilter(PostProcessEffect):
             return self.array_fbo.color_attachment(0)
         elif isinstance(screen_image, samplerCube):
             self.cube_fbo.resize(screen_image.width, screen_image.height)
-            with GLConfig.LocalConfig(depth_test=False, cull_face=None, polygon_mode=GL.GL_FILL):
+            with GLConfig.LocalConfig(
+                depth_test=False, cull_face=None, polygon_mode=GL.GL_FILL
+            ):
                 with self.cube_fbo:
                     self.cube_program["screen_image"] = screen_image
                     self.cube_program.draw_triangles(start_index=0, total=6)
 
             return self.cube_fbo.color_attachment(0)
-        
+
     def draw_to_active(self, screen_image: sampler2D) -> None:
-        with GLConfig.LocalConfig(depth_test=False, cull_face=None, polygon_mode=GL.GL_FILL):
+        with GLConfig.LocalConfig(
+            depth_test=False, cull_face=None, polygon_mode=GL.GL_FILL
+        ):
             self.program["screen_image"] = screen_image
             self.program.draw_triangles(start_index=0, total=6)
 
     @property
-    def kernel(self)->np.ndarray:
+    def kernel(self) -> np.ndarray:
         return self._kernel.kernel
-    
+
     @kernel.setter
-    def kernel(self, kernel:np.ndarray):
+    def kernel(self, kernel: np.ndarray):
         self._kernel.kernel = kernel
-    

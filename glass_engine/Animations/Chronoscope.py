@@ -1,6 +1,7 @@
 from enum import Enum
 import time
 
+
 class Chronoscope:
 
     class Status(Enum):
@@ -13,8 +14,8 @@ class Chronoscope:
         self._segment_speed = 1
         self._end_time = 0
 
-        self._status:Chronoscope.Status = Chronoscope.Status.Stop
-        self._speed:float = 1
+        self._status: Chronoscope.Status = Chronoscope.Status.Stop
+        self._speed: float = 1
 
     def start(self):
         if self._status == Chronoscope.Status.Running:
@@ -27,19 +28,21 @@ class Chronoscope:
     def stop(self):
         if self._status == Chronoscope.Status.Stop:
             return
-        
+
         self._end_time = 0
         self._status = Chronoscope.Status.Stop
 
     def pause(self):
         if self._status != Chronoscope.Status.Running:
             return
-        
-        duration = self._segment_speed * (time.perf_counter() - self._segment_start_time)
+
+        duration = self._segment_speed * (
+            time.perf_counter() - self._segment_start_time
+        )
         self._end_time += duration
         self._status = Chronoscope.Status.Paused
 
-    def goto(self, t:float):
+    def goto(self, t: float):
         self._segment_start_time = time.perf_counter()
         self._segment_speed = self._speed
         self._end_time = t
@@ -50,12 +53,12 @@ class Chronoscope:
     @property
     def status(self):
         return self._status
-    
+
     @status.setter
     def status(self, status):
         if self._status == status:
             return
-        
+
         if self._status == Chronoscope.Status.Stop:
             if status == Chronoscope.Status.Paused:
                 self._status = Chronoscope.Status.Paused
@@ -73,29 +76,32 @@ class Chronoscope:
                 self.stop()
 
     @property
-    def speed(self)->float:
+    def speed(self) -> float:
         return self._speed
 
     @speed.setter
-    def speed(self, speed:float):
+    def speed(self, speed: float):
         if self._speed == speed:
             return
-        
+
         self._speed = speed
 
         if self._status != Chronoscope.Status.Running:
             return
 
-        duration = self._segment_speed * (time.perf_counter() - self._segment_start_time)
+        duration = self._segment_speed * (
+            time.perf_counter() - self._segment_start_time
+        )
         self._end_time += duration
 
         self._segment_start_time = time.perf_counter()
         self._segment_speed = self._speed
 
-    def time(self)->float:
+    def time(self) -> float:
         if self._status != Chronoscope.Status.Running:
             return self._end_time
-        
-        duration = self._segment_speed * (time.perf_counter() - self._segment_start_time)
+
+        duration = self._segment_speed * (
+            time.perf_counter() - self._segment_start_time
+        )
         return self._end_time + duration
-    

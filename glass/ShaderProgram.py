@@ -10,43 +10,60 @@ import ctypes
 from .VAO import VAO
 from .Uniform import Uniform
 from .GPUProgram import GPUProgram, LinkError, LinkWarning
-from .Shaders import VertexShader, FragmentShader, GeometryShader, TessControlShader, TessEvaluationShader
+from .Shaders import (
+    VertexShader,
+    FragmentShader,
+    GeometryShader,
+    TessControlShader,
+    TessEvaluationShader,
+)
 from .Vertices import Vertices
 from .Indices import Indices
 from .Instances import Instances
-from .utils import defines_key, checktype, subscript, md5s, modify_time, save_var, load_var, printable_path, sanitize_filename
+from .utils import (
+    defines_key,
+    checktype,
+    subscript,
+    md5s,
+    modify_time,
+    save_var,
+    load_var,
+    printable_path,
+    sanitize_filename,
+)
 from .GLInfo import GLInfo
 from .GLConfig import GLConfig
 from .GlassConfig import GlassConfig
 from .TextureUnits import TextureUnits
 from .ImageUnits import ImageUnits
 
+
 class ShaderProgram(GPUProgram):
 
-    __accum_draw_calls:dict = {}
-    __accum_draw_points:dict = {}
-    __accum_draw_lines:dict = {}
-    __accum_draw_meshes:dict = {}
-    __accum_draw_patches:dict = {}
+    __accum_draw_calls: dict = {}
+    __accum_draw_points: dict = {}
+    __accum_draw_lines: dict = {}
+    __accum_draw_meshes: dict = {}
+    __accum_draw_patches: dict = {}
 
-    __global_defines:dict = {}
-    __global_include_paths:list = []
+    __global_defines: dict = {}
+    __global_include_paths: list = []
 
     def __init__(self):
         GPUProgram.__init__(self)
-        self.vertex_shader:VertexShader = VertexShader(self)
-        self.fragment_shader:FragmentShader = FragmentShader(self)
-        self.geometry_shader:GeometryShader = GeometryShader(self)
-        self.tess_ctrl_shader:TessControlShader = TessControlShader(self)
-        self.tess_eval_shader:TessEvaluationShader = TessEvaluationShader(self)
+        self.vertex_shader: VertexShader = VertexShader(self)
+        self.fragment_shader: FragmentShader = FragmentShader(self)
+        self.geometry_shader: GeometryShader = GeometryShader(self)
+        self.tess_ctrl_shader: TessControlShader = TessControlShader(self)
+        self.tess_eval_shader: TessEvaluationShader = TessEvaluationShader(self)
 
-        self._binary_file_name:str = ""
-        self._meta_file_name:str = ""
-        self._patch_vertices:int = 0
-        self._context:int = 0
+        self._binary_file_name: str = ""
+        self._meta_file_name: str = ""
+        self._patch_vertices: int = 0
+        self._context: int = 0
 
-        self._include_paths:list = []
-        self._defines:dict = {}
+        self._include_paths: list = []
+        self._defines: dict = {}
 
     @staticmethod
     def __update_dict(dest_dict, src_dict):
@@ -54,47 +71,49 @@ class ShaderProgram(GPUProgram):
             dest_dict[key] = copy.copy(value)
 
     @staticmethod
-    def global_define(name:str, value=None):
+    def global_define(name: str, value=None):
         ShaderProgram.__global_defines[name] = value
 
     @staticmethod
-    def global_undef(name:str):
+    def global_undef(name: str):
         if name in ShaderProgram.__global_defines:
             del ShaderProgram.__global_defines[name]
 
-    def define(self, name:str, value=None)->bool:
+    def define(self, name: str, value=None) -> bool:
         if name in self._defines and self._defines[name] == value:
             return False
-        
+
         self._defines[name] = value
         return True
 
-    def undef(self, name:str)->bool:
+    def undef(self, name: str) -> bool:
         if name not in self._defines:
             return False
-        
+
         del self._defines[name]
         return True
 
     @property
-    def defines(self)->dict:
+    def defines(self) -> dict:
         defines = {}
         defines.update(ShaderProgram.__global_defines)
         defines.update(self._defines)
         return defines
 
     @staticmethod
-    def add_global_include_path(include_path:str):
+    def add_global_include_path(include_path: str):
         full_name = os.path.abspath(include_path).replace("\\", "/")
-        if ShaderProgram.__global_include_paths and \
-           ShaderProgram.__global_include_paths[0] == full_name:
+        if (
+            ShaderProgram.__global_include_paths
+            and ShaderProgram.__global_include_paths[0] == full_name
+        ):
             return False
 
         ShaderProgram.__global_include_paths.insert(0, full_name)
         return True
-    
+
     @staticmethod
-    def remove_global_include_path(include_path:str):
+    def remove_global_include_path(include_path: str):
         full_name = os.path.abspath(include_path).replace("\\", "/")
         if full_name not in ShaderProgram.__global_include_paths:
             return False
@@ -104,7 +123,7 @@ class ShaderProgram(GPUProgram):
 
         return True
 
-    def add_include_path(self, include_path:str):
+    def add_include_path(self, include_path: str):
         full_name = os.path.abspath(include_path).replace("\\", "/")
         if self._include_paths and self._include_paths[0] == full_name:
             return False
@@ -112,7 +131,7 @@ class ShaderProgram(GPUProgram):
         self._include_paths.insert(0, full_name)
         return True
 
-    def remove_include_path(self, include_path:str):
+    def remove_include_path(self, include_path: str):
         full_name = os.path.abspath(include_path).replace("\\", "/")
         if full_name not in self._include_paths:
             return False
@@ -123,7 +142,7 @@ class ShaderProgram(GPUProgram):
         return True
 
     @property
-    def include_paths(self)->list:
+    def include_paths(self) -> list:
         return self._include_paths + ShaderProgram.__global_include_paths
 
     def reload(self):
@@ -157,7 +176,7 @@ class ShaderProgram(GPUProgram):
 
         if not is_recompiled:
             return
-        
+
         self._uniform._atoms_to_update.clear()
         self._uniform._atom_value_map.clear()
         self._uniform._texture_value_map.clear()
@@ -177,15 +196,17 @@ class ShaderProgram(GPUProgram):
             uniform_block_var.unbind()
             uniform_block_var.bind(bound_var)
 
-        for shader_storage_block_var in self._shader_storage_block._block_var_map.values():
+        for (
+            shader_storage_block_var
+        ) in self._shader_storage_block._block_var_map.values():
             bound_var = shader_storage_block_var._bound_var
             if bound_var is None:
                 continue
 
             shader_storage_block_var.unbind()
             shader_storage_block_var.bind(bound_var)
-        
-    def compile(self, file_name:str, shader_type:GLInfo.shader_types=None):
+
+    def compile(self, file_name: str, shader_type: GLInfo.shader_types = None):
         abs_file_name = os.path.abspath(file_name).replace("\\", "/")
 
         if not os.path.isfile(abs_file_name):
@@ -212,15 +233,21 @@ class ShaderProgram(GPUProgram):
             self.geometry_shader.compile(file_name)
             shader = self.geometry_shader
             if shader.geometry_in in GLInfo.primitive_type_map:
-                self._acceptable_primitives = GLInfo.primitive_type_map[shader.geometry_in]
+                self._acceptable_primitives = GLInfo.primitive_type_map[
+                    shader.geometry_in
+                ]
         elif shader_type == GL.GL_FRAGMENT_SHADER:
             self.fragment_shader.compile(file_name)
             shader = self.fragment_shader
 
         self._attributes_info.update(shader.attributes_info)
         ShaderProgram.__update_dict(self._uniforms_info, shader.uniforms_info)
-        ShaderProgram.__update_dict(self._uniform_blocks_info, shader.uniform_blocks_info)
-        ShaderProgram.__update_dict(self._shader_storage_blocks_info, shader.shader_storage_blocks_info)
+        ShaderProgram.__update_dict(
+            self._uniform_blocks_info, shader.uniform_blocks_info
+        )
+        ShaderProgram.__update_dict(
+            self._shader_storage_blocks_info, shader.shader_storage_blocks_info
+        )
         self._structs_info.update(shader.structs_info)
         self._outs_info.update(shader.outs_info)
         self._is_linked = False
@@ -244,13 +271,17 @@ class ShaderProgram(GPUProgram):
             GL.glAttachShader(self._id, self.tess_eval_shader._id)
         GL.glAttachShader(self._id, self.fragment_shader._id)
 
-        related_files = "\n  " + "\n  ".join([printable_path(file_name) for file_name in self.related_files])
+        related_files = "\n  " + "\n  ".join(
+            [printable_path(file_name) for file_name in self.related_files]
+        )
         if GlassConfig.print:
             print(f"linking program: {related_files}")
 
-        GL.glProgramParameteri(self._id, GL.GL_PROGRAM_BINARY_RETRIEVABLE_HINT, GL.GL_TRUE)
+        GL.glProgramParameteri(
+            self._id, GL.GL_PROGRAM_BINARY_RETRIEVABLE_HINT, GL.GL_TRUE
+        )
         GL.glLinkProgram(self._id)
-        
+
         message_bytes = GL.glGetProgramInfoLog(self._id)
         message = message_bytes
         if isinstance(message_bytes, bytes):
@@ -258,29 +289,37 @@ class ShaderProgram(GPUProgram):
 
         error_messages, warning_messages = self._format_error_warning(message)
         if warning_messages and GlassConfig.warning:
-            warning_message = f"Warning when linking following files:{related_files}\n" + \
-                              "\n".join(warning_messages)
+            warning_message = (
+                f"Warning when linking following files:{related_files}\n"
+                + "\n".join(warning_messages)
+            )
             warnings.warn(warning_message, category=LinkWarning)
 
         if error_messages:
-            error_message = f"Error when linking following files:{related_files}\n" + \
-                            "\n".join(error_messages)
+            error_message = (
+                f"Error when linking following files:{related_files}\n"
+                + "\n".join(error_messages)
+            )
             raise LinkError(error_message)
-        
+
         status = GL.glGetProgramiv(self._id, GL.GL_LINK_STATUS)
         if status != GL.GL_TRUE:
             raise LinkError(message)
-        
+
         saved = False
         try:
-            binary_length = int(GL.glGetProgramiv(self._id, GL.GL_PROGRAM_BINARY_LENGTH))
+            binary_length = int(
+                GL.glGetProgramiv(self._id, GL.GL_PROGRAM_BINARY_LENGTH)
+            )
             length = ctypes.pointer(GL.GLsizei())
             binary_format = ctypes.pointer(GL.GLenum())
             binary_data = bytearray(binary_length)
-            GL.glGetProgramBinary(self._id, binary_length, length, binary_format, binary_data)
+            GL.glGetProgramBinary(
+                self._id, binary_length, length, binary_format, binary_data
+            )
             out_file = open(self._binary_file_name, "wb")
-            out_file.write(struct.pack('i', binary_format.contents.value))
-            out_file.write(struct.pack('i', binary_length))
+            out_file.write(struct.pack("i", binary_format.contents.value))
+            out_file.write(struct.pack("i", binary_length))
             out_file.write(binary_data)
             out_file.close()
             saved = True
@@ -297,7 +336,9 @@ class ShaderProgram(GPUProgram):
                 meta_info["acceptable_primitives"] = self._acceptable_primitives
                 meta_info["uniforms_info"] = self._uniforms_info
                 meta_info["uniform_blocks_info"] = self._uniform_blocks_info
-                meta_info["shader_storage_blocks_info"] = self._shader_storage_blocks_info
+                meta_info["shader_storage_blocks_info"] = (
+                    self._shader_storage_blocks_info
+                )
                 meta_info["structs_info"] = self._structs_info
                 meta_info["outs_info"] = self._outs_info
                 meta_info["sampler_map"] = self._sampler_map
@@ -308,14 +349,14 @@ class ShaderProgram(GPUProgram):
                 save_var(meta_info, self._meta_file_name)
             except:
                 pass
-    
+
         if GlassConfig.print:
             print("done")
 
     def _apply(self):
         if not self._linked_but_not_applied:
             return
-        
+
         self.delete()
         self._id = GL.glCreateProgram()
         if self._id == 0:
@@ -323,8 +364,8 @@ class ShaderProgram(GPUProgram):
 
         if not self._should_relink:
             in_file = open(self._binary_file_name, "rb")
-            binary_format = struct.unpack('i', in_file.read(4))[0]
-            binary_length = struct.unpack('i', in_file.read(4))[0]
+            binary_format = struct.unpack("i", in_file.read(4))[0]
+            binary_length = struct.unpack("i", in_file.read(4))[0]
             binary_data = in_file.read(binary_length)
             in_file.close()
 
@@ -334,7 +375,7 @@ class ShaderProgram(GPUProgram):
                 status = GL.glGetProgramiv(self._id, GL.GL_LINK_STATUS)
             except:
                 status = GL.GL_FALSE
-                
+
             if GL.GL_TRUE != status:
                 self._reapply()
         else:
@@ -351,35 +392,63 @@ class ShaderProgram(GPUProgram):
         shader_should_recompile = False
 
         binary_name = os.path.basename(self.vertex_shader.file_name)
-        shaders_key = os.path.abspath(self.vertex_shader.file_name).replace("\\", "/")  + defines_key(self.vertex_shader.defines)
-        shader_should_recompile = shader_should_recompile or self.vertex_shader._should_recompile
+        shaders_key = os.path.abspath(self.vertex_shader.file_name).replace(
+            "\\", "/"
+        ) + defines_key(self.vertex_shader.defines)
+        shader_should_recompile = (
+            shader_should_recompile or self.vertex_shader._should_recompile
+        )
         if self.vertex_shader._max_modify_time > max_modify_time:
             max_modify_time = self.vertex_shader._max_modify_time
 
         if self.tess_ctrl_shader.is_compiled:
-            binary_name += ("+" + os.path.basename(self.tess_ctrl_shader.file_name))
-            shaders_key += ("+" + os.path.abspath(self.tess_ctrl_shader.file_name).replace("\\", "/") + defines_key(self.tess_ctrl_shader.defines))
-            shader_should_recompile = shader_should_recompile or self.tess_ctrl_shader._should_recompile
+            binary_name += "+" + os.path.basename(self.tess_ctrl_shader.file_name)
+            shaders_key += (
+                "+"
+                + os.path.abspath(self.tess_ctrl_shader.file_name).replace("\\", "/")
+                + defines_key(self.tess_ctrl_shader.defines)
+            )
+            shader_should_recompile = (
+                shader_should_recompile or self.tess_ctrl_shader._should_recompile
+            )
             if self.tess_ctrl_shader._max_modify_time > max_modify_time:
                 max_modify_time = self.tess_ctrl_shader._max_modify_time
 
         if self.tess_eval_shader.is_compiled:
-            binary_name += ("+" + os.path.basename(self.tess_eval_shader.file_name))
-            shaders_key += ("+" + os.path.abspath(self.tess_eval_shader.file_name).replace("\\", "/") + defines_key(self.tess_eval_shader.defines))
-            shader_should_recompile = shader_should_recompile or self.tess_eval_shader._should_recompile
+            binary_name += "+" + os.path.basename(self.tess_eval_shader.file_name)
+            shaders_key += (
+                "+"
+                + os.path.abspath(self.tess_eval_shader.file_name).replace("\\", "/")
+                + defines_key(self.tess_eval_shader.defines)
+            )
+            shader_should_recompile = (
+                shader_should_recompile or self.tess_eval_shader._should_recompile
+            )
             if self.tess_eval_shader._max_modify_time > max_modify_time:
                 max_modify_time = self.tess_eval_shader._max_modify_time
 
         if self.geometry_shader.is_compiled:
-            binary_name += ("+" + os.path.basename(self.geometry_shader.file_name))
-            shaders_key += ("+" + os.path.abspath(self.geometry_shader.file_name).replace("\\", "/") + defines_key(self.geometry_shader.defines))
-            shader_should_recompile = shader_should_recompile or self.geometry_shader._should_recompile
+            binary_name += "+" + os.path.basename(self.geometry_shader.file_name)
+            shaders_key += (
+                "+"
+                + os.path.abspath(self.geometry_shader.file_name).replace("\\", "/")
+                + defines_key(self.geometry_shader.defines)
+            )
+            shader_should_recompile = (
+                shader_should_recompile or self.geometry_shader._should_recompile
+            )
             if self.geometry_shader._max_modify_time > max_modify_time:
                 max_modify_time = self.geometry_shader._max_modify_time
 
-        binary_name += ("+" + os.path.basename(self.fragment_shader.file_name))
-        shaders_key += ("+" + os.path.abspath(self.fragment_shader.file_name).replace("\\", "/") + defines_key(self.fragment_shader.defines))
-        shader_should_recompile = shader_should_recompile or self.fragment_shader._should_recompile
+        binary_name += "+" + os.path.basename(self.fragment_shader.file_name)
+        shaders_key += (
+            "+"
+            + os.path.abspath(self.fragment_shader.file_name).replace("\\", "/")
+            + defines_key(self.fragment_shader.defines)
+        )
+        shader_should_recompile = (
+            shader_should_recompile or self.fragment_shader._should_recompile
+        )
         if self.fragment_shader._max_modify_time > max_modify_time:
             max_modify_time = self.fragment_shader._max_modify_time
 
@@ -389,13 +458,16 @@ class ShaderProgram(GPUProgram):
 
         bin_mtime = modify_time(self._binary_file_name)
         meta_mtime = modify_time(self._meta_file_name)
-        if not shader_should_recompile and \
-           bin_mtime > 0 and meta_mtime > 0 and \
-           max_modify_time < bin_mtime and \
-           max_modify_time < meta_mtime:
+        if (
+            not shader_should_recompile
+            and bin_mtime > 0
+            and meta_mtime > 0
+            and max_modify_time < bin_mtime
+            and max_modify_time < meta_mtime
+        ):
             meta_info = load_var(self._meta_file_name)
             self._attributes_info = meta_info["attributes_info"]
-            self._acceptable_primitives= meta_info["acceptable_primitives"]
+            self._acceptable_primitives = meta_info["acceptable_primitives"]
             self._uniforms_info = meta_info["uniforms_info"]
             self._uniform_blocks_info = meta_info["uniform_blocks_info"]
             self._shader_storage_blocks_info = meta_info["shader_storage_blocks_info"]
@@ -430,7 +502,9 @@ class ShaderProgram(GPUProgram):
             keys = list(self._attributes_info.keys())
             for key in keys:
                 if "location" not in self._attributes_info[key]:
-                    location = GL.glGetAttribLocation(self._id, self._attributes_info[key]["name"])
+                    location = GL.glGetAttribLocation(
+                        self._id, self._attributes_info[key]["name"]
+                    )
                     self._attributes_info[key]["location"] = location
                     self._attributes_info[location] = self._attributes_info[key]
 
@@ -448,7 +522,9 @@ class ShaderProgram(GPUProgram):
 
         if vertices is not None and vertices:
             if start_index < 0 or (start_index >= len_vertices and vertices):
-                raise IndexError("start index is out of range [0, " + str(len_vertices) + "]")
+                raise IndexError(
+                    "start index is out of range [0, " + str(len_vertices) + "]"
+                )
 
             if total is None:
                 total = len_vertices - start_index
@@ -463,7 +539,7 @@ class ShaderProgram(GPUProgram):
             total = 0
 
         return total
-    
+
     def __check_indices(self, indices, total):
         three_len_indices = 3 * len(indices)
         if not GlassConfig.debug:
@@ -491,7 +567,7 @@ class ShaderProgram(GPUProgram):
             var = uniform_var._bound_var
             if var is None:
                 continue
-            
+
             for atom_name, atom_info in Uniform._bound_vars[id(var)].items():
                 atom_value = subscript(var, atom_info["subscript_chain"])
                 self._uniform._set_atom(atom_name, atom_value)
@@ -539,15 +615,19 @@ class ShaderProgram(GPUProgram):
                     if texture_unit is None:
                         not_set_images.append(sampler_info)
                         continue
-                
+
                 access = sampler_info["access"]
                 internal_format = sampler_info["sampler"].internal_format
-                GL.glBindImageTexture(texture_unit, texture_id, 0, GL.GL_FALSE, 0, access, internal_format)
+                GL.glBindImageTexture(
+                    texture_unit, texture_id, 0, GL.GL_FALSE, 0, access, internal_format
+                )
                 ImageUnits[texture_unit] = (target_type, texture_id)
                 self_used_image_units.add(texture_unit)
 
-            if location not in self.uniform._texture_value_map or \
-               self.uniform._texture_value_map[location] != texture_unit:
+            if (
+                location not in self.uniform._texture_value_map
+                or self.uniform._texture_value_map[location] != texture_unit
+            ):
                 GL.glUniform1i(location, texture_unit)
                 self.uniform._texture_value_map[location] = texture_unit
 
@@ -560,21 +640,25 @@ class ShaderProgram(GPUProgram):
                 texture_id = 0
                 if sampler_info["sampler"] is not None:
                     texture_id = sampler_info["sampler"].id
-                
+
                 texture_unit = TextureUnits.unit_of_texture((target_type, texture_id))
                 if texture_unit is None:
                     try:
                         texture_unit = next(it_available_units)
                     except:
-                        raise RuntimeError(f"run out all {GLConfig.max_texture_units} texture units")
-                
+                        raise RuntimeError(
+                            f"run out all {GLConfig.max_texture_units} texture units"
+                        )
+
                 target_type = sampler_info["target_type"]
                 GLConfig.active_texture_unit = texture_unit
                 GL.glBindTexture(target_type, texture_id)
                 TextureUnits[texture_unit] = (target_type, texture_id)
 
-                if location not in self.uniform._texture_value_map or \
-                   self.uniform._texture_value_map[location] != texture_unit:
+                if (
+                    location not in self.uniform._texture_value_map
+                    or self.uniform._texture_value_map[location] != texture_unit
+                ):
                     GL.glUniform1i(location, texture_unit)
                     self.uniform._texture_value_map[location] = texture_unit
 
@@ -590,61 +674,95 @@ class ShaderProgram(GPUProgram):
                 try:
                     texture_unit = next(it_available_units)
                 except:
-                    raise RuntimeError(f"run out all {GLConfig.max_image_units} image units")
+                    raise RuntimeError(
+                        f"run out all {GLConfig.max_image_units} image units"
+                    )
                 target_type = sampler_info["target_type"]
                 access = sampler_info["access"]
                 internal_format = sampler_info["sampler"].internal_format
-                GL.glBindImageTexture(texture_unit, texture_id, 0, False, 0, access, internal_format)
+                GL.glBindImageTexture(
+                    texture_unit, texture_id, 0, False, 0, access, internal_format
+                )
                 ImageUnits[texture_unit] = (target_type, texture_id)
 
-                if location not in self.uniform._texture_value_map or \
-                   self.uniform._texture_value_map[location] != texture_unit:
+                if (
+                    location not in self.uniform._texture_value_map
+                    or self.uniform._texture_value_map[location] != texture_unit
+                ):
                     GL.glUniform1i(location, texture_unit)
                     self.uniform._texture_value_map[location] = texture_unit
 
     def __check_not_set_uniforms(self):
-        if not self._uniform_not_set_warning or \
-           not GlassConfig.debug or \
-           not GlassConfig.warning:
+        if (
+            not self._uniform_not_set_warning
+            or not GlassConfig.debug
+            or not GlassConfig.warning
+        ):
             return
 
         not_set_uniforms = []
         for name, uniform_info in self._uniform_map.items():
-            if not uniform_info["atoms"] and "location" not in uniform_info and \
-               name not in self._uniform._atom_value_map:
+            if (
+                not uniform_info["atoms"]
+                and "location" not in uniform_info
+                and name not in self._uniform._atom_value_map
+            ):
                 location = GL.glGetUniformLocation(self._id, name)
                 uniform_info["location"] = location
                 if location != -1:
                     not_set_uniforms.append(name)
-                    
+
         if not_set_uniforms:
             warning_message = "in shader program:\n  "
             warning_message += "\n  ".join(self.related_files)
             warning_message += "\n"
             if len(not_set_uniforms) == 1:
-                warning_message += f"uniform variable '{not_set_uniforms[0]}' is not set but used"
+                warning_message += (
+                    f"uniform variable '{not_set_uniforms[0]}' is not set but used"
+                )
             else:
                 warning_message += "following uniform variables are not set but used:\n"
                 warning_message += "\n".join(not_set_uniforms)
-                
+
             warnings.warn(warning_message, category=RuntimeWarning)
 
-    def __preprocess_before_draw(self, primitive_type, vertices, indices, instances, vao, start_index, total, times, is_patch):
+    def __preprocess_before_draw(
+        self,
+        primitive_type,
+        vertices,
+        indices,
+        instances,
+        vao,
+        start_index,
+        total,
+        times,
+        is_patch,
+    ):
         if GlassConfig.debug:
             if is_patch:
                 if not self.tess_ctrl_shader.is_compiled:
-                    raise RuntimeError("only shader program that with a tessilation shader can use draw_patches")
+                    raise RuntimeError(
+                        "only shader program that with a tessilation shader can use draw_patches"
+                    )
 
                 if self._patch_vertices == 0:
-                    raise RuntimeError("patch_vertices is not set before call draw_patches")
+                    raise RuntimeError(
+                        "patch_vertices is not set before call draw_patches"
+                    )
             else:
                 if self.tess_ctrl_shader.is_compiled:
-                    raise RuntimeError("shader program with a tessilation shader can only use draw_patches")
-        
-            if primitive_type is not None and \
-               self._acceptable_primitives and \
-               primitive_type not in self._acceptable_primitives:
-                raise RuntimeError(f"geometry shader {self.geometry_shader.file_name}\nonly accept: {self._acceptable_primitives}, but {primitive_type.__repr__()} was given")
+                    raise RuntimeError(
+                        "shader program with a tessilation shader can only use draw_patches"
+                    )
+
+            if (
+                primitive_type is not None
+                and self._acceptable_primitives
+                and primitive_type not in self._acceptable_primitives
+            ):
+                raise RuntimeError(
+                    f"geometry shader {self.geometry_shader.file_name}\nonly accept: {self._acceptable_primitives}, but {primitive_type.__repr__()} was given"
+                )
 
         if vertices is not None and indices is None:
             total = self.__check_vertices(vertices, start_index, total)
@@ -689,7 +807,7 @@ class ShaderProgram(GPUProgram):
 
     @patch_vertices.setter
     @checktype
-    def patch_vertices(self, value:int):
+    def patch_vertices(self, value: int):
         self._patch_vertices = value
 
     @staticmethod
@@ -737,31 +855,31 @@ class ShaderProgram(GPUProgram):
         current_context = GLConfig.buffered_current_context
         if current_context not in ShaderProgram.__accum_draw_calls:
             return 0
-        
+
         return ShaderProgram.__accum_draw_calls[current_context]
-    
+
     @staticmethod
     def accum_draw_points():
         current_context = GLConfig.buffered_current_context
         if current_context not in ShaderProgram.__accum_draw_points:
             return 0
-        
+
         return ShaderProgram.__accum_draw_points[current_context]
-    
+
     @staticmethod
     def accum_draw_lines():
         current_context = GLConfig.buffered_current_context
         if current_context not in ShaderProgram.__accum_draw_lines:
             return 0
-        
+
         return ShaderProgram.__accum_draw_lines[current_context]
-    
+
     @staticmethod
     def accum_draw_meshes():
         current_context = GLConfig.buffered_current_context
         if current_context not in ShaderProgram.__accum_draw_meshes:
             return 0
-        
+
         return ShaderProgram.__accum_draw_meshes[current_context]
 
     @staticmethod
@@ -769,20 +887,25 @@ class ShaderProgram(GPUProgram):
         current_context = GLConfig.buffered_current_context
         if current_context not in ShaderProgram.__accum_draw_patches:
             return 0
-        
+
         return ShaderProgram.__accum_draw_patches[current_context]
 
-    def draw_patches(self,
-          vertices:Vertices=None, indices:Indices=None, instances:Instances=None,
-          vao:VAO=None,
-          start_index:int=0, total:int=None, times:int=None):
+    def draw_patches(
+        self,
+        vertices: Vertices = None,
+        indices: Indices = None,
+        instances: Instances = None,
+        vao: VAO = None,
+        start_index: int = 0,
+        total: int = None,
+        times: int = None,
+    ):
 
         total, times = self.__preprocess_before_draw(
-            None, vertices, indices, instances, vao,
-            start_index, total, times, True)
-        
-        if (total is not None and total <= 0) or \
-           (times is not None and times <= 0):
+            None, vertices, indices, instances, vao, start_index, total, times, True
+        )
+
+        if (total is not None and total <= 0) or (times is not None and times <= 0):
             return
 
         GL.glPatchParameteri(GL.GL_PATCH_VERTICES, self._patch_vertices)
@@ -792,7 +915,9 @@ class ShaderProgram(GPUProgram):
             if times is None:
                 GL.glDrawElements(GL.GL_PATCHES, total, GL.GL_UNSIGNED_INT, None)
             else:
-                GL.glDrawElementsInstanced(GL.GL_PATCHES, total, GL.GL_UNSIGNED_INT, None, times)
+                GL.glDrawElementsInstanced(
+                    GL.GL_PATCHES, total, GL.GL_UNSIGNED_INT, None, times
+                )
         else:
             if total is None:
                 total = self._patch_vertices
@@ -804,26 +929,41 @@ class ShaderProgram(GPUProgram):
         self.__increase_draw_patches()
         self.__increase_draw_calls()
 
-    def draw_triangles(self,
-            vertices:Vertices=None, indices:Indices=None, instances:Instances=None,
-            vao:VAO=None,
-            primitive_type:GLInfo.triangle_types=GL.GL_TRIANGLES,
-            start_index:int=0, total:int=None, times:int=None):
+    def draw_triangles(
+        self,
+        vertices: Vertices = None,
+        indices: Indices = None,
+        instances: Instances = None,
+        vao: VAO = None,
+        primitive_type: GLInfo.triangle_types = GL.GL_TRIANGLES,
+        start_index: int = 0,
+        total: int = None,
+        times: int = None,
+    ):
 
         total, times = self.__preprocess_before_draw(
-            primitive_type, vertices, indices, instances, vao,
-            start_index, total, times, False)
-        
-        if (total is not None and total <= 0) or \
-           (times is not None and times <= 0):
+            primitive_type,
+            vertices,
+            indices,
+            instances,
+            vao,
+            start_index,
+            total,
+            times,
+            False,
+        )
+
+        if (total is not None and total <= 0) or (times is not None and times <= 0):
             return
-        
+
         self.use()
         if indices is not None:
             if times is None:
                 GL.glDrawElements(primitive_type, total, GL.GL_UNSIGNED_INT, None)
             else:
-                GL.glDrawElementsInstanced(primitive_type, total, GL.GL_UNSIGNED_INT, None, times)
+                GL.glDrawElementsInstanced(
+                    primitive_type, total, GL.GL_UNSIGNED_INT, None, times
+                )
         else:
             if times is None:
                 GL.glDrawArrays(primitive_type, start_index, total)
@@ -833,19 +973,31 @@ class ShaderProgram(GPUProgram):
         self.__increase_draw_meshes()
         self.__increase_draw_calls()
 
-    def draw_points(self,
-        vertices:Vertices=None, instances:Instances=None,
-        vao:VAO=None,
-        start_index:int=0, total:int=None, times:int=None):
+    def draw_points(
+        self,
+        vertices: Vertices = None,
+        instances: Instances = None,
+        vao: VAO = None,
+        start_index: int = 0,
+        total: int = None,
+        times: int = None,
+    ):
 
         total, times = self.__preprocess_before_draw(
-            GL.GL_POINTS, vertices, None, instances, vao,
-            start_index, total, times, False)
-        
-        if (total is not None and total <= 0) or \
-           (times is not None and times <= 0):
+            GL.GL_POINTS,
+            vertices,
+            None,
+            instances,
+            vao,
+            start_index,
+            total,
+            times,
+            False,
+        )
+
+        if (total is not None and total <= 0) or (times is not None and times <= 0):
             return
-        
+
         GL.glEnable(GL.GL_VERTEX_PROGRAM_POINT_SIZE)
 
         self.use()
@@ -857,26 +1009,41 @@ class ShaderProgram(GPUProgram):
         self.__increase_draw_points()
         self.__increase_draw_calls()
 
-    def draw_lines(self,
-        vertices:Vertices=None, indices:Indices=None, instances:Instances=None,
-        vao:VAO=None,
-        primitive_type:GLInfo.line_types=GL.GL_LINE_STRIP,
-        start_index:int=0, total:int=None, times:int=None):
+    def draw_lines(
+        self,
+        vertices: Vertices = None,
+        indices: Indices = None,
+        instances: Instances = None,
+        vao: VAO = None,
+        primitive_type: GLInfo.line_types = GL.GL_LINE_STRIP,
+        start_index: int = 0,
+        total: int = None,
+        times: int = None,
+    ):
 
         total, times = self.__preprocess_before_draw(
-            primitive_type, vertices, indices, instances, vao,
-            start_index, total, times, False)
-        
-        if (total is not None and total <= 0) or \
-           (times is not None and times <= 0):
+            primitive_type,
+            vertices,
+            indices,
+            instances,
+            vao,
+            start_index,
+            total,
+            times,
+            False,
+        )
+
+        if (total is not None and total <= 0) or (times is not None and times <= 0):
             return
-    
+
         self.use()
         if indices is not None:
             if times is None:
                 GL.glDrawElements(primitive_type, total, GL.GL_UNSIGNED_INT, None)
             else:
-                GL.glDrawElementsInstanced(primitive_type, total, GL.GL_UNSIGNED_INT, None, times)
+                GL.glDrawElementsInstanced(
+                    primitive_type, total, GL.GL_UNSIGNED_INT, None, times
+                )
         else:
             if times is None:
                 GL.glDrawArrays(primitive_type, start_index, total)

@@ -15,6 +15,7 @@ from glass import Instances
 import glm
 import time
 
+
 class Scene:
 
     def __init__(self):
@@ -35,10 +36,10 @@ class Scene:
         self._should_update_env_maps = False
         self._should_update_depth_maps = False
 
-    def add(self, scene_node:SceneNode)->None:
+    def add(self, scene_node: SceneNode) -> None:
         self._root.add_child(scene_node)
 
-    def remove(self, scene_node:SceneNode)->None:
+    def remove(self, scene_node: SceneNode) -> None:
         self._root.remove_child(scene_node)
 
     @property
@@ -46,13 +47,13 @@ class Scene:
         return self._root
 
     @property
-    def background(self)->Background:
+    def background(self) -> Background:
         return self._background
 
     @property
     def skybox(self):
         return self._background.skybox
-    
+
     @skybox.setter
     def skybox(self, skybox):
         self._background.skybox = skybox
@@ -60,7 +61,7 @@ class Scene:
     @property
     def skydome(self):
         return self._background.skydome
-    
+
     @skydome.setter
     def skydome(self, skydome):
         self._background.skydome = skydome
@@ -69,7 +70,7 @@ class Scene:
     def fog(self):
         return self._fog
 
-    def __update_env_maps(self, scene_node:SceneNode=None):
+    def __update_env_maps(self, scene_node: SceneNode = None):
         if scene_node is None:
             scene_node = self._root
 
@@ -98,14 +99,16 @@ class Scene:
         if success:
             self._spot_lights.dirty = True
 
-    def __clear_dirty(self, scene_node:SceneNode=None):
+    def __clear_dirty(self, scene_node: SceneNode = None):
         if scene_node is None:
             scene_node = self._root
 
-        if self not in scene_node._transform_dirty and \
-           self not in scene_node._children_transform_dirty:
+        if (
+            self not in scene_node._transform_dirty
+            and self not in scene_node._children_transform_dirty
+        ):
             return
-        
+
         if self in scene_node._transform_dirty:
             scene_node._transform_dirty.remove(self)
 
@@ -113,20 +116,28 @@ class Scene:
             for child in scene_node._children_transform_dirty[self]:
                 self.__clear_dirty(child)
             del scene_node._children_transform_dirty[self]
-    
-    def __trav(self, scene_node:SceneNode,
-               current_quat:glm.quat,
-               current_mat:glm.mat4,
-               current_path:str):
-        
-        if self not in self._root._transform_dirty and \
-           self not in self._root._children_transform_dirty:
+
+    def __trav(
+        self,
+        scene_node: SceneNode,
+        current_quat: glm.quat,
+        current_mat: glm.mat4,
+        current_path: str,
+    ):
+
+        if (
+            self not in self._root._transform_dirty
+            and self not in self._root._children_transform_dirty
+        ):
             return
 
         new_quat = current_quat * scene_node.orientation
-        new_mat = current_mat * translate_to_mat4(scene_node.position) * \
-                                quat_to_mat4(scene_node.orientation) * \
-                                scale_to_mat4(scene_node.scale)
+        new_mat = (
+            current_mat
+            * translate_to_mat4(scene_node.position)
+            * quat_to_mat4(scene_node.orientation)
+            * scale_to_mat4(scene_node.scale)
+        )
         new_path = current_path + "/" + scene_node.name
 
         if self in scene_node._transform_dirty:
@@ -138,9 +149,15 @@ class Scene:
                 if new_path not in self._all_meshes[mesh]:
                     self._all_meshes[mesh][new_path] = AffineTransform()
 
-                self._all_meshes[mesh][new_path]["affine_transform_row0"] = glm.vec4(new_mat[0][0], new_mat[1][0], new_mat[2][0], new_mat[3][0])
-                self._all_meshes[mesh][new_path]["affine_transform_row1"] = glm.vec4(new_mat[0][1], new_mat[1][1], new_mat[2][1], new_mat[3][1])
-                self._all_meshes[mesh][new_path]["affine_transform_row2"] = glm.vec4(new_mat[0][2], new_mat[1][2], new_mat[2][2], new_mat[3][2])
+                self._all_meshes[mesh][new_path]["affine_transform_row0"] = glm.vec4(
+                    new_mat[0][0], new_mat[1][0], new_mat[2][0], new_mat[3][0]
+                )
+                self._all_meshes[mesh][new_path]["affine_transform_row1"] = glm.vec4(
+                    new_mat[0][1], new_mat[1][1], new_mat[2][1], new_mat[3][1]
+                )
+                self._all_meshes[mesh][new_path]["affine_transform_row2"] = glm.vec4(
+                    new_mat[0][2], new_mat[1][2], new_mat[2][2], new_mat[3][2]
+                )
                 self.__anything_changed = True
             elif isinstance(scene_node, SpotLight):
                 spot_light = None
@@ -196,10 +213,12 @@ class Scene:
                 self.__trav(child, new_quat, new_mat, new_path)
 
     def __collect_render_infos(self):
-        if self not in self._root._transform_dirty and \
-           self not in self._root._children_transform_dirty:
+        if (
+            self not in self._root._transform_dirty
+            and self not in self._root._children_transform_dirty
+        ):
             return
-        
+
         self.__trav(self._root, glm.quat(), glm.mat4(), "")
         if self.__anything_changed:
             self.__update_env_maps()
@@ -230,28 +249,28 @@ class Scene:
     def dir_lights(self):
         self.__collect_render_infos()
         return self._dir_lights
-    
+
     @property
     def point_lights(self):
         self.__collect_render_infos()
         return self._point_lights
-    
+
     @property
     def spot_lights(self):
         self.__collect_render_infos()
         return self._spot_lights
-    
+
     @property
     def all_meshes(self):
         self.__collect_render_infos()
         return self._all_meshes
-    
-    def generate_meshes(self, seconds:float=0.01):
+
+    def generate_meshes(self, seconds: float = 0.01):
         generating_meshes = set()
         for mesh in self.all_meshes.keys():
             if mesh.is_generating:
                 generating_meshes.add(mesh)
-        
+
         if not generating_meshes:
             return False
 
@@ -261,7 +280,7 @@ class Scene:
         start_time = time.time()
         overtime = False
         while True:
-            for mesh in (generating_meshes - self._last_generated_meshes):
+            for mesh in generating_meshes - self._last_generated_meshes:
                 mesh.generate()
                 current_time = time.time()
                 self._last_generated_meshes.add(mesh)
@@ -272,12 +291,12 @@ class Scene:
 
             if overtime:
                 break
-            
+
             self._last_generated_meshes.clear()
-        
+
         self.__anything_changed = True
         return True
-    
+
     @staticmethod
     def __remove_path_prefix(instance_map, path_str):
         if isinstance(instance_map, dict):
@@ -287,7 +306,7 @@ class Scene:
                 for key in instances.keys():
                     if key == path_str or key.starts_with(path_str + "/"):
                         should_remove_keys.append(key)
-                
+
                 if len(should_remove_keys) == len(instances):
                     should_remove_meshes.append(mesh)
                 else:
@@ -307,7 +326,7 @@ class Scene:
                 lights[key].before_del()
                 del lights[key]
 
-    def _remove_paths_prefix(self, paths_str:set):
+    def _remove_paths_prefix(self, paths_str: set):
         for path_str in paths_str:
             Scene.__remove_path_prefix(self._all_meshes, path_str)
             Scene.__remove_path_prefix(self._dir_lights, path_str)
