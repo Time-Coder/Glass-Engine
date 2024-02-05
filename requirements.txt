@@ -1,5 +1,4 @@
 PyOpenGL
-PyOpenGL_accelerate
 tree-sitter
 PyGLM
 numpy
@@ -10,11 +9,11 @@ requests
 chardet
 freetype-py
 pytweening
-build
 setuptools
-twine
 wheel
-pybind11
-pyflakes
-pyinstaller
 auditwheel
+twine
+pyinstaller
+pyflakes
+pycodestyle
+black

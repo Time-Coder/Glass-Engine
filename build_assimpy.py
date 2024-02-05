@@ -29,6 +29,7 @@ with open("MANIFEST.in", "w") as out_file:
 include assimpy/README_PYPI.md
 include assimpy/assimpy_ext.h
 include assimpy/assimp.zip
+include assimpy/pybind11.zip
 """)
 
 subprocess.call([sys.executable, "setup.py", "sdist", "bdist_wheel"])

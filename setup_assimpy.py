@@ -1,16 +1,7 @@
 import setuptools
-import os
 
 import platform
 import zipfile
-
-try:
-    from pybind11.setup_helpers import Pybind11Extension
-    import pybind11
-    has_pybind11 = True
-except ImportError:
-    from setuptools import Extension as Pybind11Extension
-    has_pybind11 = False
 
 zip_file = zipfile.ZipFile("assimpy/assimp.zip")
 zip_file.extractall("assimpy/assimp")
@@ -22,20 +13,12 @@ machine = platform.machine()
 plat_sys = platform.system()
 bits = platform.architecture()[0]
 
-include_dirs = ["assimpy/assimp/include"]
-if has_pybind11:
-    include_dirs.append(os.path.dirname(os.path.abspath(pybind11.__file__)).replace("\\", "/") + "/include")
-
-ext = Pybind11Extension(
+ext = setuptools.Extension(
     name="assimpy_ext",
     sources=sorted(["assimpy/assimpy_ext.cpp", "assimpy/module.cpp"]),
-    include_dirs=["assimpy", "assimpy/assimp/include"],
-    library_dirs=[
-        f"assimpy/assimp/lib/{machine}/{plat_sys}/{bits}"
-    ],
-    libraries=[
-        "assimp", "zlibstatic"
-    ],
+    include_dirs=["assimpy/assimp/include", "assimpy/pybind11/include"],
+    library_dirs=[f"assimpy/assimp/lib/{machine}/{plat_sys}/{bits}"],
+    libraries=["assimp", "zlibstatic"],
     package_dir={'assimpy': 'assimpy'}
 )
 
@@ -68,8 +51,6 @@ setuptools.setup(
     package_data={
         'assimpy': extra_files,
     },
-    setup_requires=['pybind11'],
-    install_requires=['pybind11'],
     ext_modules=ext_modules,
     entry_points={'pyinstaller40': ['hook-dirs = assimpy.__pyinstaller:get_hook_dirs']}
 )
