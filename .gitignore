@@ -15,3 +15,5 @@ setup.py
 MANIFEST.in
 .python-version
 .DS_Store
+assimp/
+pybind11/

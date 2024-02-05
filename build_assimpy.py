@@ -28,10 +28,10 @@ with open("MANIFEST.in", "w") as out_file:
 """include assimpy/LICENSE
 include assimpy/README_PYPI.md
 include assimpy/assimpy_ext.h
-recursive-include assimpy/assimp *
+include assimpy/assimp.zip
 """)
 
-subprocess.call([sys.executable, "-m", "build", "--config-setting=-i", "--config-setting=https://pypi.tuna.tsinghua.edu.cn/simple"])
+subprocess.call([sys.executable, "setup.py", "sdist", "bdist_wheel"])
 
 with open("README_glass_engine.rst", "r", encoding="utf-8") as in_file:
     content = in_file.read()

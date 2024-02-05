@@ -2,41 +2,48 @@ import setuptools
 import os
 
 import platform
+import zipfile
 
 try:
+    from pybind11.setup_helpers import Pybind11Extension
     import pybind11
-except:
-    import sys
-    import subprocess
-    subprocess.call([sys.executable, "-m", "pip", "install", "pybind11"])
-    import pybind11
+    has_pybind11 = True
+except ImportError:
+    from setuptools import Extension as Pybind11Extension
+    has_pybind11 = False
 
-from pybind11.setup_helpers import Pybind11Extension
+zip_file = zipfile.ZipFile("assimpy/assimp.zip")
+zip_file.extractall("assimpy/assimp")
+
+zip_file = zipfile.ZipFile("assimpy/pybind11.zip")
+zip_file.extractall("assimpy/pybind11")
 
 machine = platform.machine()
 plat_sys = platform.system()
 bits = platform.architecture()[0]
 
+include_dirs = ["assimpy/assimp/include"]
+if has_pybind11:
+    include_dirs.append(os.path.dirname(os.path.abspath(pybind11.__file__)).replace("\\", "/") + "/include")
+
 ext = Pybind11Extension(
     name="assimpy_ext",
-    sources=sorted(["assimpy/assimpy_ext.cpp", "assimpy/module.cpp"]),  # Sort source files for reproducibility
-    include_dirs=[
-        os.path.dirname(os.path.abspath(pybind11.__file__)).replace("\\", "/") + "/include",
-        "assimpy/assimp/include"
-    ],
+    sources=sorted(["assimpy/assimpy_ext.cpp", "assimpy/module.cpp"]),
+    include_dirs=["assimpy", "assimpy/assimp/include"],
     library_dirs=[
         f"assimpy/assimp/lib/{machine}/{plat_sys}/{bits}"
     ],
     libraries=[
         "assimp", "zlibstatic"
-    ]
+    ],
+    package_dir={'assimpy': 'assimpy'}
 )
 
 if plat_sys != "Windows":
     ext.extra_compile_args = ["-std=c++11"]
 
 ext_modules = [ext]
-extra_files = ["LICENSE", "assimp/LICENSE"]
+extra_files = ["LICENSE"]
 
 with open("assimpy/README_PYPI.md", "r", encoding='utf-8') as in_file:
     long_description = in_file.read()
@@ -61,6 +68,8 @@ setuptools.setup(
     package_data={
         'assimpy': extra_files,
     },
+    setup_requires=['pybind11'],
+    install_requires=['pybind11'],
     ext_modules=ext_modules,
     entry_points={'pyinstaller40': ['hook-dirs = assimpy.__pyinstaller:get_hook_dirs']}
 )
