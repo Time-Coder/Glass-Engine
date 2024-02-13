@@ -80,6 +80,8 @@ class GlassEngineConfig:
         self._dict["USE_SHADING_MODEL_FRESNEL"] = False
         self._dict["USE_BINDLESS_TEXTURE"] = False
 
+        self.is_first_shown: bool = False
+
     def __getitem__(self, name: str):
         return self._dict[name]
 

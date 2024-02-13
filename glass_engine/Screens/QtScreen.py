@@ -1,5 +1,6 @@
 from ..Manipulators.Manipulator import Manipulator
 from ..Renderers.Renderer import Renderer
+from ..GlassEngineConfig import GlassEngineConfig
 from ..PostProcessEffects import (
     PostProcessEffects,
     BloomEffect,
@@ -11,7 +12,7 @@ from ..PostProcessEffects import (
 )
 from ..SlideAverageFilter import SlideAverageFilter
 from ..VideoRecorder import VideoRecorder, convert_to_image
-from ..Animations import Animation
+from ..Animations import Animation, SequentialAnimation, ParallelAnimation
 
 from glass import (
     ShaderProgram,
@@ -246,6 +247,8 @@ Try to change default graphics card of python.exe to high performance one.
 """
         warnings.warn(warning_message)
 
+    
+
     self.makeCurrent()
 
     if self.camera.scene is None:
@@ -340,6 +343,12 @@ def paintGL(self) -> None:
 
     self._calc_fps()
     self.frame_ended.emit()
+
+    if not GlassEngineConfig.is_first_shown:
+        GlassEngineConfig.is_first_shown = True
+        for animation in Animation.all_instances:
+            if animation._wait_to_start:
+                animation._start()
 
     if should_update_scene or should_update_PPEs or Animation.has_valid():
         if should_update_scene:

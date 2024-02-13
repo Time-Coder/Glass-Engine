@@ -9,14 +9,12 @@ class MetaInstancesRecorder(type):
 
     @property
     def all_instances(cls):
-        if cls not in MetaInstancesRecorder._all_instances:
-            MetaInstancesRecorder._all_instances[cls] = WeakSet()
+        all_instances = WeakSet()
+        for key, _set in MetaInstancesRecorder._all_instances.items():
+            if issubclass(key, cls):
+                all_instances.update(_set)
 
-        return MetaInstancesRecorder._all_instances[cls]
-
-    @property
-    def all_instances_copy(cls):
-        return copy.deepcopy(cls.all_instances)
+        return all_instances
 
     @staticmethod
     def init(func):

@@ -1,7 +1,7 @@
 from .GroupAnimation import GroupAnimation
 
 
-class SequentialAnimation(GroupAnimation):
+class ParallelAnimation(GroupAnimation):
 
     def __init__(self, *animations, **kwargs):
         GroupAnimation.__init__(self, *animations, **kwargs)
@@ -10,7 +10,9 @@ class SequentialAnimation(GroupAnimation):
     def duration(self):
         duration = 0
         for animation in self.animations:
-            duration += animation.total_duration
+            current_total_duration = animation.total_duration
+            if current_total_duration >= duration:
+                duration = current_total_duration
 
         return duration
 
@@ -35,21 +37,15 @@ class SequentialAnimation(GroupAnimation):
 
         reduce_t = progress * self_duration
 
-        accum_time = 0
-        next_accum_time = 0
-        active_animation = None
+        has_active_animation = False
         for animation in self.animations:
-            next_accum_time += animation.total_duration
-            if  accum_time <= reduce_t < next_accum_time:
-                active_animation = animation
-                break
-            accum_time = next_accum_time
+            if  reduce_t < animation.total_duration:
+                animation._goto(reduce_t)
+                has_active_animation = True
 
-        if active_animation is None:
+        if not has_active_animation:
             self._running = False
             return
-        
-        active_animation._goto(reduce_t - accum_time)
 
         if self.running_callback is not None:
             self.running_callback(t)
