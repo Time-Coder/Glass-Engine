@@ -42,7 +42,7 @@ class Chronoscope:
         self._end_time += duration
         self._status = Chronoscope.Status.Paused
 
-    def goto(self, t: float):
+    def go_to(self, t: float):
         self._segment_start_time = time.perf_counter()
         self._segment_speed = self._speed
         self._end_time = t

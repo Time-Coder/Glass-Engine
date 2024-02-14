@@ -6,22 +6,26 @@ class SequentialAnimation(GroupAnimation):
     def __init__(self, *animations, **kwargs):
         GroupAnimation.__init__(self, *animations, **kwargs)
 
-    @property
-    def duration(self):
-        duration = 0
+    def _update_duration(self):
+        if not self._total_duration_dirty:
+            return
+        
+        self._duration = 0
         for animation in self.animations:
-            duration += animation.total_duration
+            self._duration += animation.total_duration
 
-        return duration
+        self._total_duration = self._duration * self.loops
+        if self._go_back:
+            self._total_duration *= 2
 
-    def _goto(self, t: float):
-        end_time = self.total_duration
-        if t > end_time:
-            t = end_time
+        self._total_duration_dirty = False
+
+    def _go_to(self, t: float):
+        if t > self.total_duration:
+            t = self.total_duration
             self._running = False
 
-        self_duration = self.duration
-        progress = t / self_duration
+        progress = t / self.duration
         int_progress = int(progress)
         if progress != int_progress:
             progress -= int_progress
@@ -33,7 +37,7 @@ class SequentialAnimation(GroupAnimation):
         if self.go_back and int_progress % 2 == 1:
             progress = 1 - progress
 
-        reduce_t = progress * self_duration
+        reduce_t = progress * self.duration
 
         accum_time = 0
         next_accum_time = 0
@@ -49,7 +53,7 @@ class SequentialAnimation(GroupAnimation):
             self._running = False
             return
         
-        active_animation._goto(reduce_t - accum_time)
+        active_animation._go_to(reduce_t - accum_time)
 
         if self.running_callback is not None:
             self.running_callback(t)

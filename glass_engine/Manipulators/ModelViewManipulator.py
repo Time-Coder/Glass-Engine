@@ -27,7 +27,8 @@ class ModelViewManipulator(Manipulator):
         self.__azimuth = azimuth
         self.__elevation = elevation
         self.__offset = glm.vec2(0, 0)
-        self.__sensitivity = 1
+        self.drag_sensitivity:float = 1
+        self.scroll_sensitivity:float = 1
 
     @property
     def distance(self) -> float:
@@ -61,15 +62,6 @@ class ModelViewManipulator(Manipulator):
         self.__elevation = elevation
         self.__update_camera()
         self.camera.screen.update()
-
-    @property
-    def sensitivity(self) -> float:
-        return self.__sensitivity
-
-    @sensitivity.setter
-    @checktype
-    def sensitivity(self, sensitivity: float):
-        self.__sensitivity = sensitivity
 
     def __update_camera(self):
         azimuth = self.__azimuth / 180 * math.pi
@@ -114,9 +106,9 @@ class ModelViewManipulator(Manipulator):
             self.__right_press_global_posF = global_pos
             self.__right_press_offset = self.__offset
         elif button == Manipulator.MouseButton.XButton1:
-            self.__sensitivity /= pow(2, 1 / 2)
+            self.drag_sensitivity /= pow(2, 1 / 2)
         elif button == Manipulator.MouseButton.XButton2:
-            self.__sensitivity *= pow(2, 1 / 2)
+            self.drag_sensitivity *= pow(2, 1 / 2)
 
         return False
 
@@ -150,6 +142,7 @@ class ModelViewManipulator(Manipulator):
     ) -> bool:
         if button == Manipulator.MouseButton.LeftButton:
             self.__offset = glm.vec2(0, 0)
+            self.camera.fov = 45
             self.__update_camera()
             return True
 
@@ -161,8 +154,8 @@ class ModelViewManipulator(Manipulator):
             dx = d.x
             dy = d.y
 
-            d_pitch = dy / self.camera.screen.height() * 200 * self.sensitivity
-            d_yaw = -dx / self.camera.screen.width() * 200 * self.sensitivity
+            d_pitch = dy / self.camera.screen.height() * 200 * self.drag_sensitivity
+            d_yaw = -dx / self.camera.screen.width() * 200 * self.drag_sensitivity
 
             self.__azimuth = self.__left_press_azimuth + d_yaw
             self.__elevation = self.__left_press_elevation + d_pitch
@@ -198,19 +191,15 @@ class ModelViewManipulator(Manipulator):
 
         return False
 
-    # def on_wheel_scrolled(self, angle:glm.vec2, screen_pos:glm.vec2, global_pos:glm.vec2):
-    #     if self.__is_left_pressed or self.__is_right_pressed:
-    #         return False
+    def on_wheel_scrolled(self, angle:glm.vec2, screen_pos:glm.vec2, global_pos:glm.vec2):
+        n = self.scroll_sensitivity * angle.y/120
+        scale = pow(2, n/6)
+        if self.camera.projection_mode.value == 0:
+            self.camera.fov /= scale
+        else:
+            self.camera.height /= scale
 
-    #     n = angle.y/120
-    #     scale = pow(2, n/6)
-    #     if self.camera.projection_mode.value == 0:
-    #         self.camera.fov /= scale
-    #     else:
-    #         self.camera.height /= scale
-
-    #     self.__update_camera()
-    #     return True
+        return True
 
     def on_key_pressed(self, key: Manipulator.Key) -> bool:
         if key == Manipulator.Key.Key_R:

@@ -14,9 +14,9 @@ class Animation(metaclass=MetaInstancesRecorder):
     def __init__(
         self,
         target=None,
-        attr: str = "",
-        start_value=None,
-        end_value=None,
+        property: str = "",
+        from_=None,
+        to=None,
         duration: float = 1,
         easing_curve: EasingCurve = EasingCurve.Linear,
         step: float = 0.01,
@@ -27,13 +27,15 @@ class Animation(metaclass=MetaInstancesRecorder):
         done_callback=None,
     ):
         self.target: object = target
-        self.attr: str = attr
-        self.start_value: object = start_value
-        self.end_value: object = end_value
+        self.property: str = property
+        self.from_: object = from_
+        self.to: object = to
         self._duration: float = duration
+        self._total_duration: float = 0
+        self.__total_duration_dirty: bool = True
         self.step: float = step
-        self.loops: int = loops
-        self.go_back: bool = go_back
+        self._loops: int = loops
+        self._go_back: bool = go_back
         self.start_after_show: bool = start_after_show
         self.easing_curve: EasingCurve = easing_curve
         self.running_callback = running_callback
@@ -42,6 +44,7 @@ class Animation(metaclass=MetaInstancesRecorder):
         self._timer = Chronoscope()
         self._running_thread = None
         self._wait_to_start: bool = False
+        self._parent:Animation = None
 
     @MetaInstancesRecorder.delete
     def __del__(self):
@@ -70,26 +73,22 @@ class Animation(metaclass=MetaInstancesRecorder):
         self._running = False
         if self._running_thread is not None:
             if self._running_thread.is_alive():
-                old_done_callback = self.done_callback
-                self.done_callback = None
                 self._running_thread.join()
-                self.done_callback = old_done_callback
 
             self._running_thread = None
 
         self._timer.stop()
         if stop_value is None:
-            stop_value = self.start_value
+            stop_value = self.from_
 
-        if self.target is not None and self.attr:
-            setattr(self.target, self.attr, stop_value)
+        if self.target is not None and self.property:
+            setattr(self.target, self.property, stop_value)
 
         self._wait_to_start: bool = False
 
-    def _goto(self, t: float):
-        end_time = self.total_duration
-        if t > end_time:
-            t = end_time
+    def _go_to(self, t: float):
+        if t > self.total_duration:
+            t = self.total_duration
             self._running = False
 
         progress = t / self.duration
@@ -106,31 +105,59 @@ class Animation(metaclass=MetaInstancesRecorder):
 
         mapped_progress = self.easing_curve(progress)
 
-        if self.target is not None and self.attr:
-            if self.start_value is None:
-                self.start_value = getattr(self.target, self.attr)
+        if self.target is not None and self.property:
+            if self.from_ is None:
+                self.from_ = getattr(self.target, self.property)
 
-            setattr(
-                self.target,
-                self.attr,
-                self.start_value
-                + mapped_progress * (self.end_value - self.start_value),
-            )
+            value = self.from_ + mapped_progress * (self.to - self.from_)
+            setattr(self.target, self.property, value)
 
         if self.running_callback is not None:
             self.running_callback(t)
 
-    def goto(self, t: float):
-        self._timer.goto(t)
-        self._goto(t)
+    def go_to(self, t: float):
+        self._timer.go_to(t)
+        self._go_to(t)
 
     @property
     def duration(self):
         return self._duration
     
+    @property
+    def _total_duration_dirty(self)->bool:
+        return self.__total_duration_dirty
+    
+    @_total_duration_dirty.setter
+    def _total_duration_dirty(self, dirty:bool):
+        if self.__total_duration_dirty == dirty:
+            return
+
+        self.__total_duration_dirty = dirty
+        if dirty and self._parent is not None:
+            self._parent._total_duration_dirty = True
+
     @duration.setter
     def duration(self, duration:float):
         self._duration = duration
+        self._total_duration_dirty = True
+
+    @property
+    def loops(self):
+        return self._loops
+    
+    @loops.setter
+    def loops(self, loops:int):
+        self._loops = loops
+        self._total_duration_dirty = True
+
+    @property
+    def go_back(self)->bool:
+        return self._go_back
+    
+    @go_back.setter
+    def go_back(self, go_back:bool):
+        self._go_back = go_back
+        self._total_duration_dirty = True
 
     @property
     def speed(self):
@@ -146,11 +173,14 @@ class Animation(metaclass=MetaInstancesRecorder):
 
     @property
     def total_duration(self):
-        total_duration = self.duration * self.loops
-        if self.go_back:
-            total_duration *= 2
+        if self._total_duration_dirty:
+            self._total_duration = self.duration * self.loops
+            if self.go_back:
+                self._total_duration *= 2
 
-        return total_duration
+            self._total_duration_dirty = False
+
+        return self._total_duration
 
     @status.setter
     def status(self, status):
@@ -180,16 +210,17 @@ class Animation(metaclass=MetaInstancesRecorder):
             next_time = current_time + self.step
 
             t = self._timer.time()
-            self._goto(t)
+            self._go_to(t)
 
             if self._running:
                 dt = next_time - time.perf_counter()
                 if dt > 0:
                     time.sleep(dt)
 
-        self._timer.stop()
+        t = self._timer.time()
         if self.done_callback is not None:
-            self.done_callback()
+            self.done_callback(t)
+        self._timer.stop()
 
     @classmethod
     def has_valid(cls):

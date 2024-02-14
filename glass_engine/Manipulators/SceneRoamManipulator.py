@@ -26,7 +26,8 @@ class SceneRoamManipulator(Manipulator):
         self._hide_cursor_yaw = 0
         self._hide_cursor_pitch = 0
         self._video_writer = None
-        self._moving_speed = 1
+        self.moving_speed:float = 1 # m/s
+        self.scroll_sensitivity:float = 1
 
     def on_mouse_pressed(
         self,
@@ -35,9 +36,9 @@ class SceneRoamManipulator(Manipulator):
         global_pos: glm.vec2,
     ):
         if button == Manipulator.MouseButton.XButton1:
-            self._moving_speed /= pow(2, 1 / 2)
+            self.moving_speed /= pow(2, 1 / 2)
         elif button == Manipulator.MouseButton.XButton2:
-            self._moving_speed *= pow(2, 1 / 2)
+            self.moving_speed *= pow(2, 1 / 2)
 
         if not self.camera.screen.is_cursor_hiden:
             if button == Manipulator.MouseButton.RightButton:
@@ -51,6 +52,18 @@ class SceneRoamManipulator(Manipulator):
                 self._left_press_yaw = self.camera.yaw
                 self._left_press_pitch = self.camera.pitch
                 self._left_press_camera_pos = copy.deepcopy(self.camera.position)
+
+        return False
+
+    def on_mouse_double_clicked(
+        self,
+        button: Manipulator.MouseButton,
+        screen_pos: glm.vec2,
+        global_pos: glm.vec2,
+    ) -> bool:
+        if button == Manipulator.MouseButton.LeftButton:
+            self.camera.fov = 45
+            return True
 
         return False
 
@@ -112,15 +125,15 @@ class SceneRoamManipulator(Manipulator):
 
         return False
 
-    # def on_wheel_scrolled(self, angle:glm.vec2, screen_pos:glm.vec2, global_pos:glm.vec2):
-    #     n = angle.y/120
-    #     scale = pow(2, n/6)
-    #     if self.camera.projection_mode.value == 0:
-    #         self.camera.fov /= scale
-    #     else:
-    #         self.camera.height /= scale
+    def on_wheel_scrolled(self, angle:glm.vec2, screen_pos:glm.vec2, global_pos:glm.vec2):
+        n = self.scroll_sensitivity * angle.y/120
+        scale = pow(2, n/6)
+        if self.camera.projection_mode.value == 0:
+            self.camera.fov /= scale
+        else:
+            self.camera.height /= scale
 
-    #     return True
+        return True
 
     def on_key_pressed(self, key: Manipulator.Key) -> bool:
         if key in [Manipulator.Key.Key_Enter, Manipulator.Key.Key_Return]:
@@ -165,10 +178,10 @@ class SceneRoamManipulator(Manipulator):
         if self._is_left_pressed:
             return
 
-        d = self._moving_speed / 60
+        d = self.moving_speed / 60
         fps = self.camera.screen.smooth_fps
         if fps > 0:
-            d = self._moving_speed / fps
+            d = self.moving_speed / fps
         if abs(d) < 1e-6:
             return False
 

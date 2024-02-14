@@ -7,10 +7,15 @@ class GroupAnimation(Animation):
         Animation.__init__(self, **kwargs)
         self.animations = animations
 
+    def _update_duration(self):
+        return
+
+    @property
+    def duration(self):
+        self._update_duration()
+        return self._duration
+    
     @property
     def total_duration(self):
-        total_duration = self.duration * self.loops
-        if self.go_back:
-            total_duration *= 2
-
-        return total_duration
+        self._update_duration()
+        return self._total_duration
