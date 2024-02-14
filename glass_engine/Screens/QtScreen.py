@@ -247,8 +247,6 @@ Try to change default graphics card of python.exe to high performance one.
 """
         warnings.warn(warning_message)
 
-    
-
     self.makeCurrent()
 
     if self.camera.scene is None:

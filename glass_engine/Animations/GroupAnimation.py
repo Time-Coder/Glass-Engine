@@ -14,7 +14,7 @@ class GroupAnimation(Animation):
     def duration(self):
         self._update_duration()
         return self._duration
-    
+
     @property
     def total_duration(self):
         self._update_duration()

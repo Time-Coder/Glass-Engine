@@ -26,8 +26,8 @@ class SceneRoamManipulator(Manipulator):
         self._hide_cursor_yaw = 0
         self._hide_cursor_pitch = 0
         self._video_writer = None
-        self.moving_speed:float = 1 # m/s
-        self.scroll_sensitivity:float = 1
+        self.moving_speed: float = 1  # m/s
+        self.scroll_sensitivity: float = 1
 
     def on_mouse_pressed(
         self,
@@ -125,9 +125,11 @@ class SceneRoamManipulator(Manipulator):
 
         return False
 
-    def on_wheel_scrolled(self, angle:glm.vec2, screen_pos:glm.vec2, global_pos:glm.vec2):
-        n = self.scroll_sensitivity * angle.y/120
-        scale = pow(2, n/6)
+    def on_wheel_scrolled(
+        self, angle: glm.vec2, screen_pos: glm.vec2, global_pos: glm.vec2
+    ):
+        n = self.scroll_sensitivity * angle.y / 120
+        scale = pow(2, n / 6)
         if self.camera.projection_mode.value == 0:
             self.camera.fov /= scale
         else:

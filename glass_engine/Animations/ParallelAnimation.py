@@ -9,7 +9,7 @@ class ParallelAnimation(GroupAnimation):
     def _update_duration(self):
         if not self._total_duration_dirty:
             return
-        
+
         self._duration = 0
         for animation in self.animations:
             if animation.total_duration > self._duration:
@@ -42,7 +42,7 @@ class ParallelAnimation(GroupAnimation):
 
         has_active_animation = False
         for animation in self.animations:
-            if  reduce_t < animation.total_duration:
+            if reduce_t < animation.total_duration:
                 animation._go_to(reduce_t)
                 has_active_animation = True
 

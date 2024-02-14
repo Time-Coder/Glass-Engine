@@ -72,8 +72,12 @@ class Camera(SceneNode):
         self.__near: float = 0.1
         self.__clip: float = self.__far - self.__near
         self.__height: float = 40 * 2 * self.__near * self.__tan_half_fov
-        self.__max_height: float = 40 * 2 * self.__near * math.tan(self.__max_fov/2/180*math.pi)
-        self.__min_height: float = 40 * 2 * self.__near * math.tan(self.__min_fov/2/180*math.pi)
+        self.__max_height: float = (
+            40 * 2 * self.__near * math.tan(self.__max_fov / 2 / 180 * math.pi)
+        )
+        self.__min_height: float = (
+            40 * 2 * self.__near * math.tan(self.__min_fov / 2 / 180 * math.pi)
+        )
         self.__CSM_levels: int = 5
         self.aspect_ratio: float = 1
         self.__lens: Camera.Lens = Camera.Lens()
@@ -181,7 +185,7 @@ class Camera(SceneNode):
     @property
     def max_fov(self):
         return self.__max_fov
-    
+
     @max_fov.setter
     def max_fov(self, max_fov):
         if self.__max_fov == max_fov:
@@ -189,10 +193,14 @@ class Camera(SceneNode):
 
         if max_fov < self.min_fov:
             self.__min_fov = max_fov
-            self.__min_height = 40 * 2 * self.__near * math.tan(self.__min_fov/2/180*math.pi)
-            
+            self.__min_height = (
+                40 * 2 * self.__near * math.tan(self.__min_fov / 2 / 180 * math.pi)
+            )
+
         self.__max_fov = max_fov
-        self.__max_height = 40 * 2 * self.__near * math.tan(self.__max_fov/2/180*math.pi)
+        self.__max_height = (
+            40 * 2 * self.__near * math.tan(self.__max_fov / 2 / 180 * math.pi)
+        )
 
         if self.fov > max_fov:
             self.fov = max_fov
@@ -200,7 +208,7 @@ class Camera(SceneNode):
     @property
     def min_fov(self):
         return self.__min_fov
-    
+
     @min_fov.setter
     def min_fov(self, min_fov):
         if self.__min_fov == min_fov:
@@ -208,10 +216,14 @@ class Camera(SceneNode):
 
         if min_fov > self.max_fov:
             self.__max_fov = min_fov
-            self.__max_height = 40 * 2 * self.__near * math.tan(self.__max_fov/2/180*math.pi)
+            self.__max_height = (
+                40 * 2 * self.__near * math.tan(self.__max_fov / 2 / 180 * math.pi)
+            )
 
         self.__min_fov = min_fov
-        self.__min_height = 40 * 2 * self.__near * math.tan(self.__min_fov/2/180*math.pi)
+        self.__min_height = (
+            40 * 2 * self.__near * math.tan(self.__min_fov / 2 / 180 * math.pi)
+        )
 
         if self.fov < min_fov:
             self.fov = min_fov
@@ -219,7 +231,7 @@ class Camera(SceneNode):
     @property
     def max_height(self):
         return self.__max_height
-    
+
     @max_height.setter
     def max_height(self, max_height):
         if self.__max_height == max_height:
@@ -227,10 +239,14 @@ class Camera(SceneNode):
 
         if max_height < self.min_height:
             self.__min_height = max_height
-            self.__min_fov = math.atan(self.__min_height / 80 / self.__near)/math.pi*180*2
+            self.__min_fov = (
+                math.atan(self.__min_height / 80 / self.__near) / math.pi * 180 * 2
+            )
 
         self.__max_height = max_height
-        self.__max_fov = math.atan(self.__max_height / 80 / self.__near)/math.pi*180*2
+        self.__max_fov = (
+            math.atan(self.__max_height / 80 / self.__near) / math.pi * 180 * 2
+        )
 
         if self.fov > self.__max_fov:
             self.fov = self.__max_fov
@@ -238,18 +254,22 @@ class Camera(SceneNode):
     @property
     def min_height(self):
         return self.__min_height
-    
+
     @min_height.setter
-    def min_height(self, min_height:float):
+    def min_height(self, min_height: float):
         if self.__min_height == min_height:
             return
 
         if min_height > self.max_height:
             self.__max_height = min_height
-            self.__max_fov = math.atan(self.__max_height / 80 / self.__near)/math.pi*180*2
+            self.__max_fov = (
+                math.atan(self.__max_height / 80 / self.__near) / math.pi * 180 * 2
+            )
 
         self.__min_height = min_height
-        self.__min_fov = math.atan(self.__min_height / 80 / self.__near)/math.pi*180*2
+        self.__min_fov = (
+            math.atan(self.__min_height / 80 / self.__near) / math.pi * 180 * 2
+        )
 
         if self.fov < self.__min_fov:
             self.fov = self.__min_fov
@@ -260,14 +280,19 @@ class Camera(SceneNode):
 
     @fov_x.setter
     def fov_x(self, fov_x):
-        self.fov = 2 * math.atan(math.tan(fov_x / 180 * math.pi / 2) / self.aspect) / math.pi * 180
+        self.fov = (
+            2
+            * math.atan(math.tan(fov_x / 180 * math.pi / 2) / self.aspect)
+            / math.pi
+            * 180
+        )
 
     @property
     def fov_y(self) -> float:
         return self.fov
-    
+
     @fov_y.setter
-    def fov_y(self, fov_y:float):
+    def fov_y(self, fov_y: float):
         self.fov = fov_y
 
     @property
@@ -279,8 +304,12 @@ class Camera(SceneNode):
         self.__near = near
         self.__clip = self.__far - self.__near
         self.__height = 40 * 2 * self.__near * self.__tan_half_fov
-        self.__min_height = 40 * 2 * self.__near * math.tan(self.__min_fov/180*math.pi/2)
-        self.__max_height = 40 * 2 * self.__near * math.tan(self.__max_fov/180*math.pi/2)
+        self.__min_height = (
+            40 * 2 * self.__near * math.tan(self.__min_fov / 180 * math.pi / 2)
+        )
+        self.__max_height = (
+            40 * 2 * self.__near * math.tan(self.__max_fov / 180 * math.pi / 2)
+        )
 
     @property
     def far(self) -> float:

@@ -9,7 +9,7 @@ class SequentialAnimation(GroupAnimation):
     def _update_duration(self):
         if not self._total_duration_dirty:
             return
-        
+
         self._duration = 0
         for animation in self.animations:
             self._duration += animation.total_duration
@@ -44,7 +44,7 @@ class SequentialAnimation(GroupAnimation):
         active_animation = None
         for animation in self.animations:
             next_accum_time += animation.total_duration
-            if  accum_time <= reduce_t < next_accum_time:
+            if accum_time <= reduce_t < next_accum_time:
                 active_animation = animation
                 break
             accum_time = next_accum_time
@@ -52,7 +52,7 @@ class SequentialAnimation(GroupAnimation):
         if active_animation is None:
             self._running = False
             return
-        
+
         active_animation._go_to(reduce_t - accum_time)
 
         if self.running_callback is not None:

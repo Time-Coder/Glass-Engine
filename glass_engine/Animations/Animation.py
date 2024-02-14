@@ -44,7 +44,7 @@ class Animation(metaclass=MetaInstancesRecorder):
         self._timer = Chronoscope()
         self._running_thread = None
         self._wait_to_start: bool = False
-        self._parent:Animation = None
+        self._parent: Animation = None
 
     @MetaInstancesRecorder.delete
     def __del__(self):
@@ -122,13 +122,13 @@ class Animation(metaclass=MetaInstancesRecorder):
     @property
     def duration(self):
         return self._duration
-    
+
     @property
-    def _total_duration_dirty(self)->bool:
+    def _total_duration_dirty(self) -> bool:
         return self.__total_duration_dirty
-    
+
     @_total_duration_dirty.setter
-    def _total_duration_dirty(self, dirty:bool):
+    def _total_duration_dirty(self, dirty: bool):
         if self.__total_duration_dirty == dirty:
             return
 
@@ -137,25 +137,25 @@ class Animation(metaclass=MetaInstancesRecorder):
             self._parent._total_duration_dirty = True
 
     @duration.setter
-    def duration(self, duration:float):
+    def duration(self, duration: float):
         self._duration = duration
         self._total_duration_dirty = True
 
     @property
     def loops(self):
         return self._loops
-    
+
     @loops.setter
-    def loops(self, loops:int):
+    def loops(self, loops: int):
         self._loops = loops
         self._total_duration_dirty = True
 
     @property
-    def go_back(self)->bool:
+    def go_back(self) -> bool:
         return self._go_back
-    
+
     @go_back.setter
-    def go_back(self, go_back:bool):
+    def go_back(self, go_back: bool):
         self._go_back = go_back
         self._total_duration_dirty = True
 
