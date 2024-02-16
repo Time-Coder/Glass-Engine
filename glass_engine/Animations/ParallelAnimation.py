@@ -1,17 +1,17 @@
-from .GroupAnimation import GroupAnimation
+from .AnimationGroup import AnimationGroup
 
 
-class ParallelAnimation(GroupAnimation):
+class ParallelAnimation(AnimationGroup):
 
     def __init__(self, *animations, **kwargs):
-        GroupAnimation.__init__(self, *animations, **kwargs)
+        AnimationGroup.__init__(self, *animations, **kwargs)
 
     def _update_duration(self):
         if not self._total_duration_dirty:
             return
 
         self._duration = 0
-        for animation in self.animations:
+        for animation in self:
             if animation.total_duration > self._duration:
                 self._duration = animation.total_duration
 
@@ -41,7 +41,10 @@ class ParallelAnimation(GroupAnimation):
         reduce_t = progress * self.duration
 
         has_active_animation = False
-        for animation in self.animations:
+        for animation in self:
+            if animation is None:
+                continue
+
             if reduce_t < animation.total_duration:
                 animation._go_to(reduce_t)
                 has_active_animation = True

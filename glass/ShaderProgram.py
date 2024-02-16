@@ -29,7 +29,6 @@ from .utils import (
     save_var,
     load_var,
     printable_path,
-    sanitize_filename,
 )
 from .GLInfo import GLInfo
 from .GLConfig import GLConfig
@@ -57,7 +56,6 @@ class ShaderProgram(GPUProgram):
         self.tess_ctrl_shader: TessControlShader = TessControlShader(self)
         self.tess_eval_shader: TessEvaluationShader = TessEvaluationShader(self)
 
-        self._binary_file_name: str = ""
         self._meta_file_name: str = ""
         self._patch_vertices: int = 0
         self._context: int = 0
@@ -250,17 +248,19 @@ class ShaderProgram(GPUProgram):
         )
         self._structs_info.update(shader.structs_info)
         self._outs_info.update(shader.outs_info)
+
+        self._is_collected = False
         self._is_linked = False
 
-    def _reapply(self):
-        self.vertex_shader._apply()
+    def _relink(self, binary_file_name):
+        self.vertex_shader._apply_compile()
         if self.tess_ctrl_shader.is_compiled:
-            self.tess_ctrl_shader._apply()
+            self.tess_ctrl_shader._apply_compile()
         if self.tess_eval_shader.is_compiled:
-            self.tess_eval_shader._apply()
+            self.tess_eval_shader._apply_compile()
         if self.geometry_shader.is_compiled:
-            self.geometry_shader._apply()
-        self.fragment_shader._apply()
+            self.geometry_shader._apply_compile()
+        self.fragment_shader._apply_compile()
 
         GL.glAttachShader(self._id, self.vertex_shader._id)
         if self.geometry_shader.is_compiled:
@@ -306,7 +306,6 @@ class ShaderProgram(GPUProgram):
         if status != GL.GL_TRUE:
             raise LinkError(message)
 
-        saved = False
         try:
             binary_length = int(
                 GL.glGetProgramiv(self._id, GL.GL_PROGRAM_BINARY_LENGTH)
@@ -317,44 +316,42 @@ class ShaderProgram(GPUProgram):
             GL.glGetProgramBinary(
                 self._id, binary_length, length, binary_format, binary_data
             )
-            out_file = open(self._binary_file_name, "wb")
+
+            folder_path = os.path.dirname(os.path.abspath(binary_file_name))
+            if not os.path.isdir(folder_path):
+                os.makedirs(folder_path)
+
+            out_file = open(binary_file_name, "wb")
             out_file.write(struct.pack("i", binary_format.contents.value))
             out_file.write(struct.pack("i", binary_length))
             out_file.write(binary_data)
             out_file.close()
-            saved = True
         except:
-            saved = False
+            pass
 
         self._apply_uniform_blocks()
         self._apply_shader_storage_blocks()
 
-        if saved:
-            try:
-                meta_info = {}
-                meta_info["attributes_info"] = self._attributes_info
-                meta_info["acceptable_primitives"] = self._acceptable_primitives
-                meta_info["uniforms_info"] = self._uniforms_info
-                meta_info["uniform_blocks_info"] = self._uniform_blocks_info
-                meta_info["shader_storage_blocks_info"] = (
-                    self._shader_storage_blocks_info
-                )
-                meta_info["structs_info"] = self._structs_info
-                meta_info["outs_info"] = self._outs_info
-                meta_info["sampler_map"] = self._sampler_map
-                meta_info["uniform_map"] = self._uniform_map
-                meta_info["uniform_block_map"] = self._uniform_block_map
-                meta_info["shader_storage_block_map"] = self._shader_storage_block_map
-                meta_info["include_paths"] = self._include_paths
-                save_var(meta_info, self._meta_file_name)
-            except:
-                pass
+        meta_info = {}
+        meta_info["attributes_info"] = self._attributes_info
+        meta_info["acceptable_primitives"] = self._acceptable_primitives
+        meta_info["uniforms_info"] = self._uniforms_info
+        meta_info["uniform_blocks_info"] = self._uniform_blocks_info
+        meta_info["shader_storage_blocks_info"] = self._shader_storage_blocks_info
+        meta_info["structs_info"] = self._structs_info
+        meta_info["outs_info"] = self._outs_info
+        meta_info["sampler_map"] = self._sampler_map
+        meta_info["uniform_map"] = self._uniform_map
+        meta_info["uniform_block_map"] = self._uniform_block_map
+        meta_info["shader_storage_block_map"] = self._shader_storage_block_map
+        meta_info["include_paths"] = self._include_paths
+        save_var(meta_info, self._meta_file_name)
 
         if GlassConfig.print:
             print("done")
 
-    def _apply(self):
-        if not self._linked_but_not_applied:
+    def _link(self):
+        if self._is_linked:
             return
 
         self.delete()
@@ -362,8 +359,15 @@ class ShaderProgram(GPUProgram):
         if self._id == 0:
             raise MemoryError("failed to create ShaderProgram")
 
-        if not self._should_relink:
-            in_file = open(self._binary_file_name, "rb")
+        binary_file_name = (
+            GlassConfig.renderer_folder + "/" + self._cache_base_name + ".bin"
+        )
+        bin_mtime = modify_time(binary_file_name)
+
+        if not GlassConfig.recompile and (
+            not self._shader_should_recompile and self._max_modify_time < bin_mtime
+        ):
+            in_file = open(binary_file_name, "rb")
             binary_format = struct.unpack("i", in_file.read(4))[0]
             binary_length = struct.unpack("i", in_file.read(4))[0]
             binary_data = in_file.read(binary_length)
@@ -377,94 +381,111 @@ class ShaderProgram(GPUProgram):
                 status = GL.GL_FALSE
 
             if GL.GL_TRUE != status:
-                self._reapply()
+                self._relink(binary_file_name)
         else:
-            self._reapply()
+            self._relink(binary_file_name)
 
-        self._linked_but_not_applied = False
+        self._is_linked = True
 
-    def _test_should_relink(self):
-        if GlassConfig.recompile:
-            self._should_relink = True
-            return True
+    def _test_should_recollect(self):
+        self._max_modify_time = 0
+        self._shader_should_recompile = False
 
-        max_modify_time = 0
-        shader_should_recompile = False
-
-        binary_name = os.path.basename(self.vertex_shader.file_name)
+        prefix = os.path.basename(self.vertex_shader.file_name)
         shaders_key = os.path.abspath(self.vertex_shader.file_name).replace(
             "\\", "/"
         ) + defines_key(self.vertex_shader.defines)
-        shader_should_recompile = (
-            shader_should_recompile or self.vertex_shader._should_recompile
+        self._shader_should_recompile = (
+            self._shader_should_recompile or self.vertex_shader._should_recompile
         )
-        if self.vertex_shader._max_modify_time > max_modify_time:
-            max_modify_time = self.vertex_shader._max_modify_time
+        if self.vertex_shader._max_modify_time > self._max_modify_time:
+            self._max_modify_time = self.vertex_shader._max_modify_time
 
         if self.tess_ctrl_shader.is_compiled:
-            binary_name += "+" + os.path.basename(self.tess_ctrl_shader.file_name)
+            prefix += "+" + os.path.basename(self.tess_ctrl_shader.file_name)
             shaders_key += (
                 "+"
                 + os.path.abspath(self.tess_ctrl_shader.file_name).replace("\\", "/")
                 + defines_key(self.tess_ctrl_shader.defines)
             )
-            shader_should_recompile = (
-                shader_should_recompile or self.tess_ctrl_shader._should_recompile
+            self._shader_should_recompile = (
+                self._shader_should_recompile or self.tess_ctrl_shader._should_recompile
             )
-            if self.tess_ctrl_shader._max_modify_time > max_modify_time:
-                max_modify_time = self.tess_ctrl_shader._max_modify_time
+            if self.tess_ctrl_shader._max_modify_time > self._max_modify_time:
+                self._max_modify_time = self.tess_ctrl_shader._max_modify_time
 
         if self.tess_eval_shader.is_compiled:
-            binary_name += "+" + os.path.basename(self.tess_eval_shader.file_name)
+            prefix += "+" + os.path.basename(self.tess_eval_shader.file_name)
             shaders_key += (
                 "+"
                 + os.path.abspath(self.tess_eval_shader.file_name).replace("\\", "/")
                 + defines_key(self.tess_eval_shader.defines)
             )
-            shader_should_recompile = (
-                shader_should_recompile or self.tess_eval_shader._should_recompile
+            self._shader_should_recompile = (
+                self._shader_should_recompile or self.tess_eval_shader._should_recompile
             )
-            if self.tess_eval_shader._max_modify_time > max_modify_time:
-                max_modify_time = self.tess_eval_shader._max_modify_time
+            if self.tess_eval_shader._max_modify_time > self._max_modify_time:
+                self._max_modify_time = self.tess_eval_shader._max_modify_time
 
         if self.geometry_shader.is_compiled:
-            binary_name += "+" + os.path.basename(self.geometry_shader.file_name)
+            prefix += "+" + os.path.basename(self.geometry_shader.file_name)
             shaders_key += (
                 "+"
                 + os.path.abspath(self.geometry_shader.file_name).replace("\\", "/")
                 + defines_key(self.geometry_shader.defines)
             )
-            shader_should_recompile = (
-                shader_should_recompile or self.geometry_shader._should_recompile
+            self._shader_should_recompile = (
+                self._shader_should_recompile or self.geometry_shader._should_recompile
             )
-            if self.geometry_shader._max_modify_time > max_modify_time:
-                max_modify_time = self.geometry_shader._max_modify_time
+            if self.geometry_shader._max_modify_time > self._max_modify_time:
+                self._max_modify_time = self.geometry_shader._max_modify_time
 
-        binary_name += "+" + os.path.basename(self.fragment_shader.file_name)
+        prefix += "+" + os.path.basename(self.fragment_shader.file_name)
         shaders_key += (
             "+"
             + os.path.abspath(self.fragment_shader.file_name).replace("\\", "/")
             + defines_key(self.fragment_shader.defines)
         )
-        shader_should_recompile = (
-            shader_should_recompile or self.fragment_shader._should_recompile
+        self._shader_should_recompile = (
+            self._shader_should_recompile or self.fragment_shader._should_recompile
         )
-        if self.fragment_shader._max_modify_time > max_modify_time:
-            max_modify_time = self.fragment_shader._max_modify_time
+        if self.fragment_shader._max_modify_time > self._max_modify_time:
+            self._max_modify_time = self.fragment_shader._max_modify_time
 
-        base = f"{GlassConfig.cache_folder}/{sanitize_filename(GLConfig.renderer)}/{binary_name}_{md5s(shaders_key)}"
-        self._binary_file_name = base + ".bin"
-        self._meta_file_name = base + ".meta"
+        self._cache_base_name = prefix + "_" + md5s(shaders_key)
+        self._meta_file_name = (
+            GlassConfig.cache_folder + "/" + self._cache_base_name + ".meta"
+        )
 
-        bin_mtime = modify_time(self._binary_file_name)
         meta_mtime = modify_time(self._meta_file_name)
-        if (
-            not shader_should_recompile
-            and bin_mtime > 0
-            and meta_mtime > 0
-            and max_modify_time < bin_mtime
-            and max_modify_time < meta_mtime
-        ):
+        return self._shader_should_recompile or self._max_modify_time > meta_mtime
+
+    def collect_info(self):
+        if self._is_collected:
+            return
+
+        if not self.vertex_shader.is_compiled:
+            raise RuntimeError("should compile vertex shader before link")
+
+        if not self.fragment_shader.is_compiled:
+            raise RuntimeError("should compile fragment shader before link")
+
+        if self._test_should_recollect() or GlassConfig.recompile:
+            self._resolve_uniforms()
+            self._resolve_uniform_blocks()
+            self._resolve_shader_storage_blocks()
+
+            keys = list(self._attributes_info.keys())
+            for key in keys:
+                if "location" in self._attributes_info[key]:
+                    continue
+
+                location = GL.glGetAttribLocation(
+                    self._id, self._attributes_info[key]["name"]
+                )
+                self._attributes_info[key]["location"] = location
+                self._attributes_info[location] = self._attributes_info[key]
+        else:
             meta_info = load_var(self._meta_file_name)
             self._attributes_info = meta_info["attributes_info"]
             self._acceptable_primitives = meta_info["acceptable_primitives"]
@@ -478,40 +499,9 @@ class ShaderProgram(GPUProgram):
             self._uniform_block_map = meta_info["uniform_block_map"]
             self._shader_storage_block_map = meta_info["shader_storage_block_map"]
             self._include_paths = meta_info["include_paths"]
-            self._should_relink = False
-        else:
-            self._should_relink = True
 
-        return self._should_relink
-
-    def _link(self):
-        if self._is_linked:
-            return
-
-        if not self.vertex_shader.is_compiled:
-            raise RuntimeError("should compile vertex shader before link")
-
-        if not self.fragment_shader.is_compiled:
-            raise RuntimeError("should compile fragment shader before link")
-
-        if self._test_should_relink():
-            self._resolve_uniforms()
-            self._resolve_uniform_blocks()
-            self._resolve_shader_storage_blocks()
-
-            keys = list(self._attributes_info.keys())
-            for key in keys:
-                if "location" not in self._attributes_info[key]:
-                    location = GL.glGetAttribLocation(
-                        self._id, self._attributes_info[key]["name"]
-                    )
-                    self._attributes_info[key]["location"] = location
-                    self._attributes_info[location] = self._attributes_info[key]
-
-        self._is_linked = True
-        self._linked_but_not_applied = True
-        if GL.glCreateProgram:
-            self._apply()
+        self._is_collected = True
+        self._is_linked = False
 
     def __check_vertices(self, vertices, start_index, total):
         len_vertices = len(vertices)

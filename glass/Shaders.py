@@ -110,7 +110,7 @@ class BaseShader(GLObject):
     def clean_code(self):
         return self._clean_code
 
-    def _apply(self):
+    def _apply_compile(self):
         if not self._compiled_but_not_applied:
             return
 
@@ -121,8 +121,6 @@ class BaseShader(GLObject):
 
         used_code = self._code
         if not GlassConfig.debug:
-            # used_code = self._code
-            # used_code = minifyc(self._code)
             used_code = minifyc(treeshake(self._code))
 
         if GlassConfig.print:

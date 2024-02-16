@@ -1,17 +1,17 @@
-from .GroupAnimation import GroupAnimation
+from .AnimationGroup import AnimationGroup
 
 
-class SequentialAnimation(GroupAnimation):
+class SequentialAnimation(AnimationGroup):
 
     def __init__(self, *animations, **kwargs):
-        GroupAnimation.__init__(self, *animations, **kwargs)
+        AnimationGroup.__init__(self, *animations, **kwargs)
 
     def _update_duration(self):
         if not self._total_duration_dirty:
             return
 
         self._duration = 0
-        for animation in self.animations:
+        for animation in self:
             self._duration += animation.total_duration
 
         self._total_duration = self._duration * self.loops
@@ -42,7 +42,10 @@ class SequentialAnimation(GroupAnimation):
         accum_time = 0
         next_accum_time = 0
         active_animation = None
-        for animation in self.animations:
+        for animation in self:
+            if animation is None:
+                continue
+
             next_accum_time += animation.total_duration
             if accum_time <= reduce_t < next_accum_time:
                 active_animation = animation

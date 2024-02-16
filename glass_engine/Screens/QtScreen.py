@@ -12,7 +12,7 @@ from ..PostProcessEffects import (
 )
 from ..SlideAverageFilter import SlideAverageFilter
 from ..VideoRecorder import VideoRecorder, convert_to_image
-from ..Animations import Animation, SequentialAnimation, ParallelAnimation
+from ..Animations import Animation
 
 from glass import (
     ShaderProgram,

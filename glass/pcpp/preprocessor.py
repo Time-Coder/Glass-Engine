@@ -28,7 +28,7 @@ from .evaluator import Evaluator
 
 # Some Python 3 compatibility shims
 if sys.version_info.major < 3:
-    FILE_TYPES = file
+    FILE_TYPES = eval("file")
     clock = time.clock
 else:
     xrange = range

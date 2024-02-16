@@ -249,7 +249,7 @@ class Vertices:
         if success:
             self._vao_map[key].bind()
 
-    def _process_slice(self, index):
+    def _process_slice(self, index: slice):
         len_self = len(self)
         start = index.start if index.start is not None else 0
         stop = index.stop if index.stop is not None else len_self

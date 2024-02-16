@@ -18,7 +18,7 @@ INTMAXBITS = 64
 # Some Python 3 compatibility shims
 # Some Python 3 compatibility shims
 if sys.version_info.major < 3:
-    INTBASETYPE = long
+    INTBASETYPE = eval("long")
 else:
     INTBASETYPE = int
 

@@ -51,7 +51,7 @@ animation = SequentialAnimation(
     done_callback=done_callback
 )
 
-# animation.start()
+animation.start()
 
 # camera.aspect_ratio = 2.0
 # camera.screen.manipulator.scroll_sensitivity = 5.0

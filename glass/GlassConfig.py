@@ -1,5 +1,8 @@
 import os
 import shutil
+import re
+
+from .GLConfig import GLConfig
 
 
 class GlassConfig:
@@ -30,6 +33,15 @@ class GlassConfig:
     @cache_folder.setter
     def cache_folder(self, folder_path: str):
         self.__cache_folder = folder_path
+
+    @property
+    def renderer_folder(self) -> str:
+        santified_renderer = re.sub(r'[\\/:*?"<>|]', " ", GLConfig.renderer)
+        renderer_folder = f"{self.__cache_folder}/{santified_renderer}"
+        if not os.path.isdir(renderer_folder):
+            os.makedirs(renderer_folder)
+
+        return renderer_folder
 
     def clear_cache(self):
         if os.path.isdir(self.__cache_folder):

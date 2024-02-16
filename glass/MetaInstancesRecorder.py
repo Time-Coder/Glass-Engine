@@ -1,6 +1,5 @@
 from .WeakSet import WeakSet
 import functools
-import copy
 
 
 class MetaInstancesRecorder(type):

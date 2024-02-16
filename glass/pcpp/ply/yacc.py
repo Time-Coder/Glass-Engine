@@ -94,8 +94,8 @@ resultlimit = 40  # Size limit of results when running in debug mode.
 pickle_protocol = 0  # Protocol to use when writing pickle files
 
 # String type-checking compatibility
-if sys.version_info[0] < 3:
-    string_types = basestring
+if sys.version_info.major < 3:
+    string_types = eval("basestring")
 else:
     string_types = str
 

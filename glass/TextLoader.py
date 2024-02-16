@@ -13,9 +13,7 @@ def edtaa(a: np.ndarray):
     gy = cv2.Sobel(a, cv2.CV_64F, 0, 1, ksize=3)
     df = 1000000 * np.ones(a.shape)
 
-    condition1 = (gx == 0) | (gy == 0)
     condition2 = (gx != 0) & (gy != 0)
-    # df[condition1] = 0.5 - a[condition1]
 
     glength = np.sqrt(gx**2 + gy**2)
     condition3 = condition2 & (glength > 0)
@@ -50,16 +48,16 @@ def edtaa(a: np.ndarray):
     return df
 
 
-def octSSEDT(a, df):
-    for i in range(a.shape[0]):
-        for j in range(a.shape[1]):
-            if df[i, j] > 100000:
-                df_left = df[i, j - 1] if j - 1 >= 0 else 1000000
-                df_left_top = df[i - 1, j - 1] if i - 1 >= 0 and j - 1 >= 0 else 1000000
-                df_top = df[i - 1, j] if i - 1 >= 0 else 1000000
-                df_right_top = (
-                    df[i - 1, j + 1] if i - 1 >= 0 and j + 1 < a.shape[1] else 1000000
-                )
+# def octSSEDT(a, df):
+#     for i in range(a.shape[0]):
+#         for j in range(a.shape[1]):
+#             if df[i, j] > 100000:
+#                 df_left = df[i, j - 1] if j - 1 >= 0 else 1000000
+#                 df_left_top = df[i - 1, j - 1] if i - 1 >= 0 and j - 1 >= 0 else 1000000
+#                 df_top = df[i - 1, j] if i - 1 >= 0 else 1000000
+#                 df_right_top = (
+#                     df[i - 1, j + 1] if i - 1 >= 0 and j + 1 < a.shape[1] else 1000000
+#                 )
 
 
 class MetaFont(type):

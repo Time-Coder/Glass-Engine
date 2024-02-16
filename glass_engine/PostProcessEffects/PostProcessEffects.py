@@ -20,7 +20,7 @@ class PostProcessEffects(DictList):
     @property
     def has_valid(self) -> bool:
         for effect in self:
-            if effect.enabled:
+            if effect is not None and effect.enabled:
                 return True
 
         return False
@@ -28,7 +28,7 @@ class PostProcessEffects(DictList):
     @property
     def need_pos_info(self) -> bool:
         for effect in self:
-            if effect.enabled and effect.need_pos_info():
+            if effect is not None and effect.enabled and effect.need_pos_info():
                 return True
 
         return False
@@ -37,7 +37,7 @@ class PostProcessEffects(DictList):
     def last_valid(self) -> PostProcessEffect:
         for i in range(len(self) - 1, -1, -1):
             effect = self[i]
-            if effect.enabled:
+            if effect is not None and effect.enabled:
                 return effect
 
         return None
@@ -45,7 +45,7 @@ class PostProcessEffects(DictList):
     def apply(self, screen_image: sampler2D) -> sampler2D:
         self._should_update = False
         for effect in self:
-            if not effect.enabled:
+            if effect is None or not effect.enabled:
                 continue
 
             effect.depth_map = self.depth_map
@@ -69,7 +69,7 @@ class PostProcessEffects(DictList):
         last_effect_index = -1
         for i in range(len(self) - 1, -1, -1):
             effect = self[i]
-            if effect.enabled:
+            if effect is not None and effect.enabled:
                 last_effect = effect
                 last_effect_index = i
                 break
@@ -80,7 +80,7 @@ class PostProcessEffects(DictList):
 
         for i in range(last_effect_index):
             effect = self[i]
-            if not effect.enabled:
+            if effect is None or not effect.enabled:
                 continue
 
             effect.depth_map = self.depth_map
@@ -111,4 +111,5 @@ class PostProcessEffects(DictList):
     def screen_update_time(self, screen_update_time: float) -> None:
         self._screen_update_time = screen_update_time
         for effect in self:
-            effect.screen_update_time = screen_update_time
+            if effect is not None:
+                effect.screen_update_time = screen_update_time

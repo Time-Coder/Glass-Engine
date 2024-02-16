@@ -2,6 +2,7 @@ from glass.MetaInstancesRecorder import MetaInstancesRecorder
 
 from .Chronoscope import Chronoscope
 from .EasingCurve import EasingCurve
+from glass.WeakSet import WeakSet
 from ..GlassEngineConfig import GlassEngineConfig
 
 import threading
@@ -44,7 +45,7 @@ class Animation(metaclass=MetaInstancesRecorder):
         self._timer = Chronoscope()
         self._running_thread = None
         self._wait_to_start: bool = False
-        self._parent: Animation = None
+        self._parents: WeakSet = WeakSet()
 
     @MetaInstancesRecorder.delete
     def __del__(self):
@@ -133,8 +134,9 @@ class Animation(metaclass=MetaInstancesRecorder):
             return
 
         self.__total_duration_dirty = dirty
-        if dirty and self._parent is not None:
-            self._parent._total_duration_dirty = True
+        if dirty:
+            for parent in self._parents:
+                parent._total_duration_dirty = True
 
     @duration.setter
     def duration(self, duration: float):

@@ -92,8 +92,8 @@ class GPUProgram(GLObject):
         self._uniform_block = UniformBlock(self)
         self._shader_storage_block = ShaderStorageBlock(self)
 
+        self._is_collected = False
         self._is_linked = False
-        self._linked_but_not_applied = False
         self._uniform_not_set_warning = True
 
     def __hash__(self):
@@ -115,9 +115,7 @@ class GPUProgram(GLObject):
         pass
 
     def __getitem__(self, name: str):
-        if not self._is_linked:
-            self._link()
-
+        self.collect_info()
         if name in self._uniform_map:
             return self._uniform[name]
         elif name in self._shader_storage_block_map:
@@ -130,9 +128,7 @@ class GPUProgram(GLObject):
             raise NameError(error_message)
 
     def __setitem__(self, name: str, value):
-        if not self._is_linked:
-            self._link()
-
+        self.collect_info()
         if name in self._uniform_map:
             self._uniform[name] = value
         elif name in self._shader_storage_block_map:
@@ -145,9 +141,7 @@ class GPUProgram(GLObject):
             raise NameError(error_message)
 
     def __contains__(self, name: str):
-        if not self._is_linked:
-            self._link()
-
+        self.collect_info()
         return (
             name in self._uniform_map
             or name in self.buffer._blocks_info
@@ -156,23 +150,17 @@ class GPUProgram(GLObject):
 
     @property
     def uniform(self):
-        if not self._is_linked:
-            self._link()
-
+        self.collect_info()
         return self._uniform
 
     @property
     def uniform_block(self):
-        if not self._is_linked:
-            self._link()
-
+        self.collect_info()
         return self._uniform_block
 
     @property
     def buffer(self):
-        if not self._is_linked:
-            self._link()
-
+        self.collect_info()
         return self._shader_storage_block
 
     def download(self, var):
@@ -186,24 +174,18 @@ class GPUProgram(GLObject):
                     if block_var in ssbo._bound_block_vars:
                         ssbo.download()
 
-    def compile(self, shader_type, file_name=None):
-        pass
-
-    def _apply(self):
+    def _relink(self, binary_file_name: str):
         pass
 
     def _link(self):
         pass
 
-    @property
-    def is_linked(self):
-        return self._is_linked
+    def collect_info(self):
+        pass
 
     def use(self):
-        if not self._is_linked:
-            self._link()
-        if self._linked_but_not_applied:
-            self._apply()
+        self.collect_info()
+        self._link()
 
         current_context = GLConfig.buffered_current_context
         if (

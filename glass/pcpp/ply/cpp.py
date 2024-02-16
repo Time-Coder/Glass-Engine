@@ -41,7 +41,7 @@ import sys
 
 # Some Python 3 compatibility shims
 if sys.version_info.major < 3:
-    STRING_TYPES = (str, unicode)
+    STRING_TYPES = (str, eval("unicode"))
 else:
     STRING_TYPES = str
     xrange = range
