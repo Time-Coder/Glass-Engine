@@ -550,7 +550,7 @@ class sampler2D(FBOAttachment):
         shader_path = os.path.abspath(shader_path).replace("\\", "/")
         self_folder = os.path.dirname(os.path.abspath(__file__))
         program = ShaderProgram()
-        program.define("FILE_NAME", shader_path)
+        program.define("FILE_NAME", f'"{shader_path}"')
         program.compile(self_folder + "/glsl/draw_frame.vs")
         program.compile(self_folder + "/glsl/shadertoy_template.fs")
 

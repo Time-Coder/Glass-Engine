@@ -123,7 +123,7 @@ class GPUProgram(GLObject):
         elif name in self._uniform_block_map:
             return self._uniform_block[name]
         else:
-            error_message = "'" + name + "' is not defined in following files:\n"
+            error_message = f"'{name}' is not defined in following files:\n"
             error_message += "\n".join(self.related_files)
             raise NameError(error_message)
 
@@ -136,7 +136,7 @@ class GPUProgram(GLObject):
         elif name in self._uniform_block_map:
             self._uniform_block[name] = value
         else:
-            error_message = "'" + name + "' is not defined in following files:\n"
+            error_message = f"'{name}' is not defined in following files:\n"
             error_message += "\n".join(self.related_files)
             raise NameError(error_message)
 

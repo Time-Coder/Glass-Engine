@@ -178,6 +178,9 @@ class ShaderProgram(GPUProgram):
         self._uniform._atoms_to_update.clear()
         self._uniform._atom_value_map.clear()
         self._uniform._texture_value_map.clear()
+        self.collect_info()
+        self._link()
+
         for uniform_var in self._uniform._uniform_var_map.values():
             bound_var = uniform_var._bound_var
             if bound_var is None:
@@ -296,6 +299,16 @@ class ShaderProgram(GPUProgram):
             warnings.warn(warning_message, category=LinkWarning)
 
         if error_messages:
+            self_defines = self.defines
+            if (
+                len(error_messages) == 1 and 
+                error_messages[0] == "Out of resource error." and
+                "USE_SHADER_STORAGE_BLOCK" in self_defines and
+                self_defines["USE_SHADER_STORAGE_BLOCK"] == True
+            ):
+                self.undef("USE_SHADER_STORAGE_BLOCK")
+                self.reload()
+
             error_message = (
                 f"Error when linking following files:{related_files}\n"
                 + "\n".join(error_messages)

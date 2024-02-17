@@ -626,14 +626,20 @@ class _MetaGLConfig(type):
     @property
     def major_version(cls) -> str:
         if _MetaGLConfig.__gl_major_version is None:
-            _MetaGLConfig.__gl_major_version = GL.glGetInteger(GL.GL_MAJOR_VERSION)
+            try:
+                _MetaGLConfig.__gl_major_version = GL.glGetInteger(GL.GL_MAJOR_VERSION)
+            except:
+                _MetaGLConfig.__gl_major_version = cls.version.split(" ")[0].split(".")[0]
 
         return _MetaGLConfig.__gl_major_version
 
     @property
     def minor_version(cls) -> str:
         if _MetaGLConfig.__gl_minor_version is None:
-            _MetaGLConfig.__gl_minor_version = GL.glGetInteger(GL.GL_MINOR_VERSION)
+            try:
+                _MetaGLConfig.__gl_minor_version = GL.glGetInteger(GL.GL_MINOR_VERSION)
+            except:
+                _MetaGLConfig.__gl_minor_version = cls.version.split(" ")[0].split(".")[1]
 
         return _MetaGLConfig.__gl_minor_version
 

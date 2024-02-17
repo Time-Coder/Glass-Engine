@@ -79,6 +79,7 @@ class GlassEngineConfig:
         self._dict["USE_SHADING_MODEL_UNLIT"] = False
         self._dict["USE_SHADING_MODEL_FRESNEL"] = False
         self._dict["USE_BINDLESS_TEXTURE"] = False
+        self._dict["USE_SHADER_STORAGE_BLOCK"] = True
 
         self.is_first_shown: bool = False
 

@@ -78,15 +78,15 @@ class ShaderEffect(PostProcessEffect):
                     + "/../glsl/PostProcessEffects/shader_effect_template.fs"
                 )
                 self._program = ShaderProgram()
-                self._program.define("FILE_NAME", self._shader_path)
+                self._program.define("FILE_NAME", f'"{self._shader_path}"')
                 self._program.compile(Frame.draw_frame_vs)
                 self._program.compile(template_filename)
             else:
                 if (
                     "FILE_NAME" not in self._program.defines
-                    or self._program.defines["FILE_NAME"] != self._shader_path
+                    or self._program.defines["FILE_NAME"] != f'"{self._shader_path}"'
                 ):
-                    self._program.define("FILE_NAME", self._shader_path)
+                    self._program.define("FILE_NAME", f'"{self._shader_path}"')
                     self._program.reload()
 
         if self._uniforms and self._program is not None:

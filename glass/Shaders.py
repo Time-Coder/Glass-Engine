@@ -22,6 +22,7 @@ from .utils import (
     printable_size,
 )
 from .GlassConfig import GlassConfig
+from .GLConfig import GLConfig
 from .GLObject import GLObject
 from .ShaderParser import ShaderParser
 from .GPUProgram import CompileError, CompileWarning
@@ -122,6 +123,10 @@ class BaseShader(GLObject):
         used_code = self._code
         if not GlassConfig.debug:
             used_code = minifyc(treeshake(self._code))
+
+        version_pattern = r"#\s*version \d\d\d core"
+        version_str = f"#version {GLConfig.major_version}{GLConfig.minor_version}0 core"
+        used_code = re.sub(version_pattern, version_str, used_code)
 
         if GlassConfig.print:
             print(
@@ -401,9 +406,6 @@ class BaseShader(GLObject):
             if value is None:
                 defines_str += f"#define {name}\n"
             else:
-                if isinstance(value, str):
-                    value = f'"{value}"'
-
                 defines_str += f"#define {name} {value}\n"
         lines_of_defines_str = ShaderParser.lines(defines_str)
 

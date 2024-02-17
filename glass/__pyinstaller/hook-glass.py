@@ -37,6 +37,13 @@ datas.append(
             os.path.dirname(os.path.abspath(__file__)) + "/../LICENSE"
         ).replace("\\", "/"),
         "glass",
+    ),
+
+    (
+        os.path.abspath(
+            os.path.dirname(os.path.abspath(__file__)) + "/../pcpp/LICENSE"
+        ).replace("\\", "/"),
+        "glass/pcpp",
     )
 )
 if platform.system() == "Linux":

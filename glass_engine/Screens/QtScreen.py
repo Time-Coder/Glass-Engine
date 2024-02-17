@@ -33,6 +33,7 @@ import time
 import glm
 import sys
 from OpenGL import GL
+import OpenGL.GL.ARB.bindless_texture as bt
 
 import os
 
@@ -223,29 +224,21 @@ def render_hints(self, hint: RenderHints) -> None:
 
 
 def initializeGL(self) -> None:
-    try:
-        if GLConfig.major_version < 4:
-            raise RuntimeError(
-                f"Current OpenGL version ({GLConfig.version}) is lower than minimum version require (OpenGL 4.3)"
-            )
+    if GLConfig.major_version < 4:
+        GlassEngineConfig["USE_SHADER_STORAGE_BLOCK"] = False
 
-        if GLConfig.minor_version < 3:
-            raise RuntimeError(
-                f"Current OpenGL version ({GLConfig.version}) is lower than minimum version require (OpenGL 4.3)"
-            )
-    except:
-        pass
+    if GLConfig.minor_version < 3:
+        GlassEngineConfig["USE_SHADER_STORAGE_BLOCK"] = False
 
-    if (
-        GlassConfig.warning
-        and "GL_ARB_bindless_texture" not in GLConfig.available_extensions
-    ):
-        warning_message = """
+    if not bt.glInitBindlessTextureARB():
+        if GlassConfig.warning:
+            warning_message = """
 Extension GL_ARB_bindless_texture is not available.
 Shadows and dynamic environment mapping will be disabled.
 Try to change default graphics card of python.exe to high performance one.
 """
-        warnings.warn(warning_message)
+            warnings.warn(warning_message)
+        GlassEngineConfig["USE_BINDLESS_TEXTURE"] = False
 
     self.makeCurrent()
 
