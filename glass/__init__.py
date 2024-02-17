@@ -1,3 +1,5 @@
+__version__ = "0.1.52"
+
 from .VAO import VAO
 from .VBO import VBO
 from .EBO import EBO

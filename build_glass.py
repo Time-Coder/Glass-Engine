@@ -28,6 +28,7 @@ with open("MANIFEST.in", "w", encoding="utf-8") as out_file:
     out_file.write(
 """include glass/README_PYPI.md
 include glass/LICENSE
+include glass/pcpp/LICENSE
 """)
 
 subprocess.call([sys.executable, "setup.py", "sdist", "bdist_wheel"])

@@ -1,3 +1,5 @@
+__version__ = "0.1.52"
+
 from .Scene import Scene
 from .SceneNode import SceneNode
 from .BasicScene import SceneRoam, ModelView

@@ -14,7 +14,7 @@ def find_files(module, directory):
                 file_list.append(file_path.replace("\\", "/"))
     return file_list
 
-extra_files = ["LICENSE"]
+extra_files = ["LICENSE", "pcpp/LICENSE"]
 extra_files += find_files("glass", "glass/glsl")
 extra_files += find_files("glass", "glass/tree-sitter-glsl")
 
@@ -23,7 +23,7 @@ with open("glass/README_PYPI.md", "r", encoding='utf-8') as in_file:
 
 setuptools.setup(
     name="python_glass",
-    version="0.1.51",
+    version="0.1.52",
     author="王炳辉 (BingHui-WANG)",
     author_email="binghui.wang@foxmail.com",
     description="OpenGL wrapper for Glass-Engine",
