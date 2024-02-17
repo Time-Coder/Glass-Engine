@@ -563,8 +563,8 @@ class CommonRenderer(Renderer):
             self_folder + "/../glsl/Pipelines/forward_rendering/forward_rendering.fs"
         )
 
-        program["PointLights"].bind(self.scene.point_lights)
         program["DirLights"].bind(self.scene.dir_lights)
+        program["PointLights"].bind(self.scene.point_lights)
         program["SpotLights"].bind(self.scene.spot_lights)
 
         self.programs["forward"] = program
@@ -586,8 +586,8 @@ class CommonRenderer(Renderer):
             self_folder + "/../glsl/Pipelines/forward_rendering/forward_draw_points.fs"
         )
 
-        program["PointLights"].bind(self.scene.point_lights)
         program["DirLights"].bind(self.scene.dir_lights)
+        program["PointLights"].bind(self.scene.point_lights)
         program["SpotLights"].bind(self.scene.spot_lights)
 
         self.programs["forward_lines"] = program
@@ -609,8 +609,8 @@ class CommonRenderer(Renderer):
             self_folder + "/../glsl/Pipelines/forward_rendering/forward_draw_points.fs"
         )
 
-        program["PointLights"].bind(self.scene.point_lights)
         program["DirLights"].bind(self.scene.dir_lights)
+        program["PointLights"].bind(self.scene.point_lights)
         program["SpotLights"].bind(self.scene.spot_lights)
 
         self.programs["forward_points"] = program

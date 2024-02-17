@@ -42,8 +42,8 @@ class DeferredRenderer(CommonRenderer):
             self_folder + "/../glsl/Pipelines/deferred_rendering/deferred_rendering.fs"
         )
 
-        program["PointLights"].bind(self.scene.point_lights)
         program["DirLights"].bind(self.scene.dir_lights)
+        program["PointLights"].bind(self.scene.point_lights)
         program["SpotLights"].bind(self.scene.spot_lights)
 
         self.programs["deferred_render"] = program
@@ -68,8 +68,8 @@ class DeferredRenderer(CommonRenderer):
             self_folder + "/../glsl/Pipelines/deferred_rendering/draw_to_gbuffer.fs"
         )
 
-        program["PointLights"].bind(self.scene.point_lights)
         program["DirLights"].bind(self.scene.dir_lights)
+        program["PointLights"].bind(self.scene.point_lights)
         program["SpotLights"].bind(self.scene.spot_lights)
         self.programs["draw_to_gbuffer"] = program
 
@@ -91,8 +91,8 @@ class DeferredRenderer(CommonRenderer):
             + "/../glsl/Pipelines/deferred_rendering/draw_points_to_gbuffer.fs"
         )
 
-        program["PointLights"].bind(self.scene.point_lights)
         program["DirLights"].bind(self.scene.dir_lights)
+        program["PointLights"].bind(self.scene.point_lights)
         program["SpotLights"].bind(self.scene.spot_lights)
         self.programs["draw_lines_to_gbuffer"] = program
 
@@ -114,8 +114,8 @@ class DeferredRenderer(CommonRenderer):
             + "/../glsl/Pipelines/deferred_rendering/draw_points_to_gbuffer.fs"
         )
 
-        program["PointLights"].bind(self.scene.point_lights)
         program["DirLights"].bind(self.scene.dir_lights)
+        program["PointLights"].bind(self.scene.point_lights)
         program["SpotLights"].bind(self.scene.spot_lights)
         self.programs["draw_points_to_gbuffer"] = program
 

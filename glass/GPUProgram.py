@@ -388,6 +388,7 @@ class GPUProgram(GLObject):
         return uniform_block["atoms"]
 
     def _apply_uniform_blocks(self):
+        backup_block_index = 0
         for block_name, block_info in self._uniform_blocks_info.items():
             atoms = self._uniform_block_map[block_name]["atoms"]
             len_atoms = len(atoms)
@@ -401,7 +402,11 @@ class GPUProgram(GLObject):
 
                 atom_names.append(atom_name)
 
-            block_index = GL.glGetUniformBlockIndex(self._id, block_name)
+            try:
+                block_index = GL.glGetUniformBlockIndex(self._id, block_name)
+            except GL.error.GLError:
+                block_index = backup_block_index
+
             if block_index == 4294967295: # -1
                 raise ValueError(f"failed to get uniform block {block_name}'s index")
 
@@ -450,6 +455,8 @@ class GPUProgram(GLObject):
                 atom["offset"] = int(offset)
                 atom["stride"] = stride
 
+            backup_block_index += 1
+
     def _resolve_uniform_blocks(self):
         for block_info in self._uniform_blocks_info.values():
             self._resolve_one_uniform_block(block_info)
@@ -485,12 +492,17 @@ class GPUProgram(GLObject):
         return shader_storage_block["atoms"]
 
     def _apply_shader_storage_blocks(self):
+        backup_block_index = 0
         for block_name, block_info in self._shader_storage_blocks_info.items():
             atoms = self._shader_storage_block_map[block_name]["atoms"]
 
-            block_index = GL.glGetProgramResourceIndex(
-                self._id, GL.GL_SHADER_STORAGE_BLOCK, block_name
-            )
+            try:
+                block_index = GL.glGetProgramResourceIndex(
+                    self._id, GL.GL_SHADER_STORAGE_BLOCK, block_name
+                )
+            except GL.error.GLError:
+                block_index = backup_block_index
+
             if block_index == 4294967295:
                 raise ValueError(f"failed to get {block_name} index")
             
@@ -542,6 +554,8 @@ class GPUProgram(GLObject):
                 atom["offset"] = int(atom_offset)
                 atom["stride"] = int(atom_stride)
 
+            backup_block_index += 1
+
     def _resolve_shader_storage_blocks(self):
         for block_info in self._shader_storage_blocks_info.values():
             self._resolve_one_shader_storage_block(block_info)
@@ -551,5 +565,3 @@ class GPUProgram(GLObject):
             var_name = block_info["var_name"]
             if var_name:
                 blocks_with_var_name[var_name] = block_name
-
-        # self._apply_shader_storage_blocks()

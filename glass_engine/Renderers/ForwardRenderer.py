@@ -44,7 +44,10 @@ class ForwardRenderer(CommonRenderer):
             not self._opaque_meshes
             and not self._opaque_lines
             and not self._opaque_points
+            and not self.scene.skybox.is_completed
+            and not self.scene.skydome.is_completed
         ):
+            GLConfig.clear_buffers()
             return
 
         need_fbo = (
