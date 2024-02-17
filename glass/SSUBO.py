@@ -125,18 +125,20 @@ class SSUBO(BO):
             atom_subscript_chain = atom_info["subscript_chain"]
             set_func = SSUBO._set_atom_func(atom_type)
             if "[{0}]" not in atom_name:
-                # value = eval("self._bound_var." + atom_name)
-                # eval("self._set_" + atom_type)(atom_offset, value)
+                try:
+                    value = subscript(self._bound_var, atom_subscript_chain)
+                except IndexError:
+                    continue
 
-                value = subscript(self._bound_var, atom_subscript_chain)
                 set_func(self, atom_offset, value)
             else:
                 stride = atom_info["stride"]
                 for i in range(self._len_array):
-                    # value = eval("self._bound_var." + atom_name.format(i))
-                    # eval("self._set_" + atom_type)(atom_offset + i*stride, value)
-
-                    value = subscript(self._bound_var, atom_subscript_chain, i)
+                    try:
+                        value = subscript(self._bound_var, atom_subscript_chain, i)
+                    except IndexError:
+                        continue
+                    
                     set_func(self, atom_offset + i * stride, value)
 
         binding_point = self.bind_to_point()
