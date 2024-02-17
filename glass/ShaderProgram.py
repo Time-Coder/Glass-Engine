@@ -252,7 +252,7 @@ class ShaderProgram(GPUProgram):
         self._is_collected = False
         self._is_linked = False
 
-    def _relink(self, binary_file_name):
+    def _relink(self, binary_file_name: str):
         self.vertex_shader._apply_compile()
         if self.tess_ctrl_shader.is_compiled:
             self.tess_ctrl_shader._apply_compile()
@@ -316,11 +316,7 @@ class ShaderProgram(GPUProgram):
             GL.glGetProgramBinary(
                 self._id, binary_length, length, binary_format, binary_data
             )
-
-            folder_path = os.path.dirname(os.path.abspath(binary_file_name))
-            if not os.path.isdir(folder_path):
-                os.makedirs(folder_path)
-
+            
             out_file = open(binary_file_name, "wb")
             out_file.write(struct.pack("i", binary_format.contents.value))
             out_file.write(struct.pack("i", binary_length))
