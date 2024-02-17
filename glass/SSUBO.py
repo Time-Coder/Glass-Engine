@@ -138,7 +138,7 @@ class SSUBO(BO):
                         value = subscript(self._bound_var, atom_subscript_chain, i)
                     except IndexError:
                         continue
-                    
+
                     set_func(self, atom_offset + i * stride, value)
 
         binding_point = self.bind_to_point()

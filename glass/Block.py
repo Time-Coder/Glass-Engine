@@ -2,6 +2,7 @@ from OpenGL import GL
 from .utils import di
 from functools import wraps
 
+
 class Block:
 
     _bound_vars = {}

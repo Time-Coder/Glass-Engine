@@ -316,7 +316,7 @@ class ShaderProgram(GPUProgram):
             GL.glGetProgramBinary(
                 self._id, binary_length, length, binary_format, binary_data
             )
-            
+
             out_file = open(binary_file_name, "wb")
             out_file.write(struct.pack("i", binary_format.contents.value))
             out_file.write(struct.pack("i", binary_length))

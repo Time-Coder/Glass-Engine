@@ -407,7 +407,7 @@ class GPUProgram(GLObject):
             except GL.error.GLError:
                 block_index = backup_block_index
 
-            if block_index == 4294967295: # -1
+            if block_index == 4294967295:  # -1
                 raise ValueError(f"failed to get uniform block {block_name}'s index")
 
             block_size = np.array([0], dtype=int)
@@ -424,8 +424,10 @@ class GPUProgram(GLObject):
             )
 
             for atom_name, atom_index in zip(atom_names, atom_indices):
-                if atom_index == 4294967295: # -1
-                    raise ValueError(f"failed to get uniform block variable {atom_name}'s index")
+                if atom_index == 4294967295:  # -1
+                    raise ValueError(
+                        f"failed to get uniform block variable {atom_name}'s index"
+                    )
 
             atom_offsets = np.array([0] * len_atoms, dtype=int)
             GL.glGetActiveUniformsiv(
@@ -505,7 +507,7 @@ class GPUProgram(GLObject):
 
             if block_index == 4294967295:
                 raise ValueError(f"failed to get {block_name} index")
-            
+
             block_info["index"] = block_index
             len_var_name = len(block_info["var_name"])
 
@@ -524,9 +526,9 @@ class GPUProgram(GLObject):
                 atom_index = GL.glGetProgramResourceIndex(
                     self._id, GL.GL_BUFFER_VARIABLE, used_atom_name
                 )
-                if atom_index == 4294967295: # -1
+                if atom_index == 4294967295:  # -1
                     raise ValueError(f"failed to get {used_atom_name} index")
-                
+
                 GL.glGetProgramResourceiv(
                     self._id,
                     GL.GL_BUFFER_VARIABLE,
@@ -540,13 +542,11 @@ class GPUProgram(GLObject):
                 atom_offset_stride = [int(x) for x in atom_offset_stride]
 
                 member_name = ShaderParser.array_basename(atom_name)
-                atom_offset = (
-                    atom_offset_stride[0] + 
-                    atom_offset_stride[1] * 
-                    ShaderParser.index_offset(
-                        block_members[member_name]["type"],
-                        atom_name
-                    ))
+                atom_offset = atom_offset_stride[0] + atom_offset_stride[
+                    1
+                ] * ShaderParser.index_offset(
+                    block_members[member_name]["type"], atom_name
+                )
                 atom_stride = min(atom_offset_stride[1], atom_offset_stride[2])
                 if atom_stride == 0:
                     atom_stride = max(atom_offset_stride[1], atom_offset_stride[2])
