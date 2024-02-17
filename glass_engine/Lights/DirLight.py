@@ -1,6 +1,6 @@
 from .Light import Light, FlatLight
 from glass.DictList import DictList
-from glass.ShaderStorageBlock import ShaderStorageBlock
+from glass import Block
 
 import glm
 
@@ -18,20 +18,20 @@ class FlatDirLight(FlatLight):
         FlatLight.__init__(self, dir_light)
 
 
-class DirLights(ShaderStorageBlock.HostClass):
+class DirLights(Block.HostClass):
 
     def __init__(self):
-        ShaderStorageBlock.HostClass.__init__(self)
+        Block.HostClass.__init__(self)
         self.dir_lights = DictList()
 
     def __getitem__(self, key: (str, int)):
         return self.dir_lights[key]
 
-    @ShaderStorageBlock.HostClass.not_const
+    @Block.HostClass.not_const
     def __setitem__(self, key: (str, int), dir_light: FlatDirLight):
         self.dir_lights[key] = dir_light
 
-    @ShaderStorageBlock.HostClass.not_const
+    @Block.HostClass.not_const
     def __delitem__(self, key: (str, int)):
         del self.dir_lights[key]
 

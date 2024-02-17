@@ -21,10 +21,10 @@ vec3 get_diffuse_color(
     vec3 diffuse_color = vec3(0.2);
 
 #if USE_DIR_LIGHT
-    for(int i = 0; i < n_dir_lights; i++)
+    for(int i = 0; i < all_dir_lights.n_dir_lights; i++)
     {
         diffuse_color += get_diffuse_color(
-            dir_lights[i], internal_material, CSM_camera,
+            all_dir_lights.dir_lights[i], internal_material, CSM_camera,
             view_dir, frag_pos, frag_normal
         );
     }
@@ -61,10 +61,10 @@ vec3 get_specular_color(
     vec3 specular_color = vec3(0);
 
 #if USE_DIR_LIGHT
-    for(int i = 0; i < n_dir_lights; i++)
+    for(int i = 0; i < all_dir_lights.n_dir_lights; i++)
     {
         specular_color += get_specular_color(
-            dir_lights[i], internal_material, CSM_camera,
+            all_dir_lights.dir_lights[i], internal_material, CSM_camera,
             out_dir, frag_pos, frag_normal
         );
     }
@@ -101,10 +101,10 @@ vec3 lighting(
     vec3 out_color3 = internal_material.ambient;
 
 #if USE_DIR_LIGHT
-    for(int i = 0; i < n_dir_lights; i++)
+    for(int i = 0; i < all_dir_lights.n_dir_lights; i++)
     {
         out_color3 += lighting(
-            dir_lights[i], internal_material, CSM_camera, 
+            all_dir_lights.dir_lights[i], internal_material, CSM_camera, 
             camera_pos, frag_pos, frag_normal
         );
     }

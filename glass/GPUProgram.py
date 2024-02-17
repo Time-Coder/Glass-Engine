@@ -300,7 +300,6 @@ class GPUProgram(GLObject):
         if var_type in GLInfo.atom_type_names:
             var_atoms = [var]
             var["atoms"] = var_atoms
-            # var["location"] = GL.glGetUniformLocation(self._id, var["name"])
             uniform_map[var_name] = var
             return var_atoms
 
@@ -371,14 +370,11 @@ class GPUProgram(GLObject):
     def _resolve_one_uniform_block(self, block_info):
         uniform_block = {}
         block_name = block_info["name"]
-        block_var_name = block_info["var_name"]
         uniform_block["name"] = block_name
         uniform_block["atoms"] = []
 
         for member in block_info["members"].values():
             member_name = member["name"]
-            if block_var_name:
-                member_name = block_var_name + "." + member_name
             uniform_info = {
                 "name": member_name,
                 "type": member["type"],
@@ -395,12 +391,19 @@ class GPUProgram(GLObject):
         for block_name, block_info in self._uniform_blocks_info.items():
             atoms = self._uniform_block_map[block_name]["atoms"]
             len_atoms = len(atoms)
+            len_var_name = len(block_info["var_name"])
+
             atom_names = []
             for atom in atoms:
-                atom_names.append(atom["name"])
+                atom_name = atom["name"]
+                if len_var_name > 0:
+                    atom_name = block_name + "." + atom_name
+
+                atom_names.append(atom_name)
 
             block_index = GL.glGetUniformBlockIndex(self._id, block_name)
-            len_var_name = len(block_info["var_name"])
+            if block_index == 4294967295: # -1
+                raise ValueError(f"failed to get uniform block {block_name}'s index")
 
             block_size = np.array([0], dtype=int)
             GL.glGetActiveUniformBlockiv(
@@ -414,6 +417,10 @@ class GPUProgram(GLObject):
             GL.glGetUniformIndices(
                 self._id, len_atoms, LP_LP_c_char(atom_names), atom_indices
             )
+
+            for atom_name, atom_index in zip(atom_names, atom_indices):
+                if atom_index == 4294967295: # -1
+                    raise ValueError(f"failed to get uniform block variable {atom_name}'s index")
 
             atom_offsets = np.array([0] * len_atoms, dtype=int)
             GL.glGetActiveUniformsiv(
@@ -435,9 +442,6 @@ class GPUProgram(GLObject):
             ):
                 atom_name = atom["name"]
                 member_name = ShaderParser.array_basename(atom_name)
-                if len_var_name > 0:
-                    member_name = member_name[len_var_name + 1 :]
-
                 stride = int(array_stride)
                 member_type = block_members[member_name]["type"]
                 offset = atom_offset + stride * ShaderParser.index_offset(
@@ -457,24 +461,17 @@ class GPUProgram(GLObject):
             if var_name:
                 blocks_with_var_name[var_name] = block_name
 
-        for var_name, block_name in blocks_with_var_name.items():
-            self._uniform_blocks_info[var_name] = self._uniform_blocks_info[block_name]
-            self._uniform_block_map[var_name] = self._uniform_block_map[block_name]
-
         # self._apply_uniform_blocks()
 
     def _resolve_one_shader_storage_block(self, block_info):
         shader_storage_block = {}
         block_name = block_info["name"]
-        block_var_name = block_info["var_name"]
 
         shader_storage_block["name"] = block_name
         shader_storage_block["atoms"] = []
 
         for member in block_info["members"].values():
             member_name = member["name"]
-            if block_var_name:
-                member_name = block_var_name + "." + member_name
             uniform_info = {
                 "name": member_name,
                 "type": member["type"],
@@ -485,9 +482,6 @@ class GPUProgram(GLObject):
             )
 
         self._shader_storage_block_map[block_name] = shader_storage_block
-        if block_var_name:
-            self._shader_storage_block_map[block_var_name] = shader_storage_block
-
         return shader_storage_block["atoms"]
 
     def _apply_shader_storage_blocks(self):
@@ -497,14 +491,11 @@ class GPUProgram(GLObject):
             block_index = GL.glGetProgramResourceIndex(
                 self._id, GL.GL_SHADER_STORAGE_BLOCK, block_name
             )
+            if block_index == 4294967295:
+                raise ValueError(f"failed to get {block_name} index")
+            
             block_info["index"] = block_index
-
-            block_var_name = block_info["var_name"]
-            len_var_name = len(block_var_name)
-            if block_var_name:
-                raise ValueError(
-                    "Shader Storage Block with variable name is not supported"
-                )
+            len_var_name = len(block_info["var_name"])
 
             props = np.array(
                 [GL.GL_OFFSET, GL.GL_ARRAY_STRIDE, GL.GL_TOP_LEVEL_ARRAY_STRIDE]
@@ -514,9 +505,16 @@ class GPUProgram(GLObject):
             for atom in atoms:
                 atom_offset_stride = np.array([0, 0, 0], dtype=np.int32)
                 atom_name = re.sub(r"\[\d+\]", "[0]", atom["name"].format(0))
+                used_atom_name = atom_name
+                if len_var_name > 0:
+                    used_atom_name = block_name + "." + atom_name
+
                 atom_index = GL.glGetProgramResourceIndex(
-                    self._id, GL.GL_BUFFER_VARIABLE, atom_name
+                    self._id, GL.GL_BUFFER_VARIABLE, used_atom_name
                 )
+                if atom_index == 4294967295: # -1
+                    raise ValueError(f"failed to get {used_atom_name} index")
+                
                 GL.glGetProgramResourceiv(
                     self._id,
                     GL.GL_BUFFER_VARIABLE,
@@ -530,15 +528,13 @@ class GPUProgram(GLObject):
                 atom_offset_stride = [int(x) for x in atom_offset_stride]
 
                 member_name = ShaderParser.array_basename(atom_name)
-                # member_name = ShaderParser.array_basename(atom["name"])
-                if block_var_name:
-                    member_name = member_name[len_var_name + 1 :]
-                # atom_offset = atom_offset_stride[0] + atom_offset_stride[1] * ShaderParser.index_offset(block_members[member_name]["type"], atom["name"].format(0))
-                atom_offset = atom_offset_stride[0] + atom_offset_stride[
-                    1
-                ] * ShaderParser.index_offset(
-                    block_members[member_name]["type"], atom_name
-                )
+                atom_offset = (
+                    atom_offset_stride[0] + 
+                    atom_offset_stride[1] * 
+                    ShaderParser.index_offset(
+                        block_members[member_name]["type"],
+                        atom_name
+                    ))
                 atom_stride = min(atom_offset_stride[1], atom_offset_stride[2])
                 if atom_stride == 0:
                     atom_stride = max(atom_offset_stride[1], atom_offset_stride[2])
@@ -555,11 +551,5 @@ class GPUProgram(GLObject):
             var_name = block_info["var_name"]
             if var_name:
                 blocks_with_var_name[var_name] = block_name
-
-        for var_name in blocks_with_var_name:
-            self._shader_storage_blocks_info[var_name] = block_info
-            self._shader_storage_block_map[var_name] = self._shader_storage_block_map[
-                block_name
-            ]
 
         # self._apply_shader_storage_blocks()

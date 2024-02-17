@@ -1,8 +1,38 @@
 from OpenGL import GL
 from .utils import di
-
+from functools import wraps
 
 class Block:
+
+    _bound_vars = {}
+
+    class HostClass:
+        def __init__(self):
+            self._dirty = True
+
+        @property
+        def dirty(self):
+            return self._dirty
+
+        @dirty.setter
+        def dirty(self, flag: bool):
+            self._dirty = flag
+
+        def upload(self):
+            if self._dirty:
+                Block.upload_var(self)
+                self._dirty = False
+
+        @staticmethod
+        def not_const(func):
+            @wraps(func)
+            def wrapper(*args, **kwargs):
+                self = args[0]
+                result = func(*args, **kwargs)
+                self._dirty = True
+                return result
+
+            return wrapper
 
     class Variable:
         def __init__(self, block, name: str) -> None:

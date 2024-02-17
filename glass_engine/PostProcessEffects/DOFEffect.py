@@ -1,9 +1,8 @@
 from .PostProcessEffect import PostProcessEffect
 from ..Frame import Frame
 
-from glass import FBO, ShaderProgram, sampler2D, GLConfig
+from glass import FBO, ShaderProgram, sampler2D, GLConfig, Block
 from glass.utils import checktype
-from glass.ShaderStorageBlock import ShaderStorageBlock
 
 from OpenGL import GL
 import time
@@ -12,9 +11,9 @@ import os
 
 class DOFEffect(PostProcessEffect):
 
-    class CurrentFocus(ShaderStorageBlock.HostClass):
+    class CurrentFocus(Block.HostClass):
         def __init__(self):
-            ShaderStorageBlock.HostClass.__init__(self)
+            Block.HostClass.__init__(self)
 
             self._current_focus = 0
 
@@ -23,7 +22,7 @@ class DOFEffect(PostProcessEffect):
             return self._current_focus
 
         @current_focus.setter
-        @ShaderStorageBlock.HostClass.not_const
+        @Block.HostClass.not_const
         def current_focus(self, focus: float):
             self._current_focus = focus
 

@@ -1,17 +1,17 @@
-#include "PointLight.glsl"
 #include "DirLight.glsl"
+#include "PointLight.glsl"
 #include "SpotLight.glsl"
-
-buffer PointLights
-{
-    int n_point_lights;
-    PointLight point_lights[];
-};
 
 buffer DirLights
 {
     int n_dir_lights;
     DirLight dir_lights[];
+}all_dir_lights;
+
+buffer PointLights
+{
+    int n_point_lights;
+    PointLight point_lights[];
 };
 
 buffer SpotLights

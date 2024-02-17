@@ -29,6 +29,7 @@ from .ComputeProgram import ComputeProgram
 
 from .ShaderStorageBlock import ShaderStorageBlock
 from .UniformBlock import UniformBlock
+from .Block import Block
 from .Uniform import Uniform
 
 from .GLConfig import GLConfig

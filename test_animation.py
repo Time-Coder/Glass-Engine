@@ -5,12 +5,11 @@ from glass_engine.Animations import Animation, EasingCurve, SequentialAnimation,
 
 import math
 
+GlassConfig.recompile = True
+GlassConfig.debug = True
+
 scene, camera, light, floor = SceneRoam()
 camera.pitch = 0
-scene.remove(light)
-light = PointLight()
-light.position.z = 10
-scene.add(light)
 
 sphere = Sphere()
 sphere.position.z = 0.5

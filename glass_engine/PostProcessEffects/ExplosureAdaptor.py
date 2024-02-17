@@ -1,5 +1,5 @@
 from .ShaderEffect import ShaderEffect
-from glass import sampler2D, ShaderStorageBlock
+from glass import sampler2D, Block
 
 import time
 import os
@@ -7,9 +7,9 @@ import os
 
 class ExplosureAdaptor(ShaderEffect):
 
-    class CurrentLuma(ShaderStorageBlock.HostClass):
+    class CurrentLuma(Block.HostClass):
         def __init__(self):
-            ShaderStorageBlock.HostClass.__init__(self)
+            Block.HostClass.__init__(self)
             self._current_luma = 0
 
         @property
@@ -17,7 +17,7 @@ class ExplosureAdaptor(ShaderEffect):
             return self._current_luma
 
         @current_luma.setter
-        @ShaderStorageBlock.HostClass.not_const
+        @Block.HostClass.not_const
         def current_luma(self, luma: float):
             self._current_luma = luma
 
