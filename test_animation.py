@@ -7,8 +7,6 @@ import math
 
 GlassConfig.recompile = True
 scene, camera, light, floor = SceneRoam()
-scene.background.color = glm.vec3(1, 0, 0)
-scene.skydome = "workspace/laufenurg_church_4k.exr"
 
 
 

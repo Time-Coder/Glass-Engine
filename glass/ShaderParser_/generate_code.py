@@ -52,44 +52,99 @@ atom_type_names = [
     "dmat2",
     "dmat3",
     "dmat4",
-    "sampler1D", "isampler1D", "usampler1D",
-    "sampler2D", "isampler2D", "usampler2D",
-    "sampler3D", "isampler3D", "usampler3D",
-
-    "sampler1DShadow", "isampler1DShadow", "usampler1DShadow",
-    "sampler2DShadow", "isampler2DShadow", "usampler2DShadow",
-    "sampler3DShadow", "isampler3DShadow", "usampler3DShadow",
-
-    "sampler1DArray", "isampler1DArray", "usampler1DArray",
-    "sampler2DArray", "isampler2DArray", "usampler2DArray",
-    "sampler1DArrayShadow", "isampler1DArrayShadow", "usampler1DArrayShadow",
-    "sampler2DArrayShadow", "isampler2DArrayShadow", "usampler2DArrayShadow",
-
-    "sampler2DMS", "isampler2DMS", "usampler2DMS",
-    "sampler2DMSArray", "isampler2DMSArray", "usampler2DMSArray",
-
-    "samplerCube", "isamplerCube", "usamplerCube",
-    "samplerCubeArray", "isamplerCubeArray", "usamplerCubeArray",
-    "samplerCubeShadow", "isamplerCubeShadow", "usamplerCubeShadow",
-    "samplerCubeArrayShadow", "isamplerCubeArrayShadow", "usamplerCubeArrayShadow",
-
-    "sampler2DRect", "isampler2DRect", "usampler2DRect",
-    "sampler2DRectShadow", "isampler2DRectShadow", "usampler2DRectShadow",
-
-    "samplerBuffer", "isamplerBuffer", "usamplerBuffer",
-
-    "image1D", "iimage1D", "uimage1D",
-    "image2D", "iimage2D", "uimage2D",
-    "image3D", "iimage3D", "uimage3D",
-    "imageCube", "iimageCube", "uimageCube",
-    "imageCubeArray", "iimageCubeArray", "uimageCubeArray",
-    "image2DRect", "iimage2DRect", "iimage2DRect",
-    "image2DRect", "iimage2DRect", "iimage2DRect",
-    "image1DArray", "iimage1DArray", "iimage1DArray",
-    "image2DArray", "iimage2DArray", "uimage2DArray",
-    "imageBuffer", "iimageBuffer", "uimageBuffer",
-    "image2DMS", "iimage2DMS", "uimage2DMS",
-    "image2DMSArray", "iimage2DMSArray", "uimage2DMSArray"
+    "sampler1D",
+    "isampler1D",
+    "usampler1D",
+    "sampler2D",
+    "isampler2D",
+    "usampler2D",
+    "sampler3D",
+    "isampler3D",
+    "usampler3D",
+    "sampler1DShadow",
+    "isampler1DShadow",
+    "usampler1DShadow",
+    "sampler2DShadow",
+    "isampler2DShadow",
+    "usampler2DShadow",
+    "sampler3DShadow",
+    "isampler3DShadow",
+    "usampler3DShadow",
+    "sampler1DArray",
+    "isampler1DArray",
+    "usampler1DArray",
+    "sampler2DArray",
+    "isampler2DArray",
+    "usampler2DArray",
+    "sampler1DArrayShadow",
+    "isampler1DArrayShadow",
+    "usampler1DArrayShadow",
+    "sampler2DArrayShadow",
+    "isampler2DArrayShadow",
+    "usampler2DArrayShadow",
+    "sampler2DMS",
+    "isampler2DMS",
+    "usampler2DMS",
+    "sampler2DMSArray",
+    "isampler2DMSArray",
+    "usampler2DMSArray",
+    "samplerCube",
+    "isamplerCube",
+    "usamplerCube",
+    "samplerCubeArray",
+    "isamplerCubeArray",
+    "usamplerCubeArray",
+    "samplerCubeShadow",
+    "isamplerCubeShadow",
+    "usamplerCubeShadow",
+    "samplerCubeArrayShadow",
+    "isamplerCubeArrayShadow",
+    "usamplerCubeArrayShadow",
+    "sampler2DRect",
+    "isampler2DRect",
+    "usampler2DRect",
+    "sampler2DRectShadow",
+    "isampler2DRectShadow",
+    "usampler2DRectShadow",
+    "samplerBuffer",
+    "isamplerBuffer",
+    "usamplerBuffer",
+    "image1D",
+    "iimage1D",
+    "uimage1D",
+    "image2D",
+    "iimage2D",
+    "uimage2D",
+    "image3D",
+    "iimage3D",
+    "uimage3D",
+    "imageCube",
+    "iimageCube",
+    "uimageCube",
+    "imageCubeArray",
+    "iimageCubeArray",
+    "uimageCubeArray",
+    "image2DRect",
+    "iimage2DRect",
+    "iimage2DRect",
+    "image2DRect",
+    "iimage2DRect",
+    "iimage2DRect",
+    "image1DArray",
+    "iimage1DArray",
+    "iimage1DArray",
+    "image2DArray",
+    "iimage2DArray",
+    "uimage2DArray",
+    "imageBuffer",
+    "iimageBuffer",
+    "uimageBuffer",
+    "image2DMS",
+    "iimage2DMS",
+    "uimage2DMS",
+    "image2DMSArray",
+    "iimage2DMSArray",
+    "uimage2DMSArray",
 ]
 
 func_list = [
@@ -256,7 +311,7 @@ func_list = [
     "unpackUnorm",
     # "unpackUnorm2x16",
     # "unpackUnorm4x8",
-    "usubBorrow"
+    "usubBorrow",
 ]
 
 gen_type_map = {
@@ -304,8 +359,10 @@ gen_type_map = {
 definition_list = []
 
 for func_name in func_list:
-    response = requests.get(f"https://registry.khronos.org/OpenGL-Refpages/gl4/html/{func_name}.xhtml")
-    soup = bs4.BeautifulSoup(response.text, 'html.parser')
+    response = requests.get(
+        f"https://registry.khronos.org/OpenGL-Refpages/gl4/html/{func_name}.xhtml"
+    )
+    soup = bs4.BeautifulSoup(response.text, "html.parser")
     code_block = soup.select(f"#{func_name} > div.refsynopsisdiv")
     if not code_block:
         print(func_name, "failed")
@@ -318,7 +375,7 @@ for func_name in func_list:
 
         if div.name != "div":
             continue
-        
+
         div_class = div.get("class")
         if not isinstance(div_class, list) or "funcsynopsis" not in div_class:
             continue
@@ -333,7 +390,10 @@ for func_name in func_list:
             code = table.get_text()
             return_type = code.split(" ")[0].strip(" \t\n")
             func_name_ = code.split("(")[0].split(" ")[1].strip(" \t\n")
-            arg_strs = [arg.strip(" \t\n\xa0") for arg in code.split("(")[1].strip(" \t\n);").split(",")]
+            arg_strs = [
+                arg.strip(" \t\n\xa0")
+                for arg in code.split("(")[1].strip(" \t\n);").split(",")
+            ]
             if return_type in gen_type_map:
                 return_type = gen_type_map[return_type]
 
@@ -371,18 +431,22 @@ for func_name in func_list:
             for i in range(len(arg_types)):
                 if not isinstance(arg_types[i], list):
                     arg_types[i] = [arg_types[i]] * n_gen_types
-            
+
             for j in range(n_gen_types):
-                for i in range(n_optionals+1):
-                    local_arg_types = [arg_type[j] for arg_type in arg_types[:argc-i]]
+                for i in range(n_optionals + 1):
+                    local_arg_types = [
+                        arg_type[j] for arg_type in arg_types[: argc - i]
+                    ]
                     signature = f"{func_name_}({', '.join(local_arg_types)})"
-                    definition_list.append({
-                        "name": func_name_,
-                        "return_type": return_type[j],
-                        "arg_types": local_arg_types,
-                        "arg_names": arg_names[:argc-i],
-                        "signature": signature
-                    })
+                    definition_list.append(
+                        {
+                            "name": func_name_,
+                            "return_type": return_type[j],
+                            "arg_types": local_arg_types,
+                            "arg_names": arg_names[: argc - i],
+                            "signature": signature,
+                        }
+                    )
 
             success = True
 
@@ -397,10 +461,10 @@ if pos_func == -1:
 
 content = content[:pos_func] + "functions = {\n"
 for func in definition_list:
-    content += (f'        "{func["signature"]}": Func(\n')
-    content += (f'            return_type="{func["return_type"]}",\n')
-    content += (f'            name="{func["name"]}",\n')
-    content += (f'            args=[\n')
+    content += f'        "{func["signature"]}": Func(\n'
+    content += f'            return_type="{func["return_type"]}",\n'
+    content += f'            name="{func["name"]}",\n'
+    content += f"            args=[\n"
     for arg_name, arg_type in zip(func["arg_names"], func["arg_types"]):
         if arg_type not in atom_type_names:
             print(f"not supported type '{arg_type}'", func["name"])
@@ -409,10 +473,10 @@ for func in definition_list:
         if pos_bracket != -1:
             arg_type += arg_name[pos_bracket:]
             arg_name = arg_name[:pos_bracket]
-        content += (f'                Var(name="{arg_name}", type="{arg_type}"),\n')
-    content += (f'            ]\n')
-    content += (f'        ),\n')
-content += ("    }\n")
+        content += f'                Var(name="{arg_name}", type="{arg_type}"),\n'
+    content += f"            ]\n"
+    content += f"        ),\n"
+content += "    }\n"
 
 out_file = open(self_folder + "/ShaderBuiltins.py", "w")
 out_file.write(content)

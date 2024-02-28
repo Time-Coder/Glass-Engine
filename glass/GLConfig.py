@@ -629,7 +629,9 @@ class _MetaGLConfig(type):
             try:
                 _MetaGLConfig.__gl_major_version = GL.glGetInteger(GL.GL_MAJOR_VERSION)
             except:
-                _MetaGLConfig.__gl_major_version = cls.version.split(" ")[0].split(".")[0]
+                _MetaGLConfig.__gl_major_version = cls.version.split(" ")[0].split(".")[
+                    0
+                ]
 
         return _MetaGLConfig.__gl_major_version
 
@@ -639,7 +641,9 @@ class _MetaGLConfig(type):
             try:
                 _MetaGLConfig.__gl_minor_version = GL.glGetInteger(GL.GL_MINOR_VERSION)
             except:
-                _MetaGLConfig.__gl_minor_version = cls.version.split(" ")[0].split(".")[1]
+                _MetaGLConfig.__gl_minor_version = cls.version.split(" ")[0].split(".")[
+                    1
+                ]
 
         return _MetaGLConfig.__gl_minor_version
 

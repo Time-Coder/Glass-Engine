@@ -18,7 +18,7 @@ from .utils import (
     cat,
     relative_path,
     printable_path,
-    printable_size
+    printable_size,
 )
 
 from .GlassConfig import GlassConfig
@@ -76,7 +76,7 @@ class BaseShader(GLObject):
         self._include_paths: list = [""]
         self._defines: dict = {}
 
-        self._shader_parser:ShaderParser_ = ShaderParser_(self.__class__._type)
+        self._shader_parser: ShaderParser_ = ShaderParser_(self.__class__._type)
 
     @delete
     def clear(self):

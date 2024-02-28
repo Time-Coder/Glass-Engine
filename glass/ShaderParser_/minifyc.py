@@ -2,6 +2,7 @@ from .pcpp import pcmd
 import sys
 import io
 
+
 def is_space(char):
     return char in [" ", "\t", "\n", "\r", "\v", "\f"]
 

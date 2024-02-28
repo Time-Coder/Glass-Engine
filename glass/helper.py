@@ -163,43 +163,44 @@ def get_dtype(internal_format):
     return GLInfo.format_info_map[internal_format][1]
 
 
-def type_distance(type1:str, type2:str):
+def type_distance(type1: str, type2: str):
     if type1 == type2:
         return 0
-    
+
     if type1 in ["mat2", "mat2x2"] and type2 in ["mat2", "mat2x2"]:
         return 0
-    
+
     if type1 in ["mat3", "mat3x3"] and type2 in ["mat3", "mat3x3"]:
         return 0
-    
+
     if type1 in ["mat4", "mat4x4"] and type2 in ["mat4", "mat4x4"]:
         return 0
-    
+
     if type1 in ["dmat2", "dmat2x2"] and type2 in ["dmat2", "dmat2x2"]:
         return 0
-    
+
     if type1 in ["dmat3", "dmat3x3"] and type2 in ["dmat3", "dmat3x3"]:
         return 0
-    
+
     if type1 in ["dmat4", "dmat4x4"] and type2 in ["dmat4", "dmat4x4"]:
         return 0
-    
+
     if type1 not in GLInfo.basic_types or type2 not in GLInfo.basic_types:
         return None
-    
+
     return abs(GLInfo.basic_types.index(type1) - GLInfo.basic_types.index(type2))
 
-def greater_type(type1:str, type2:str):
+
+def greater_type(type1: str, type2: str):
     if type1 == "":
         return type2
-    
+
     if type2 == "":
         return type1
-    
+
     if type1 == type2:
         return type1
-    
+
     type1_struct = GLInfo.atom_type_map[type1][2]
     type1_dtype = GLInfo.atom_type_map[type1][1]
     type1_index = GLInfo.basic_types.index(type1_dtype)
@@ -210,11 +211,11 @@ def greater_type(type1:str, type2:str):
     type2_index = GLInfo.basic_types.index(type2_dtype)
     type2_nitems = nitems(type2)
 
-    result_dtype = (type1_dtype if type1_index >= type2_index else type2_dtype)
-    result_struct = (type1_struct if type1_nitems >= type2_nitems else type2_struct)
+    result_dtype = type1_dtype if type1_index >= type2_index else type2_dtype
+    result_struct = type1_struct if type1_nitems >= type2_nitems else type2_struct
     if not result_struct:
         return result_dtype
-    
+
     if result_dtype == "bool":
         return "b" + result_struct
     elif result_dtype == "int":
@@ -225,43 +226,44 @@ def greater_type(type1:str, type2:str):
         return result_struct
     elif result_dtype == "double":
         return "d" + result_struct
-    
-def subscript_type(type_str:str):
+
+
+def subscript_type(type_str: str):
     pos_bracket = type_str.rfind("[")
     if pos_bracket != -1:
         return type_str[:pos_bracket]
-    
+
     if type_str in ["bvec2", "bvec3", "bvec4"]:
         return "bool"
-    
+
     if type_str in ["ivec2", "ivec3", "ivec4"]:
         return "int"
-    
+
     if type_str in ["uvec2", "uvec3", "uvec4"]:
         return "uint"
-    
+
     if type_str in ["vec2", "vec3", "vec4"]:
         return "float"
-    
+
     if type_str in ["dvec2", "dvec3", "dvec4"]:
         return "double"
-    
+
     if type_str in ["mat2", "mat2x2", "mat2x3", "mat2x4"]:
         return "vec2"
-    
+
     if type_str in ["mat3", "mat3x2", "mat3x3", "mat3x4"]:
         return "vec3"
-    
+
     if type_str in ["mat4", "mat4x2", "mat4x3", "mat4x4"]:
         return "vec4"
-    
+
     if type_str in ["dmat2", "dmat2x2", "dmat2x3", "dmat2x4"]:
         return "dvec2"
-    
+
     if type_str in ["dmat3", "dmat3x2", "dmat3x3", "dmat3x4"]:
         return "dvec3"
-    
+
     if type_str in ["dmat4", "dmat4x2", "dmat4x3", "dmat4x4"]:
         return "dvec4"
-    
+
     return ""

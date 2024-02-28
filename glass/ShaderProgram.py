@@ -301,10 +301,10 @@ class ShaderProgram(GPUProgram):
         if error_messages:
             self_defines = self.defines
             if (
-                len(error_messages) == 1 and 
-                error_messages[0] == "Out of resource error." and
-                "USE_SHADER_STORAGE_BLOCK" in self_defines and
-                self_defines["USE_SHADER_STORAGE_BLOCK"] == True
+                len(error_messages) == 1
+                and error_messages[0] == "Out of resource error."
+                and "USE_SHADER_STORAGE_BLOCK" in self_defines
+                and self_defines["USE_SHADER_STORAGE_BLOCK"] == True
             ):
                 self.undef("USE_SHADER_STORAGE_BLOCK")
                 self.reload()
