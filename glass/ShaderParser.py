@@ -117,15 +117,8 @@ class ShaderParser:
         def append_geometry_in(match):
             layout_qualifiers = match.group("layout_qualifiers")
             args, kwargs = ShaderParser.get_layout_qualifiers(layout_qualifiers)
-            acceptable_geometry_ins = [
-                "points",
-                "lines",
-                "lines_adjacency",
-                "triangles",
-                "triangles_adjacency",
-            ]
             for arg in args:
-                if arg in acceptable_geometry_ins:
+                if arg in GLInfo.geometry_ins:
                     geometry_in.append(arg)
                     return
 

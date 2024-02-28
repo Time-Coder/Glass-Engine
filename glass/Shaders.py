@@ -6,8 +6,7 @@ import copy
 import warnings
 import sys
 
-from .minifyc import minifyc
-from .treeshake import treeshake, macros_expand
+from .ShaderParser_.minifyc import minifyc, macros_expand
 from .utils import (
     di,
     defines_key,
@@ -19,13 +18,15 @@ from .utils import (
     cat,
     relative_path,
     printable_path,
-    printable_size,
+    printable_size
 )
+
 from .GlassConfig import GlassConfig
 from .GLConfig import GLConfig
 from .GLObject import GLObject
 from .ShaderParser import ShaderParser
 from .GPUProgram import CompileError, CompileWarning
+from .ShaderParser_ import ShaderParser_
 
 
 class BaseShader(GLObject):
@@ -75,6 +76,8 @@ class BaseShader(GLObject):
         self._include_paths: list = [""]
         self._defines: dict = {}
 
+        self._shader_parser:ShaderParser_ = ShaderParser_(self.__class__._type)
+
     @delete
     def clear(self):
         pass
@@ -91,9 +94,9 @@ class BaseShader(GLObject):
     def is_bound(self):
         pass
 
-    @property
-    def type(self):
-        return self._type
+    @classmethod
+    def type(cls):
+        return cls._type
 
     @property
     def is_compiled(self):
@@ -116,13 +119,13 @@ class BaseShader(GLObject):
             return
 
         if self._id == 0:
-            self._id = GL.glCreateShader(self._type)
+            self._id = GL.glCreateShader(self.__class__._type)
             if self._id == 0:
                 raise MemoryError("Failed to create Shader!")
 
         used_code = self._code
         if not GlassConfig.debug:
-            used_code = minifyc(treeshake(self._code))
+            used_code = minifyc(self._shader_parser.treeshake())
 
         version_pattern = r"#\s*version \d\d\d core"
         version_str = f"#version {GLConfig.major_version}{GLConfig.minor_version}0 core"
@@ -141,7 +144,7 @@ class BaseShader(GLObject):
                 os.makedirs(dest_folder)
 
             out_file = open(dest_folder + "/" + os.path.basename(self.file_name), "w")
-            out_file.write(self._code)
+            out_file.write(used_code)
             out_file.close()
 
         GL.glShaderSource(self._id, used_code)
@@ -234,17 +237,18 @@ class BaseShader(GLObject):
         return False
 
     def _define_shader_type(self):
-        if self._type == GL.GL_VERTEX_SHADER:
+        shader_type = self.__class__._type
+        if shader_type == GL.GL_VERTEX_SHADER:
             self.define("VERTEX_SHADER")
-        elif self._type == GL.GL_TESS_CONTROL_SHADER:
+        elif shader_type == GL.GL_TESS_CONTROL_SHADER:
             self.define("TESS_CONTROL_SHADER")
-        elif self._type == GL.GL_TESS_EVALUATION_SHADER:
+        elif shader_type == GL.GL_TESS_EVALUATION_SHADER:
             self.define("TESS_EVALUATION_SHADER")
-        elif self._type == GL.GL_GEOMETRY_SHADER:
+        elif shader_type == GL.GL_GEOMETRY_SHADER:
             self.define("GEOMETRY_SHADER")
-        elif self._type == GL.GL_FRAGMENT_SHADER:
+        elif shader_type == GL.GL_FRAGMENT_SHADER:
             self.define("FRAGMENT_SHADER")
-        elif self._type == GL.GL_COMPUTE_SHADER:
+        elif shader_type == GL.GL_COMPUTE_SHADER:
             self.define("COMPUTE_SHADER")
 
     def _collect_info(self, file_name):
@@ -283,6 +287,8 @@ class BaseShader(GLObject):
             self._collect_info(file_name)
 
             self._clean_code = macros_expand(self._code)
+            self._shader_parser.parse(self._clean_code)
+
             self.attributes_info = {}
             self.geometry_in = ""
             self.uniforms_info = {}

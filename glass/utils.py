@@ -214,11 +214,92 @@ def delete(method):
 def extname(filename):
     return os.path.splitext(filename)[1][1:].lower()
 
-
 def has_valid(content):
     its = list(re.finditer(r"\S", content))
-    return its.__bool__()
+    return bool(its)
 
+def array_basename(name:str):
+    pos_bracket = name.find("[")
+    if pos_bracket == -1:
+        return name
+    else:
+        return name[:pos_bracket].strip(" \t")
+
+def extract_array_indices(var_name:str):
+    if "[" not in var_name:
+        return []
+
+    indices = []
+    len_var_name = len(var_name)
+    pos_start = len_var_name
+    while True:
+        pos_end = var_name.rfind("]", 0, pos_start)
+        if pos_end == -1:
+            break
+
+        str_mid = var_name[pos_end + 1 : pos_start]
+        if (
+            pos_end >= 0
+            and pos_end < len_var_name
+            and pos_start >= 0
+            and pos_start < len_var_name
+            and has_valid(str_mid)
+        ):
+            break
+
+        pos_start = var_name.rfind("[", 0, pos_end)
+        if pos_start == -1:
+            break
+
+        index = '{0}'
+        if pos_end - pos_start > 1:
+            index = int(var_name[pos_start + 1 : pos_end].strip(" \t"))
+
+        indices.insert(0, index)
+
+    return indices
+
+def next_index(current_index, indices):
+    if not current_index:
+        for index in indices:
+            if isinstance(index, int):
+                current_index.append(0)
+            else:
+                current_index.append('{0}')
+        return True
+
+    i = len(current_index) - 1
+    while True:
+        if i < 0:
+            return False
+        while i >= 0 and isinstance(indices[i], str):
+            i -= 1
+        if i < 0:
+            return False
+        current_index[i] += 1
+        if current_index[i] >= indices[i]:
+            current_index[i] = 0
+            i -= 1
+        else:
+            return True
+
+
+def resolve_array(var_name):
+    if "[" not in var_name:
+        return [var_name]
+
+    indices = extract_array_indices(var_name)
+    base_name = array_basename(var_name)
+
+    element_names = []
+    current_index = []
+    while next_index(current_index, indices):
+        element_name = base_name
+        for index in current_index:
+            element_name += "[" + str(index) + "]"
+        element_names.append(element_name)
+
+    return element_names
 
 def rget_token(content, i):
     token = {}

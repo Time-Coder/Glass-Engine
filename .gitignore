@@ -17,3 +17,4 @@ MANIFEST.in
 .DS_Store
 assimp/
 pybind11/
+*.sqlite

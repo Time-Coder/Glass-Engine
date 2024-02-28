@@ -2,15 +2,12 @@ import subprocess
 import sys
 import os
 import shutil
-from glass.glsl_parser import create_glsl_parser
 
 if os.path.isdir("build"):
     shutil.rmtree("build")
 
 if os.path.isdir("python_glass.egg-info"):
     shutil.rmtree("python_glass.egg-info")
-
-create_glsl_parser()
 
 with open("README_glass.rst", "r", encoding="utf-8") as in_file:
     content = in_file.read()

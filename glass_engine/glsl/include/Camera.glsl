@@ -151,14 +151,20 @@ int locate_CSM_leveli(Camera camera, vec3 world_pos)
 {
 	vec3 view_pos = world_to_view(camera, world_pos);
 	if (view_pos.y < PSSM(camera, 0))
+	{
 		return 0;
+	}
+
 	for (int i = 0; i < camera.CSM_levels; i++)
 	{
 		float z0 = PSSM(camera, i);
 		float z1 = PSSM(camera, i+1);
 		if (z0 <= view_pos.y && view_pos.y <= z1)
+		{
 			return i;
+		}
 	}
+	
 	return int(camera.CSM_levels-1);
 }
 
