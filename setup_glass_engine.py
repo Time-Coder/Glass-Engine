@@ -36,7 +36,7 @@ setuptools.setup(
     include_package_data=False,
     python_requires=">=3.7",
     install_requires=[
-        "python-glass>=0.1.51",
+        "python-glass>=0.1.52",
         "assimpy>=5.3.1.3",
         "pytweening"
     ],
