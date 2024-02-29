@@ -169,7 +169,7 @@ class Font(metaclass=MetaFont):
         char.bitmap = np.array(self.face.glyph.bitmap.buffer, dtype=np.uint8).reshape(
             (self.face.glyph.bitmap.rows, self.face.glyph.bitmap.width)
         )
-        char.sdf = edtaa(char.bitmap / 255)
+        # char.sdf = edtaa(char.bitmap / 255)
         Font._char_map[key] = char
 
         return char
