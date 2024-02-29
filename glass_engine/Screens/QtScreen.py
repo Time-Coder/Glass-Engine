@@ -227,7 +227,7 @@ def initializeGL(self) -> None:
     if GLConfig.major_version < 4:
         GlassEngineConfig["USE_SHADER_STORAGE_BLOCK"] = False
 
-    if GLConfig.minor_version < 3:
+    if GLConfig.major_version == 4 and GLConfig.minor_version < 3:
         GlassEngineConfig["USE_SHADER_STORAGE_BLOCK"] = False
 
     if not bt.glInitBindlessTextureARB():
