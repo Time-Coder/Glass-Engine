@@ -55,6 +55,10 @@ camera.screen.show() # 相机显示屏显示渲染结果
 
 ## Release notes
 
+* temp version 0.1.52
+    * 添加深度树摇尝试修复 bug #3
+    * 临时版本，代码结构有待优化
+
 * version 0.1.51
     * 修复相机挂载到有缩放的节点位置不对的 bug
     * 将所有屏幕四边形绘制取消依赖顶点和索引
