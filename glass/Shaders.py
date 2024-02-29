@@ -283,12 +283,11 @@ class BaseShader(GLObject):
             f"{GlassConfig.cache_folder}/{base_name}_{md5_value}.meta"
         )
 
+        self._collect_info(file_name)
+        self._clean_code = macros_expand(self._code)
+        self._shader_parser.parse(self._clean_code)
+
         if self._test_should_recompile():
-            self._collect_info(file_name)
-
-            self._clean_code = macros_expand(self._code)
-            self._shader_parser.parse(self._clean_code)
-
             self.attributes_info = {}
             self.geometry_in = ""
             self.uniforms_info = {}

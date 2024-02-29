@@ -4,13 +4,14 @@ import platform
 import glob
 import tree_sitter
 import re
+import zipfile
 
 from ..GLInfo import GLInfo
 from .ShaderSyntaxTokens import Var, Attribute, Func, FuncCall, Struct, SimpleVar
 from .ShaderBuiltins import ShaderBuiltins
 
 from ..utils import resolve_array
-from ..helper import greater_type, type_distance, subscript_type
+from ..helper import greater_type, type_list_distance, subscript_type
 
 from OpenGL import GL
 from tree_sitter import Language, Parser
@@ -56,16 +57,20 @@ class ShaderParser_:
         bits = platform.architecture()[0]
 
         dll_file = (
-            f"{self_folder}/lib/{machine}/{platform_system}/{bits}/glsl.{dll_suffix}"
+            f"{self_folder}/tree-sitter-glsl/lib/{machine}/{platform_system}/{bits}/glsl.{dll_suffix}"
         )
         dll_folder = os.path.dirname(dll_file)
         if not os.path.isdir(dll_folder):
             os.makedirs(dll_folder)
 
         if not os.path.isfile(dll_file):
+            if not os.path.isfile(self_folder + "/tree-sitter-glsl/src/parser.c"):
+                zip_file = zipfile.ZipFile(self_folder + "/tree-sitter-glsl/src.zip")
+                zip_file.extractall(self_folder + "/tree-sitter-glsl/src")
+
             Language.build_library(dll_file, [self_folder + "/tree-sitter-glsl"])
             trash_files = glob.glob(
-                f"{self_folder}/lib/{machine}/{platform_system}/{bits}/glsl.*"
+                f"{dll_folder}/glsl.*"
             )
             for trash_file in trash_files:
                 if os.path.abspath(trash_file) != os.path.abspath(dll_file):
@@ -616,26 +621,30 @@ class ShaderParser_:
 
         min_distance = None
         best_mached_func = None
+        candidate_funcs = []
         for candidate_func in self.candidate_functions(func_call.name):
             if candidate_func.argc != len(arg_types):
                 continue
-
-            current_distance = self.type_list_distance(
+            
+            current_distance = type_list_distance(
                 arg_types, candidate_func.arg_types
             )
-            if current_distance is not None and current_distance == 0:
-                min_distance = 0
-                best_mached_func = candidate_func
-                break
-
-            if min_distance is None or (
-                current_distance is not None and current_distance < min_distance
-            ):
-                min_distance = current_distance
-                if min_distance is not None:
+            if isinstance(current_distance, int):
+                if current_distance == 0:
+                    min_distance = 0
                     best_mached_func = candidate_func
+                    break
 
-        return best_mached_func
+                if min_distance is None or current_distance < min_distance:
+                    min_distance = current_distance
+                    best_mached_func = candidate_func
+            else:
+                if current_distance == "inf":
+                    continue
+
+                candidate_funcs.append(candidate_func)
+
+        return (best_mached_func if best_mached_func is not None else candidate_funcs)
 
     def resolve_functions(self):
         if not ShaderBuiltins.function_groups:
@@ -656,7 +665,7 @@ class ShaderParser_:
                     continue
 
                 best_match_func = self.find_best_match_function(func_call, func)
-                if best_match_func is not None:
+                if best_match_func:
                     func.func_calls[key] = best_match_func
 
     def candidate_functions(self, func_name: str):
@@ -665,6 +674,24 @@ class ShaderParser_:
 
         if func_name in ShaderBuiltins.function_groups:
             yield from ShaderBuiltins.function_groups[func_name]
+
+    @staticmethod
+    def get_return_type(func_list):
+        if isinstance(func_list, Func):
+            return func_list.return_type
+        
+        if isinstance(func_list, list):
+            common_return_type = ""
+            for func in func_list:
+                if common_return_type == "":
+                    common_return_type = func.return_type
+                else:
+                    if common_return_type != func.return_type:
+                        return ""
+                    
+            return common_return_type
+        
+        return ""
 
     def analyse_type(self, expression: tree_sitter.Node, func: Func) -> str:
         if expression.type == "number_literal":
@@ -787,13 +814,14 @@ class ShaderParser_:
 
             func_call_key = FuncCall.get_signature(expression)
             func_call = func.func_calls[func_call_key]
-            if isinstance(func_call, Func):
-                return func_call.return_type
+            if isinstance(func_call, (Func, list)):
+                return ShaderParser_.get_return_type(func_call)
 
-            best_match_func = self.find_best_match_function(func_call, func)
-            if best_match_func is not None:
-                func.func_calls[func_call_key] = best_match_func
-                return best_match_func.return_type
+            if isinstance(func_call, FuncCall):
+                best_match_func = self.find_best_match_function(func_call, func)
+                if best_match_func:
+                    func.func_calls[func_call_key] = best_match_func
+                return ShaderParser_.get_return_type(best_match_func)
 
             return ""
         elif expression.type == "binary_expression":
@@ -828,24 +856,15 @@ class ShaderParser_:
 
         return ""
 
-    def type_list_distance(
-        self, type_list1: List[str], type_list2: List[str]
-    ) -> Union[int | None]:
-        full_distance = 0
-        for type1, type2 in zip(type_list1, type_list2):
-            current_distance = type_distance(type1, type2)
-            if current_distance is None:
-                return None
-            full_distance += current_distance
-
-        return full_distance
-
     def resolve(self):
         self.resolve_structs()
         self.resolve_vars()
         self.resolve_functions()
 
     def treeshake(self) -> str:
+        if "main()" not in self.functions:
+            return self.clean_code
+
         self.functions["main()"].is_used = True
 
         segments_to_be_removed = []
@@ -862,7 +881,7 @@ class ShaderParser_:
                 segments_to_be_removed.append((struct.start_index, struct.end_index))
 
         if not segments_to_be_removed:
-            return
+            return self.clean_code
 
         segments_to_be_removed.sort(key=lambda x: x[0])
         result = self.clean_code[: segments_to_be_removed[0][0]]

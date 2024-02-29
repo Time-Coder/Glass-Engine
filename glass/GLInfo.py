@@ -990,43 +990,16 @@ class GLInfo:
     ]
 
     basic_types = ["bool", "int", "uint", "float", "double"]
-    bvec = ["bvec2", "bvec3", "bvec4"]
-    uint_types = ["uvec2", "uvec3", "uvec4"]
-    int_types = ["ivec2", "ivec3", "ivec4"]
-    float_types = [
-        "vec2",
-        "vec3",
-        "vec4",
-        "mat2x2",
-        "mat3x2",
-        "mat4x2",
-        "mat2x3",
-        "mat3x3",
-        "mat4x3",
-        "mat2x4",
-        "mat3x4",
-        "mat4x4",
-        "mat2",
-        "mat3",
-        "mat4",
-    ]
-    double_types = [
-        "dvec2",
-        "dvec3",
-        "dvec4",
-        "dmat2x2",
-        "dmat3x2",
-        "dmat4x2",
-        "dmat2x3",
-        "dmat3x3",
-        "dmat4x3",
-        "dmat2x4",
-        "dmat3x4",
-        "dmat4x4",
-        "dmat2",
-        "dmat3",
-        "dmat4",
-    ]
+    gvec2_types = ["bvec2", "ivec2", "uvec2", "vec2", "dvec2"]
+    gvec3_types = ["bvec3", "ivec3", "uvec3", "vec3", "dvec3"]
+    gvec4_types = ["bvec4", "ivec4", "uvec4", "vec4", "dvec4"]
+    gmat2x2_types = [("mat2x2", "mat2"), ("dmat2x2", "dmat2")]
+    gmat3x2_types = ["mat3x2", "dmat3x2"]
+    gmat3x3_types = [("mat3x3", "mat3"), ("dmat3x3", "dmat3")]
+    gmat3x4_types = ["mat3x4", "dmat3x4"]
+    gmat4x2_types = ["mat4x2", "dmat4x2"]
+    gmat4x3_types = ["mat4x3", "dmat4x3"]
+    gmat4x4_types = [("mat4x4", "mat4"), ("dmat4x4", "dmat4")]
 
     atom_type_map = {
         "bool": (bool, "bool", ""),

@@ -214,9 +214,16 @@ class Func:
         for func_call in self.func_calls.values():
             if isinstance(func_call, Func):
                 func_call.is_used = flag
+            elif isinstance(func_call, list):
+                for sub_func_call in func_call:
+                    sub_func_call.is_used = flag
 
         for struct in self.used_structs:
             struct.is_used = flag
 
     def __repr__(self):
         return f"{self.return_type} {self.signature}"
+
+    def __bool__(self):
+        return True
+    

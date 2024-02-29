@@ -30,7 +30,7 @@ def find_files(directory):
 
 
 datas = find_files("glsl")
-datas += find_files("tree-sitter-glsl")
+datas += find_files("ShaderParser_/tree-sitter-glsl")
 datas.append(
     (
         os.path.abspath(
@@ -40,9 +40,9 @@ datas.append(
     ),
     (
         os.path.abspath(
-            os.path.dirname(os.path.abspath(__file__)) + "/../pcpp/LICENSE"
+            os.path.dirname(os.path.abspath(__file__)) + "/../ShaderParser_/pcpp/LICENSE"
         ).replace("\\", "/"),
-        "glass/pcpp",
+        "glass/ShaderParser_/pcpp",
     ),
 )
 if platform.system() == "Linux":

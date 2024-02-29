@@ -18,3 +18,5 @@ MANIFEST.in
 assimp/
 pybind11/
 *.sqlite
+glass/ShaderParser_/tree-sitter-glsl/src/*
+test_*

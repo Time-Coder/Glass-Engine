@@ -60,6 +60,7 @@ class AttrList(SameTypeList):
         self._list_dirty = True
         self._should_retest = True
         self.stride = sizeof(dtype)
+        self._increment = None
 
     def _apply(self) -> None:
         self._check_in_items()
@@ -72,10 +73,12 @@ class AttrList(SameTypeList):
         if not self:
             return
 
-        assert self._increment is None
-        self._increment = Increment(self)
+        if self._increment is None:
+            self._increment = Increment(self)
 
-        assert self._vbo.nbytes == 0 and self._vbo.id == 0
+        if self._vbo.nbytes > 0 or self._vbo.id > 0:
+            self._vbo.delete()
+
         self.stride = sizeof(self.const_get(0))
         self._vbo.malloc(self.capacity * self.stride, self._draw_type)
 

@@ -166,29 +166,57 @@ def get_dtype(internal_format):
 def type_distance(type1: str, type2: str):
     if type1 == type2:
         return 0
+    
+    if type1 == "" or type2 == "":
+        return "unknown"
+                
+    def type_index(type_, types):
+        for i, target_type in enumerate(types):
+            if isinstance(target_type, tuple):
+                if type_ in target_type:
+                    return i
+            else:
+                if type_ == target_type:
+                    return i
+        return -1
 
-    if type1 in ["mat2", "mat2x2"] and type2 in ["mat2", "mat2x2"]:
-        return 0
+    all_types = [
+        GLInfo.basic_types,
+        GLInfo.gvec2_types,
+        GLInfo.gvec3_types,
+        GLInfo.gvec4_types,
+        GLInfo.gmat2x2_types,
+        GLInfo.gmat3x2_types,
+        GLInfo.gmat3x3_types,
+        GLInfo.gmat3x4_types,
+        GLInfo.gmat4x2_types,
+        GLInfo.gmat4x3_types,
+        GLInfo.gmat4x4_types
+    ]
 
-    if type1 in ["mat3", "mat3x3"] and type2 in ["mat3", "mat3x3"]:
-        return 0
+    for target_types in all_types:
+        type1_index = type_index(type1, target_types)
+        type2_index = type_index(type2, target_types)
+        if type1_index != -1 and type2_index != -1:
+            return abs(type1_index - type2_index)
 
-    if type1 in ["mat4", "mat4x4"] and type2 in ["mat4", "mat4x4"]:
-        return 0
+    return "inf"
 
-    if type1 in ["dmat2", "dmat2x2"] and type2 in ["dmat2", "dmat2x2"]:
-        return 0
 
-    if type1 in ["dmat3", "dmat3x3"] and type2 in ["dmat3", "dmat3x3"]:
-        return 0
+def type_list_distance(type_list1, type_list2):
+    for type1, type2 in zip(type_list1, type_list2):
+        current_distance = type_distance(type1, type2)
+        if current_distance == "inf":
+            return "inf"
+    
+    full_distance = 0
+    for type1, type2 in zip(type_list1, type_list2):
+        current_distance = type_distance(type1, type2)
+        if current_distance == "unknown":
+            return "unknown"
+        full_distance += current_distance
 
-    if type1 in ["dmat4", "dmat4x4"] and type2 in ["dmat4", "dmat4x4"]:
-        return 0
-
-    if type1 not in GLInfo.basic_types or type2 not in GLInfo.basic_types:
-        return None
-
-    return abs(GLInfo.basic_types.index(type1) - GLInfo.basic_types.index(type2))
+    return full_distance
 
 
 def greater_type(type1: str, type2: str):
