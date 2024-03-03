@@ -443,7 +443,7 @@ def is_text_file(file_path):
 
     try:
         with open(file_path, "rb") as f:
-            result = chardet.detect(f.read())
+            result = chardet.detect(f.read(1024))
             return result["encoding"] is not None
     except:
         return False

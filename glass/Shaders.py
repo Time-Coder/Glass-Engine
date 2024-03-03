@@ -145,7 +145,7 @@ class BaseShader(GLObject):
                     version_str = "#version 120"
                 elif GLConfig.minor_version == 0:
                     version_str = "#version 110"
-                    
+
         if not version_str:
             raise RuntimeError(f"OpenGL version {GLConfig.major_version}.{GLConfig.minor_version} is not supported.")
 
@@ -545,7 +545,7 @@ class BaseShader(GLObject):
             found = False
 
             if end_char == "\n":
-                include_filename = self.defines[include_filename]
+                include_filename = self.defines[include_filename][1:-1]
 
             for include_path in self.include_paths:
                 if include_path and not os.path.isdir(include_path):
