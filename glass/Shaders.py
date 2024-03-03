@@ -127,9 +127,32 @@ class BaseShader(GLObject):
         if not GlassConfig.debug:
             used_code = minifyc(self._shader_parser.treeshake())
 
-        version_pattern = r"#\s*version \d\d\d core"
-        version_str = f"#version {GLConfig.major_version}{GLConfig.minor_version}0 core"
-        used_code = re.sub(version_pattern, version_str, used_code)
+        version_pattern1 = r"#\s*version \d\d\d core"
+        version_pattern2 = r"#\s*version \d\d\d"
+        version_str = ""
+        if GLConfig.major_version > 3 or GLConfig.major_version == 3 and GLConfig.minor_version >= 3:
+            version_str = f"#version {GLConfig.major_version}{GLConfig.minor_version}0 core"
+        else:
+            if GLConfig.major_version == 3:
+                if GLConfig.minor_version == 2:
+                    version_str = "#version 150"
+                elif GLConfig.minor_version == 1:
+                    version_str = "#version 140"
+                elif GLConfig.minor_version == 0:
+                    version_str = "#version 130"
+            elif GLConfig.major_version == 2:
+                if GLConfig.minor_version == 1:
+                    version_str = "#version 120"
+                elif GLConfig.minor_version == 0:
+                    version_str = "#version 110"
+                    
+        if not version_str:
+            raise RuntimeError(f"OpenGL version {GLConfig.major_version}.{GLConfig.minor_version} is not supported.")
+
+        if re.search(version_pattern1, used_code):
+            used_code = re.sub(version_pattern1, version_str, used_code)
+        elif re.search(version_pattern2, used_code):
+            used_code = re.sub(version_pattern2, version_str, used_code)
 
         if GlassConfig.print:
             print(
