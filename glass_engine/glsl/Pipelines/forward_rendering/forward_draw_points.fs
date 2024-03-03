@@ -72,8 +72,7 @@ void main()
         view_pos = shading_info.view_pos;
         view_normal = shading_info.view_TBN[2];
     }
-
-    if (!is_opaque_pass && out_color.a < 1)
+    else if (out_color.a < 1 - 1E-6)
     {
         get_OIT_info(out_color, fs_in.view_pos.y, accum, reveal);
         out_color = vec4(0);

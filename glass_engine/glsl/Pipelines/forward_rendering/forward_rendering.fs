@@ -87,7 +87,7 @@ void main()
     }
     else if (out_color.a < 1 - 1E-6)
     {
-        get_OIT_info(out_color, view_pos.y, accum, reveal);
+        get_OIT_info(out_color, fs_in.view_pos.y, accum, reveal);
         out_color = vec4(0);
     }
 }
