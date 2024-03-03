@@ -5,9 +5,11 @@ import zipfile
 
 zip_file = zipfile.ZipFile("assimpy/assimp.zip")
 zip_file.extractall("assimpy/assimp")
+zip_file.close()
 
 zip_file = zipfile.ZipFile("assimpy/pybind11.zip")
 zip_file.extractall("assimpy/pybind11")
+zip_file.close()
 
 machine = platform.machine()
 plat_sys = platform.system()

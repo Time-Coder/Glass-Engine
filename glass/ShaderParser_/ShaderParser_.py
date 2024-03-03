@@ -67,6 +67,7 @@ class ShaderParser_:
             if not os.path.isfile(self_folder + "/tree-sitter-glsl/src/parser.c"):
                 zip_file = zipfile.ZipFile(self_folder + "/tree-sitter-glsl/src.zip")
                 zip_file.extractall(self_folder + "/tree-sitter-glsl/src")
+                zip_file.close()
 
             Language.build_library(dll_file, [self_folder + "/tree-sitter-glsl"])
             trash_files = glob.glob(
