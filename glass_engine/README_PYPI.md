@@ -55,69 +55,93 @@ camera.screen.show() # 相机显示屏显示渲染结果
 
 ## Release notes
 
-* temp version 0.1.52
-    * 添加深度树摇尝试修复 bug #3
-    * 临时版本，代码结构有待优化
+### version 0.1.54
 
-* version 0.1.51
-    * 修复相机挂载到有缩放的节点位置不对的 bug
-    * 将所有屏幕四边形绘制取消依赖顶点和索引
-    * 去除不必要的 FBO
+* 修复 bug [#4](https://github.com/Time-Coder/Glass-Engine/issues/4): "view_pos.y" is used before being initialized
+* 修复 bug [#5](https://github.com/Time-Coder/Glass-Engine/issues/5): ShaderToy 动态纹理文件不存在
+* 修复 bug [#6](https://github.com/Time-Coder/Glass-Engine/issues/6): ImportError: cannot import name 'Self' from 'typing'
+* 修复 bug [#7](https://github.com/Time-Coder/Glass-Engine/issues/7): #version directive error
 
-* version 0.1.39
-    * 兼容 Linux
-    * 支持 PyInstaller 无配置打包
+### temp version 0.1.52
 
-* version 0.1.36
-    * 修复纹理数超过硬件限制问题
+* 添加深度树摇尝试修复 bug #3
+* 临时版本，代码结构有待优化
 
-* version 0.1.35
-    * 修改 PyPI 主页文档
+### version 0.1.51
 
-* version 0.1.34:
-    * 删除对 OpenEXR 的依赖，使用 opencv 读取 exr
+* 修复相机挂载到有缩放的节点位置不对的 bug
+* 将所有屏幕四边形绘制取消依赖顶点和索引
+* 去除不必要的 FBO
 
-* version 0.1.33:
-    * 修复打包错误
+### version 0.1.39
 
-* version 0.1.31:
-    * 将 OpenGL 封装模块分离出来并单独打包为 [python-glass](https://pypi.org/project/python-glass/)
-    * 将模型加载模块分离出来并单独打包为 [assimpy](https://pypi.org/project/assimpy/)
-    * 模型加载支持内置纹理
-    * 添加对 metallic-roughness map 的支持
+* 兼容 Linux
+* 支持 PyInstaller 无配置打包
 
-* version 0.1.30:
-    * 兼容了 AMD 显卡
-    * 修复仅有天空盒不显示 bug
-    * 优化 shader 逻辑
-    * 改进 Qt API 选择逻辑
+### version 0.1.36
 
-* version 0.1.29:
-    * 修改动态加载新功能代码 bug
+* 修复纹理数超过硬件限制问题
 
-* version 0.1.28:
-    * 修改 pcpp 冲突 bug
+### version 0.1.35
 
-* version 0.1.27:
-    * 禁用滚轮
-    * 修改 Python 3.7 f-string bug
+* 修改 PyPI 主页文档
 
-* version 0.1.26:
-    * 添加 treeshake 功能，自动删除 glsl 无用函数
-    * 添加功能自动剪裁功能，没有用到的功能不参与 glsl 编译
+### version 0.1.34
 
-* version 0.1.25:
-    * 添加 minifyc 进一步减小 glsl 代码体积，避免 OSError: 0x000000010 bug
+* 删除对 OpenEXR 的依赖，使用 opencv 读取 exr
 
-* version 0.1.24:
-    * 修复 OSError: 0x000000010 bug
-    * 修复 dynamic_env_map 开启再关闭失效 bug
-    * 修复 cast_shadows 开启再关闭失效 bug
-    * 修复 16bits 灰度图像加载错误 bug
+### version 0.1.33
 
-* version 0.1.23:
-    * 修复后处理 bug
-    * 修复半透明 bug
+* 修复打包错误
 
-* version 0.1.22:
-    * 支持了 Python 3.12
+### version 0.1.31
+
+* 将 OpenGL 封装模块分离出来并单独打包为 [python-glass](https://pypi.org/project/python-glass/)
+* 将模型加载模块分离出来并单独打包为 [assimpy](https://pypi.org/project/assimpy/)
+* 模型加载支持内置纹理
+* 添加对 metallic-roughness map 的支持
+
+### version 0.1.30
+
+* 兼容了 AMD 显卡
+* 修复仅有天空盒不显示 bug
+* 优化 shader 逻辑
+* 改进 Qt API 选择逻辑
+
+### version 0.1.29
+
+* 修改动态加载新功能代码 bug
+
+### version 0.1.28
+
+* 修改 pcpp 冲突 bug
+
+### version 0.1.27
+
+* 禁用滚轮
+* 修改 Python 3.7 f-string bug
+
+### version 0.1.26
+
+* 添加 treeshake 功能，自动删除 glsl 无用函数
+* 添加功能自动剪裁功能，没有用到的功能不参与 glsl 编译
+
+### version 0.1.25
+
+* 添加 minifyc 进一步减小 glsl 代码体积，避免 OSError: 0x000000010 bug
+
+### version 0.1.24
+
+* 修复 OSError: 0x000000010 bug
+* 修复 dynamic_env_map 开启再关闭失效 bug
+* 修复 cast_shadows 开启再关闭失效 bug
+* 修复 16bits 灰度图像加载错误 bug
+
+### version 0.1.23
+
+* 修复后处理 bug
+* 修复半透明 bug
+
+### version 0.1.22
+
+* 支持了 Python 3.12
