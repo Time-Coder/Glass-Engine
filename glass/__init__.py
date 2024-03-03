@@ -40,4 +40,4 @@ from .GLInfo import GLInfo
 from .RenderHints import RenderHints
 from .download import download
 from .ImageLoader import ImageLoader
-from .TextLoader import TextLoader, Font
+# from .TextLoader import TextLoader, Font
