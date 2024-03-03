@@ -1,4 +1,4 @@
-from typing import Self, Union, List, Dict
+from typing import Union, List, Dict
 
 import tree_sitter
 
@@ -6,7 +6,7 @@ from ..helper import type_from_str, sizeof
 
 
 class SimpleVar:
-    def __init__(self: Self, name: str = "", type: str = ""):
+    def __init__(self, name: str = "", type: str = ""):
         self.name: str = name
         self.type: str = type
 
@@ -16,7 +16,7 @@ class SimpleVar:
 
 class Var:
     def __init__(
-        self: Self,
+        self,
         name: str = "",
         type: str = "",
         location: int = -1,

@@ -4,7 +4,6 @@ from typing import (
     Callable,
     Iterable,
     Iterator,
-    Self,
     Dict,
     List,
     KeysView,
@@ -16,12 +15,12 @@ from .WeakList import WeakList
 class ExtendableList:
 
     def __init__(
-        self: Self,
+        self,
         weak_ref: bool = True,
-        before_item_add_callback: Union[None, Callable[[Self, Any], None]] = None,
-        before_item_remove_callback: Union[None, Callable[[Self, Any], None]] = None,
-        after_item_add_callback: Union[None, Callable[[Self, Any], None]] = None,
-        after_item_remove_callback: Union[None, Callable[[Self, Any], None]] = None,
+        before_item_add_callback = None,
+        before_item_remove_callback = None,
+        after_item_add_callback = None,
+        after_item_remove_callback = None,
     ) -> None:
         if weak_ref:
             self._list: Union[List[Any], WeakList] = WeakList()
@@ -41,7 +40,7 @@ class ExtendableList:
             None, Callable[[ExtendableList, Any], None]
         ] = after_item_remove_callback
 
-    def __setitem__(self: Self, index: Union[int, slice], value: Any) -> None:
+    def __setitem__(self, index: Union[int, slice], value: Any) -> None:
         len_self: int = len(self)
         item_to_be_removed: Any = None
         if isinstance(index, int) and index >= len_self:
@@ -87,10 +86,10 @@ class ExtendableList:
                 for item in value:
                     self.after_item_add_callback(self, item)
 
-    def __getitem__(self: Self, index: Union[int, slice]) -> Any:
+    def __getitem__(self, index: Union[int, slice]) -> Any:
         return self._list[index]
 
-    def __delitem__(self: Self, index: Union[int, slice]) -> None:
+    def __delitem__(self, index: Union[int, slice]) -> None:
         item_to_be_removed: Any = self._list[index]
 
         # before callback
@@ -111,19 +110,19 @@ class ExtendableList:
                 for item in item_to_be_removed:
                     self.after_item_remove_callback(self, item)
 
-    def __contains__(self: Self, value: Any) -> bool:
+    def __contains__(self, value: Any) -> bool:
         return value in self._list
 
-    def __len__(self: Self) -> int:
+    def __len__(self) -> int:
         return self._list.__len__()
 
-    def __bool__(self: Self) -> bool:
+    def __bool__(self) -> bool:
         return bool(self._list)
 
-    def __iter__(self: Self) -> Iterator:
+    def __iter__(self) -> Iterator:
         return self._list.__iter__()
 
-    def append(self: Self, value: Any) -> None:
+    def append(self, value: Any) -> None:
         # before callback
         if self.before_item_add_callback is not None:
             self.before_item_add_callback(self, value)
@@ -134,7 +133,7 @@ class ExtendableList:
         if self.after_item_add_callback is not None:
             self.after_item_add_callback(self, value)
 
-    def insert(self: Self, index: int, value: Any) -> None:
+    def insert(self, index: int, value: Any) -> None:
         # before callback
         if self.before_item_add_callback is not None:
             self.before_item_add_callback(self, value)
@@ -145,7 +144,7 @@ class ExtendableList:
         if self.after_item_add_callback is not None:
             self.after_item_add_callback(self, value)
 
-    def extend(self: Self, values: Iterable) -> None:
+    def extend(self, values: Iterable) -> None:
         # before callback
         if self.before_item_add_callback is not None:
             for item in values:
@@ -158,7 +157,7 @@ class ExtendableList:
             for item in values:
                 self.after_item_add_callback(self, item)
 
-    def remove(self: Self, value: Any) -> None:
+    def remove(self, value: Any) -> None:
         index: int = self._list.index(value)
         item_to_be_removed: Any = self._list[index]
 
@@ -172,7 +171,7 @@ class ExtendableList:
         if self.after_item_remove_callback is not None:
             self.after_item_remove_callback(self, item_to_be_removed)
 
-    def pop(self: Self, index: int) -> Any:
+    def pop(self, index: int) -> Any:
         item_to_be_removed: Any = self._list[index]
 
         # before callback
@@ -187,7 +186,7 @@ class ExtendableList:
 
         return item_to_be_removed
 
-    def clear(self: Self) -> None:
+    def clear(self) -> None:
         # before callback
         items_to_be_removed: List[Any] = []
         for item in self._list:
@@ -205,7 +204,7 @@ class ExtendableList:
 
 class DictList(ExtendableList):
     def __init__(
-        self: Self,
+        self,
         values: Union[Dict[str, Any], Iterable, None] = None,
         weak_ref: bool = False,
         before_item_add_callback: Union[
@@ -241,7 +240,7 @@ class DictList(ExtendableList):
 
         self.update(kwargs)
 
-    def __setitem__(self: Self, index: Union[int, slice, str], value: Any) -> None:
+    def __setitem__(self, index: Union[int, slice, str], value: Any) -> None:
         if isinstance(index, str):
             key: str = index
             if key in self._key_index_map:
@@ -255,14 +254,14 @@ class DictList(ExtendableList):
         else:
             ExtendableList.__setitem__(self, index, value)
 
-    def __getitem__(self: Self, index: Union[int, slice, str]) -> Any:
+    def __getitem__(self, index: Union[int, slice, str]) -> Any:
         if isinstance(index, str):
             key: str = index
             index: int = self._key_index_map[key]
 
         return ExtendableList.__getitem__(self, index)
 
-    def __update_after(self: Self, index: int) -> None:
+    def __update_after(self, index: int) -> None:
         for i in range(index, len(self._key_list)):
             key: str = self._key_list[i]
             if key is not None:
@@ -288,7 +287,7 @@ class DictList(ExtendableList):
 
         return start, stop, step
 
-    def __delitem__(self: Self, index: Union[int, str, slice]) -> None:
+    def __delitem__(self, index: Union[int, str, slice]) -> None:
         if isinstance(index, slice):
             start, stop, step = self._process_slice(index)
             for i in range(start, stop, step):
@@ -310,7 +309,7 @@ class DictList(ExtendableList):
 
         self.__update_after(index)
 
-    def pop(self: Self, index: Union[int, str]) -> Any:
+    def pop(self, index: Union[int, str]) -> Any:
         key: Union[str, None] = None
         if isinstance(index, str):
             key: Union[str, None] = index
@@ -329,7 +328,7 @@ class DictList(ExtendableList):
         return value
 
     def insert(
-        self: Self, index: Union[int, str], value: Any, key: Union[str, None] = None
+        self, index: Union[int, str], value: Any, key: Union[str, None] = None
     ) -> None:
         if isinstance(index, str):
             index: int = self._key_index_map[index]
@@ -341,36 +340,36 @@ class DictList(ExtendableList):
 
         self.__update_after(index + 1)
 
-    def append(self: Self, value: Any, key: Union[str, None] = None) -> None:
+    def append(self, value: Any, key: Union[str, None] = None) -> None:
         ExtendableList.append(self, value)
         self._key_list.append(key)
         if key is not None:
             self._key_index_map[key] = len(self) - 1
 
-    def extend(self: Self, new_list: Iterable) -> None:
+    def extend(self, new_list: Iterable) -> None:
         ExtendableList.extend(self, new_list)
         self._key_list.extend([None] * len(new_list))
 
-    def update(self: Self, new_dict: Dict[str, Any]) -> None:
+    def update(self, new_dict: Dict[str, Any]) -> None:
         for key, value in new_dict.items():
             self[key] = value
 
-    def index(self: Self, key: str) -> int:
+    def index(self, key: str) -> int:
         return self._key_index_map[key]
 
-    def key(self: Self, index: int) -> str:
+    def key(self, index: int) -> str:
         return self._key_list[index]
 
-    def clear(self: Self) -> None:
+    def clear(self) -> None:
         ExtendableList.clear(self)
         self._key_index_map.clear()
         self._key_list.clear()
 
-    def __contains__(self: Self, key: Any) -> bool:
+    def __contains__(self, key: Any) -> bool:
         if isinstance(key, str):
             return key in self._key_index_map
         else:
             return ExtendableList.__contains__(self, key)
 
-    def keys(self: Self) -> KeysView:
+    def keys(self) -> KeysView:
         return self._key_index_map.keys()

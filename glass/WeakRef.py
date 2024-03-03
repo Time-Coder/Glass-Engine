@@ -1,11 +1,11 @@
 from .utils import di
 
-from typing import Any, Self, Union
+from typing import Any, Union
 
 
 class WeakRef:
 
-    def __init__(self: Self, obj: Any) -> None:
+    def __init__(self, obj: Any) -> None:
         if isinstance(obj, (int, float, complex, bool, str, bytes, type(None))):
             self._obj_id: Union[int, float, complex, bool, str, bytes, None] = obj
             self._is_real_id: bool = False
@@ -13,7 +13,7 @@ class WeakRef:
             self._obj_id: Union[int, float, complex, bool, str, bytes, None] = id(obj)
             self._is_real_id: bool = True
 
-    def __hash__(self: Self) -> int:
+    def __hash__(self) -> int:
         return hash(self._obj_id)
 
     def __eq__(self, other: Any) -> bool:

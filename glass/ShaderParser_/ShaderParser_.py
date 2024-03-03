@@ -15,14 +15,14 @@ from ..helper import greater_type, type_list_distance, subscript_type
 
 from OpenGL import GL
 from tree_sitter import Language, Parser
-from typing import List, Dict, Union, Self
+from typing import List, Dict, Union
 
 
 class ShaderParser_:
 
     __glsl_parser = None
 
-    def __init__(self: Self, shader_type):
+    def __init__(self, shader_type):
         self.ins: Dict[str, Var] = {}
         self.outs: Dict[str, Var] = {}
         self.attributes: Dict[str, Attribute] = {}
