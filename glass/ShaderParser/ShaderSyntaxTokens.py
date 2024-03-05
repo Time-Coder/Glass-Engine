@@ -17,6 +17,7 @@ class SimpleVar:
 class Var:
     def __init__(
         self,
+        parent = None,
         name: str = "",
         type: str = "",
         location: int = -1,
@@ -36,8 +37,14 @@ class Var:
         self.other_qualifiers: List[str] = (
             [] if other_qualifiers is None else other_qualifiers
         )
-        self.atoms: List[SimpleVar] = []
-        self.resolved: List[SimpleVar] = []
+        self.children = {}
+        self.full_name = self.name
+        if parent is not None:
+            if isinstance(self.name, int):
+                self.full_name = parent.full_name + f"[{self.name}]"
+            else:
+                self.full_name = parent.full_name + "." + self.name
+
         self.start_index: int = start_index
         self.end_index: int = end_index
         self.is_used: bool = False
@@ -87,22 +94,6 @@ class Struct:
         self.used_structs: List[Struct] = []
         self.is_resolved: bool = False
         self._is_used: bool = False
-
-    def _get_atoms(self):
-        for member in self.members.values():
-            yield from member.atoms
-
-    def _get_resolved(self):
-        for member in self.members.values():
-            yield from member.resolved
-
-    @property
-    def atoms(self):
-        return self._get_atoms()
-
-    @property
-    def resolved(self):
-        return self._get_resolved()
 
     @property
     def is_used(self):

@@ -306,6 +306,28 @@ def resolve_array(var_name):
     return element_names
 
 
+def index_offset(total_index_str, current_index_str):
+    total_index = extract_array_indices(total_index_str)
+    stop_index = extract_array_indices(current_index_str)
+    len_total_index = len(total_index)
+    if len(stop_index) != len_total_index:
+        raise ValueError("array should have same dimension")
+
+    if not total_index:
+        return 0
+
+    current_index = [0] * len_total_index
+    current_index[-1] = -1
+
+    offset = 0
+    while next_index(current_index, total_index):
+        if current_index == stop_index:
+            break
+        offset += 1
+
+    return offset
+
+
 def rget_token(content, i):
     token = {}
 
@@ -339,6 +361,19 @@ def reg_rfind(content, pattern, pos_start, pos_end):
 
     return it.start()
 
+
+def skip_space(content, i):
+    len_content = len(content)
+
+    if i < 0 or i >= len_content:
+        return -1
+    
+    while True:
+        if i >= len_content or content[i] not in " \t\r.":
+            break
+        i += 1
+
+    return i
 
 def rskip_space(content, i):
     if i < 0 or i >= len(content):
@@ -508,6 +543,10 @@ def load_var(file_path):
     with open(file_path, "rb") as file:
         var = pickle.load(file)
     return var
+
+
+def lines(content:str):
+    return content.count("\n") + 1
 
 
 def subscript(var, subscript_chain, feed_index: int = None):

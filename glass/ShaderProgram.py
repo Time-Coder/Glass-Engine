@@ -55,6 +55,11 @@ class ShaderProgram(GPUProgram):
         self.geometry_shader: GeometryShader = GeometryShader(self)
         self.tess_ctrl_shader: TessControlShader = TessControlShader(self)
         self.tess_eval_shader: TessEvaluationShader = TessEvaluationShader(self)
+        self.shaders[GL.GL_VERTEX_SHADER] = self.vertex_shader
+        self.shaders[GL.GL_FRAGMENT_SHADER] = self.fragment_shader
+        self.shaders[GL.GL_GEOMETRY_SHADER] = self.geometry_shader
+        self.shaders[GL.GL_TESS_CONTROL_SHADER] = self.tess_ctrl_shader
+        self.shaders[GL.GL_TESS_EVALUATION_SHADER] = self.tess_eval_shader
 
         self._meta_file_name: str = ""
         self._patch_vertices: int = 0
@@ -280,9 +285,12 @@ class ShaderProgram(GPUProgram):
         if GlassConfig.print:
             print(f"linking program: {related_files}")
 
-        GL.glProgramParameteri(
-            self._id, GL.GL_PROGRAM_BINARY_RETRIEVABLE_HINT, GL.GL_TRUE
-        )
+        try:
+            GL.glProgramParameteri(
+                self._id, GL.GL_PROGRAM_BINARY_RETRIEVABLE_HINT, GL.GL_TRUE
+            )
+        except:
+            pass
         GL.glLinkProgram(self._id)
 
         message_bytes = GL.glGetProgramInfoLog(self._id)
@@ -1051,20 +1059,3 @@ class ShaderProgram(GPUProgram):
 
         self.__increase_draw_lines()
         self.__increase_draw_calls()
-
-    @property
-    def related_files(self):
-        result = []
-
-        if self.vertex_shader._file_name:
-            result.append(self.vertex_shader._file_name)
-        if self.tess_ctrl_shader._file_name:
-            result.append(self.tess_ctrl_shader._file_name)
-        if self.tess_eval_shader._file_name:
-            result.append(self.tess_eval_shader._file_name)
-        if self.geometry_shader._file_name:
-            result.append(self.geometry_shader._file_name)
-        if self.fragment_shader._file_name:
-            result.append(self.fragment_shader._file_name)
-
-        return result

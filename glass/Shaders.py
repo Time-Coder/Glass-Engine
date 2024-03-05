@@ -6,7 +6,7 @@ import copy
 import warnings
 import sys
 
-from .ShaderParser_.minifyc import minifyc, macros_expand
+from .ShaderParser.minifyc import minifyc, macros_expand
 from .utils import (
     di,
     defines_key,
@@ -19,6 +19,8 @@ from .utils import (
     relative_path,
     printable_path,
     printable_size,
+    rskip_space,
+    skip_space
 )
 
 from .GlassConfig import GlassConfig
@@ -26,7 +28,6 @@ from .GLConfig import GLConfig
 from .GLObject import GLObject
 from .ShaderParser import ShaderParser
 from .GPUProgram import CompileError, CompileWarning
-from .ShaderParser_ import ShaderParser_
 
 
 class BaseShader(GLObject):
@@ -62,21 +63,11 @@ class BaseShader(GLObject):
         self._compiled_but_not_applied: bool = False
         self._should_recompile: bool = True
         self._max_modify_time: int = 0
-
-        self.attributes_info: dict = {}
-        self.geometry_in: str = ""
-        self.uniforms_info: dict = {}
-        self.uniform_blocks_info: dict = {}
-        self.shader_storage_blocks_info: dict = {}
-        self.structs_info: dict = {}
-        self.outs_info: dict = {}
-        self.work_group_size: tuple = tuple()
         self.related_files: list = []
-
         self._include_paths: list = [""]
         self._defines: dict = {}
 
-        self._shader_parser: ShaderParser_ = ShaderParser_(self.__class__._type)
+        self.parser: ShaderParser = ShaderParser(self.__class__._type)
 
     @delete
     def clear(self):
@@ -125,7 +116,7 @@ class BaseShader(GLObject):
 
         used_code = self._code
         if not GlassConfig.debug:
-            used_code = minifyc(self._shader_parser.treeshake())
+            used_code = minifyc(self.parser.treeshake())
 
         version_pattern1 = r"#\s*version \d\d\d core"
         version_pattern2 = r"#\s*version \d\d\d"
@@ -306,10 +297,6 @@ class BaseShader(GLObject):
             f"{GlassConfig.cache_folder}/{base_name}_{md5_value}.meta"
         )
 
-        self._collect_info(file_name)
-        self._clean_code = macros_expand(self._code)
-        self._shader_parser.parse(self._clean_code)
-
         if self._test_should_recompile():
             self.attributes_info = {}
             self.geometry_in = ""
@@ -320,28 +307,9 @@ class BaseShader(GLObject):
             self.outs_info = {}
             self.work_group_size = tuple()
 
-            self.uniforms_info = ShaderParser.find_uniforms(self._clean_code)
-            self.uniform_blocks_info = ShaderParser.find_uniform_blocks(
-                self._clean_code
-            )
-            self.shader_storage_blocks_info = ShaderParser.find_shader_storage_blocks(
-                self._clean_code
-            )
-            self.structs_info = ShaderParser.find_structs(self._clean_code)
-
-            if self._type == GL.GL_VERTEX_SHADER:
-                self.attributes_info = ShaderParser.find_attributes(self._clean_code)
-
-            if self._type == GL.GL_GEOMETRY_SHADER:
-                self.geometry_in = ShaderParser.find_geometry_in(self._clean_code)
-
-            if self._type == GL.GL_FRAGMENT_SHADER:
-                self.outs_info = ShaderParser.find_outs(self._clean_code)
-
-            if self._type == GL.GL_COMPUTE_SHADER:
-                self.work_group_size = ShaderParser.find_work_group_size(
-                    self._clean_code
-                )
+            self._collect_info(file_name)
+            self._clean_code = macros_expand(self._code)
+            self.parser.parse(self._clean_code)
 
         self._compiled_but_not_applied = True
 
@@ -429,13 +397,13 @@ class BaseShader(GLObject):
                 break
 
     def _replace_includes(self):
-        defines_str = ""
+        defines_str:str = ""
         for name, value in self.defines.items():
             if value is None:
                 defines_str += f"#define {name}\n"
             else:
                 defines_str += f"#define {name} {value}\n"
-        lines_of_defines_str = ShaderParser.lines(defines_str)
+        lines_of_defines_str = defines_str.count("\n") + 1
 
         len_version = len("#version")
         self._find_comments()
@@ -463,13 +431,13 @@ class BaseShader(GLObject):
                         )
                     self._find_comments()
                 break
-        line_num_version = ShaderParser.line_of(self._code, pos_version)
+        line_num_version = self._code[:pos_version].count("\n")
 
         pos_include_start = 0
         pos_filename_start = 0
         pos_include_end = 0
         pos_filename_end = 0
-        n_lines = ShaderParser.lines(self._code)
+        n_lines = self._code.count("\n") + 1
         self._line_message_map[0] = self._file_name + ": {message_type}: "
         for i in range(1, n_lines + 1):
             if i <= line_num_version:
@@ -507,7 +475,7 @@ class BaseShader(GLObject):
                     break
 
             pos_filename_start = pos_include_start + len_include
-            pos_filename_start = ShaderParser.skip_space(self._code, pos_filename_start)
+            pos_filename_start = skip_space(self._code, pos_filename_start)
 
             start_char = self._code[pos_filename_start]
             if start_char == "<":
@@ -519,13 +487,13 @@ class BaseShader(GLObject):
 
             if end_char != "\n":
                 pos_filename_start += 1
-                pos_filename_start = ShaderParser.skip_space(
+                pos_filename_start = skip_space(
                     self._code, pos_filename_start
                 )
 
             pos_filename_end = self._code.find(end_char, pos_filename_start)
             if pos_filename_end == -1:
-                line_num = ShaderParser.line_of(self._code, pos_filename_start)
+                line_num = self._code[:pos_filename_start].count("\n")
                 raise CompileError(
                     "\n"
                     + self._line_message_map[line_num].format(message_type="error")
@@ -538,9 +506,7 @@ class BaseShader(GLObject):
                 pos_include_end = pos_filename_end
 
             pos_filename_end -= 1
-            pos_filename_end = ShaderParser.skip_space_reverse(
-                self._code, pos_filename_end
-            )
+            pos_filename_end = rskip_space(self._code, pos_filename_end)
             include_filename = self._code[pos_filename_start : pos_filename_end + 1]
             found = False
 
@@ -575,12 +541,10 @@ class BaseShader(GLObject):
                     + self._code[pos_include_end:]
                 )
                 if include_content:
-                    include_line_num = ShaderParser.line_of(
-                        self._code, pos_include_start
-                    )
-                    include_lines = ShaderParser.lines(include_content)
+                    include_line_num = self._code[:pos_include_start].count("\n")
+                    include_lines = include_content.count("\n") + 1
                     include_line_end = include_line_num + include_lines
-                    n_lines = ShaderParser.lines(self._code)
+                    n_lines = self._code.count("\n") + 1
 
                     old_line_message_map = copy.deepcopy(self._line_message_map)
                     for i in range(include_line_end, n_lines + 1):
@@ -605,7 +569,7 @@ class BaseShader(GLObject):
                 break
 
             if not found:
-                line_num = ShaderParser.line_of(self._code, pos_filename_start)
+                line_num = self._code[:pos_filename_start].count("\n")
                 raise CompileError(
                     "\n"
                     + self._line_message_map[line_num].format(message_type="error")

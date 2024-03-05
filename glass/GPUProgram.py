@@ -10,8 +10,7 @@ from .GLConfig import GLConfig
 from .Uniform import Uniform
 from .UniformBlock import UniformBlock
 from .ShaderStorageBlock import ShaderStorageBlock
-from .ShaderParser import ShaderParser
-from .utils import LP_LP_c_char, delete, checktype
+from .utils import LP_LP_c_char, delete, checktype, index_offset, array_basename
 
 _target_type_map = {
     "sampler2D": GL.GL_TEXTURE_2D,
@@ -75,24 +74,12 @@ class GPUProgram(GLObject):
     def __init__(self):
         GLObject.__init__(self)
 
-        self._attributes_info = {}
-        self._acceptable_primitives = []
-        self._uniforms_info = {}
-        self._uniform_blocks_info = {}
-        self._shader_storage_blocks_info = {}
-        self._structs_info = {}
-        self._outs_info = {}
-
         self._sampler_map = {}
-        self._uniform_map = {}
-        self._uniform_block_map = {}
-        self._shader_storage_block_map = {}
+        self.shaders = {}
+        self._uniform = Uniform(self.shaders)
+        self._uniform_block = UniformBlock(self.shaders)
+        self._shader_storage_block = ShaderStorageBlock(self.shaders)
 
-        self._uniform = Uniform(self)
-        self._uniform_block = UniformBlock(self)
-        self._shader_storage_block = ShaderStorageBlock(self)
-
-        self._is_collected = False
         self._is_linked = False
         self._uniform_not_set_warning = True
 
@@ -115,12 +102,11 @@ class GPUProgram(GLObject):
         pass
 
     def __getitem__(self, name: str):
-        self.collect_info()
-        if name in self._uniform_map:
+        if name in self._uniform:
             return self._uniform[name]
-        elif name in self._shader_storage_block_map:
+        elif name in self._shader_storage_block:
             return self._shader_storage_block[name]
-        elif name in self._uniform_block_map:
+        elif name in self._uniform_block:
             return self._uniform_block[name]
         else:
             error_message = f"'{name}' is not defined in following files:\n"
@@ -128,12 +114,11 @@ class GPUProgram(GLObject):
             raise NameError(error_message)
 
     def __setitem__(self, name: str, value):
-        self.collect_info()
-        if name in self._uniform_map:
+        if name in self._uniform:
             self._uniform[name] = value
-        elif name in self._shader_storage_block_map:
+        elif name in self._shader_storage_block:
             self._shader_storage_block[name] = value
-        elif name in self._uniform_block_map:
+        elif name in self._uniform_block:
             self._uniform_block[name] = value
         else:
             error_message = f"'{name}' is not defined in following files:\n"
@@ -141,27 +126,11 @@ class GPUProgram(GLObject):
             raise NameError(error_message)
 
     def __contains__(self, name: str):
-        self.collect_info()
         return (
-            name in self._uniform_map
-            or name in self.buffer._blocks_info
-            or name in self.uniform_block._blocks_info
+            name in self._uniform
+            or name in self._uniform_block
+            or name in self._shader_storage_block
         )
-
-    @property
-    def uniform(self):
-        self.collect_info()
-        return self._uniform
-
-    @property
-    def uniform_block(self):
-        self.collect_info()
-        return self._uniform_block
-
-    @property
-    def buffer(self):
-        self.collect_info()
-        return self._shader_storage_block
 
     def download(self, var):
         id_var = id(var)
@@ -216,7 +185,11 @@ class GPUProgram(GLObject):
 
     @property
     def related_files(self):
-        return []
+        result = []
+        for shader in self.shaders.values():
+            result.append(shader._file_name)
+
+        return result
 
     def _format_error_warning(self, message):
         used_shaders = []
@@ -293,100 +266,6 @@ class GPUProgram(GLObject):
 
         return error_messages, warning_messages
 
-    def _resolve_one_uniform(self, var, uniform_map):
-        var_type = var["type"]
-        var_name = var["name"]
-        var_subscript_chain = var["subscript_chain"]
-        if var_type in GLInfo.atom_type_names:
-            var_atoms = [var]
-            var["atoms"] = var_atoms
-            uniform_map[var_name] = var
-            return var_atoms
-
-        if "[" in var_type:
-            pos_start = var_type.find("[")
-            pos_end = var_type.find("]", pos_start)
-            base_type = var_type[:pos_start]
-            atom_type = base_type + var_type[pos_end + 1 :]
-
-            var_atoms = []
-            if pos_end - pos_start > 1:
-                num = int(var_type[pos_start + 1 : pos_end])
-                for i in range(num):
-                    atom_info = {
-                        "name": var_name + "[" + str(i) + "]",
-                        "type": atom_type,
-                        "subscript_chain": [*var_subscript_chain, ("getitem", i)],
-                    }
-                    var_atoms.extend(
-                        self._resolve_one_uniform(atom_info, self._uniform_map)
-                    )
-            else:
-                atom_info = {
-                    "name": var_name + "[{0}]",
-                    "type": atom_type,
-                    "subscript_chain": [*var_subscript_chain, ("getitem", "{0}")],
-                }
-                var_atoms.extend(
-                    self._resolve_one_uniform(atom_info, self._uniform_map)
-                )
-            var["atoms"] = var_atoms
-            uniform_map[var_name] = var
-
-            return var_atoms
-
-        if GlassConfig.debug and var_type not in self._structs_info:
-            raise TypeError("type " + var_type + " is not defined in shader program")
-
-        var_atoms = []
-        for member in self._structs_info[var_type]["members"].values():
-            member_name = member["name"]
-            uniform_info = {
-                "name": var_name + "." + member_name,
-                "type": member["type"],
-                "subscript_chain": [*var_subscript_chain, ("getattr", member_name)],
-            }
-            var_atoms.extend(self._resolve_one_uniform(uniform_info, self._uniform_map))
-        var["atoms"] = var_atoms
-        uniform_map[var_name] = var
-
-        return var_atoms
-
-    def _resolve_uniforms(self):
-        for uniform_info in self._uniforms_info.values():
-            self._resolve_one_uniform(uniform_info, self._uniform_map)
-
-        for uniform in self._uniform_map.values():
-            for atom in uniform["atoms"]:
-                atom_type = atom["type"]
-                atom_name = atom["name"]
-                if "sampler" in atom_type or "image" in atom_type:
-                    self._sampler_map[atom_name] = {
-                        "location": -1,
-                        "sampler": None,
-                        "target_type": _target_type_map[atom_type],
-                    }
-
-    def _resolve_one_uniform_block(self, block_info):
-        uniform_block = {}
-        block_name = block_info["name"]
-        uniform_block["name"] = block_name
-        uniform_block["atoms"] = []
-
-        for member in block_info["members"].values():
-            member_name = member["name"]
-            uniform_info = {
-                "name": member_name,
-                "type": member["type"],
-                "subscript_chain": [("getattr", member_name)],
-            }
-            uniform_block["atoms"].extend(
-                self._resolve_one_uniform(uniform_info, self._uniform_block_map)
-            )
-
-        self._uniform_block_map[block_name] = uniform_block
-        return uniform_block["atoms"]
-
     def _apply_uniform_blocks(self):
         backup_block_index = 0
         for block_name, block_info in self._uniform_blocks_info.items():
@@ -448,50 +327,16 @@ class GPUProgram(GLObject):
                 atoms, array_strides, atom_offsets
             ):
                 atom_name = atom["name"]
-                member_name = ShaderParser.array_basename(atom_name)
+                member_name = array_basename(atom_name)
                 stride = int(array_stride)
                 member_type = block_members[member_name]["type"]
-                offset = atom_offset + stride * ShaderParser.index_offset(
+                offset = atom_offset + stride * index_offset(
                     member_type, atom_name
                 )
                 atom["offset"] = int(offset)
                 atom["stride"] = stride
 
             backup_block_index += 1
-
-    def _resolve_uniform_blocks(self):
-        for block_info in self._uniform_blocks_info.values():
-            self._resolve_one_uniform_block(block_info)
-
-        blocks_with_var_name = {}
-
-        for block_name, block_info in self._uniform_blocks_info.items():
-            var_name = block_info["var_name"]
-            if var_name:
-                blocks_with_var_name[var_name] = block_name
-
-        # self._apply_uniform_blocks()
-
-    def _resolve_one_shader_storage_block(self, block_info):
-        shader_storage_block = {}
-        block_name = block_info["name"]
-
-        shader_storage_block["name"] = block_name
-        shader_storage_block["atoms"] = []
-
-        for member in block_info["members"].values():
-            member_name = member["name"]
-            uniform_info = {
-                "name": member_name,
-                "type": member["type"],
-                "subscript_chain": [("getattr", member_name)],
-            }
-            shader_storage_block["atoms"].extend(
-                self._resolve_one_uniform(uniform_info, self._shader_storage_block_map)
-            )
-
-        self._shader_storage_block_map[block_name] = shader_storage_block
-        return shader_storage_block["atoms"]
 
     def _apply_shader_storage_blocks(self):
         backup_block_index = 0
@@ -541,10 +386,10 @@ class GPUProgram(GLObject):
                 )
                 atom_offset_stride = [int(x) for x in atom_offset_stride]
 
-                member_name = ShaderParser.array_basename(atom_name)
+                member_name = array_basename(atom_name)
                 atom_offset = atom_offset_stride[0] + atom_offset_stride[
                     1
-                ] * ShaderParser.index_offset(
+                ] * index_offset(
                     block_members[member_name]["type"], atom_name
                 )
                 atom_stride = min(atom_offset_stride[1], atom_offset_stride[2])
@@ -555,13 +400,3 @@ class GPUProgram(GLObject):
                 atom["stride"] = int(atom_stride)
 
             backup_block_index += 1
-
-    def _resolve_shader_storage_blocks(self):
-        for block_info in self._shader_storage_blocks_info.values():
-            self._resolve_one_shader_storage_block(block_info)
-
-        blocks_with_var_name = {}
-        for block_name, block_info in self._shader_storage_blocks_info.items():
-            var_name = block_info["var_name"]
-            if var_name:
-                blocks_with_var_name[var_name] = block_name
