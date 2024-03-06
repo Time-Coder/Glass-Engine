@@ -1,5 +1,10 @@
 import re
-from OpenGL import GL
+import platform
+
+if platform.machine() == "aarch64":
+    from OpenGL import GLES2 as GL
+else:
+    from OpenGL import GL
 from .utils import has_valid
 from .helper import sizeof, type_from_str
 from .GLInfo import GLInfo

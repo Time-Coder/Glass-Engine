@@ -1,4 +1,9 @@
-from OpenGL import GL, constant
+import platform
+
+if platform.machine() == "aarch64":
+    from OpenGL import GLES2 as GL
+else:
+    from OpenGL import GL, constant
 import OpenGL.GL.ARB.gpu_shader_int64 as gsi64
 import numpy as np
 import glm

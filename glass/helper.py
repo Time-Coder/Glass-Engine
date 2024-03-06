@@ -1,4 +1,9 @@
-from OpenGL import GL, constant
+import platform
+
+if platform.machine() == "aarch64":
+    from OpenGL import GLES2 as GL
+else:
+    from OpenGL import GL, constant
 import numpy as np
 import glm
 import struct
@@ -166,10 +171,10 @@ def get_dtype(internal_format):
 def type_distance(type1: str, type2: str):
     if type1 == type2:
         return 0
-    
+
     if type1 == "" or type2 == "":
         return "unknown"
-                
+
     def type_index(type_, types):
         for i, target_type in enumerate(types):
             if isinstance(target_type, tuple):
@@ -191,7 +196,7 @@ def type_distance(type1: str, type2: str):
         GLInfo.gmat3x4_types,
         GLInfo.gmat4x2_types,
         GLInfo.gmat4x3_types,
-        GLInfo.gmat4x4_types
+        GLInfo.gmat4x4_types,
     ]
 
     for target_types in all_types:
@@ -208,7 +213,7 @@ def type_list_distance(type_list1, type_list2):
         current_distance = type_distance(type1, type2)
         if current_distance == "inf":
             return "inf"
-    
+
     full_distance = 0
     for type1, type2 in zip(type_list1, type_list2):
         current_distance = type_distance(type1, type2)

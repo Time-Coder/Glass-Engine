@@ -1,9 +1,7 @@
 import sys
 import os
-import platform
 import glob
 import tree_sitter
-import re
 import zipfile
 
 from ..GLInfo import GLInfo
@@ -13,7 +11,12 @@ from .ShaderBuiltins import ShaderBuiltins
 from ..utils import resolve_array
 from ..helper import greater_type, type_list_distance, subscript_type
 
-from OpenGL import GL
+import platform
+
+if platform.machine() == "aarch64":
+    from OpenGL import GLES2 as GL
+else:
+    from OpenGL import GL
 from tree_sitter import Language, Parser
 from typing import List, Dict, Union
 
@@ -56,9 +59,7 @@ class ShaderParser_:
         machine = platform.machine()
         bits = platform.architecture()[0]
 
-        dll_file = (
-            f"{self_folder}/tree-sitter-glsl/lib/{machine}/{platform_system}/{bits}/glsl.{dll_suffix}"
-        )
+        dll_file = f"{self_folder}/tree-sitter-glsl/lib/{machine}/{platform_system}/{bits}/glsl.{dll_suffix}"
         dll_folder = os.path.dirname(dll_file)
         if not os.path.isdir(dll_folder):
             os.makedirs(dll_folder)
@@ -70,9 +71,7 @@ class ShaderParser_:
                 zip_file.close()
 
             Language.build_library(dll_file, [self_folder + "/tree-sitter-glsl"])
-            trash_files = glob.glob(
-                f"{dll_folder}/glsl.*"
-            )
+            trash_files = glob.glob(f"{dll_folder}/glsl.*")
             for trash_file in trash_files:
                 if os.path.abspath(trash_file) != os.path.abspath(dll_file):
                     os.remove(trash_file)
@@ -626,10 +625,8 @@ class ShaderParser_:
         for candidate_func in self.candidate_functions(func_call.name):
             if candidate_func.argc != len(arg_types):
                 continue
-            
-            current_distance = type_list_distance(
-                arg_types, candidate_func.arg_types
-            )
+
+            current_distance = type_list_distance(arg_types, candidate_func.arg_types)
             if isinstance(current_distance, int):
                 if current_distance == 0:
                     min_distance = 0
@@ -645,7 +642,7 @@ class ShaderParser_:
 
                 candidate_funcs.append(candidate_func)
 
-        return (best_mached_func if best_mached_func is not None else candidate_funcs)
+        return best_mached_func if best_mached_func is not None else candidate_funcs
 
     def resolve_functions(self):
         if not ShaderBuiltins.function_groups:
@@ -680,7 +677,7 @@ class ShaderParser_:
     def get_return_type(func_list):
         if isinstance(func_list, Func):
             return func_list.return_type
-        
+
         if isinstance(func_list, list):
             common_return_type = ""
             for func in func_list:
@@ -689,9 +686,9 @@ class ShaderParser_:
                 else:
                     if common_return_type != func.return_type:
                         return ""
-                    
+
             return common_return_type
-        
+
         return ""
 
     def analyse_type(self, expression: tree_sitter.Node, func: Func) -> str:

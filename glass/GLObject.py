@@ -1,5 +1,10 @@
 import numpy as np
-from OpenGL import GL
+import platform
+
+if platform.machine() == "aarch64":
+    from OpenGL import GLES2 as GL
+else:
+    from OpenGL import GL
 
 from .GLConfig import GLConfig
 from .MetaInstancesRecorder import MetaInstancesRecorder

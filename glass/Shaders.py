@@ -1,6 +1,11 @@
 import os
 
-from OpenGL import GL
+import platform
+
+if platform.machine() == "aarch64":
+    from OpenGL import GLES2 as GL
+else:
+    from OpenGL import GL
 import re
 import copy
 import warnings
@@ -130,8 +135,14 @@ class BaseShader(GLObject):
         version_pattern1 = r"#\s*version \d\d\d core"
         version_pattern2 = r"#\s*version \d\d\d"
         version_str = ""
-        if GLConfig.major_version > 3 or GLConfig.major_version == 3 and GLConfig.minor_version >= 3:
-            version_str = f"#version {GLConfig.major_version}{GLConfig.minor_version}0 core"
+        if (
+            GLConfig.major_version > 3
+            or GLConfig.major_version == 3
+            and GLConfig.minor_version >= 3
+        ):
+            version_str = (
+                f"#version {GLConfig.major_version}{GLConfig.minor_version}0 core"
+            )
         else:
             if GLConfig.major_version == 3:
                 if GLConfig.minor_version == 2:
@@ -147,7 +158,9 @@ class BaseShader(GLObject):
                     version_str = "#version 110"
 
         if not version_str:
-            raise RuntimeError(f"OpenGL version {GLConfig.major_version}.{GLConfig.minor_version} is not supported.")
+            raise RuntimeError(
+                f"OpenGL version {GLConfig.major_version}.{GLConfig.minor_version} is not supported."
+            )
 
         if re.search(version_pattern1, used_code):
             used_code = re.sub(version_pattern1, version_str, used_code)

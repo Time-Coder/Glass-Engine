@@ -17,10 +17,10 @@ class ExtendableList:
     def __init__(
         self,
         weak_ref: bool = True,
-        before_item_add_callback = None,
-        before_item_remove_callback = None,
-        after_item_add_callback = None,
-        after_item_remove_callback = None,
+        before_item_add_callback=None,
+        before_item_remove_callback=None,
+        after_item_add_callback=None,
+        after_item_remove_callback=None,
     ) -> None:
         if weak_ref:
             self._list: Union[List[Any], WeakList] = WeakList()

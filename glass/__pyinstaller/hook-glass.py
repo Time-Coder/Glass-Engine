@@ -40,7 +40,8 @@ datas.append(
     ),
     (
         os.path.abspath(
-            os.path.dirname(os.path.abspath(__file__)) + "/../ShaderParser_/pcpp/LICENSE"
+            os.path.dirname(os.path.abspath(__file__))
+            + "/../ShaderParser_/pcpp/LICENSE"
         ).replace("\\", "/"),
         "glass/ShaderParser_/pcpp",
     ),

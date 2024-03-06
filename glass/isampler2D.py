@@ -3,7 +3,12 @@ from .GLInfo import GLInfo
 from .utils import checktype
 
 import numpy as np
-from OpenGL import GL
+import platform
+
+if platform.machine() == "aarch64":
+    from OpenGL import GLES2 as GL
+else:
+    from OpenGL import GL
 import OpenGL.GL.ARB.bindless_texture as bt
 
 

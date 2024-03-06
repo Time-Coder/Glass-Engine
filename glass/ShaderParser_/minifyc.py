@@ -1,5 +1,4 @@
 from .pcpp import pcmd
-import sys
 import io
 
 

@@ -356,7 +356,7 @@ gen_type_map = {
     "dvec": ["dvec2", "dvec3", "dvec4"],
 }
 
-definition_list = []
+definition_dict = {}
 
 for func_name in func_list:
     response = requests.get(
@@ -438,15 +438,13 @@ for func_name in func_list:
                         arg_type[j] for arg_type in arg_types[: argc - i]
                     ]
                     signature = f"{func_name_}({', '.join(local_arg_types)})"
-                    definition_list.append(
-                        {
-                            "name": func_name_,
-                            "return_type": return_type[j],
-                            "arg_types": local_arg_types,
-                            "arg_names": arg_names[: argc - i],
-                            "signature": signature,
-                        }
-                    )
+                    definition_dict[signature] = {
+                        "name": func_name_,
+                        "return_type": return_type[j],
+                        "arg_types": local_arg_types,
+                        "arg_names": arg_names[: argc - i],
+                        "signature": signature,
+                    }
 
             success = True
 
@@ -460,11 +458,11 @@ if pos_func == -1:
     exit()
 
 content = content[:pos_func] + "functions = {\n"
-for func in definition_list:
+for func in definition_dict.values():
     content += f'        "{func["signature"]}": Func(\n'
     content += f'            return_type="{func["return_type"]}",\n'
     content += f'            name="{func["name"]}",\n'
-    content += f"            args=[\n"
+    content += "            args=[\n"
     for arg_name, arg_type in zip(func["arg_names"], func["arg_types"]):
         if arg_type not in atom_type_names:
             print(f"not supported type '{arg_type}'", func["name"])
@@ -474,8 +472,8 @@ for func in definition_list:
             arg_type += arg_name[pos_bracket:]
             arg_name = arg_name[:pos_bracket]
         content += f'                Var(name="{arg_name}", type="{arg_type}"),\n'
-    content += f"            ]\n"
-    content += f"        ),\n"
+    content += "            ]\n"
+    content += "        ),\n"
 content += "    }\n"
 
 out_file = open(self_folder + "/ShaderBuiltins.py", "w")

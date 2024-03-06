@@ -1,6 +1,11 @@
 import os
 
-from OpenGL import GL
+import platform
+
+if platform.machine() == "aarch64":
+    from OpenGL import GLES2 as GL
+else:
+    from OpenGL import GL
 import pathlib
 import warnings
 import struct
@@ -280,9 +285,12 @@ class ShaderProgram(GPUProgram):
         if GlassConfig.print:
             print(f"linking program: {related_files}")
 
-        GL.glProgramParameteri(
-            self._id, GL.GL_PROGRAM_BINARY_RETRIEVABLE_HINT, GL.GL_TRUE
-        )
+        try:
+            GL.glProgramParameteri(
+                self._id, GL.GL_PROGRAM_BINARY_RETRIEVABLE_HINT, GL.GL_TRUE
+            )
+        except:
+            pass
         GL.glLinkProgram(self._id)
 
         message_bytes = GL.glGetProgramInfoLog(self._id)

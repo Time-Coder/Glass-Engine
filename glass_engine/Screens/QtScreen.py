@@ -32,7 +32,12 @@ from glass.utils import extname, di
 import time
 import glm
 import sys
-from OpenGL import GL
+import platform
+
+if platform.machine() == "aarch64":
+    from OpenGL import GLES2 as GL
+else:
+    from OpenGL import GL
 import OpenGL.GL.ARB.bindless_texture as bt
 
 import os

@@ -1,6 +1,11 @@
 from .ShaderSyntaxTokens import Var, Struct, Func
 
-from OpenGL import GL
+import platform
+
+if platform.machine() == "aarch64":
+    from OpenGL import GLES2 as GL
+else:
+    from OpenGL import GL
 
 
 class ShaderBuiltins:
@@ -1120,15 +1125,6 @@ class ShaderBuiltins:
                 Var(name="maxVal", type="vec4"),
             ],
         ),
-        "clamp(float, float, float)": Func(
-            return_type="float",
-            name="clamp",
-            args=[
-                Var(name="x", type="float"),
-                Var(name="minVal", type="float"),
-                Var(name="maxVal", type="float"),
-            ],
-        ),
         "clamp(vec2, float, float)": Func(
             return_type="vec2",
             name="clamp",
@@ -1190,15 +1186,6 @@ class ShaderBuiltins:
                 Var(name="x", type="dvec4"),
                 Var(name="minVal", type="dvec4"),
                 Var(name="maxVal", type="dvec4"),
-            ],
-        ),
-        "clamp(double, double, double)": Func(
-            return_type="double",
-            name="clamp",
-            args=[
-                Var(name="x", type="double"),
-                Var(name="minVal", type="double"),
-                Var(name="maxVal", type="double"),
             ],
         ),
         "clamp(dvec2, double, double)": Func(
@@ -1264,15 +1251,6 @@ class ShaderBuiltins:
                 Var(name="maxVal", type="ivec4"),
             ],
         ),
-        "clamp(int, int, int)": Func(
-            return_type="int",
-            name="clamp",
-            args=[
-                Var(name="x", type="int"),
-                Var(name="minVal", type="int"),
-                Var(name="maxVal", type="int"),
-            ],
-        ),
         "clamp(ivec2, int, int)": Func(
             return_type="ivec2",
             name="clamp",
@@ -1334,15 +1312,6 @@ class ShaderBuiltins:
                 Var(name="x", type="uvec4"),
                 Var(name="minVal", type="uvec4"),
                 Var(name="maxVal", type="uvec4"),
-            ],
-        ),
-        "clamp(uint, uint, uint)": Func(
-            return_type="uint",
-            name="clamp",
-            args=[
-                Var(name="x", type="uint"),
-                Var(name="minVal", type="uint"),
-                Var(name="maxVal", type="uint"),
             ],
         ),
         "clamp(uvec2, uint, uint)": Func(
@@ -2772,15 +2741,6 @@ class ShaderBuiltins:
                 Var(name="data", type="uint"),
             ],
         ),
-        "imageAtomicAdd(iimage2DRect, ivec2, uint)": Func(
-            return_type="uint",
-            name="imageAtomicAdd",
-            args=[
-                Var(name="image", type="iimage2DRect"),
-                Var(name="P", type="ivec2"),
-                Var(name="data", type="uint"),
-            ],
-        ),
         "imageAtomicAdd(imageCube, ivec3, uint)": Func(
             return_type="uint",
             name="imageAtomicAdd",
@@ -2840,15 +2800,6 @@ class ShaderBuiltins:
             name="imageAtomicAdd",
             args=[
                 Var(name="image", type="image1DArray"),
-                Var(name="P", type="ivec2"),
-                Var(name="data", type="uint"),
-            ],
-        ),
-        "imageAtomicAdd(iimage1DArray, ivec2, uint)": Func(
-            return_type="uint",
-            name="imageAtomicAdd",
-            args=[
-                Var(name="image", type="iimage1DArray"),
                 Var(name="P", type="ivec2"),
                 Var(name="data", type="uint"),
             ],
@@ -3075,15 +3026,6 @@ class ShaderBuiltins:
                 Var(name="data", type="int"),
             ],
         ),
-        "imageAtomicAdd(iimage2DRect, ivec2, int)": Func(
-            return_type="int",
-            name="imageAtomicAdd",
-            args=[
-                Var(name="image", type="iimage2DRect"),
-                Var(name="P", type="ivec2"),
-                Var(name="data", type="int"),
-            ],
-        ),
         "imageAtomicAdd(imageCube, ivec3, int)": Func(
             return_type="int",
             name="imageAtomicAdd",
@@ -3143,15 +3085,6 @@ class ShaderBuiltins:
             name="imageAtomicAdd",
             args=[
                 Var(name="image", type="image1DArray"),
-                Var(name="P", type="ivec2"),
-                Var(name="data", type="int"),
-            ],
-        ),
-        "imageAtomicAdd(iimage1DArray, ivec2, int)": Func(
-            return_type="int",
-            name="imageAtomicAdd",
-            args=[
-                Var(name="image", type="iimage1DArray"),
                 Var(name="P", type="ivec2"),
                 Var(name="data", type="int"),
             ],
@@ -3378,15 +3311,6 @@ class ShaderBuiltins:
                 Var(name="data", type="uint"),
             ],
         ),
-        "imageAtomicAnd(iimage2DRect, ivec2, uint)": Func(
-            return_type="uint",
-            name="imageAtomicAnd",
-            args=[
-                Var(name="image", type="iimage2DRect"),
-                Var(name="P", type="ivec2"),
-                Var(name="data", type="uint"),
-            ],
-        ),
         "imageAtomicAnd(imageCube, ivec3, uint)": Func(
             return_type="uint",
             name="imageAtomicAnd",
@@ -3446,15 +3370,6 @@ class ShaderBuiltins:
             name="imageAtomicAnd",
             args=[
                 Var(name="image", type="image1DArray"),
-                Var(name="P", type="ivec2"),
-                Var(name="data", type="uint"),
-            ],
-        ),
-        "imageAtomicAnd(iimage1DArray, ivec2, uint)": Func(
-            return_type="uint",
-            name="imageAtomicAnd",
-            args=[
-                Var(name="image", type="iimage1DArray"),
                 Var(name="P", type="ivec2"),
                 Var(name="data", type="uint"),
             ],
@@ -3681,15 +3596,6 @@ class ShaderBuiltins:
                 Var(name="data", type="int"),
             ],
         ),
-        "imageAtomicAnd(iimage2DRect, ivec2, int)": Func(
-            return_type="int",
-            name="imageAtomicAnd",
-            args=[
-                Var(name="image", type="iimage2DRect"),
-                Var(name="P", type="ivec2"),
-                Var(name="data", type="int"),
-            ],
-        ),
         "imageAtomicAnd(imageCube, ivec3, int)": Func(
             return_type="int",
             name="imageAtomicAnd",
@@ -3749,15 +3655,6 @@ class ShaderBuiltins:
             name="imageAtomicAnd",
             args=[
                 Var(name="image", type="image1DArray"),
-                Var(name="P", type="ivec2"),
-                Var(name="data", type="int"),
-            ],
-        ),
-        "imageAtomicAnd(iimage1DArray, ivec2, int)": Func(
-            return_type="int",
-            name="imageAtomicAnd",
-            args=[
-                Var(name="image", type="iimage1DArray"),
                 Var(name="P", type="ivec2"),
                 Var(name="data", type="int"),
             ],
@@ -3995,16 +3892,6 @@ class ShaderBuiltins:
                 Var(name="data", type="uint"),
             ],
         ),
-        "imageAtomicCompSwap(iimage2DRect, ivec2, uint, uint)": Func(
-            return_type="uint",
-            name="imageAtomicCompSwap",
-            args=[
-                Var(name="image", type="iimage2DRect"),
-                Var(name="P", type="ivec2"),
-                Var(name="compare", type="uint"),
-                Var(name="data", type="uint"),
-            ],
-        ),
         "imageAtomicCompSwap(imageCube, ivec3, uint, uint)": Func(
             return_type="uint",
             name="imageAtomicCompSwap",
@@ -4070,16 +3957,6 @@ class ShaderBuiltins:
             name="imageAtomicCompSwap",
             args=[
                 Var(name="image", type="image1DArray"),
-                Var(name="P", type="ivec2"),
-                Var(name="compare", type="uint"),
-                Var(name="data", type="uint"),
-            ],
-        ),
-        "imageAtomicCompSwap(iimage1DArray, ivec2, uint, uint)": Func(
-            return_type="uint",
-            name="imageAtomicCompSwap",
-            args=[
-                Var(name="image", type="iimage1DArray"),
                 Var(name="P", type="ivec2"),
                 Var(name="compare", type="uint"),
                 Var(name="data", type="uint"),
@@ -4331,16 +4208,6 @@ class ShaderBuiltins:
                 Var(name="data", type="int"),
             ],
         ),
-        "imageAtomicCompSwap(iimage2DRect, ivec2, int, int)": Func(
-            return_type="int",
-            name="imageAtomicCompSwap",
-            args=[
-                Var(name="image", type="iimage2DRect"),
-                Var(name="P", type="ivec2"),
-                Var(name="compare", type="int"),
-                Var(name="data", type="int"),
-            ],
-        ),
         "imageAtomicCompSwap(imageCube, ivec3, int, int)": Func(
             return_type="int",
             name="imageAtomicCompSwap",
@@ -4406,16 +4273,6 @@ class ShaderBuiltins:
             name="imageAtomicCompSwap",
             args=[
                 Var(name="image", type="image1DArray"),
-                Var(name="P", type="ivec2"),
-                Var(name="compare", type="int"),
-                Var(name="data", type="int"),
-            ],
-        ),
-        "imageAtomicCompSwap(iimage1DArray, ivec2, int, int)": Func(
-            return_type="int",
-            name="imageAtomicCompSwap",
-            args=[
-                Var(name="image", type="iimage1DArray"),
                 Var(name="P", type="ivec2"),
                 Var(name="compare", type="int"),
                 Var(name="data", type="int"),
@@ -4656,15 +4513,6 @@ class ShaderBuiltins:
                 Var(name="data", type="uint"),
             ],
         ),
-        "imageAtomicExchange(iimage2DRect, ivec2, uint)": Func(
-            return_type="uint",
-            name="imageAtomicExchange",
-            args=[
-                Var(name="image", type="iimage2DRect"),
-                Var(name="P", type="ivec2"),
-                Var(name="data", type="uint"),
-            ],
-        ),
         "imageAtomicExchange(imageCube, ivec3, uint)": Func(
             return_type="uint",
             name="imageAtomicExchange",
@@ -4724,15 +4572,6 @@ class ShaderBuiltins:
             name="imageAtomicExchange",
             args=[
                 Var(name="image", type="image1DArray"),
-                Var(name="P", type="ivec2"),
-                Var(name="data", type="uint"),
-            ],
-        ),
-        "imageAtomicExchange(iimage1DArray, ivec2, uint)": Func(
-            return_type="uint",
-            name="imageAtomicExchange",
-            args=[
-                Var(name="image", type="iimage1DArray"),
                 Var(name="P", type="ivec2"),
                 Var(name="data", type="uint"),
             ],
@@ -4959,15 +4798,6 @@ class ShaderBuiltins:
                 Var(name="data", type="int"),
             ],
         ),
-        "imageAtomicExchange(iimage2DRect, ivec2, int)": Func(
-            return_type="int",
-            name="imageAtomicExchange",
-            args=[
-                Var(name="image", type="iimage2DRect"),
-                Var(name="P", type="ivec2"),
-                Var(name="data", type="int"),
-            ],
-        ),
         "imageAtomicExchange(imageCube, ivec3, int)": Func(
             return_type="int",
             name="imageAtomicExchange",
@@ -5027,15 +4857,6 @@ class ShaderBuiltins:
             name="imageAtomicExchange",
             args=[
                 Var(name="image", type="image1DArray"),
-                Var(name="P", type="ivec2"),
-                Var(name="data", type="int"),
-            ],
-        ),
-        "imageAtomicExchange(iimage1DArray, ivec2, int)": Func(
-            return_type="int",
-            name="imageAtomicExchange",
-            args=[
-                Var(name="image", type="iimage1DArray"),
                 Var(name="P", type="ivec2"),
                 Var(name="data", type="int"),
             ],
@@ -5262,15 +5083,6 @@ class ShaderBuiltins:
                 Var(name="data", type="float"),
             ],
         ),
-        "imageAtomicExchange(iimage2DRect, ivec2, float)": Func(
-            return_type="int",
-            name="imageAtomicExchange",
-            args=[
-                Var(name="image", type="iimage2DRect"),
-                Var(name="P", type="ivec2"),
-                Var(name="data", type="float"),
-            ],
-        ),
         "imageAtomicExchange(imageCube, ivec3, float)": Func(
             return_type="int",
             name="imageAtomicExchange",
@@ -5330,15 +5142,6 @@ class ShaderBuiltins:
             name="imageAtomicExchange",
             args=[
                 Var(name="image", type="image1DArray"),
-                Var(name="P", type="ivec2"),
-                Var(name="data", type="float"),
-            ],
-        ),
-        "imageAtomicExchange(iimage1DArray, ivec2, float)": Func(
-            return_type="int",
-            name="imageAtomicExchange",
-            args=[
-                Var(name="image", type="iimage1DArray"),
                 Var(name="P", type="ivec2"),
                 Var(name="data", type="float"),
             ],
@@ -5565,15 +5368,6 @@ class ShaderBuiltins:
                 Var(name="data", type="uint"),
             ],
         ),
-        "imageAtomicMax(iimage2DRect, ivec2, uint)": Func(
-            return_type="uint",
-            name="imageAtomicMax",
-            args=[
-                Var(name="image", type="iimage2DRect"),
-                Var(name="P", type="ivec2"),
-                Var(name="data", type="uint"),
-            ],
-        ),
         "imageAtomicMax(imageCube, ivec3, uint)": Func(
             return_type="uint",
             name="imageAtomicMax",
@@ -5633,15 +5427,6 @@ class ShaderBuiltins:
             name="imageAtomicMax",
             args=[
                 Var(name="image", type="image1DArray"),
-                Var(name="P", type="ivec2"),
-                Var(name="data", type="uint"),
-            ],
-        ),
-        "imageAtomicMax(iimage1DArray, ivec2, uint)": Func(
-            return_type="uint",
-            name="imageAtomicMax",
-            args=[
-                Var(name="image", type="iimage1DArray"),
                 Var(name="P", type="ivec2"),
                 Var(name="data", type="uint"),
             ],
@@ -5868,15 +5653,6 @@ class ShaderBuiltins:
                 Var(name="data", type="int"),
             ],
         ),
-        "imageAtomicMax(iimage2DRect, ivec2, int)": Func(
-            return_type="int",
-            name="imageAtomicMax",
-            args=[
-                Var(name="image", type="iimage2DRect"),
-                Var(name="P", type="ivec2"),
-                Var(name="data", type="int"),
-            ],
-        ),
         "imageAtomicMax(imageCube, ivec3, int)": Func(
             return_type="int",
             name="imageAtomicMax",
@@ -5936,15 +5712,6 @@ class ShaderBuiltins:
             name="imageAtomicMax",
             args=[
                 Var(name="image", type="image1DArray"),
-                Var(name="P", type="ivec2"),
-                Var(name="data", type="int"),
-            ],
-        ),
-        "imageAtomicMax(iimage1DArray, ivec2, int)": Func(
-            return_type="int",
-            name="imageAtomicMax",
-            args=[
-                Var(name="image", type="iimage1DArray"),
                 Var(name="P", type="ivec2"),
                 Var(name="data", type="int"),
             ],
@@ -6171,15 +5938,6 @@ class ShaderBuiltins:
                 Var(name="data", type="uint"),
             ],
         ),
-        "imageAtomicMin(iimage2DRect, ivec2, uint)": Func(
-            return_type="uint",
-            name="imageAtomicMin",
-            args=[
-                Var(name="image", type="iimage2DRect"),
-                Var(name="P", type="ivec2"),
-                Var(name="data", type="uint"),
-            ],
-        ),
         "imageAtomicMin(imageCube, ivec3, uint)": Func(
             return_type="uint",
             name="imageAtomicMin",
@@ -6239,15 +5997,6 @@ class ShaderBuiltins:
             name="imageAtomicMin",
             args=[
                 Var(name="image", type="image1DArray"),
-                Var(name="P", type="ivec2"),
-                Var(name="data", type="uint"),
-            ],
-        ),
-        "imageAtomicMin(iimage1DArray, ivec2, uint)": Func(
-            return_type="uint",
-            name="imageAtomicMin",
-            args=[
-                Var(name="image", type="iimage1DArray"),
                 Var(name="P", type="ivec2"),
                 Var(name="data", type="uint"),
             ],
@@ -6474,15 +6223,6 @@ class ShaderBuiltins:
                 Var(name="data", type="int"),
             ],
         ),
-        "imageAtomicMin(iimage2DRect, ivec2, int)": Func(
-            return_type="int",
-            name="imageAtomicMin",
-            args=[
-                Var(name="image", type="iimage2DRect"),
-                Var(name="P", type="ivec2"),
-                Var(name="data", type="int"),
-            ],
-        ),
         "imageAtomicMin(imageCube, ivec3, int)": Func(
             return_type="int",
             name="imageAtomicMin",
@@ -6542,15 +6282,6 @@ class ShaderBuiltins:
             name="imageAtomicMin",
             args=[
                 Var(name="image", type="image1DArray"),
-                Var(name="P", type="ivec2"),
-                Var(name="data", type="int"),
-            ],
-        ),
-        "imageAtomicMin(iimage1DArray, ivec2, int)": Func(
-            return_type="int",
-            name="imageAtomicMin",
-            args=[
-                Var(name="image", type="iimage1DArray"),
                 Var(name="P", type="ivec2"),
                 Var(name="data", type="int"),
             ],
@@ -6777,15 +6508,6 @@ class ShaderBuiltins:
                 Var(name="data", type="uint"),
             ],
         ),
-        "imageAtomicOr(iimage2DRect, ivec2, uint)": Func(
-            return_type="uint",
-            name="imageAtomicOr",
-            args=[
-                Var(name="image", type="iimage2DRect"),
-                Var(name="P", type="ivec2"),
-                Var(name="data", type="uint"),
-            ],
-        ),
         "imageAtomicOr(imageCube, ivec3, uint)": Func(
             return_type="uint",
             name="imageAtomicOr",
@@ -6845,15 +6567,6 @@ class ShaderBuiltins:
             name="imageAtomicOr",
             args=[
                 Var(name="image", type="image1DArray"),
-                Var(name="P", type="ivec2"),
-                Var(name="data", type="uint"),
-            ],
-        ),
-        "imageAtomicOr(iimage1DArray, ivec2, uint)": Func(
-            return_type="uint",
-            name="imageAtomicOr",
-            args=[
-                Var(name="image", type="iimage1DArray"),
                 Var(name="P", type="ivec2"),
                 Var(name="data", type="uint"),
             ],
@@ -7080,15 +6793,6 @@ class ShaderBuiltins:
                 Var(name="data", type="int"),
             ],
         ),
-        "imageAtomicOr(iimage2DRect, ivec2, int)": Func(
-            return_type="int",
-            name="imageAtomicOr",
-            args=[
-                Var(name="image", type="iimage2DRect"),
-                Var(name="P", type="ivec2"),
-                Var(name="data", type="int"),
-            ],
-        ),
         "imageAtomicOr(imageCube, ivec3, int)": Func(
             return_type="int",
             name="imageAtomicOr",
@@ -7148,15 +6852,6 @@ class ShaderBuiltins:
             name="imageAtomicOr",
             args=[
                 Var(name="image", type="image1DArray"),
-                Var(name="P", type="ivec2"),
-                Var(name="data", type="int"),
-            ],
-        ),
-        "imageAtomicOr(iimage1DArray, ivec2, int)": Func(
-            return_type="int",
-            name="imageAtomicOr",
-            args=[
-                Var(name="image", type="iimage1DArray"),
                 Var(name="P", type="ivec2"),
                 Var(name="data", type="int"),
             ],
@@ -7383,15 +7078,6 @@ class ShaderBuiltins:
                 Var(name="data", type="uint"),
             ],
         ),
-        "imageAtomicXor(iimage2DRect, ivec2, uint)": Func(
-            return_type="uint",
-            name="imageAtomicXor",
-            args=[
-                Var(name="image", type="iimage2DRect"),
-                Var(name="P", type="ivec2"),
-                Var(name="data", type="uint"),
-            ],
-        ),
         "imageAtomicXor(imageCube, ivec3, uint)": Func(
             return_type="uint",
             name="imageAtomicXor",
@@ -7451,15 +7137,6 @@ class ShaderBuiltins:
             name="imageAtomicXor",
             args=[
                 Var(name="image", type="image1DArray"),
-                Var(name="P", type="ivec2"),
-                Var(name="data", type="uint"),
-            ],
-        ),
-        "imageAtomicXor(iimage1DArray, ivec2, uint)": Func(
-            return_type="uint",
-            name="imageAtomicXor",
-            args=[
-                Var(name="image", type="iimage1DArray"),
                 Var(name="P", type="ivec2"),
                 Var(name="data", type="uint"),
             ],
@@ -7686,15 +7363,6 @@ class ShaderBuiltins:
                 Var(name="data", type="int"),
             ],
         ),
-        "imageAtomicXor(iimage2DRect, ivec2, int)": Func(
-            return_type="int",
-            name="imageAtomicXor",
-            args=[
-                Var(name="image", type="iimage2DRect"),
-                Var(name="P", type="ivec2"),
-                Var(name="data", type="int"),
-            ],
-        ),
         "imageAtomicXor(imageCube, ivec3, int)": Func(
             return_type="int",
             name="imageAtomicXor",
@@ -7754,15 +7422,6 @@ class ShaderBuiltins:
             name="imageAtomicXor",
             args=[
                 Var(name="image", type="image1DArray"),
-                Var(name="P", type="ivec2"),
-                Var(name="data", type="int"),
-            ],
-        ),
-        "imageAtomicXor(iimage1DArray, ivec2, int)": Func(
-            return_type="int",
-            name="imageAtomicXor",
-            args=[
-                Var(name="image", type="iimage1DArray"),
                 Var(name="P", type="ivec2"),
                 Var(name="data", type="int"),
             ],
@@ -7971,14 +7630,6 @@ class ShaderBuiltins:
             ],
         ),
         "imageLoad(iimage2DRect, ivec2)": Func(
-            return_type="ivec4",
-            name="imageLoad",
-            args=[
-                Var(name="image", type="iimage2DRect"),
-                Var(name="P", type="ivec2"),
-            ],
-        ),
-        "imageLoad(iimage2DRect, ivec2)": Func(
             return_type="uvec4",
             name="imageLoad",
             args=[
@@ -8039,14 +7690,6 @@ class ShaderBuiltins:
             name="imageLoad",
             args=[
                 Var(name="image", type="image1DArray"),
-                Var(name="P", type="ivec2"),
-            ],
-        ),
-        "imageLoad(iimage1DArray, ivec2)": Func(
-            return_type="ivec4",
-            name="imageLoad",
-            args=[
-                Var(name="image", type="iimage1DArray"),
                 Var(name="P", type="ivec2"),
             ],
         ),
@@ -8321,25 +7964,11 @@ class ShaderBuiltins:
                 Var(name="image", type="iimage2DRect"),
             ],
         ),
-        "imageSize(iimage2DRect)": Func(
-            return_type="ivec2",
-            name="imageSize",
-            args=[
-                Var(name="image", type="iimage2DRect"),
-            ],
-        ),
         "imageSize(image1DArray)": Func(
             return_type="ivec2",
             name="imageSize",
             args=[
                 Var(name="image", type="image1DArray"),
-            ],
-        ),
-        "imageSize(iimage1DArray)": Func(
-            return_type="ivec2",
-            name="imageSize",
-            args=[
-                Var(name="image", type="iimage1DArray"),
             ],
         ),
         "imageSize(iimage1DArray)": Func(
@@ -9494,14 +9123,6 @@ class ShaderBuiltins:
                 Var(name="y", type="vec4"),
             ],
         ),
-        "max(float, float)": Func(
-            return_type="float",
-            name="max",
-            args=[
-                Var(name="x", type="float"),
-                Var(name="y", type="float"),
-            ],
-        ),
         "max(vec2, float)": Func(
             return_type="vec2",
             name="max",
@@ -9556,14 +9177,6 @@ class ShaderBuiltins:
             args=[
                 Var(name="x", type="dvec4"),
                 Var(name="y", type="dvec4"),
-            ],
-        ),
-        "max(double, double)": Func(
-            return_type="double",
-            name="max",
-            args=[
-                Var(name="x", type="double"),
-                Var(name="y", type="double"),
             ],
         ),
         "max(dvec2, double)": Func(
@@ -9622,14 +9235,6 @@ class ShaderBuiltins:
                 Var(name="y", type="ivec4"),
             ],
         ),
-        "max(int, int)": Func(
-            return_type="int",
-            name="max",
-            args=[
-                Var(name="x", type="int"),
-                Var(name="y", type="int"),
-            ],
-        ),
         "max(ivec2, int)": Func(
             return_type="ivec2",
             name="max",
@@ -9684,14 +9289,6 @@ class ShaderBuiltins:
             args=[
                 Var(name="x", type="uvec4"),
                 Var(name="y", type="uvec4"),
-            ],
-        ),
-        "max(uint, uint)": Func(
-            return_type="uint",
-            name="max",
-            args=[
-                Var(name="x", type="uint"),
-                Var(name="y", type="uint"),
             ],
         ),
         "max(uvec2, uint)": Func(
@@ -9763,14 +9360,6 @@ class ShaderBuiltins:
                 Var(name="y", type="vec4"),
             ],
         ),
-        "min(float, float)": Func(
-            return_type="float",
-            name="min",
-            args=[
-                Var(name="x", type="float"),
-                Var(name="y", type="float"),
-            ],
-        ),
         "min(vec2, float)": Func(
             return_type="vec2",
             name="min",
@@ -9825,14 +9414,6 @@ class ShaderBuiltins:
             args=[
                 Var(name="x", type="dvec4"),
                 Var(name="y", type="dvec4"),
-            ],
-        ),
-        "min(double, double)": Func(
-            return_type="double",
-            name="min",
-            args=[
-                Var(name="x", type="double"),
-                Var(name="y", type="double"),
             ],
         ),
         "min(dvec2, double)": Func(
@@ -9891,14 +9472,6 @@ class ShaderBuiltins:
                 Var(name="y", type="ivec4"),
             ],
         ),
-        "min(int, int)": Func(
-            return_type="int",
-            name="min",
-            args=[
-                Var(name="x", type="int"),
-                Var(name="y", type="int"),
-            ],
-        ),
         "min(ivec2, int)": Func(
             return_type="ivec2",
             name="min",
@@ -9953,14 +9526,6 @@ class ShaderBuiltins:
             args=[
                 Var(name="x", type="uvec4"),
                 Var(name="y", type="uvec4"),
-            ],
-        ),
-        "min(uint, uint)": Func(
-            return_type="uint",
-            name="min",
-            args=[
-                Var(name="x", type="uint"),
-                Var(name="y", type="uint"),
             ],
         ),
         "min(uvec2, uint)": Func(
@@ -10021,15 +9586,6 @@ class ShaderBuiltins:
                 Var(name="x", type="vec4"),
                 Var(name="y", type="vec4"),
                 Var(name="a", type="vec4"),
-            ],
-        ),
-        "mix(float, float, float)": Func(
-            return_type="float",
-            name="mix",
-            args=[
-                Var(name="x", type="float"),
-                Var(name="y", type="float"),
-                Var(name="a", type="float"),
             ],
         ),
         "mix(vec2, vec2, float)": Func(
@@ -10093,15 +9649,6 @@ class ShaderBuiltins:
                 Var(name="x", type="dvec4"),
                 Var(name="y", type="dvec4"),
                 Var(name="a", type="dvec4"),
-            ],
-        ),
-        "mix(double, double, double)": Func(
-            return_type="double",
-            name="mix",
-            args=[
-                Var(name="x", type="double"),
-                Var(name="y", type="double"),
-                Var(name="a", type="double"),
             ],
         ),
         "mix(dvec2, dvec2, double)": Func(
@@ -10343,14 +9890,6 @@ class ShaderBuiltins:
                 Var(name="y", type="float"),
             ],
         ),
-        "mod(float, float)": Func(
-            return_type="float",
-            name="mod",
-            args=[
-                Var(name="x", type="float"),
-                Var(name="y", type="float"),
-            ],
-        ),
         "mod(vec2, vec2)": Func(
             return_type="vec2",
             name="mod",
@@ -10404,14 +9943,6 @@ class ShaderBuiltins:
             name="mod",
             args=[
                 Var(name="x", type="dvec4"),
-                Var(name="y", type="double"),
-            ],
-        ),
-        "mod(double, double)": Func(
-            return_type="double",
-            name="mod",
-            args=[
-                Var(name="x", type="double"),
                 Var(name="y", type="double"),
             ],
         ),
@@ -11434,15 +10965,6 @@ class ShaderBuiltins:
                 Var(name="x", type="vec4"),
             ],
         ),
-        "smoothstep(float, float, float)": Func(
-            return_type="float",
-            name="smoothstep",
-            args=[
-                Var(name="edge0", type="float"),
-                Var(name="edge1", type="float"),
-                Var(name="x", type="float"),
-            ],
-        ),
         "smoothstep(float, float, vec2)": Func(
             return_type="vec2",
             name="smoothstep",
@@ -11504,15 +11026,6 @@ class ShaderBuiltins:
                 Var(name="edge0", type="dvec4"),
                 Var(name="edge1", type="dvec4"),
                 Var(name="x", type="dvec4"),
-            ],
-        ),
-        "smoothstep(double, double, double)": Func(
-            return_type="double",
-            name="smoothstep",
-            args=[
-                Var(name="edge0", type="double"),
-                Var(name="edge1", type="double"),
-                Var(name="x", type="double"),
             ],
         ),
         "smoothstep(double, double, dvec2)": Func(
@@ -11630,14 +11143,6 @@ class ShaderBuiltins:
                 Var(name="x", type="vec4"),
             ],
         ),
-        "step(float, float)": Func(
-            return_type="float",
-            name="step",
-            args=[
-                Var(name="edge", type="float"),
-                Var(name="x", type="float"),
-            ],
-        ),
         "step(float, vec2)": Func(
             return_type="vec2",
             name="step",
@@ -11692,14 +11197,6 @@ class ShaderBuiltins:
             args=[
                 Var(name="edge", type="dvec4"),
                 Var(name="x", type="dvec4"),
-            ],
-        ),
-        "step(double, double)": Func(
-            return_type="double",
-            name="step",
-            args=[
-                Var(name="edge", type="double"),
-                Var(name="x", type="double"),
             ],
         ),
         "step(double, dvec2)": Func(

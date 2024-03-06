@@ -3,7 +3,12 @@ from .GLInfo import GLInfo
 from .utils import checktype
 from .helper import get_dtype
 
-from OpenGL import GL
+import platform
+
+if platform.machine() == "aarch64":
+    from OpenGL import GLES2 as GL
+else:
+    from OpenGL import GL
 
 
 class RBO(FBOAttachment):

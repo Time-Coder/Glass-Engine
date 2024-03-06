@@ -86,7 +86,14 @@ def is_China_user():
 
 
 def pip_install(package_name: str):
-    install_cmd = [sys.executable, "-m", "pip", "install", package_name, "--no-warn-script-location"]
+    install_cmd = [
+        sys.executable,
+        "-m",
+        "pip",
+        "install",
+        package_name,
+        "--no-warn-script-location",
+    ]
     if is_China_user():
         install_cmd = [
             sys.executable,
@@ -96,7 +103,7 @@ def pip_install(package_name: str):
             package_name,
             "-i",
             "https://pypi.tuna.tsinghua.edu.cn/simple",
-            "--no-warn-script-location"
+            "--no-warn-script-location",
         ]
 
     return_code = subprocess.call(install_cmd)

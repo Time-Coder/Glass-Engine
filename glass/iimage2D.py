@@ -4,7 +4,12 @@ from .utils import checktype
 from .isampler2D import isampler2D
 
 import numpy as np
-from OpenGL import GL
+import platform
+
+if platform.machine() == "aarch64":
+    from OpenGL import GLES2 as GL
+else:
+    from OpenGL import GL
 
 
 class iimage2D(isampler2D):

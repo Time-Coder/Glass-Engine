@@ -1,4 +1,9 @@
-from OpenGL import GL
+import platform
+
+if platform.machine() == "aarch64":
+    from OpenGL import GLES2 as GL
+else:
+    from OpenGL import GL
 import OpenGL.GL.ARB.gpu_shader_int64 as gsi64
 import ctypes
 import functools

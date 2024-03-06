@@ -1,7 +1,14 @@
 from .BO import BO
 from .utils import capacity_of
 
-from OpenGL import GL
+import platform
+
+if platform.machine() == "aarch64":
+    from OpenGL import GLES2 as GL
+else:
+    import platform
+    from OpenGL import GL
+
 import numpy as np
 
 
