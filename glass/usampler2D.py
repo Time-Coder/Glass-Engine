@@ -2,14 +2,9 @@ from .sampler2D import sampler2D
 from .GLInfo import GLInfo
 from .utils import checktype
 
-import numpy as np
-import platform
-
-if platform.machine() == "aarch64":
-    from OpenGL import GLES2 as GL
-else:
-    from OpenGL import GL
+from OpenGL import GL
 import OpenGL.GL.ARB.bindless_texture as bt
+import numpy as np
 
 
 class usampler2D(sampler2D):

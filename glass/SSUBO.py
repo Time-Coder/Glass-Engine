@@ -1,12 +1,7 @@
 import glm
 import numpy as np
 import struct
-import platform
-
-if platform.machine() == "aarch64":
-    from OpenGL import GLES2 as GL
-else:
-    from OpenGL import GL
+from OpenGL import GL
 from enum import Enum
 
 from .GLConfig import GLConfig

@@ -5,12 +5,7 @@ from glass.utils import checktype
 
 import glm
 import math
-import platform
-
-if platform.machine() == "aarch64":
-    from OpenGL import GLES2 as GL
-else:
-    from OpenGL import GL
+from OpenGL import GL
 
 
 class Circle(Mesh):

@@ -5,12 +5,7 @@ from glass.utils import extname
 
 import numpy as np
 import os
-import platform
-
-if platform.machine() == "aarch64":
-    from OpenGL import GLES2 as GL
-else:
-    from OpenGL import GL
+from OpenGL import GL
 
 
 class LUTEffect(ShaderEffect):

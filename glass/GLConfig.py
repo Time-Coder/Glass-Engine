@@ -1,10 +1,5 @@
 import OpenGL
-import platform
-
-if platform.machine() == "aarch64":
-    from OpenGL import GLES2 as GL
-else:
-    from OpenGL import GL
+from OpenGL import GL
 from OpenGL.platform import PLATFORM
 import glm
 import numpy as np

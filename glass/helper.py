@@ -1,9 +1,4 @@
-import platform
-
-if platform.machine() == "aarch64":
-    from OpenGL import GLES2 as GL
-else:
-    from OpenGL import GL, constant
+from OpenGL import GL, constant
 import numpy as np
 import glm
 import struct

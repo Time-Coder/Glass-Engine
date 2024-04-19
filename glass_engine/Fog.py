@@ -1,12 +1,7 @@
 import glm
 import math
 from enum import Enum
-import platform
-
-if platform.machine() == "aarch64":
-    from OpenGL import GLES2 as GL
-else:
-    from OpenGL import GL
+from OpenGL import GL
 
 from glass.utils import checktype
 from glass.MetaInstancesRecorder import MetaInstancesRecorder

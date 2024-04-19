@@ -15,12 +15,7 @@ import numpy as np
 
 import assimpy
 import glm
-import platform
-
-if platform.machine() == "aarch64":
-    from OpenGL import GLES2 as GL
-else:
-    from OpenGL import GL
+from OpenGL import GL
 from enum import Flag
 
 

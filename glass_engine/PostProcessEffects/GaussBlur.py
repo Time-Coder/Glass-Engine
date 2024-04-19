@@ -13,12 +13,7 @@ from glass import (
 from glass.utils import checktype
 from glass.helper import get_channels
 
-import platform
-
-if platform.machine() == "aarch64":
-    from OpenGL import GLES2 as GL
-else:
-    from OpenGL import GL
+from OpenGL import GL
 import glm
 import os
 

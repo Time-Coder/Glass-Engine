@@ -3,12 +3,7 @@ from .Manipulator import Manipulator
 from glass.RenderHints import RenderHints
 from glass.utils import checktype
 
-import platform
-
-if platform.machine() == "aarch64":
-    from OpenGL import GLES2 as GL
-else:
-    from OpenGL import GL
+from OpenGL import GL
 import math
 import glm
 import datetime

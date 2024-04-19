@@ -3,12 +3,8 @@ from .PostProcessEffect import PostProcessEffect
 from .GaussBlur import GaussBlur
 from .MulFilter import MulFilter
 from glass import sampler2D
-import platform
 
-if platform.machine() == "aarch64":
-    from OpenGL import GLES2 as GL
-else:
-    from OpenGL import GL
+from OpenGL import GL
 import os
 
 

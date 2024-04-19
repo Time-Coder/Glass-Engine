@@ -2,12 +2,7 @@ from .Manipulator import Manipulator
 from glass.RenderHints import RenderHints
 
 import glm
-import platform
-
-if platform.machine() == "aarch64":
-    from OpenGL import GLES2 as GL
-else:
-    from OpenGL import GL
+from OpenGL import GL
 import copy
 import datetime
 

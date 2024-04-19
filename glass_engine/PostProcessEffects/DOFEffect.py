@@ -4,12 +4,7 @@ from ..Frame import Frame
 from glass import FBO, ShaderProgram, sampler2D, GLConfig, Block
 from glass.utils import checktype
 
-import platform
-
-if platform.machine() == "aarch64":
-    from OpenGL import GLES2 as GL
-else:
-    from OpenGL import GL
+from OpenGL import GL
 import time
 import os
 

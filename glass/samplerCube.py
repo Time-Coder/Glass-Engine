@@ -2,14 +2,9 @@ import os
 
 os.environ["OPENCV_IO_ENABLE_OPENEXR"] = "1"
 import cv2
-import numpy as np
 import glm
-import platform
-
-if platform.machine() == "aarch64":
-    from OpenGL import GLES2 as GL
-else:
-    from OpenGL import GL
+import numpy as np
+from OpenGL import GL
 import OpenGL.GL.ARB.bindless_texture as bt
 
 from .FBOAttachment import FBOAttachment

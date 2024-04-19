@@ -3,13 +3,8 @@ from .GLInfo import GLInfo
 from .utils import checktype
 from .isampler2D import isampler2D
 
+from OpenGL import GL
 import numpy as np
-import platform
-
-if platform.machine() == "aarch64":
-    from OpenGL import GLES2 as GL
-else:
-    from OpenGL import GL
 
 
 class iimage2D(isampler2D):

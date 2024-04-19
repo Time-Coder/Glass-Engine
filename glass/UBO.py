@@ -1,11 +1,6 @@
 from .SSUBO import SSUBO
 
-import platform
-
-if platform.machine() == "aarch64":
-    from OpenGL import GLES2 as GL
-else:
-    from OpenGL import GL
+from OpenGL import GL
 
 
 class UBO(SSUBO):

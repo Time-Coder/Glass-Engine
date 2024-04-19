@@ -9,12 +9,7 @@ from glass.AttrList import AttrList
 
 import glm
 from functools import wraps
-import platform
-
-if platform.machine() == "aarch64":
-    from OpenGL import GLES2 as GL
-else:
-    from OpenGL import GL
+from OpenGL import GL
 import inspect
 import types
 from enum import Enum

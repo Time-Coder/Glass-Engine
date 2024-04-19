@@ -1,9 +1,4 @@
-import platform
-
-if platform.machine() == "aarch64":
-    from OpenGL import GLES2 as GL
-else:
-    from OpenGL import GL
+from OpenGL import GL
 
 from .SSUBO import SSUBO
 from .utils import subscript_set, subscript

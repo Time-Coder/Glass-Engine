@@ -3,6 +3,7 @@ import os
 import glob
 import tree_sitter
 import zipfile
+import platform
 
 from ..GLInfo import GLInfo
 from .ShaderSyntaxTokens import Var, Attribute, Func, FuncCall, Struct, SimpleVar
@@ -11,12 +12,7 @@ from .ShaderBuiltins import ShaderBuiltins
 from ..utils import resolve_array
 from ..helper import greater_type, type_list_distance, subscript_type
 
-import platform
-
-if platform.machine() == "aarch64":
-    from OpenGL import GLES2 as GL
-else:
-    from OpenGL import GL
+from OpenGL import GL
 from tree_sitter import Language, Parser
 from typing import List, Dict, Union
 
