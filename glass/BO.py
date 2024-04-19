@@ -4,211 +4,119 @@ import numpy as np
 from .GLInfo import GLInfo
 from .GLObject import GLObject
 from .GlassConfig import GlassConfig
+from .Increment import Increment
 
+from typing import Union
 
-class BO(GLObject):
+class BO(GLObject, Increment):
 
-    def __init__(self, context_shared=True) -> None:
+    def __init__(self, byte_array:Union[bytes,bytearray]=b'', context_shared:bool=True, redundant:bool=False) -> None:
         GLObject.__init__(self, context_shared=context_shared)
+        Increment.__init__(self, byte_array)
         self._nbytes: int = 0
         self._draw_type: GLInfo.draw_types = GL.GL_STATIC_DRAW
+        self._redundant = redundant
 
-    def delete(self) -> None:
-        GLObject.delete(self)
-        self._nbytes = 0
+    def bind(self):
+        GLObject.bind(self)
+        self.__apply_increment()
 
-    def bufferData(
-        self, value_array, draw_type: GLInfo.draw_types = GL.GL_STATIC_DRAW
-    ) -> None:
-        if GlassConfig.debug and self.__class__.__name__ in ["FBO", "RBO"]:
-            raise AttributeError(
-                "'" + self.__class__.__name__ + "' object has no attribute 'bufferData'"
-            )
-
-        array_bytes = 0
-        if isinstance(value_array, np.ndarray):
-            array_bytes = value_array.nbytes
-        elif isinstance(value_array, bytes):
-            array_bytes = len(value_array)
-        elif isinstance(value_array, bytearray):
-            array_bytes = len(value_array)
-            value_array = bytes(value_array)
-        else:
-            value_array = np.array(value_array)
-            array_bytes = value_array.nbytes
-
-        self.bind()
-        GL.glBufferData(
-            self.__class__._basic_info["target_type"],
-            array_bytes,
-            value_array,
-            draw_type,
-        )
-        self._nbytes = array_bytes
-        self._draw_type = draw_type
-
-    def malloc(
-        self, nbytes: int, draw_type: GLInfo.draw_types = GL.GL_STATIC_DRAW
-    ) -> None:
-        if GlassConfig.debug:
-            if self.__class__.__name__ in ["FBO", "RBO"]:
-                raise AttributeError(
-                    "'" + self.__class__.__name__ + "' object has no attribute 'malloc'"
-                )
-
-        self.bind()
-        GL.glBufferData(
-            self.__class__._basic_info["target_type"], nbytes, None, draw_type
-        )
-        self._nbytes = nbytes
-        self._draw_type = draw_type
-
-    def memmove(self, old_start: int, nbytes: int, new_start: int) -> None:
-        if GlassConfig.debug:
-            if old_start < 0:
-                raise ValueError(
-                    "source start position should be positive, "
-                    + str(old_start)
-                    + " is passed"
-                )
-            elif old_start >= self.nbytes:
-                raise ValueError(
-                    "source start position is out of range, max position is "
-                    + str(self._nbytes - 1),
-                    ", " + str(old_start) + " is passed",
-                )
-
-            if new_start < 0:
-                raise ValueError(
-                    "dest start position should be positive, "
-                    + str(new_start)
-                    + " is passed"
-                )
-            elif new_start >= self.nbytes:
-                raise ValueError(
-                    "dest start position is out of range, max position is "
-                    + str(self._nbytes - 1),
-                    ", " + str(new_start) + " is passed",
-                )
-
-            if nbytes < 0:
-                raise ValueError(
-                    "'nbytes' should be positive, " + str(nbytes) + " is passed"
-                )
-
-            if old_start + nbytes > self._nbytes:
-                raise ValueError(
-                    "source buffer end position is out of range, max position is "
-                    + str(self._nbytes)
-                    + ", "
-                    + str(old_start + nbytes)
-                    + " is applied."
-                )
-
-        if self._nbytes == 0 or nbytes == 0 or old_start == new_start:
-            return
+    def __apply_move(self, move):
+        new_start = move["new_start"]
+        old_start = move["old_start"]
+        nbytes = move["size"]
 
         temp_bo_id = GL.glGenBuffers(1)
         GL.glBindBuffer(GL.GL_COPY_WRITE_BUFFER, temp_bo_id)
         GL.glBufferData(GL.GL_COPY_WRITE_BUFFER, nbytes, None, self.draw_type)
 
-        GL.glBindBuffer(GL.GL_COPY_READ_BUFFER, self._id)
+        target_type = self.__class__._basic_info["target_type"]
         GL.glCopyBufferSubData(
-            GL.GL_COPY_READ_BUFFER, GL.GL_COPY_WRITE_BUFFER, old_start, 0, nbytes
+            target_type, GL.GL_COPY_WRITE_BUFFER, old_start, 0, nbytes
+        )
+        GL.glCopyBufferSubData(
+            GL.GL_COPY_WRITE_BUFFER, target_type, new_start, 0, nbytes
         )
 
-        GL.glBindBuffer(GL.GL_COPY_WRITE_BUFFER, 0)
-        GL.glBindBuffer(GL.GL_COPY_READ_BUFFER, 0)
+        GL.glDeleteBuffers(1, [temp_bo_id])
+        move["is_moved"] = True
+        move["current_start"] = new_start
 
-        self.bufferSubData(old_start, nbytes, bytes(nbytes))
-        real_delta = 0
-        if old_start - new_start > 0:
-            real_delta = old_start - new_start
-            self.copy_to(new_start, real_delta, self, new_start + nbytes)
+    def __apply_increment(self):
+        if not self.is_changed:
+            return
+        
+        patch = self.patch()
+        if self._redundant:
+            old_capacity = patch["old_capacity"]
+            new_capacity = patch["new_capacity"]
         else:
-            real_delta = min(new_start + nbytes, self._nbytes) - (old_start + nbytes)
-            self.copy_to(old_start + nbytes, real_delta, self, old_start)
+            old_capacity = patch["old_size"]
+            new_capacity = patch["new_size"]
 
-        GL.glBindBuffer(GL.GL_COPY_WRITE_BUFFER, self._id)
-        GL.glBindBuffer(GL.GL_COPY_READ_BUFFER, temp_bo_id)
-        GL.glCopyBufferSubData(
-            GL.GL_COPY_READ_BUFFER, GL.GL_COPY_WRITE_BUFFER, 0, new_start, nbytes
-        )
-        GL.glBindBuffer(GL.GL_COPY_WRITE_BUFFER, 0)
-        GL.glBindBuffer(GL.GL_COPY_READ_BUFFER, 0)
-        GL.glDeleteBuffers(1, np.array([temp_bo_id]))
-        temp_bo_id = 0
+        target_type = self.__class__._basic_info["target_type"]
 
-    def bufferSubData(self, start: int, nbytes: int, value_array) -> None:
-        if GlassConfig.debug:
-            if self.__class__.__name__ in ["FBO", "RBO"]:
-                raise AttributeError(
-                    "'"
-                    + self.__class__.__name__
-                    + "' object has no attribute 'bufferSubData'"
-                )
-
-        array_nbytes = 0
-        if isinstance(value_array, np.ndarray):
-            array_nbytes = value_array.nbytes
-            value_array = value_array.tobytes()
-        elif isinstance(value_array, bytes):
-            array_nbytes = len(value_array)
-        elif isinstance(value_array, bytearray):
-            array_nbytes = len(value_array)
-            value_array = bytes(value_array)
-        else:
-            value_array = np.array(value_array)
-            array_nbytes = value_array.nbytes
-            value_array = value_array.tobytes()
-
-        if GlassConfig.debug:
-            if start < 0:
-                raise ValueError(
-                    "Memory start position should be positive, "
-                    + str(start)
-                    + " is passed"
-                )
-
-            if nbytes < 0:
-                raise ValueError(
-                    "'nbytes' should be positive, " + str(nbytes) + " is passed"
-                )
-
-            if start >= self._nbytes:
-                raise ValueError(
-                    "Memory start position is out of range, max position is "
-                    + str(self._nbytes - 1)
-                    + ", "
-                    + str(start)
-                    + " is passed."
-                )
-
-            if start + nbytes > self._nbytes:
-                raise ValueError(
-                    "Memory end position is out of range, max position is "
-                    + str(self._nbytes)
-                    + ", "
-                    + str(start + nbytes)
-                    + " is applied."
-                )
-
-            if nbytes > array_nbytes:
-                raise ValueError(
-                    "Need copy data is over value_array's size. Max data size is "
-                    + str(value_array.nbytes)
-                    + " bytes, "
-                    + str(nbytes)
-                    + " bytes is needed."
-                )
-
-        if nbytes == 0:
+        if old_capacity != new_capacity:
+            GL.glBufferData(target_type, len(self), self, self.draw_type)
             return
 
-        self.bind()
-        GL.glBufferSubData(
-            self.__class__._basic_info["target_type"], start, nbytes, value_array
-        )
+        len_move = len(patch["move"])
+        has_moved = True
+        while has_moved:
+            has_moved = False
+            for i, move in enumerate(patch["move"]):
+                if move["is_moved"]:
+                    continue
+
+                new_start = move["new_start"]
+                old_start = move["old_start"]
+                nbytes = move["size"]
+                if new_start > old_start:
+                    if i + 1 < len_move:
+                        if new_start + nbytes <= patch["move"][i + 1]["current_start"]:
+                            self.__apply_move(move)
+                            has_moved = True
+                    else:
+                        self.__apply_move(move)
+                        has_moved = True
+                else:
+                    if i - 1 >= 0:
+                        if new_start >= patch["move"][i - 1]["current_start"] + patch["move"][i - 1]["size"]:
+                            self.__apply_move(move)
+                            has_moved = True
+                    else:
+                        self.__apply_move(move)
+                        has_moved = True
+
+        if patch["old_size"] > patch["new_size"]:
+            del self[patch["new_size"]:]
+
+        new_data = patch["new_data"]
+        patch_update = patch["update"]
+
+        if new_data and patch_update:
+            if len(patch_update) > 1:
+                temp_bo_id = GL.glGenBuffers(1)
+                GL.glBindBuffer(GL.GL_COPY_READ_BUFFER, temp_bo_id)
+                GL.glBufferData(GL.GL_COPY_READ_BUFFER, nbytes, new_data, self.draw_type)
+                for update in patch_update:
+                    dest_start = update["dest_start"]
+                    size = update["size"]
+                    src_start = update["src_start"]
+                    GL.glCopyBufferSubData(GL.GL_COPY_READ_BUFFER, target_type, src_start, dest_start, size)
+
+                GL.glDeleteBuffers(1, [temp_bo_id])
+            else:
+                update = patch_update[0]
+                dest_start = update["dest_start"]
+                size = update["size"]
+                GL.glBufferSubData(target_type, dest_start, size, new_data)
+
+        self._nbytes = len(self)
+        
+    def delete(self) -> None:
+        GLObject.delete(self)
+        self._nbytes = 0
 
     def copy_to(self, src_start: int, nbytes: int, dest_bo, dest_start: int) -> None:
         if GlassConfig.debug:

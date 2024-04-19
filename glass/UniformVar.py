@@ -2,78 +2,265 @@ from .utils import di
 from .ShaderParser import Var
 from .GlassConfig import GlassConfig
 from .GLInfo import GLInfo
+from .WeakSet import WeakSet
 
 from OpenGL import GL
 from typing import Union, Dict, Any
 
-def setter(self, name:Union[int,str], value:Any):
-    if isinstance(name, str):
-        old_value = getattr(self, name)
-    else:
-        old_value = self[name]
+class MethodsInstaller:
 
-    if old_value == value:
-        return
-    
-    id_normal_var = id(self)
-    id_normal_cls = id(self.__class__)
-    old_setter = UniformVar._old_methods[id_normal_cls]["setter"]
+    list_methods = [
+        "__setitem__", "__delitem__", "append", "extend",
+        "insert", "remove", "pop", "clear", "sort", "reverse"
+    ]
 
-    if id_normal_var not in UniformVar._bound_vars:
-        old_setter(self, name, value)
-        return
-    
-    for uniform_var in UniformVar._bound_vars[id_normal_var]:
-        for key, child_var in uniform_var._var.children.items():
-            if child_var.type in GLInfo.atom_type_map:
-                if isinstance(key, str):
-                    setattr(uniform_var, key, getattr(value, key))
-                elif isinstance(key, int):
-                    uniform_var[key] = value[key]
+    def __setitem__(self, index:Union[int,slice], value:Any):
+        id_normal_var = id(self)
+        id_normal_cls = id(self.__class__)
+        old_setitem = UniformVar._old_methods[id_normal_cls]["__setitem__"]
+        old_setitem(self, index, value)
+
+        if id_normal_var not in UniformVar._bound_vars:
+            return
+        
+        if isinstance(index, int):            
+            for uniform_var in UniformVar._bound_vars[id_normal_var]:
+                if index in uniform_var:
+                    uniform_var[index].bind(value)
+        elif isinstance(index, slice):
+            len_self = len(self)
+
+            start = index.start
+            stop = index.stop
+            step = index.step
+            if step is None:
+                step = 1
+
+            if start is None:
+                start = (0 if step > 0 else len_self - 1)
+            elif start < 0:
+                start += len_self
+            
+            if stop is None:
+                stop = (len_self if step > 0 else -1)
+            elif stop < 0:
+                stop += len_self
+
+            indices = list(range(start, stop, step))
+            if len(value) == len(indices):
+                for uniform_var in UniformVar._bound_vars[id_normal_var]:
+                    for i in indices:
+                        if i in uniform_var:
+                            uniform_var[i].bind(self[i])
             else:
-                if isinstance(key, str):
-                    attr = getattr(value, key)
-                elif isinstance(key, int):
-                    attr = value[key]
-                    
-                attr_cls = attr.__class__
-                id_attr_cls = id(attr_cls)
-                if id_attr_cls not in UniformVar._old_methods:
-                    if "[" not in child_var.type:
-                        if hasattr(attr_cls, "__setattr__"):
-                            UniformVar._old_methods[id_attr_cls]["__setattr__"] = attr_cls.__setattr__
+                if step > 0:
+                    start_index = start
+                else:
+                    start_index = stop + 1
 
-                        attr_cls.__setattr__ = setter
-                    else:
-                        if hasattr(attr_cls, "__setitem__"):
-                            UniformVar._old_methods[id_attr_cls]["__setitem__"] = attr_cls.__setitem__
+                for uniform_var in UniformVar._bound_vars[id_normal_var]:
+                    for i in range(start_index, len(self)):
+                        if i in uniform_var:
+                            uniform_var[i].bind(self[i])
 
-                        attr_cls.__setitem__ = setter
+    def __delitem__(self, index:Union[int,slice]):
+        id_normal_var = id(self)
+        id_normal_cls = id(self.__class__)
+        old_delitem = UniformVar._old_methods[id_normal_cls]["__delitem__"]
+        old_delitem(self, index)
 
-    
+        if id_normal_var not in UniformVar._bound_vars:
+            return
+        
+        if isinstance(index, int):
+            start_index = index
+            for uniform_var in UniformVar._bound_vars[id_normal_var]:
+                if index in uniform_var:
+                    uniform_var[index].unbind()
+        elif isinstance(index, slice):
+            len_self = len(self)
+
+            start = index.start
+            stop = index.stop
+            step = index.step
+            if step is None:
+                step = 1
+
+            if start is None:
+                start = (0 if step > 0 else len_self - 1)
+            elif start < 0:
+                start += len_self
+            
+            if stop is None:
+                stop = (len_self if step > 0 else -1)
+            elif stop < 0:
+                stop += len_self
+
+            if step > 0:
+                start_index = start
+            else:
+                start_index = stop + 1
+
+            for uniform_var in range():
+                if index in uniform_var:
+                    uniform_var[index].unbind()
+            
+        for uniform_var in UniformVar._bound_vars[id_normal_var]:
+            for i in range(start_index, len(self)):
+                if i in uniform_var:
+                    uniform_var[i].bind(self[i])
+
+    def __setattr__(self, name: str, value: Any):
+        old_value = getattr(self, name)
+        if id(old_value) == id(value):
+            return
+        
+        id_normal_var = id(self)
+        id_normal_cls = id(self.__class__)
+        old_setattr = UniformVar._old_methods[id_normal_cls]["__setattr__"]
+        old_setattr(self, name, value)
+
+        if id_normal_var not in UniformVar._bound_vars:
+            return
+        
+        for uniform_var in UniformVar._bound_vars[id_normal_var]:
+            if name in uniform_var:
+                uniform_var[name].bind(value)
+
+    def append(self, value:Any):
+        id_normal_var = id(self)
+        id_normal_cls = id(self.__class__)
+        old_append = UniformVar._old_methods[id_normal_cls]["append"]
+        last_index = len(self)
+        old_append(self, value)
+
+        if id_normal_var not in UniformVar._bound_vars:
+            return
+        
+        for uniform_var in UniformVar._bound_vars[id_normal_var]:
+            if last_index in uniform_var:
+                uniform_var[last_index].bind(value)
+
+    def extend(self, values):
+        id_normal_var = id(self)
+        id_normal_cls = id(self.__class__)
+        old_extend = UniformVar._old_methods[id_normal_cls]["extend"]
+        last_index = len(self)
+        old_extend(self, values)
+
+        if id_normal_var not in UniformVar._bound_vars:
+            return
+        
+        for uniform_var in UniformVar._bound_vars[id_normal_var]:
+            for sub_index, value in enumerate(values):
+                index = last_index + sub_index
+                if index in uniform_var:
+                    uniform_var[index].bind(value)
+
+    def insert(self, index:int, value:Any):
+        id_normal_var = id(self)
+        id_normal_cls = id(self.__class__)
+        old_insert = UniformVar._old_methods[id_normal_cls]["insert"]
+        old_insert(self, index, value)
+
+        if id_normal_var not in UniformVar._bound_vars:
+            return
+        
+        for uniform_var in UniformVar._bound_vars[id_normal_var]:
+            for i in range(index, len(self)):
+                if i in uniform_var:
+                    uniform_var[i].bind(self[i])
+
+    def remove(self, value:Any):
+        try:
+            index = self.index(value)
+            value = self[index]
+        except:
+            pass
+
+        id_normal_var = id(self)
+        id_normal_cls = id(self.__class__)
+        old_remove = UniformVar._old_methods[id_normal_cls]["remove"]
+        old_remove(self, value)
+
+        if id_normal_var not in UniformVar._bound_vars:
+            return
+        
+        for uniform_var in UniformVar._bound_vars[id_normal_var]:
+            if index in uniform_var:
+                uniform_var[index].unbind(value)
+
+            for i in range(index, len(self)):
+                if i in uniform_var:
+                    uniform_var[i].bind(self[i])
                 
 
+    def pop(self, index:int):
+        id_normal_var = id(self)
+        id_normal_cls = id(self.__class__)
+        old_pop = UniformVar._old_methods[id_normal_cls]["pop"]
+        value = old_pop(self, index)
+
+        if id_normal_var not in UniformVar._bound_vars:
+            return
+        
+        for uniform_var in UniformVar._bound_vars[id_normal_var]:
+            if index in uniform_var:
+                uniform_var[index].unbind()
+                
+            for i in range(index, len(self)):
+                if i in uniform_var:
+                    uniform_var[i].bind(self[i])
+
+        return value
+
+    def clear(self):
+        id_normal_var = id(self)
+        id_normal_cls = id(self.__class__)
+        old_clear = UniformVar._old_methods[id_normal_cls]["clear"]
+        old_clear(self)
+
+        if id_normal_var not in UniformVar._bound_vars:
+            return
+        
+        for uniform_var in UniformVar._bound_vars[id_normal_var]:                
+            for i in range(len(self)):
+                if i in uniform_var:
+                    uniform_var[i].unbind()
+
+    def sort(self, *args, key=None, reverse=False):
+        id_normal_var = id(self)
+        id_normal_cls = id(self.__class__)
+        old_sort = UniformVar._old_methods[id_normal_cls]["sort"]
+        old_sort(self, *args, key=key, reverse=reverse)
+
+        if id_normal_var not in UniformVar._bound_vars:
+            return
+        
+        for uniform_var in UniformVar._bound_vars[id_normal_var]:                
+            for i in range(len(self)):
+                if i in uniform_var:
+                    uniform_var[i].bind(self[i])
+
+    def reverse(self):
+        id_normal_var = id(self)
+        id_normal_cls = id(self.__class__)
+        old_reverse = UniformVar._old_methods[id_normal_cls]["reverse"]
+        old_reverse(self)
+
+        if id_normal_var not in UniformVar._bound_vars:
+            return
+        
+        for uniform_var in UniformVar._bound_vars[id_normal_var]:
+            for i in range(len(self)):
+                if i in uniform_var:
+                    uniform_var[i].bind(self[i])
+
 class UniformVar:
-    _all_attrs = {
-        "__init__",
-        "__getitem__",
-        "__setitem__",
-        "__getattr__",
-        "__setattr__",
-        "__hash__",
-        "__eq__",
-        "_uniform_id",
-        "_var",
-        "_children",
-        "uniform",
-        "program",
-        "type",
-        "full_name",
-        "location",
-    }
 
     _bound_vars = {}
     _old_methods = {}
+    _class_count = {}
 
     def __init__(self, uniform_id:int, var:Var):
         self._uniform_id:int = uniform_id
@@ -119,12 +306,6 @@ class UniformVar:
                 sub_value = value[child_name]
 
             self._children[child_name].set_value(sub_value)
-        
-    def __hash__(self):
-        return id(self)
-
-    def __eq__(self, other):
-        return id(self) == id(other)
 
     def __contains__(self, name: Union[str, int]):
         return name in self._var.children
@@ -148,37 +329,90 @@ class UniformVar:
         self[name].set_value(value)
 
     def __getattr__(self, name: str):
-        if name in UniformVar._all_attrs:
+        if name not in self._var.children:
             return super().__getattr__(name)
 
         return self[name]
 
     def __setattr__(self, name: str, value):
-        if name in UniformVar._all_attrs:
+        if name not in self._var.children:
             return super().__setattr__(name, value)
 
         self[name] = value
 
-    def bind(self, normal_var):
-        if self._normal_var is not None and self._normal_var is not normal_var:
-            self.unbind()
+    def bind(self, normal_var:Any):
+        if id(self._normal_var) == id(normal_var):
+            return
 
         if self._var.type in GLInfo.atom_type_map:
-            raise TypeError(f"cannot bind to primitive type '{self._var.type}'")
+            self.set_value(normal_var)
+            return
+
+        if normal_var is None:
+            self.unbind()
+            return
         
+        self.unbind()
+        
+        normal_cls = normal_var.__class__
+        id_normal_cls = id(normal_var.__class__)
+        if id_normal_cls not in UniformVar._class_count:
+            UniformVar._class_count[id_normal_cls] = 0
+
         id_normal_var = id(normal_var)
         if id_normal_var not in UniformVar._bound_vars:
-            UniformVar._bound_vars[id_normal_var] = set()
-            normal_cls = normal_var.__class__
-            id_normal_cls = id(normal_var.__class__)
-            if id_normal_cls not in UniformVar._old_methods:
-                UniformVar._old_methods[id_normal_cls] = {}
+            UniformVar._bound_vars[id_normal_var] = WeakSet()
 
-                if hasattr(normal_var, "__setattr__"):
-                    UniformVar._old_methods[id_normal_cls]["__setattr__"] = normal_cls.__setattr__
+        UniformVar._bound_vars[id_normal_var].add(self)
+        self._normal_var = normal_var
 
-                if hasattr(normal_var, "__setitem__"):
-                    UniformVar._old_methods[id_normal_cls]["__setitem__"] = normal_cls.__setitem__
+        if id_normal_cls not in UniformVar._old_methods:
+            old_methods = {}
+            UniformVar._old_methods[id_normal_cls] = old_methods
+            if "[" not in self._var.type:
+                if hasattr(normal_cls, "__setattr__"):
+                    old_methods["__setattr__"] = normal_cls.__setattr__
 
-        if self not in UniformVar._bound_vars[id_normal_var]:
-            UniformVar._bound_vars[id_normal_var].add(self)
+                normal_cls.__setattr__ = MethodsInstaller.__setattr__
+            else: # list
+                for method_name in MethodsInstaller.list_methods:
+                    if hasattr(normal_cls, method_name):
+                        old_methods[method_name] = getattr(normal_cls, method_name)
+
+                    setattr(normal_cls, method_name, getattr(MethodsInstaller, method_name))
+
+        UniformVar._class_count[id_normal_cls] += 1
+
+        for key in self._var.children:
+            if isinstance(key, int):
+                sub_normal_var = normal_var[key]
+            else:
+                sub_normal_var = getattr(normal_cls, key)
+
+            self[key].bind(sub_normal_var)
+
+    def unbind(self):
+        if self._normal_var is None:
+            return
+        
+        id_normal_var = id(self._normal_var)
+        if id_normal_var not in UniformVar._bound_vars or self not in UniformVar._bound_vars[id_normal_var]:
+            self._normal_var = None
+            return
+        
+        uniform_var_set = UniformVar._bound_vars[id_normal_var]
+        uniform_var_set.remove(self)
+        if len(uniform_var_set) == 0:
+            del UniformVar._bound_vars[id_normal_var]
+
+        normal_cls = id(self._normal_var.__class__)
+        id_normal_cls = id(normal_cls)
+        UniformVar._class_count[id_normal_cls] -= 1
+        if UniformVar._class_count[id_normal_cls] == 0:
+            del UniformVar._class_count[id_normal_cls]
+
+        if id_normal_var not in UniformVar._class_count:
+            for method_name, old_method in UniformVar._old_methods[id_normal_cls].items():
+                setattr(normal_cls, method_name, old_method)
+
+            del UniformVar._old_methods[id_normal_cls]

@@ -624,7 +624,7 @@ class _MetaGLConfig(type):
         return _MetaGLConfig.__gl_version
 
     @property
-    def major_version(cls) -> str:
+    def major_version(cls) -> int:
         if _MetaGLConfig.__gl_major_version is None:
             try:
                 _MetaGLConfig.__gl_major_version = GL.glGetInteger(GL.GL_MAJOR_VERSION)
@@ -636,7 +636,7 @@ class _MetaGLConfig(type):
         return _MetaGLConfig.__gl_major_version
 
     @property
-    def minor_version(cls) -> str:
+    def minor_version(cls) -> int:
         if _MetaGLConfig.__gl_minor_version is None:
             try:
                 _MetaGLConfig.__gl_minor_version = GL.glGetInteger(GL.GL_MINOR_VERSION)
