@@ -6,7 +6,6 @@ from ctypes import c_int, pointer
 from .GLObject import GLObject
 from .GLInfo import GLInfo
 from .GlassConfig import GlassConfig
-from .GLConfig import GLConfig
 from .Uniform import Uniform
 from .UniformBlock import UniformBlock
 from .ShaderStorageBlock import ShaderStorageBlock
@@ -70,7 +69,6 @@ class GPUProgram(GLObject):
     __message_prefix3 = re.compile(
         r"\n0?\((?P<line_number>\d+)\) : (?P<message_type>\w+) "
     )
-    __active_program = {}
 
     def __init__(self):
         GLObject.__init__(self)
@@ -187,13 +185,7 @@ class GPUProgram(GLObject):
         self.collect_info()
         self._link()
 
-        current_context = GLConfig.buffered_current_context
-        if (
-            current_context not in GPUProgram.__active_program
-            or GPUProgram.__active_program[current_context] != self._id
-        ):
-            GL.glUseProgram(self._id)
-            GPUProgram.__active_program[current_context] = self._id
+        GL.glUseProgram(self._id)
 
     def stop_using(self):
         if not self.is_using:

@@ -49,7 +49,6 @@ class ShaderProgram(GPUProgram):
 
     def __init__(self):
         GPUProgram.__init__(self)
-        print("I am here!")
         self.vertex_shader: VertexShader = VertexShader(self)
         self.fragment_shader: FragmentShader = FragmentShader(self)
         self.geometry_shader: GeometryShader = GeometryShader(self)
