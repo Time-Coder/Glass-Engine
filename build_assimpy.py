@@ -30,6 +30,8 @@ include assimpy/README_PYPI.md
 include assimpy/assimpy_ext.h
 include assimpy/assimp-5.4.0.zip
 include assimpy/pybind11-2.12.0.zip
+include assimpy/__pyinstaller/assimp/LICENSE
+include assimpy/__pyinstaller/pybind11/LICENSE
 """)
 
 subprocess.check_call([sys.executable, "setup.py", "sdist", "bdist_wheel"])
