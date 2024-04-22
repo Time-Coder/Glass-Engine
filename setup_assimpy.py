@@ -5,6 +5,14 @@ import zipfile
 
 import subprocess
 
+def in_PATH(exe):
+    if platform.system() == 'Windows':
+        return_code = subprocess.call(["where", exe])
+    else:
+        return_code = subprocess.call(["which", exe])
+
+    return (return_code == 0)
+
 zip_file = zipfile.ZipFile("assimpy/assimp-5.4.0.zip")
 zip_file.extractall("assimpy")
 zip_file.close()
@@ -13,9 +21,35 @@ zip_file = zipfile.ZipFile("assimpy/pybind11-2.12.0.zip")
 zip_file.extractall("assimpy")
 zip_file.close()
 
+library_dirs = [
+    "build/assimp-5.4.0/lib",
+    "build/assimp-5.4.0/contrib/zlib"
+]
+
+generator = ""
+if platform.system() == "Windows":
+    if in_PATH("g++"):
+        if in_PATH("ninja"):
+            generator = "Ninja"
+        elif in_PATH("mingw32-make"):
+            generator = "MinGW Makefiles"
+    else:
+        generator = "NMake Makefiles"
+        library_dirs = [
+            "build/assimp-5.4.0/lib/MinSizeRel",
+            "build/assimp-5.4.0/contrib/zlib/MinSizeRel"
+        ]
+else:
+    if in_PATH("ninja"):
+        generator = "Ninja"
+    elif in_PATH("make"):
+        generator = "Unix Makefiles"
+
 subprocess.check_call(
     [
-        "cmake", "assimpy/assimp-5.4.0", "-B", "build/assimp-5.4.0",
+        "cmake", "assimpy/assimp-5.4.0",
+        "-B", "build/assimp-5.4.0",
+        "-G", generator,
         "-DCMAKE_CONFIGURATION_TYPES=MinSizeRel",
         "-DBUILD_SHARED_LIBS=OFF",
         "-DASSIMP_BUILD_TESTS=OFF",
@@ -33,7 +67,7 @@ subprocess.check_call(
 )
 
 ext = setuptools.Extension(
-    "assimpy",
+    "assimpy_ext",
     sources=[
         "assimpy/assimpy_ext.cpp",
         "assimpy/module.cpp"
@@ -48,10 +82,7 @@ ext = setuptools.Extension(
         "assimp",
         "zlibstatic"
     ],
-    library_dirs=[
-        "build/assimp-5.4.0/lib/MinSizeRel",
-        "build/assimp-5.4.0/contrib/zlib/MinSizeRel"
-    ]
+    library_dirs=library_dirs
 )
 
 if platform.system() != "Windows":

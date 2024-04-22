@@ -5,6 +5,14 @@ import shutil
 import platform
 import glob
 
+def in_PATH(exe):
+    if platform.system() == 'Windows':
+        return_code = subprocess.call(["where", exe])
+    else:
+        return_code = subprocess.call(["which", exe])
+
+    return (return_code == 0)
+
 if os.path.isdir("build"):
     shutil.rmtree("build")
 
@@ -32,7 +40,10 @@ include assimpy/assimp-5.4.0.zip
 include assimpy/pybind11-2.12.0.zip
 """)
 
-subprocess.call([sys.executable, "setup.py", "sdist", "bdist_wheel"])
+if platform.system() == "Windows" and in_PATH("g++"):
+    subprocess.check_call([sys.executable, "setup.py", "sdist", "bdist_wheel", "build_ext", "--inplace", "--compiler=mingw32"])
+else:
+    subprocess.check_call([sys.executable, "setup.py", "sdist", "bdist_wheel"])
 
 with open("README_glass_engine.rst", "r", encoding="utf-8") as in_file:
     content = in_file.read()
@@ -44,5 +55,5 @@ if platform.system() == "Linux":
     machine = platform.machine()
     files = glob.glob(f"dist/assimpy-*-linux_{machine}.whl")
     for file in files:
-        subprocess.call([sys.executable, "-m", "auditwheel", "repair", file, f"--plat=manylinux_2_34_{machine}", "-w", "dist"])
+        subprocess.call([sys.executable, "-m", "auditwheel", "repair", file, f"--plat=manylinux2014_{machine}", "-w", "dist"])
         os.remove(file)
