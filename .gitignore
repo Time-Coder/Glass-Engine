@@ -15,8 +15,8 @@ setup.py
 MANIFEST.in
 .python-version
 .DS_Store
-assimp/
-pybind11/
+assimp-*/*
+pybind11-*/*
 *.sqlite
 glass/ShaderParser_/tree-sitter-glsl/src/*
 test_*

@@ -3,28 +3,58 @@ import setuptools
 import platform
 import zipfile
 
-zip_file = zipfile.ZipFile("assimpy/assimp.zip")
-zip_file.extractall("assimpy/assimp")
+import subprocess
+
+zip_file = zipfile.ZipFile("assimpy/assimp-5.4.0.zip")
+zip_file.extractall("assimpy")
 zip_file.close()
 
-zip_file = zipfile.ZipFile("assimpy/pybind11.zip")
-zip_file.extractall("assimpy/pybind11")
+zip_file = zipfile.ZipFile("assimpy/pybind11-2.12.0.zip")
+zip_file.extractall("assimpy")
 zip_file.close()
 
-machine = platform.machine()
-plat_sys = platform.system()
-bits = platform.architecture()[0]
-
-ext = setuptools.Extension(
-    name="assimpy_ext",
-    sources=sorted(["assimpy/assimpy_ext.cpp", "assimpy/module.cpp"]),
-    include_dirs=["assimpy/assimp/include", "assimpy/pybind11/include"],
-    library_dirs=[f"assimpy/assimp/lib/{machine}/{plat_sys}/{bits}"],
-    libraries=["assimp", "zlibstatic"],
-    package_dir={'assimpy': 'assimpy'}
+subprocess.check_call(
+    [
+        "cmake", "assimpy/assimp-5.4.0", "-B", "build/assimp-5.4.0",
+        "-DCMAKE_CONFIGURATION_TYPES=MinSizeRel",
+        "-DBUILD_SHARED_LIBS=OFF",
+        "-DASSIMP_BUILD_TESTS=OFF",
+        "-DASSIMP_INJECT_DEBUG_POSTFIX=OFF",
+        "-DASSIMP_INSTALL=OFF",
+        "-DASSIMP_INSTALL_PDB=OFF",
+        "-DASSIMP_WARNINGS_AS_ERRORS=OFF",
+        "-DLIBRARY_SUFFIX="
+    ]
+)
+subprocess.check_call(
+    [
+        "cmake", "--build", f"build/assimp-5.4.0", "--config", "MinSizeRel", "--parallel"
+    ]
 )
 
-if plat_sys != "Windows":
+ext = setuptools.Extension(
+    "assimpy",
+    sources=[
+        "assimpy/assimpy_ext.cpp",
+        "assimpy/module.cpp"
+    ],
+    include_dirs=[
+        "assimpy",
+        "assimpy/pybind11-2.12.0/include",
+        "assimpy/assimp-5.4.0/include",
+        "build/assimp-5.4.0/include"
+    ],
+    libraries=[
+        "assimp",
+        "zlibstatic"
+    ],
+    library_dirs=[
+        "build/assimp-5.4.0/lib/MinSizeRel",
+        "build/assimp-5.4.0/contrib/zlib/MinSizeRel"
+    ]
+)
+
+if platform.system() != "Windows":
     ext.extra_compile_args = ["-std=c++11"]
 
 ext_modules = [ext]
@@ -35,7 +65,7 @@ with open("assimpy/README_PYPI.md", "r", encoding='utf-8') as in_file:
 
 setuptools.setup(
     name="assimpy",
-    version="5.3.1.3",
+    version="5.4.0",
     author="王炳辉 (BingHui-WANG)",
     author_email="binghui.wang@foxmail.com",
     description="3D model loader for Glass-Engine",
