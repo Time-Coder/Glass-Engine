@@ -89,7 +89,7 @@ if platform.system() != "Windows":
     ext.extra_compile_args = ["-std=c++11"]
 
 ext_modules = [ext]
-extra_files = ["LICENSE"]
+extra_files = ["LICENSE", "__pyinstaller/assimp/LICENSE", "__pyinstaller/pybind11/LICENSE"]
 
 with open("assimpy/README_PYPI.md", "r", encoding='utf-8') as in_file:
     long_description = in_file.read()

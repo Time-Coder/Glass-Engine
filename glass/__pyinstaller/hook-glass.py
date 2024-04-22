@@ -28,23 +28,20 @@ def find_files(directory):
                 file_list.append((file_path.replace("\\", "/"), target_path))
     return file_list
 
-
+self_folder = os.path.dirname(os.path.abspath(__file__))
 datas = find_files("glsl")
 datas += find_files("ShaderParser_/tree-sitter-glsl")
-datas.append(
-    (
-        os.path.abspath(
-            os.path.dirname(os.path.abspath(__file__)) + "/../LICENSE"
-        ).replace("\\", "/"),
-        "glass",
-    ),
-    (
-        os.path.abspath(
-            os.path.dirname(os.path.abspath(__file__))
-            + "/../ShaderParser_/pcpp/LICENSE"
-        ).replace("\\", "/"),
-        "glass/ShaderParser_/pcpp",
-    ),
+datas.extend(
+    [
+        (
+            os.path.abspath(self_folder + "/../LICENSE").replace("\\", "/"),
+            "glass",
+        ),
+        (
+            os.path.abspath(self_folder + "/../ShaderParser_/pcpp/LICENSE").replace("\\", "/"),
+            "glass/ShaderParser_/pcpp",
+        )
+    ]
 )
 if platform.system() == "Linux":
     hiddenimports = ["OpenGL.platform.egl"]
