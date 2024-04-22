@@ -5,14 +5,6 @@ import shutil
 import platform
 import glob
 
-def in_PATH(exe):
-    if platform.system() == 'Windows':
-        return_code = subprocess.call(["where", exe])
-    else:
-        return_code = subprocess.call(["which", exe])
-
-    return (return_code == 0)
-
 if os.path.isdir("build"):
     shutil.rmtree("build")
 
@@ -40,10 +32,7 @@ include assimpy/assimp-5.4.0.zip
 include assimpy/pybind11-2.12.0.zip
 """)
 
-if platform.system() == "Windows" and in_PATH("g++"):
-    subprocess.check_call([sys.executable, "setup.py", "sdist", "bdist_wheel", "build_ext", "--inplace", "--compiler=mingw32"])
-else:
-    subprocess.check_call([sys.executable, "setup.py", "sdist", "bdist_wheel"])
+subprocess.check_call([sys.executable, "setup.py", "sdist", "bdist_wheel"])
 
 with open("README_glass_engine.rst", "r", encoding="utf-8") as in_file:
     content = in_file.read()

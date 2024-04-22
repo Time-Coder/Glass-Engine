@@ -1,17 +1,8 @@
 import setuptools
-
 import platform
 import zipfile
-
 import subprocess
-
-def in_PATH(exe):
-    if platform.system() == 'Windows':
-        return_code = subprocess.call(["where", exe])
-    else:
-        return_code = subprocess.call(["which", exe])
-
-    return (return_code == 0)
+import shutil
 
 zip_file = zipfile.ZipFile("assimpy/assimp-5.4.0.zip")
 zip_file.extractall("assimpy")
@@ -21,35 +12,23 @@ zip_file = zipfile.ZipFile("assimpy/pybind11-2.12.0.zip")
 zip_file.extractall("assimpy")
 zip_file.close()
 
-library_dirs = [
-    "build/assimp-5.4.0/lib",
-    "build/assimp-5.4.0/contrib/zlib"
-]
-
-generator = ""
 if platform.system() == "Windows":
-    if in_PATH("g++"):
-        if in_PATH("ninja"):
-            generator = "Ninja"
-        elif in_PATH("mingw32-make"):
-            generator = "MinGW Makefiles"
-    else:
-        generator = "NMake Makefiles"
-        library_dirs = [
-            "build/assimp-5.4.0/lib/MinSizeRel",
-            "build/assimp-5.4.0/contrib/zlib/MinSizeRel"
-        ]
-else:
-    if in_PATH("ninja"):
-        generator = "Ninja"
-    elif in_PATH("make"):
-        generator = "Unix Makefiles"
+    extra_flags = []
+    library_dirs = [
+        "build/assimp-5.4.0/lib/MinSizeRel",
+        "build/assimp-5.4.0/contrib/zlib/MinSizeRel"
+    ]
+elif shutil.which("ninja") is not None:
+    extra_flags = ["-G", "Ninja"]
+    library_dirs = [
+        "build/assimp-5.4.0/lib",
+        "build/assimp-5.4.0/contrib/zlib"
+    ]
 
 subprocess.check_call(
     [
         "cmake", "assimpy/assimp-5.4.0",
         "-B", "build/assimp-5.4.0",
-        "-G", generator,
         "-DCMAKE_CONFIGURATION_TYPES=MinSizeRel",
         "-DBUILD_SHARED_LIBS=OFF",
         "-DASSIMP_BUILD_TESTS=OFF",
@@ -58,7 +37,7 @@ subprocess.check_call(
         "-DASSIMP_INSTALL_PDB=OFF",
         "-DASSIMP_WARNINGS_AS_ERRORS=OFF",
         "-DLIBRARY_SUFFIX="
-    ]
+    ] + extra_flags
 )
 subprocess.check_call(
     [
