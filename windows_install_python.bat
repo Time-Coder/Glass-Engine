@@ -6,5 +6,5 @@ for %%v in (%python_versions%) do (
     pyenv install %%v
     pyenv local %%v
     python -m pip install pip --upgrade -i https://pypi.tuna.tsinghua.edu.cn/simple
-    python -m pip install -r requirements.txt --upgrade -i https://pypi.tuna.tsinghua.edu.cn/simple
+    @REM python -m pip install -r requirements.txt --upgrade -i https://pypi.tuna.tsinghua.edu.cn/simple
 )
