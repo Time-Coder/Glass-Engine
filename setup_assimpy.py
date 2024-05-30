@@ -46,30 +46,26 @@ except ImportError:
     pip_install("setuptools")
     import setuptools
 
-zip_file = zipfile.ZipFile("assimpy/assimp-5.4.1.zip")
-zip_file.extractall("assimpy")
-zip_file.close()
-
-zip_file = zipfile.ZipFile("assimpy/pybind11-2.12.0.zip")
-zip_file.extractall("assimpy")
-zip_file.close()
+bits = platform.architecture()[0]
+if bits == '64bit':
+    bits = 'x64'
+else:
+    bits = 'Win32'
 
 extra_flags = []
 if platform.system() == "Windows":
+    extra_flags = ["-A", bits]
     library_dirs = [
-        "build/assimp-5.4.1/lib/MinSizeRel",
-        "build/assimp-5.4.1/contrib/zlib/MinSizeRel"
+        f"build/assimp-5.4.1/{bits}/lib/MinSizeRel",
+        f"build/assimp-5.4.1/{bits}/contrib/zlib/MinSizeRel"
     ]
 else:
     library_dirs = [
-        "build/assimp-5.4.1/lib",
-        "build/assimp-5.4.1/contrib/zlib"
+        f"build/assimp-5.4.1/{bits}/lib",
+        f"build/assimp-5.4.1/{bits}/contrib/zlib"
     ]
     if shutil.which("ninja") is not None:
         extra_flags = ["-G", "Ninja"]
-
-if shutil.which("cmake") is None:
-    pip_install("cmake")
 
 if (
     (
@@ -84,10 +80,21 @@ if (
         not os.path.isfile(library_dirs[1] + "/libzlibstatic.a")
     )
 ):
+    zip_file = zipfile.ZipFile("assimpy/assimp-5.4.1.zip")
+    zip_file.extractall("assimpy")
+    zip_file.close()
+
+    zip_file = zipfile.ZipFile("assimpy/pybind11-2.12.0.zip")
+    zip_file.extractall("assimpy")
+    zip_file.close()
+
+    if shutil.which("cmake") is None:
+        pip_install("cmake")
+
     subprocess.check_call(
         [
             "cmake", "assimpy/assimp-5.4.1",
-            "-B", "build/assimp-5.4.1",
+            "-B", f"build/assimp-5.4.1/{bits}",
             "-DCMAKE_CONFIGURATION_TYPES=MinSizeRel",
             "-DBUILD_SHARED_LIBS=OFF",
             "-DASSIMP_BUILD_TESTS=OFF",
@@ -100,7 +107,7 @@ if (
     )
     subprocess.check_call(
         [
-            "cmake", "--build", f"build/assimp-5.4.1", "--config", "MinSizeRel", "--parallel"
+            "cmake", "--build", f"build/assimp-5.4.1/{bits}", "--config", "MinSizeRel", "--parallel"
         ]
     )
 
@@ -114,7 +121,7 @@ ext = setuptools.Extension(
         "assimpy",
         "assimpy/pybind11-2.12.0/include",
         "assimpy/assimp-5.4.1/include",
-        "build/assimp-5.4.1/include"
+        f"build/assimp-5.4.1/{bits}/include"
     ],
     libraries=[
         "assimp",

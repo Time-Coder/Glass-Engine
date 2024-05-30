@@ -1,8 +1,51 @@
 import subprocess
-import sys
 import os
 import platform
 import glob
+import winreg
+
+def get_python_paths(reg_key):
+    python_paths = {}
+
+    try:
+        i = 0
+        while True:
+            version = winreg.EnumKey(reg_key, i)
+            version_key = winreg.OpenKey(reg_key, version)
+            try:
+                install_key = winreg.OpenKey(version_key, "InstallPath")
+            except:
+                i += 1
+                continue
+            install_path, _ = winreg.QueryValueEx(install_key, None)
+            python_paths[version] = install_path.replace("\\", "/") + "python.exe"
+            i += 1
+    except OSError:
+        pass
+
+    return python_paths
+
+def get_all_python_paths():
+    paths = {}
+    try:
+        reg_key = winreg.OpenKey(winreg.HKEY_LOCAL_MACHINE, "SOFTWARE\\Python\\PythonCore")
+        paths.update(get_python_paths(reg_key))
+    except:
+        pass
+
+    try:
+        reg_key = winreg.OpenKey(winreg.HKEY_LOCAL_MACHINE, "SOFTWARE\\WOW6432Node\\Python\\PythonCore")
+        paths.update(get_python_paths(reg_key))
+    except:
+        pass
+
+    try:
+        reg_key = winreg.OpenKey(winreg.HKEY_CURRENT_USER, "SOFTWARE\\Python\\PythonCore")
+        paths.update(get_python_paths(reg_key))
+    except:
+        pass
+
+    return paths
 
 with open("README_assimpy.rst", "r", encoding="utf-8") as in_file:
     content = in_file.read()
@@ -27,17 +70,25 @@ include assimpy/__pyinstaller/assimp/LICENSE
 include assimpy/__pyinstaller/pybind11/LICENSE
 """)
 
-subprocess.check_call([sys.executable, "setup.py", "sdist", "bdist_wheel"])
+python_paths = get_all_python_paths()
+i = 0
+for python_path in python_paths.values():
+    if i == 0:
+        subprocess.check_call([python_path, "setup.py", "sdist", "bdist_wheel"])
+    else:
+        subprocess.check_call([python_path, "setup.py", "bdist_wheel"])
+
+    if platform.system() == "Linux":
+        machine = platform.machine()
+        files = glob.glob(f"dist/assimpy-*-linux_{machine}.whl")
+        for file in files:
+            subprocess.call([python_path, "-m", "auditwheel", "repair", file, f"--plat=manylinux2014_{machine}", "-w", "dist"])
+            os.remove(file)
+
+    i += 1
 
 with open("README_glass_engine.rst", "r", encoding="utf-8") as in_file:
     content = in_file.read()
 
 with open("README.rst", "w", encoding="utf-8") as out_file:
     out_file.write(content)
-
-if platform.system() == "Linux":
-    machine = platform.machine()
-    files = glob.glob(f"dist/assimpy-*-linux_{machine}.whl")
-    for file in files:
-        subprocess.call([sys.executable, "-m", "auditwheel", "repair", file, f"--plat=manylinux2014_{machine}", "-w", "dist"])
-        os.remove(file)
