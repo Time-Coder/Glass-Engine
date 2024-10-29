@@ -10,16 +10,17 @@ import math
 from enum import Enum
 import numpy as np
 import sys
+import importlib
 
 Screen = {}
 
 
 def import_Screen(gui_system: str) -> None:
     if gui_system not in Screen:
-        cmd = f"from .Screens.{gui_system}Screen import {gui_system}Screen"
-        exec(cmd)
+        module_name = f"glass_engine.Screens.{gui_system}Screen"
+        module = importlib.import_module(module_name)
 
-        Screen[gui_system] = eval(f"{gui_system}Screen")
+        Screen[gui_system] = getattr(module, f"{gui_system}Screen")
 
 
 class Camera(SceneNode):

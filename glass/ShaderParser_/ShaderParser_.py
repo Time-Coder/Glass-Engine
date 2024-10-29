@@ -788,7 +788,7 @@ class ShaderParser_:
                     return member.type
 
             if prefix_type in ShaderBuiltins.structs:
-                struct = self.structs[prefix_type]
+                struct = ShaderBuiltins.structs[prefix_type]
                 if suffix_text in struct.members:
                     member = struct.members[suffix_text]
                     return member.type

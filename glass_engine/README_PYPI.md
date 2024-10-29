@@ -55,6 +55,10 @@ camera.screen.show() # 相机显示屏显示渲染结果
 
 ## Release notes
 
+### version 0.1.57
+
+* 兼容 Python 3.13
+
 ### version 0.1.54
 
 * 修复 bug [#4](https://github.com/Time-Coder/Glass-Engine/issues/4): "view_pos.y" is used before being initialized
