@@ -19,7 +19,7 @@ Glass Engine -- 易用的 Python 3D 渲染引擎
 
 ::
 
-    pip install glass-engine -i https://pypi.tuna.tsinghua.edu.cn/simple
+    pip install glass-engine -i https://mirrors.aliyun.com/pypi/simple
 
 接下来，让我们通过一个简单例子来直观感受一下 **Glass Engine** 的使用过程：
 

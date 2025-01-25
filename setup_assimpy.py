@@ -36,7 +36,7 @@ def is_China_user():
 
 def pip_install(package):
     if is_China_user():
-        subprocess.check_call([sys.executable, "-m", "pip", "install", package, "-i", "https://pypi.tuna.tsinghua.edu.cn/simple"])
+        subprocess.check_call([sys.executable, "-m", "pip", "install", package, "-i", "https://mirrors.aliyun.com/pypi/simple"])
     else:
         subprocess.check_call([sys.executable, "-m", "pip", "install", package])
 

@@ -13,7 +13,7 @@ pip install glass-engine
 如果你是中国区用户，则可以使用以下命令以加速安装过程：
 
 ```
-pip install glass-engine -i https://pypi.tuna.tsinghua.edu.cn/simple
+pip install glass-engine -i https://mirrors.aliyun.com/pypi/simple
 ```
 
 若发生安装错误，请参考 [Glass Engine 的安装教程](https://glass-engine-doc.readthedocs.io/zh/latest/installation/installation.html) 进行解决。

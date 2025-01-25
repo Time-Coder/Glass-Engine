@@ -10,6 +10,6 @@ do
     # wget --no-check-certificate https://npm.taobao.org/mirrors/python/$version/Python-$version.tar.xz -P ~/.pyenv/cache/
     # pyenv install $version
     pyenv local $version
-    $(pyenv which python) -m pip install pip --upgrade -i https://pypi.tuna.tsinghua.edu.cn/simple
-    $(pyenv which python) -m pip install -r requirements.txt --upgrade -i https://pypi.tuna.tsinghua.edu.cn/simple
+    $(pyenv which python) -m pip install pip --upgrade -i https://mirrors.aliyun.com/pypi/simple
+    $(pyenv which python) -m pip install -r requirements.txt --upgrade -i https://mirrors.aliyun.com/pypi/simple
 done;

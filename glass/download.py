@@ -102,7 +102,7 @@ def pip_install(package_name: str):
             "install",
             package_name,
             "-i",
-            "https://pypi.tuna.tsinghua.edu.cn/simple",
+            "https://mirrors.aliyun.com/pypi/simple",
             "--no-warn-script-location",
         ]
 
