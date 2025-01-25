@@ -287,6 +287,19 @@ class SceneNode(metaclass=MetaInstancesRecorder):
         self._orientation.y = orientation.y
         self._orientation.z = orientation.z
 
+    def rotate(self, axis:glm.vec3, angle:float):
+        angle_rad = angle/180*math.pi
+        new_orientation = glm.quat(math.cos(angle_rad/2), math.sin(angle_rad/2)*axis) * self._orientation
+        self._orientation.w = new_orientation.w
+        self._orientation.x = new_orientation.x
+        self._orientation.y = new_orientation.y
+        self._orientation.z = new_orientation.z
+
+    def translate(self, translation:glm.vec3):
+        self._position.x = self._position.x + translation.x
+        self._position.y = self._position.x + translation.y
+        self._position.z = self._position.x + translation.z
+
     def _add_scenes(self, scenes):
         self._scenes.update(scenes)
         for child in self._children:

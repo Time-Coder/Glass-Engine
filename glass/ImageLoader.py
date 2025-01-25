@@ -70,6 +70,8 @@ class ImageLoader:
                 image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
             elif channels == 4:
                 image = cv2.cvtColor(image, cv2.COLOR_BGRA2RGBA)
+            elif channels == 1:
+                image = cv2.cvtColor(image, cv2.COLOR_GRAY2RGB)
 
             return image
         except:
