@@ -64,8 +64,8 @@ with open("MANIFEST.in", "w") as out_file:
 """include assimpy/LICENSE
 include assimpy/README_PYPI.md
 include assimpy/assimpy_ext.h
-include assimpy/assimp-5.4.1.zip
-include assimpy/pybind11-2.12.0.zip
+include assimpy/assimp-5.4.3.zip
+include assimpy/pybind11-2.13.6.zip
 include assimpy/__pyinstaller/assimp/LICENSE
 include assimpy/__pyinstaller/pybind11/LICENSE
 """)
