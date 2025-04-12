@@ -22,7 +22,7 @@ class Var:
         location: int = -1,
         layout_args: Union[List[str], None] = None,
         layout_kwargs: Union[Dict[str, str], None] = None,
-        other_qualifiers: Union[List[str], None] = None,
+        qualifier: str = "",
         start_index: int = -1,
         end_index: int = -1,
     ):
@@ -33,9 +33,7 @@ class Var:
         self.layout_kwargs: Dict[str, str] = (
             {} if layout_kwargs is None else layout_kwargs
         )
-        self.other_qualifiers: List[str] = (
-            [] if other_qualifiers is None else other_qualifiers
-        )
+        self.qualifier: str = qualifier
         self.atoms: List[SimpleVar] = []
         self.resolved: List[SimpleVar] = []
         self.start_index: int = start_index
@@ -130,11 +128,11 @@ class FuncCall:
             self.args: List[tree_sitter.Node] = [] if args is None else args
         else:
             identifier = call_expression.children[0]
-            function_call_parameter_list = call_expression.children[2]
+            argument_list = call_expression.children[1]
             self.name: str = identifier.text.decode("utf-8")
             self.args: List[tree_sitter.Node] = []
-            for arg in function_call_parameter_list.children:
-                if arg.type not in [",", "ERROR"]:
+            for arg in argument_list.children:
+                if arg.type not in [",", "ERROR", "(", ")"]:
                     self.args.append(arg)
 
     @property
@@ -149,12 +147,12 @@ class FuncCall:
     @staticmethod
     def get_signature(call_expression: tree_sitter.Node):
         identifier = call_expression.children[0]
-        function_call_parameter_list = call_expression.children[2]
+        argument_list = call_expression.children[1]
 
         name = identifier.text.decode("utf-8")
         args = []
-        for arg in function_call_parameter_list.children:
-            if arg.type != ",":
+        for arg in argument_list.children:
+            if arg.type not in [",", "ERROR", "(", ")"]:
                 args.append(arg)
 
         return name + "(" + ", ".join([arg.text.decode("utf-8") for arg in args]) + ")"

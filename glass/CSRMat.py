@@ -77,7 +77,7 @@ class CSRMat:
 
     @property
     def rows(self) -> int:
-        return self.indptr.__len__() - 1
+        return len(self.indptr) - 1
 
     @property
     def cols(self) -> int:
@@ -100,6 +100,10 @@ class CSRMat:
         for _ in range(n):
             self.indptr.insert(i, self.indptr[i])
 
+        for k, row in enumerate(self.row_indices):
+            if row >= i:
+                self.row_indices[k] = row + n
+
     def append_row(self, n: int = 1) -> None:
         for _ in range(n):
             self.indptr.insert(self.rows, self.indptr[self.rows])
@@ -120,14 +124,25 @@ class CSRMat:
         for it in range(row_end, len(self.indptr)):
             self.indptr[it] -= delta
 
-    def remove_row(self, row_start: int, row_end: int = None) -> None:
-        if row_end is None:
-            row_end = row_start + 1
+    def remove_row(self, row_start: int, row_stop: int = None) -> None:
+        if row_stop is None:
+            row_stop = row_start + 1
 
-        if row_end == row_start:
+        if row_stop == row_start:
             return
 
-        del self.col_indices[self.indptr[row_start] : self.indptr[row_end]]
-        del self.row_indices[self.indptr[row_start] : self.indptr[row_end]]
-        del self.data[self.indptr[row_start] : self.indptr[row_end]]
-        del self.indprt[row_start:row_end]
+        start = self.indptr[row_start]
+        stop = self.indptr[row_stop]
+        
+        del self.col_indices[start : stop]
+        del self.row_indices[start : stop]
+        del self.data[start : stop]
+        del self.indptr[row_start : row_stop]
+        
+        delta = row_stop - row_start
+        for i in range(row_start, len(self.indptr)):
+            self.indptr[i] -= delta
+
+        delta = stop - start
+        for i in range(start, len(self.row_indices)):
+            self.row_indices[i] -= delta

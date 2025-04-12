@@ -14,6 +14,7 @@ from ..helper import greater_type, type_list_distance, subscript_type
 
 from OpenGL import GL
 from tree_sitter import Language, Parser
+import tree_sitter_glsl as tsglsl
 from typing import List, Dict, Union
 
 
@@ -43,97 +44,55 @@ class ShaderParser_:
         if ShaderParser_.__glsl_parser is not None:
             return ShaderParser_.__glsl_parser
 
-        self_folder = os.path.dirname(os.path.abspath(__file__))
-        platform_system = platform.system()
-        if platform_system == "Linux":
-            dll_suffix = "so"
-        elif platform_system == "Darwin":
-            dll_suffix = "dylib"
-        else:
-            dll_suffix = "dll"
-
-        machine = platform.machine()
-        bits = platform.architecture()[0]
-
-        dll_file = f"{self_folder}/tree-sitter-glsl/lib/{machine}/{platform_system}/{bits}/glsl.{dll_suffix}"
-        dll_folder = os.path.dirname(dll_file)
-        if not os.path.isdir(dll_folder):
-            os.makedirs(dll_folder)
-
-        if not os.path.isfile(dll_file):
-            if not os.path.isfile(self_folder + "/tree-sitter-glsl/src/parser.c"):
-                zip_file = zipfile.ZipFile(self_folder + "/tree-sitter-glsl/src.zip")
-                zip_file.extractall(self_folder + "/tree-sitter-glsl/src")
-                zip_file.close()
-
-            Language.build_library(dll_file, [self_folder + "/tree-sitter-glsl"])
-            trash_files = glob.glob(f"{dll_folder}/glsl.*")
-            for trash_file in trash_files:
-                if os.path.abspath(trash_file) != os.path.abspath(dll_file):
-                    os.remove(trash_file)
-
-        GLSL_LANGUAGE = Language(dll_file, "glsl")
-        ShaderParser_.__glsl_parser = Parser()
-        ShaderParser_.__glsl_parser.set_language(GLSL_LANGUAGE)
+        GLSL_LANGUAGE = Language(tsglsl.language())
+        ShaderParser_.__glsl_parser = Parser(GLSL_LANGUAGE)
         return ShaderParser_.__glsl_parser
 
     @staticmethod
-    def parse_struct_declaration_list(
-        struct_declaration_list: tree_sitter.Node,
-    ) -> Dict[str, Var]:
+    def parse_field_declaration_list(field_declaration_list: tree_sitter.Node) -> Dict[str, Var]:
         members: Dict[str, Var] = {}
-        for struct_declaration in struct_declaration_list.children:
-            if struct_declaration.type != "struct_declaration":
+        for field_declaration in field_declaration_list.children:
+            if field_declaration.type != "field_declaration":
                 continue
 
-            type_specifier = struct_declaration.children[0]
-            struct_declarator_list = struct_declaration.children[1]
-            if type_specifier.type == "type_qualifier_list":
-                type_specifier = struct_declaration.children[1]
-                struct_declarator_list = struct_declaration.children[2]
+            var_names = []
+            type_identifier = None
+            qualifier = ""
+            for var_name in field_declaration.children:
+                if var_name.type in ["field_identifier", "array_declarator"]:
+                    var_names.append(var_name)
 
-            type_ = type_specifier.text.decode("utf-8")
-            for struct_declarator in struct_declarator_list.children:
-                if struct_declarator.type != "struct_declarator":
-                    continue
+            if field_declaration.children[0].type in ["primitive_type", "type_identifier"]:
+                type_identifier = field_declaration.children[0]
+            elif field_declaration.children[1].type in ["primitive_type", "type_identifier"]:
+                type_identifier = field_declaration.children[1]
+                qualifier = field_declaration.children[0].type
 
-                name = struct_declarator.text.decode("utf-8")
-                member: Var = Var(name=name, type=type_)
-                members[name] = member
+            type_ = type_identifier.text.decode("utf-8")
+            for var_name in var_names:
+                var: Var = Var(
+                    name=var_name.text.decode("utf-8"),
+                    type=type_,
+                    qualifier=qualifier
+                )
+
+                members[var.name] = var
 
         return members
 
-    def parse_qualifiers(self, type_qualifier_list: tree_sitter.Node):
+    def parse_layout(self, layout_qualifiers: tree_sitter.Node):
         layout_args: List[str] = []
         layout_kwargs: Dict[str, str] = {}
-        other_qualifiers: List[str] = []
-        in_out: str = ""
-        for type_qualifier in type_qualifier_list.children:
-            if type_qualifier.type != "type_qualifier":
+        for qualifier in layout_qualifiers.children:
+            if qualifier.type != "qualifier":
                 continue
 
-            if type_qualifier.type == "layout_qualifier":
-                for layout_qualifier_id in type_qualifier.children:
-                    if layout_qualifier_id.type != "layout_qualifier_id":
-                        continue
-
-                    key = layout_qualifier_id.children[0].text.decode("utf-8")
-                    if layout_qualifier_id.child_count == 1:
-                        layout_args.append(key)
-                    elif layout_qualifier_id.child_count == 2:
-                        layout_kwargs[key] = layout_qualifier_id.children[
-                            2
-                        ].text.decode("utf-8")
+            if qualifier.child_count == 3:
+                layout_kwargs[qualifier.children[0].text.decode("utf-8")] = qualifier.children[2].text.decode("utf-8")
             else:
-                qualifier: str = type_qualifier.text.decode("utf-8")
-                if qualifier in ["in", "out"]:
-                    in_out: str = qualifier
-                other_qualifiers.append(qualifier)
+                layout_args.append(qualifier.text.decode("utf-8"))
 
-        if "location" in layout_kwargs and (in_out != ""):
-            self.accum_location[in_out] = int(layout_kwargs["location"])
-
-        return layout_args, layout_kwargs, other_qualifiers, in_out
+        return layout_args, layout_kwargs
 
     def parse_single_value_declaration(self, declaration: tree_sitter.Node):
         var_names = []
@@ -141,45 +100,56 @@ class ShaderParser_:
             if var_name.type in ["identifier", "array_declarator"]:
                 var_names.append(var_name)
 
-        fully_specified_type = declaration.children[0]
-
-        has_qualifier = False
-        is_uniform = False
+        layout_qualifiers = None
+        qualifier = ""
+        type_identifier = None
         if (
-            fully_specified_type.child_count == 2
-            and fully_specified_type.children[0].type == "type_qualifier_list"
-            and fully_specified_type.children[1].type == "type_specifier"
+            declaration.child_count >= 4
+            and declaration.children[0].type == "layout_specification"
+            and declaration.children[1].type in ["in", "out", "uniform", "attribute"]
+            and declaration.children[2].type in ["type_identifier", "primitive_type"]
+            and declaration.children[3].type == "identifier"
         ):
-            type_qualifier_list = fully_specified_type.children[0]
-            type_specifier = fully_specified_type.children[1]
-            has_qualifier = True
+            layout_qualifiers = declaration.children[0].children[1]
+            qualifier = declaration.children[1].type
+            type_identifier = declaration.children[2]
         elif (
-            fully_specified_type.child_count == 1
-            and fully_specified_type.children[0].type == "type_specifier"
+            declaration.child_count >= 3
+            and declaration.children[0].type in ["in", "out", "uniform", "attribute"]
+            and declaration.children[1].type in ["type_identifier", "primitive_type"]
+            and declaration.children[2].type in ["identifier", "array_declarator"]
         ):
-            type_specifier = fully_specified_type.children[0]
-            has_qualifier = False
+            qualifier = declaration.children[0].type
+            type_identifier = declaration.children[1]
+        elif (
+            declaration.child_count >= 2
+            and declaration.children[0].type in ["type_identifier", "primitive_type"]
+            and declaration.children[1].type in ["identifier", "array_declarator"]
+        ):
+            type_identifier = declaration.children[0]
 
-        if has_qualifier:
-            layout_args, layout_kwargs, other_qualifiers, in_out = (
-                self.parse_qualifiers(type_qualifier_list)
+        is_attribute = (
+            qualifier in ["in", "attribute"]
+            and self.shader_type == GL.GL_VERTEX_SHADER
+        )
+
+        if layout_qualifiers is not None:
+            layout_args, layout_kwargs = (
+                self.parse_layout(layout_qualifiers)
             )
-            is_attribute = (
-                (layout_kwargs or "attribute" in other_qualifiers)
-                and in_out == "in"
-                and self.shader_type == GL.GL_VERTEX_SHADER
-            )
+            if qualifier in ["in", "out"] and "location" in layout_kwargs:
+                self.accum_location[qualifier] = int(layout_kwargs["location"])
 
             for var_name in var_names:
                 var: Var = Var(
                     name=var_name.text.decode("utf-8"),
-                    type=type_specifier.text.decode("utf-8"),
+                    type=type_identifier.text.decode("utf-8"),
                     layout_args=layout_args,
                     layout_kwargs=layout_kwargs,
-                    other_qualifiers=other_qualifiers,
+                    qualifier=qualifier,
                 )
-                if in_out != "":
-                    var.location = self.accum_location[in_out]
+                if qualifier in ["in", "out"]:
+                    var.location = self.accum_location[qualifier]
 
                 if var_name.type == "identifier":
                     if is_attribute:
@@ -187,8 +157,8 @@ class ShaderParser_:
                         self.attributes[attribute.name] = attribute
                         self.attributes[attribute.location] = attribute
 
-                    if in_out in ["in", "out"]:
-                        self.accum_location[in_out] += 1
+                    if qualifier in ["in", "out"]:
+                        self.accum_location[qualifier] += 1
                 elif var_name.type == "array_declarator":
                     pure_name = var_name.children[0].text.decode("utf-8")
                     if is_attribute:
@@ -197,55 +167,76 @@ class ShaderParser_:
                             attribute = Attribute(
                                 name=pure_name + f"[{i}]",
                                 type=var.type,
-                                location=self.accum_location[in_out],
+                                location=self.accum_location[qualifier],
                             )
                             self.attributes[attribute.name] = attribute
                             self.attributes[attribute.location] = attribute
-                            self.accum_location[in_out] += 1
+                            self.accum_location[qualifier] += 1
                     else:
-                        if in_out in ["in", "out"]:
-                            self.accum_location[in_out] += 1
+                        if qualifier in ["in", "out"]:
+                            self.accum_location[qualifier] += 1
 
-                if in_out == "in":
+                if qualifier == "in":
                     self.ins[var.name] = var
-                elif in_out == "out":
+                elif qualifier == "out":
                     self.outs[var.name] = var
-                elif "uniform" in other_qualifiers:
+                elif qualifier == "uniform":
                     self.uniforms[var.name] = var
 
         else:
-            type_ = type_specifier.text.decode("utf-8")
+            type_ = type_identifier.text.decode("utf-8")
             for var_name in var_names:
                 name = var_name.text.decode("utf-8")
                 var = Var(name=name, type=type_)
-                if is_uniform:
+                if qualifier == "uniform":
                     self.uniforms[var.name] = var
                 else:
                     var.start_index = declaration.start_byte
                     var.end_index = declaration.end_byte
                     self.global_vars[var.name] = var
 
-    def parse_block_declaration(self, declaration):
+    def parse_block_declaration(self, declaration: tree_sitter.Node):
+        block_name = None
+        field_declaration_list = None
         var_names = []
-        for var_name in declaration.children[5:]:
-            if var_name.type in ["identifier", "array_declarator"]:
+        for i in range(declaration.child_count):
+            var_name = declaration.children[i]
+            if (
+                var_name.type == "identifier"
+                and i + 1 < declaration.child_count
+                and declaration.children[i+1].type == "field_declaration_list"
+            ):
+                block_name = var_name
+                
+
+            if var_name.type == "field_declaration_list":
+                field_declaration_list = var_name
+
+            if field_declaration_list is not None and var_name.type in ["identifier", "array_declarator"]:
                 var_names.append(var_name)
 
-        block_name = declaration.children[1]
+        layout_args = []
+        layout_kwargs = {}
+        layout_specification = None
+        qualifier = ""
+        if declaration.children[0].type == "layout_specification":
+            layout_specification = declaration.children[0]
+            qualifier = declaration.children[1].type
+            layout_args, layout_kwargs = self.parse_layout(
+                layout_specification
+            )
+            if qualifier in ["in", "out"] and "location" in layout_kwargs:
+                self.accum_location[qualifier] = int(layout_kwargs["location"])
 
-        type_qualifier_list = declaration.children[0]
-        struct_declaration_list = declaration.children[3]
-
-        layout_args, layout_kwargs, other_qualifiers, in_out = self.parse_qualifiers(
-            type_qualifier_list
-        )
+        elif declaration.children[0].type in ["in", "out", "uniform", "buffer", "struct"]:
+            qualifier = declaration.children[0].type
 
         type_ = block_name.text.decode("utf-8")
         struct = Struct(
             name=type_,
-            members=ShaderParser_.parse_struct_declaration_list(
-                struct_declaration_list
-            ),
+            members=ShaderParser_.parse_field_declaration_list(
+                field_declaration_list
+            )
         )
         self.structs[type_] = struct
 
@@ -256,87 +247,82 @@ class ShaderParser_:
                 type=type_,
                 layout_args=layout_args,
                 layout_kwargs=layout_kwargs,
-                other_qualifiers=other_qualifiers,
+                qualifier=qualifier,
             )
-            if in_out in self.accum_location:
-                var.location = self.accum_location[in_out]
+            if qualifier in ["in", "out"]:
+                var.location = self.accum_location[qualifier]
 
-            if in_out == "in":
+            if qualifier == "in":
                 self.ins[var.name] = var
-            elif in_out == "out":
+            elif qualifier == "out":
                 self.outs[var.name] = var
-            elif "uniform" in other_qualifiers:
+            elif qualifier == "uniform":
                 self.uniform_blocks[var.name] = var
-            elif "buffer" in other_qualifiers:
+            elif qualifier == "buffer":
                 self.shader_storage_blocks[var.name] = var
 
-            self.accum_location[in_out] += 1
+            self.accum_location[qualifier] += 1
 
-        if "uniform" in other_qualifiers or "buffer" in other_qualifiers:
+        if qualifier in ["uniform", "buffer"]:
             var = Var(
                 name=type_,
                 type=type_,
                 layout_args=layout_args,
                 layout_kwargs=layout_kwargs,
-                other_qualifiers=other_qualifiers,
+                qualifier=qualifier,
             )
 
-            if "uniform" in other_qualifiers:
+            if qualifier == "uniform":
                 self.uniform_blocks[type_] = var
-            elif "buffer" in other_qualifiers:
+            elif qualifier == "buffer":
                 self.shader_storage_blocks[type_] = var
 
-        if not var_names:
+        if not var_names and qualifier != "struct":
             for member in struct.members.values():
                 self.hidden_vars[member.name] = member
 
     @staticmethod
     def is_single_value_declaration(declaration):
         return (
+            declaration.child_count >= 4
+            and declaration.children[0].type == "layout_specification"
+            and declaration.children[1].type in ["in", "out", "uniform", "attribute"]
+            and declaration.children[2].type in ["type_identifier", "primitive_type"]
+            and declaration.children[3].type == "identifier"
+        ) or (
+            declaration.child_count >= 3
+            and declaration.children[0].type in ["in", "out", "uniform", "attribute"]
+            and declaration.children[1].type in ["type_identifier", "primitive_type"]
+            and declaration.children[2].type in ["identifier", "array_declarator"]
+        ) or (
             declaration.child_count >= 2
-            and declaration.children[0].type == "fully_specified_type"
+            and declaration.children[0].type in ["type_identifier", "primitive_type"]
             and declaration.children[1].type in ["identifier", "array_declarator"]
         )
 
     @staticmethod
     def is_block_declaration(declaration):
-        return (
-            declaration.child_count >= 5
-            and declaration.children[0].type == "type_qualifier_list"
-            and declaration.children[1].type == "identifier"
-            and declaration.children[2].type == "{"
-            and declaration.children[3].type == "struct_declaration_list"
-            and declaration.children[4].type == "}"
-        )
+        for i in range(declaration.child_count):
+            if (
+                declaration.children[i].type == "identifier"
+                and i + 1 < declaration.child_count
+                and declaration.children[i + 1].type == "field_declaration_list"
+            ):
+                return True
 
-    @staticmethod
-    def is_struct_declaration(declaration):
-        return (
-            declaration.child_count == 2
-            and declaration.children[0].type == "fully_specified_type"
-            and declaration.children[0].child_count == 1
-            and declaration.children[0].children[0].type == "type_specifier"
-            and declaration.children[0].children[0].child_count == 5
-            and declaration.children[0].children[0].children[0].type == "struct"
-            and declaration.children[0].children[0].children[1].type == "identifier"
-            and declaration.children[0].children[0].children[2].type == "{"
-            and declaration.children[0].children[0].children[3].type
-            == "struct_declaration_list"
-            and declaration.children[0].children[0].children[4].type == "}"
-            and declaration.children[1].type == ";"
-        )
+        return False
 
-    def parse_struct(self, declaration: tree_sitter.Node):
-        type_specifier = declaration.children[0].children[0]
-        struct_declaration_list = type_specifier.children[3]
-        struct_name = type_specifier.children[1].text.decode("utf-8")
+    def parse_struct(self, struct_specifier: tree_sitter.Node):
+        type_identifier = struct_specifier.children[1]
+        field_declaration_list = struct_specifier.children[2]
+        struct_name = type_identifier.text.decode("utf-8")
         struct = Struct(
             name=struct_name,
-            members=ShaderParser_.parse_struct_declaration_list(
-                struct_declaration_list
+            members=ShaderParser_.parse_field_declaration_list(
+                field_declaration_list
             ),
-            start_index=declaration.start_byte,
-            end_index=declaration.end_byte,
+            start_index=struct_specifier.start_byte,
+            end_index=struct_specifier.end_byte,
         )
         self.structs[struct_name] = struct
 
@@ -384,54 +370,57 @@ class ShaderParser_:
             func.func_calls[func_call.signature] = func_call
         elif node.type == "declaration":
             declaration = node
-            fully_specified_type = declaration.children[0]
-            type_specifier = fully_specified_type.children[0]
-            if type_specifier.type != "type_specifier":
-                type_specifier = fully_specified_type.children[1]
-            type_ = type_specifier.text.decode("utf-8")
-            for identifier in declaration.children:
-                if identifier.type != "identifier":
-                    continue
+            type_identifier = None
+            for child in declaration.children:
+                if child.type in ["type_identifier", "primitive_type"]:
+                    type_identifier = child
 
-                var = Var(name=identifier.text.decode("utf-8"), type=type_)
-                func.local_vars.append(var)
+                if child.type in ["identifier", "array_declarator"]:
+                    identifier = child
+                    var = Var(name=identifier.text.decode("utf-8"), type=type_identifier.text.decode("utf-8"))
+                    func.local_vars.append(var)
+
+                if child.type == "init_declarator":
+                    identifier = child.children[0]
+                    var = Var(name=identifier.text.decode("utf-8"), type=type_identifier.text.decode("utf-8"))
+                    func.local_vars.append(var)
 
         for child in node.children:
             self.find_func_calls_and_local_vars(child, func)
 
     def parse_function(self, function_definition: tree_sitter.Node):
-        function_declaration = function_definition.children[0].children[0]
-        statement_list = function_definition.children[1].children[1]
+        type_identifier = function_definition.children[0]
+        function_declarator = function_definition.children[1]
+        statement_list = function_definition.children[2]
 
-        fully_specified_type = function_declaration.children[0]
-        identifier = function_declaration.children[1]
-        has_args = False
-        if function_declaration.child_count >= 4:
-            function_parameter_list = function_declaration.children[3]
-            has_args = True
+        identifier = function_declarator.children[0]
+        parameter_list = function_declarator.children[1]
 
         func = Func(
-            return_type=fully_specified_type.text.decode("utf-8"),
+            return_type=type_identifier.text.decode("utf-8"),
             name=identifier.text.decode("utf-8"),
             start_index=function_definition.start_byte,
             end_index=function_definition.end_byte,
         )
 
         # args
-        if has_args:
-            for parameter_declaration in function_parameter_list.children:
-                if parameter_declaration.type != "parameter_declaration":
-                    continue
+        for parameter_declaration in parameter_list.children:
+            if parameter_declaration.type != "parameter_declaration":
+                continue
 
-                parameter_declarator = parameter_declaration.children[0]
-                if parameter_declarator.type != "parameter_declarator":
-                    parameter_declarator = parameter_declaration.children[1]
+            type_identifier = None
+            identifier = None
+            for child in parameter_declaration.children:
+                if child.type in ["type_identifier", "primitive_type"]:
+                    type_identifier = child
 
-                type_specifier = parameter_declarator.children[0]
-                identifier = parameter_declarator.children[1]
+                if child.type in ["identifier", "array_declarator"]:
+                    identifier = child
+            
+            if type_identifier is not None and identifier is not None:
                 arg = Var(
                     name=identifier.text.decode("utf-8"),
-                    type=type_specifier.text.decode("utf-8"),
+                    type=type_identifier.text.decode("utf-8"),
                 )
                 func.args.append(arg)
 
@@ -469,20 +458,19 @@ class ShaderParser_:
                 declaration = child
                 if ShaderParser_.is_single_value_declaration(declaration):
                     self.parse_single_value_declaration(declaration)
-                elif ShaderParser_.is_block_declaration(
-                    declaration
-                ):  # block declaration
+                elif ShaderParser_.is_block_declaration(declaration):  # block declaration
                     self.parse_block_declaration(declaration)
                 elif ShaderParser_.is_only_qualifiers(declaration):  # only qualifiers
                     self.parse_only_qualifiers(declaration)
-                elif ShaderParser_.is_struct_declaration(
-                    declaration
-                ):  # struct definition
-                    self.parse_struct(declaration)
 
             elif child.type == "function_definition":
                 function_definition = child
                 self.parse_function(function_definition)
+
+            elif child.type == "struct_specifier":
+                struct_specifier = child
+                self.parse_struct(struct_specifier)
+
 
         self.resolve()
 
@@ -607,9 +595,7 @@ class ShaderParser_:
 
             ShaderBuiltins.is_resolved = True
 
-    def find_best_match_function(
-        self, func_call: FuncCall, func: Func
-    ) -> Union[Func, None]:
+    def find_best_match_function(self, func_call: FuncCall, func: Func) -> Union[Func, None]:
         arg_types = []
         for arg in func_call.args:
             type_ = self.analyse_type(arg, func)
@@ -638,7 +624,10 @@ class ShaderParser_:
 
                 candidate_funcs.append(candidate_func)
 
-        return best_mached_func if best_mached_func is not None else candidate_funcs
+        if best_mached_func is not None:
+            return best_mached_func
+        else:
+            return candidate_funcs
 
     def resolve_functions(self):
         if not ShaderBuiltins.function_groups:
