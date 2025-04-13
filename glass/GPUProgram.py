@@ -147,6 +147,11 @@ class GPUProgram(GLObject):
         )
 
     @property
+    def uniforms_info(self):
+        self.collect_info()
+        return self._uniforms_info
+
+    @property
     def uniform(self):
         self.collect_info()
         return self._uniform
@@ -289,6 +294,11 @@ class GPUProgram(GLObject):
         var_type = var["type"]
         var_name = var["name"]
         var_subscript_chain = var["subscript_chain"]
+        if "members" not in var:
+            var["members"] = []
+        if "self_name" not in var:
+            var["self_name"] = var_name
+
         if var_type in GLInfo.atom_type_names:
             var_atoms = [var]
             var["atoms"] = var_atoms
@@ -307,21 +317,25 @@ class GPUProgram(GLObject):
                 for i in range(num):
                     atom_info = {
                         "name": var_name + "[" + str(i) + "]",
+                        "self_name": "[" + str(i) + "]",
                         "type": atom_type,
                         "subscript_chain": [*var_subscript_chain, ("getitem", i)],
                     }
                     var_atoms.extend(
                         self._resolve_one_uniform(atom_info, self._uniform_map)
                     )
+                    var["members"].append(atom_info)
             else:
                 atom_info = {
                     "name": var_name + "[{0}]",
+                    "self_name": "[{0}]",
                     "type": atom_type,
                     "subscript_chain": [*var_subscript_chain, ("getitem", "{0}")],
                 }
                 var_atoms.extend(
                     self._resolve_one_uniform(atom_info, self._uniform_map)
                 )
+                var["members"].append(atom_info)
             var["atoms"] = var_atoms
             uniform_map[var_name] = var
 
@@ -335,10 +349,12 @@ class GPUProgram(GLObject):
             member_name = member["name"]
             uniform_info = {
                 "name": var_name + "." + member_name,
+                "self_name": member_name,
                 "type": member["type"],
                 "subscript_chain": [*var_subscript_chain, ("getattr", member_name)],
             }
             var_atoms.extend(self._resolve_one_uniform(uniform_info, self._uniform_map))
+            var["members"].append(uniform_info)
         var["atoms"] = var_atoms
         uniform_map[var_name] = var
 
