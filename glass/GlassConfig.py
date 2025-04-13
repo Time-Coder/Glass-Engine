@@ -22,6 +22,7 @@ class GlassConfig:
         self.print: bool = True
         self.warning: bool = True
         self.recompile: bool = False
+        self.save_used_shaders: bool = False
 
     @property
     def cache_folder(self) -> str:

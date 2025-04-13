@@ -173,7 +173,7 @@ class BaseShader(GLObject):
                 flush=True,
             )
 
-        if GlassConfig.debug:
+        if GlassConfig.debug and GlassConfig.save_used_shaders:
             dest_folder = "used_shaders/" + os.path.basename(sys.argv[0])
             if not os.path.isdir(dest_folder):
                 os.makedirs(dest_folder)
