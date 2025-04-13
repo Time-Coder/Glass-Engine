@@ -55,7 +55,12 @@ camera.screen.show() # 相机显示屏显示渲染结果
 
 ## Release notes
 
-### version 0.1.58
+### version 0.1.59
+
+* 升级 tree-sitter 为现代版
+* 优化预处理调用时机，减少调用次数
+
+### version 0.1.57
 
 * 兼容 Python 3.13
 

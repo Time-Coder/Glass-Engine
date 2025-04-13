@@ -23,7 +23,7 @@ with open("glass/README_PYPI.md", "r", encoding='utf-8') as in_file:
 
 setuptools.setup(
     name="python_glass",
-    version="0.1.58",
+    version="0.1.59",
     author="王炳辉 (BingHui-WANG)",
     author_email="binghui.wang@foxmail.com",
     description="OpenGL wrapper for Glass-Engine",
@@ -45,7 +45,7 @@ setuptools.setup(
         "wget",
         "requests",
         "chardet",
-        "tree-sitter<0.22.0",
+        "tree-sitter>=0.22.0",
         "freetype-py"
     ],
     classifiers=[
