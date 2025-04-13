@@ -6,7 +6,7 @@ import copy
 import warnings
 import sys
 
-from .ShaderParser_.minifyc import minifyc, macros_expand
+from .CodeCompressor.minifyc import macros_expand
 from .utils import (
     di,
     defines_key,
@@ -26,7 +26,7 @@ from .GLConfig import GLConfig
 from .GLObject import GLObject
 from .ShaderParser import ShaderParser
 from .GPUProgram import CompileError, CompileWarning
-from .ShaderParser_ import ShaderParser_
+from .CodeCompressor import CodeCompressor
 
 
 class BaseShader(GLObject):
@@ -56,11 +56,12 @@ class BaseShader(GLObject):
         self._program_id: int = id(program)
         self._code: str = ""
         self._clean_code: str = ""
+        self._used_code:str = ""
         self._comments_set: set = set()
         self._line_message_map: dict = {}
         self._file_name: str = ""
-        self._compiled_but_not_applied: bool = False
-        self._should_recompile: bool = True
+        self._preprocessed_but_not_compiled: bool = False
+        self._should_repreprocess: bool = True
         self._max_modify_time: int = 0
 
         self.attributes_info: dict = {}
@@ -76,7 +77,7 @@ class BaseShader(GLObject):
         self._include_paths: list = [""]
         self._defines: dict = {}
 
-        self._shader_parser: ShaderParser_ = ShaderParser_(self.__class__._type)
+        self._code_compressor: CodeCompressor = CodeCompressor(self.__class__._type)
 
     @delete
     def clear(self):
@@ -115,7 +116,7 @@ class BaseShader(GLObject):
         return self._clean_code
 
     def _apply_compile(self):
-        if not self._compiled_but_not_applied:
+        if not self._preprocessed_but_not_compiled:
             return
 
         if self._id == 0:
@@ -123,9 +124,12 @@ class BaseShader(GLObject):
             if self._id == 0:
                 raise MemoryError("Failed to create Shader!")
 
-        used_code = self._code
-        if not GlassConfig.debug:
-            used_code = minifyc(self._shader_parser.treeshake())
+        if not self._used_code:
+            if not GlassConfig.debug:
+                self._code_compressor.parse(self._clean_code)
+                self._used_code = self._code_compressor.compress()
+            else:
+                self._used_code = self._code
 
         version_pattern1 = r"#\s*version \d\d\d core"
         version_pattern2 = r"#\s*version \d\d\d"
@@ -157,14 +161,14 @@ class BaseShader(GLObject):
                 f"OpenGL version {GLConfig.major_version}.{GLConfig.minor_version} is not supported."
             )
 
-        if re.search(version_pattern1, used_code):
-            used_code = re.sub(version_pattern1, version_str, used_code)
-        elif re.search(version_pattern2, used_code):
-            used_code = re.sub(version_pattern2, version_str, used_code)
+        if re.search(version_pattern1, self._used_code):
+            self._used_code = re.sub(version_pattern1, version_str, self._used_code)
+        elif re.search(version_pattern2, self._used_code):
+            self._used_code = re.sub(version_pattern2, version_str, self._used_code)
 
         if GlassConfig.print:
             print(
-                f"compiling shader: {printable_path(self.file_name)} {printable_size(used_code)} ",
+                f"compiling shader: {printable_path(self.file_name)} {printable_size(self._used_code)} ",
                 end="",
                 flush=True,
             )
@@ -175,10 +179,10 @@ class BaseShader(GLObject):
                 os.makedirs(dest_folder)
 
             out_file = open(dest_folder + "/" + os.path.basename(self.file_name), "w")
-            out_file.write(used_code)
+            out_file.write(self._used_code)
             out_file.close()
 
-        GL.glShaderSource(self._id, used_code)
+        GL.glShaderSource(self._id, self._used_code)
         GL.glCompileShader(self._id)
 
         message_bytes = GL.glGetShaderInfoLog(self._id)
@@ -208,6 +212,7 @@ class BaseShader(GLObject):
         meta_info["related_files"] = self.related_files
         meta_info["code"] = self._code
         meta_info["clean_code"] = self._clean_code
+        meta_info["used_code"] = self._used_code
         meta_info["line_message_map"] = self._line_message_map
         meta_info["attributes_info"] = self.attributes_info
         meta_info["geometry_in"] = self.geometry_in
@@ -219,21 +224,21 @@ class BaseShader(GLObject):
         meta_info["work_group_size"] = self.work_group_size
         save_var(meta_info, self._meta_file_name)
 
-        self._compiled_but_not_applied = False
+        self._preprocessed_but_not_compiled = False
 
         if GlassConfig.print:
             print("done")
 
-    def _test_should_recompile(self):
+    def _test_should_repreprocess(self):
         if GlassConfig.recompile:
-            self._should_recompile = True
+            self._should_repreprocess = True
             return True
 
         meta_mtime = modify_time(self._meta_file_name)
         self._max_modify_time = 0
 
         if meta_mtime == 0:
-            self._should_recompile = True
+            self._should_repreprocess = True
             return True
 
         meta_info = load_var(self._meta_file_name)
@@ -248,23 +253,28 @@ class BaseShader(GLObject):
                 self._max_modify_time = mtime
 
         if should_recompile:
-            self._should_recompile = True
+            self._should_repreprocess = True
             return True
 
-        self._code = meta_info["code"]
-        self._clean_code = meta_info["clean_code"]
-        self._line_message_map = meta_info["line_message_map"]
-        self.attributes_info = meta_info["attributes_info"]
-        self.geometry_in = meta_info["geometry_in"]
-        self.uniforms_info = meta_info["uniforms_info"]
-        self.uniform_blocks_info = meta_info["uniform_blocks_info"]
-        self.shader_storage_blocks_info = meta_info["shader_storage_blocks_info"]
-        self.structs_info = meta_info["structs_info"]
-        self.outs_info = meta_info["outs_info"]
-        self.work_group_size = meta_info["work_group_size"]
-        self.related_files = related_files
+        try:
+            self._code = meta_info["code"]
+            self._clean_code = meta_info["clean_code"]
+            self._line_message_map = meta_info["line_message_map"]
+            self._used_code = meta_info["used_code"]
+            self.attributes_info = meta_info["attributes_info"]
+            self.geometry_in = meta_info["geometry_in"]
+            self.uniforms_info = meta_info["uniforms_info"]
+            self.uniform_blocks_info = meta_info["uniform_blocks_info"]
+            self.shader_storage_blocks_info = meta_info["shader_storage_blocks_info"]
+            self.structs_info = meta_info["structs_info"]
+            self.outs_info = meta_info["outs_info"]
+            self.work_group_size = meta_info["work_group_size"]
+            self.related_files = related_files
+        except:
+            self._should_repreprocess = True
+            return True
 
-        self._should_recompile = False
+        self._should_repreprocess = False
         return False
 
     def _define_shader_type(self):
@@ -296,7 +306,7 @@ class BaseShader(GLObject):
         self.related_files.extend(self._replace_includes())
 
     def compile(self, file_name: str):
-        if self.is_compiled and not self._compiled_but_not_applied:
+        if self.is_compiled and not self._preprocessed_but_not_compiled:
             self.delete()
 
         abs_name = os.path.abspath(file_name).replace("\\", "/")
@@ -315,10 +325,8 @@ class BaseShader(GLObject):
         )
 
         self._collect_info(file_name)
-        self._clean_code = macros_expand(self._code)
-        self._shader_parser.parse(self._clean_code)
 
-        if self._test_should_recompile():
+        if self._test_should_repreprocess():
             self.attributes_info = {}
             self.geometry_in = ""
             self.uniforms_info = {}
@@ -327,6 +335,8 @@ class BaseShader(GLObject):
             self.structs_info = {}
             self.outs_info = {}
             self.work_group_size = tuple()
+            self._clean_code = macros_expand(self._code)
+            self._used_code = ""
 
             self.uniforms_info = ShaderParser.find_uniforms(self._clean_code)
             self.uniform_blocks_info = ShaderParser.find_uniform_blocks(
@@ -351,7 +361,7 @@ class BaseShader(GLObject):
                     self._clean_code
                 )
 
-        self._compiled_but_not_applied = True
+        self._preprocessed_but_not_compiled = True
 
     def add_include_path(self, include_path: str):
         full_name = os.path.abspath(include_path).replace("\\", "/")

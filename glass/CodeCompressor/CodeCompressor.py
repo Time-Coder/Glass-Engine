@@ -1,13 +1,11 @@
 import sys
-import os
-import glob
+import re
 import tree_sitter
-import zipfile
-import platform
 
 from ..GLInfo import GLInfo
 from .ShaderSyntaxTokens import Var, Attribute, Func, FuncCall, Struct, SimpleVar
 from .ShaderBuiltins import ShaderBuiltins
+from .minifyc import minifyc
 
 from ..utils import resolve_array
 from ..helper import greater_type, type_list_distance, subscript_type
@@ -18,7 +16,7 @@ import tree_sitter_glsl as tsglsl
 from typing import List, Dict, Union
 
 
-class ShaderParser_:
+class CodeCompressor:
 
     __glsl_parser = None
 
@@ -38,15 +36,34 @@ class ShaderParser_:
 
         self.accum_location = {"in": 0, "out": 0}
         self.shader_type = shader_type
+        self._is_empty = True
+
+    def clear(self):
+        self.ins.clear()
+        self.outs.clear()
+        self.attributes.clear()
+        self.hidden_vars.clear()
+        self.global_vars.clear()
+        self.structs.clear()
+        self.uniforms.clear()
+        self.uniform_blocks.clear()
+        self.shader_storage_blocks.clear()
+        self.functions.clear()
+        self.function_groups.clear()
+        self.geometry_in: str = ""
+
+        self.accum_location["in"] = 0
+        self.accum_location["out"] = 0
+        self._is_empty = True
 
     @staticmethod
     def glsl_parser():
-        if ShaderParser_.__glsl_parser is not None:
-            return ShaderParser_.__glsl_parser
+        if CodeCompressor.__glsl_parser is not None:
+            return CodeCompressor.__glsl_parser
 
         GLSL_LANGUAGE = Language(tsglsl.language())
-        ShaderParser_.__glsl_parser = Parser(GLSL_LANGUAGE)
-        return ShaderParser_.__glsl_parser
+        CodeCompressor.__glsl_parser = Parser(GLSL_LANGUAGE)
+        return CodeCompressor.__glsl_parser
 
     @staticmethod
     def parse_field_declaration_list(field_declaration_list: tree_sitter.Node) -> Dict[str, Var]:
@@ -234,7 +251,7 @@ class ShaderParser_:
         type_ = block_name.text.decode("utf-8")
         struct = Struct(
             name=type_,
-            members=ShaderParser_.parse_field_declaration_list(
+            members=CodeCompressor.parse_field_declaration_list(
                 field_declaration_list
             )
         )
@@ -318,7 +335,7 @@ class ShaderParser_:
         struct_name = type_identifier.text.decode("utf-8")
         struct = Struct(
             name=struct_name,
-            members=ShaderParser_.parse_field_declaration_list(
+            members=CodeCompressor.parse_field_declaration_list(
                 field_declaration_list
             ),
             start_index=struct_specifier.start_byte,
@@ -327,42 +344,46 @@ class ShaderParser_:
         self.structs[struct_name] = struct
 
     @staticmethod
-    def is_only_qualifiers(declaration):
-        return (
-            declaration.child_count >= 2
-            and declaration.children[0].type == "type_qualifier_list"
-            and declaration.children[0].child_count >= 2
-            and declaration.children[0].children[1].text in [b"in", b"out"]
-            and declaration.children[1].type == ";"
-        )
+    def get_layout_qualifiers(content):
+        if content is None:
+            return [], {}
 
-    def parse_only_qualifiers(self, declaration):
-        layout_args, layout_kwargs, other_qualifiers, in_out = self.parse_qualifiers(
-            declaration.children[0]
-        )
+        items = content.split(",")
+        args = []
+        kwargs = {}
+        for item in items:
+            item = item.strip()
+            if "=" in item:
+                key_value = item.split("=")
+                key = key_value[0].strip()
+                value = key_value[1].strip()
+                kwargs[key] = value
+            else:
+                args.append(item)
 
-        if self.shader_type == GL.GL_GEOMETRY_SHADER:
-            for arg in layout_args:
+        return args, kwargs
+
+    def parse_geometry_in(self):
+        regx = r"^\s*layout\s*\((?P<layout_qualifiers>[^\n]*?)\)\s*in\s*;"
+
+        def append_geometry_in(match):
+            layout_qualifiers = match.group("layout_qualifiers")
+            args, kwargs = CodeCompressor.get_layout_qualifiers(layout_qualifiers)
+            for arg in args:
                 if arg in GLInfo.geometry_ins:
                     self.geometry_in = arg
-                    break
+                    return
 
-        location = (
-            -1 if "location" not in layout_kwargs else eval(layout_kwargs["location"])
-        )
-        var = Var(
-            name="",
-            type="",
-            location=location,
-            layout_args=layout_args,
-            layout_kwargs=layout_kwargs,
-            other_qualifiers=other_qualifiers,
-        )
+        re.sub(regx, append_geometry_in, self.clean_code, flags=re.M)
 
-        if in_out == "in":
-            self.ins[""] = var
-        elif in_out == "out":
-            self.outs[""] = var
+    def replace_only_in_out(self):
+        regx = r"^\s*layout\s*\(([^\n]*?)\)\s*(in|out)\s*;"
+
+        def replacement(match):
+            matched_text = match.group(0)
+            return ' ' * len(matched_text)
+        
+        return re.sub(regx, replacement, self.clean_code, flags=re.M)
 
     def find_func_calls_and_local_vars(self, node: tree_sitter.Node, func: Func):
         if node.type == "call_expression":
@@ -449,19 +470,21 @@ class ShaderParser_:
 
         self.accum_location = {"in": 0, "out": 0}
 
-        parser = ShaderParser_.glsl_parser()
+        if self.shader_type == GL.GL_GEOMETRY_SHADER:
+            self.parse_geometry_in()
+        clean_code = self.replace_only_in_out()
+
+        parser = CodeCompressor.glsl_parser()
         tree = parser.parse(bytes(clean_code, sys.getdefaultencoding()))
         root_node = tree.root_node
 
         for child in root_node.children:
             if child.type == "declaration":
                 declaration = child
-                if ShaderParser_.is_single_value_declaration(declaration):
+                if CodeCompressor.is_single_value_declaration(declaration):
                     self.parse_single_value_declaration(declaration)
-                elif ShaderParser_.is_block_declaration(declaration):  # block declaration
+                elif CodeCompressor.is_block_declaration(declaration):  # block declaration
                     self.parse_block_declaration(declaration)
-                elif ShaderParser_.is_only_qualifiers(declaration):  # only qualifiers
-                    self.parse_only_qualifiers(declaration)
 
             elif child.type == "function_definition":
                 function_definition = child
@@ -471,8 +494,12 @@ class ShaderParser_:
                 struct_specifier = child
                 self.parse_struct(struct_specifier)
 
-
         self.resolve()
+        self._is_empty = False
+
+    @property
+    def is_empty(self):
+        return self._is_empty
 
     def resolve_var(
         self,
@@ -798,13 +825,13 @@ class ShaderParser_:
             func_call_key = FuncCall.get_signature(expression)
             func_call = func.func_calls[func_call_key]
             if isinstance(func_call, (Func, list)):
-                return ShaderParser_.get_return_type(func_call)
+                return CodeCompressor.get_return_type(func_call)
 
             if isinstance(func_call, FuncCall):
                 best_match_func = self.find_best_match_function(func_call, func)
                 if best_match_func:
                     func.func_calls[func_call_key] = best_match_func
-                return ShaderParser_.get_return_type(best_match_func)
+                return CodeCompressor.get_return_type(best_match_func)
 
             return ""
         elif expression.type == "binary_expression":
@@ -877,3 +904,6 @@ class ShaderParser_:
                 result += self.clean_code[segments_to_be_removed[i][1] :]
 
         return result
+
+    def compress(self)->str:
+        return minifyc(self.treeshake())

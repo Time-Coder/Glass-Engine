@@ -407,7 +407,7 @@ class ShaderProgram(GPUProgram):
             "\\", "/"
         ) + defines_key(self.vertex_shader.defines)
         self._shader_should_recompile = (
-            self._shader_should_recompile or self.vertex_shader._should_recompile
+            self._shader_should_recompile or self.vertex_shader._should_repreprocess
         )
         if self.vertex_shader._max_modify_time > self._max_modify_time:
             self._max_modify_time = self.vertex_shader._max_modify_time
@@ -420,7 +420,7 @@ class ShaderProgram(GPUProgram):
                 + defines_key(self.tess_ctrl_shader.defines)
             )
             self._shader_should_recompile = (
-                self._shader_should_recompile or self.tess_ctrl_shader._should_recompile
+                self._shader_should_recompile or self.tess_ctrl_shader._should_repreprocess
             )
             if self.tess_ctrl_shader._max_modify_time > self._max_modify_time:
                 self._max_modify_time = self.tess_ctrl_shader._max_modify_time
@@ -433,7 +433,7 @@ class ShaderProgram(GPUProgram):
                 + defines_key(self.tess_eval_shader.defines)
             )
             self._shader_should_recompile = (
-                self._shader_should_recompile or self.tess_eval_shader._should_recompile
+                self._shader_should_recompile or self.tess_eval_shader._should_repreprocess
             )
             if self.tess_eval_shader._max_modify_time > self._max_modify_time:
                 self._max_modify_time = self.tess_eval_shader._max_modify_time
@@ -446,7 +446,7 @@ class ShaderProgram(GPUProgram):
                 + defines_key(self.geometry_shader.defines)
             )
             self._shader_should_recompile = (
-                self._shader_should_recompile or self.geometry_shader._should_recompile
+                self._shader_should_recompile or self.geometry_shader._should_repreprocess
             )
             if self.geometry_shader._max_modify_time > self._max_modify_time:
                 self._max_modify_time = self.geometry_shader._max_modify_time
@@ -458,7 +458,7 @@ class ShaderProgram(GPUProgram):
             + defines_key(self.fragment_shader.defines)
         )
         self._shader_should_recompile = (
-            self._shader_should_recompile or self.fragment_shader._should_recompile
+            self._shader_should_recompile or self.fragment_shader._should_repreprocess
         )
         if self.fragment_shader._max_modify_time > self._max_modify_time:
             self._max_modify_time = self.fragment_shader._max_modify_time

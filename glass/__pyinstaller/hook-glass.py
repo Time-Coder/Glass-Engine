@@ -30,7 +30,7 @@ def find_files(directory):
 
 self_folder = os.path.dirname(os.path.abspath(__file__))
 datas = find_files("glsl")
-datas += find_files("ShaderParser_/tree-sitter-glsl")
+datas += find_files("CodeCompressor/tree-sitter-glsl")
 datas.extend(
     [
         (
@@ -38,8 +38,8 @@ datas.extend(
             "glass",
         ),
         (
-            os.path.abspath(self_folder + "/../ShaderParser_/pcpp/LICENSE").replace("\\", "/"),
-            "glass/ShaderParser_/pcpp",
+            os.path.abspath(self_folder + "/../CodeCompressor/pcpp/LICENSE").replace("\\", "/"),
+            "glass/CodeCompressor/pcpp",
         )
     ]
 )

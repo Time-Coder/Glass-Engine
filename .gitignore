@@ -20,5 +20,5 @@ assimpy/pybind11-*/*
 assimpy/assimp/*
 assimpy/pybind11/*
 *.sqlite
-glass/ShaderParser_/tree-sitter-glsl/src/*
+glass/CodeCompressor/tree-sitter-glsl/src/*
 test_*

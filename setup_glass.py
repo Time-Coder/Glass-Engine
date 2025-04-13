@@ -16,7 +16,7 @@ def find_files(module, directory):
 
 extra_files = ["LICENSE", "pcpp/LICENSE"]
 extra_files += find_files("glass", "glass/glsl")
-extra_files += find_files("glass", "glass/ShaderParser_/tree-sitter-glsl")
+extra_files += find_files("glass", "glass/CodeCompressor/tree-sitter-glsl")
 
 with open("glass/README_PYPI.md", "r", encoding='utf-8') as in_file:
     long_description = in_file.read()
