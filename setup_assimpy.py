@@ -140,11 +140,12 @@ if (
     if shutil.which("cmake") is None:
         pip_install("cmake")
 
-    if shutil.which("ninja") is None:
-        pip_install("ninja")
+    if platform.system() != "Windows":
+        if shutil.which("ninja") is None:
+            pip_install("ninja")
 
-    if shutil.which("ninja") is not None:
-        extra_flags = ["-G", "Ninja"]
+        if shutil.which("ninja") is not None:
+            extra_flags = ["-G", "Ninja"]
 
     if platform.system() == "Windows":
         vs_paths = vspaths()
@@ -160,6 +161,7 @@ if (
         [
             "cmake", "assimpy/assimp-5.4.3",
             "-B", f"build/assimp-5.4.3/{bits}",
+            "-DCMAKE_CONFIGURATION_TYPES=MinSizeRel",
             "-DCMAKE_BUILD_TYPE=MinSizeRel",
             "-DBUILD_SHARED_LIBS=OFF",
             "-DASSIMP_BUILD_TESTS=OFF",
@@ -168,8 +170,8 @@ if (
             "-DASSIMP_INSTALL_PDB=OFF",
             "-DASSIMP_WARNINGS_AS_ERRORS=OFF",
             "-DLIBRARY_SUFFIX=",
-            "-DCMAKE_DEPFILE_FLAGS_C=",
-            "-DCMAKE_DEPFILE_FLAGS_CXX="
+            "-DASSIMP_BUILD_ZLIB=ON"
+            
         ] + extra_flags
     )
     subprocess.check_call(
@@ -178,6 +180,7 @@ if (
         ]
     )
 
+print('build done')
 ext = setuptools.Extension(
     "assimpy_ext",
     sources=[

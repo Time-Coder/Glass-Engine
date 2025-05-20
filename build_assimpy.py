@@ -2,7 +2,11 @@ import subprocess
 import os
 import platform
 import glob
-import winreg
+import getpass
+
+
+if platform.system() == "Windows":
+    import winreg
 
 def get_python_paths(reg_key):
     python_paths = {}
@@ -27,23 +31,29 @@ def get_python_paths(reg_key):
 
 def get_all_python_paths():
     paths = {}
-    try:
-        reg_key = winreg.OpenKey(winreg.HKEY_LOCAL_MACHINE, "SOFTWARE\\Python\\PythonCore")
-        paths.update(get_python_paths(reg_key))
-    except:
-        pass
 
-    try:
-        reg_key = winreg.OpenKey(winreg.HKEY_LOCAL_MACHINE, "SOFTWARE\\WOW6432Node\\Python\\PythonCore")
-        paths.update(get_python_paths(reg_key))
-    except:
-        pass
+    if platform.system() != "Windows":
+        path_list = os.listdir('/home/' + getpass.getuser() + '/.pyenv/versions')
+        for path in path_list:
+            paths[path] = os.path.abspath('/home/' + getpass.getuser() + '/.pyenv/versions/' + path + '/bin/python')        
+    else:
+        try:
+            reg_key = winreg.OpenKey(winreg.HKEY_LOCAL_MACHINE, "SOFTWARE\\Python\\PythonCore")
+            paths.update(get_python_paths(reg_key))
+        except:
+            pass
 
-    try:
-        reg_key = winreg.OpenKey(winreg.HKEY_CURRENT_USER, "SOFTWARE\\Python\\PythonCore")
-        paths.update(get_python_paths(reg_key))
-    except:
-        pass
+        try:
+            reg_key = winreg.OpenKey(winreg.HKEY_LOCAL_MACHINE, "SOFTWARE\\WOW6432Node\\Python\\PythonCore")
+            paths.update(get_python_paths(reg_key))
+        except:
+            pass
+
+        try:
+            reg_key = winreg.OpenKey(winreg.HKEY_CURRENT_USER, "SOFTWARE\\Python\\PythonCore")
+            paths.update(get_python_paths(reg_key))
+        except:
+            pass
 
     return paths
 
@@ -73,16 +83,27 @@ include assimpy/__pyinstaller/pybind11/LICENSE
 python_paths = get_all_python_paths()
 i = 0
 for python_path in python_paths.values():
-    if i == 0:
-        subprocess.check_call([python_path, "setup.py", "sdist", "bdist_wheel"])
-    else:
-        subprocess.check_call([python_path, "setup.py", "bdist_wheel"])
+    try:
+        if i == 0:
+            subprocess.check_call([python_path, "setup.py", "sdist", "bdist_wheel"])
+        else:
+            subprocess.check_call([python_path, "setup.py", "bdist_wheel"])
+    except:
+        subprocess.check_call([python_path, "-m", "pip", "install", "wheel"])
+        if i == 0:
+            subprocess.check_call([python_path, "setup.py", "sdist", "bdist_wheel"])
+        else:
+            subprocess.check_call([python_path, "setup.py", "bdist_wheel"])
 
     if platform.system() == "Linux":
         machine = platform.machine()
         files = glob.glob(f"dist/assimpy-*-linux_{machine}.whl")
         for file in files:
-            subprocess.call([python_path, "-m", "auditwheel", "repair", file, f"--plat=manylinux2014_{machine}", "-w", "dist"])
+            try:
+                subprocess.check_call([python_path, "-m", "auditwheel", "repair", file, "--plat=manylinux_2_24_" + machine, "-w", "dist"])
+            except:
+                subprocess.check_call([python_path, "-m", "pip", "install", "auditwheel"])
+                subprocess.check_call([python_path, "-m", "auditwheel", "repair", file, "--plat=manylinux_2_24_" + machine, "-w", "dist"])
             os.remove(file)
 
     i += 1

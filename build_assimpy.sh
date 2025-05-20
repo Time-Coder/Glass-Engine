@@ -2,7 +2,7 @@
 
 set -e
 
-python_versions=("3.7.9" "3.8.10" "3.9.13" "3.10.11" "3.11.7" "3.12.1")
+python_versions=("3.7.17" "3.8.19" "3.9.19" "3.10.9" "3.11.9" "3.12.3" "3.13.0b1")
 for version in ${python_versions[@]};
 do
     pyenv local $version
