@@ -140,12 +140,11 @@ if (
     if shutil.which("cmake") is None:
         pip_install("cmake")
 
-    if platform.system() != "Windows":
-        if shutil.which("ninja") is None:
-            pip_install("ninja")
+    if shutil.which("ninja") is None:
+        pip_install("ninja")
 
-        if shutil.which("ninja") is not None:
-            extra_flags = ["-G", "Ninja"]
+    if shutil.which("ninja") is not None:
+        extra_flags = ["-G", "Ninja"]
 
     if platform.system() == "Windows":
         vs_paths = vspaths()
