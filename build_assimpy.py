@@ -100,10 +100,11 @@ try:
             files = glob.glob(f"dist/assimpy-*-linux_{machine}.whl")
             for file in files:
                 try:
-                    subprocess.check_call([python_path, "-m", "auditwheel", "repair", file, "--plat=manylinux_2_24_" + machine, "-w", "dist"])
+                    subprocess.check_call([python_path, "-m", "auditwheel", "repair", file, f"--plat=manylinux_2_24_{machine}", "-w", "dist"])
                 except:
                     subprocess.check_call([python_path, "-m", "pip", "install", "auditwheel"])
-                    subprocess.check_call([python_path, "-m", "auditwheel", "repair", file, "--plat=manylinux_2_24_" + machine, "-w", "dist"])
+                    subprocess.check_call([python_path, "-m", "auditwheel", "repair", file, f"--plat=manylinux_2_24_{machine}", "-w", "dist"])
+                os.rename(file[:-len(f"-linux_{machine}.whl")] + f"-manylinux_2_24_{machine}.whl", file[:-len(f"-linux_{machine}.whl")] + f"-manylinux_2_15_{machine}.whl")
                 os.remove(file)
 
         i += 1
