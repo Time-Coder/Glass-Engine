@@ -2,54 +2,9 @@ import platform
 import zipfile
 import subprocess
 import shutil
-import sys
 import os
+import setuptools
 
-def pip_raw_install(*args):
-    try:
-        subprocess.check_call([sys.executable, "-m", "pip", "install", *args])
-    except:
-        import pip
-        if hasattr(pip, 'main'):
-            pip.main(['install', *args])
-        else:
-            from pip._internal.cli.main import main as pip_main
-            pip_main(['install', *args])
-
-try:
-    import requests
-except ImportError:
-    pip_raw_install("requests")
-    import requests
-
-def public_ip():
-    try:
-        response = requests.get("https://httpbin.org/ip")
-        return response.json().get("origin")
-    except:
-        return "127.0.0.1"
-
-def is_China_ip(ip_address):
-    try:
-        response = requests.get(f"https://ipinfo.io/{ip_address}/json/")
-        data = response.json()
-        return data['country'] == 'CN'
-    except Exception as e:
-        return True
-
-_is_China_user = None
-def is_China_user():
-    global _is_China_user
-    if _is_China_user is None:
-        _is_China_user = is_China_ip(public_ip())
-
-    return _is_China_user
-
-def pip_install(package):
-    if is_China_user():
-        pip_raw_install(package, "-i", "https://mirrors.aliyun.com/pypi/simple", "--no-warn-script-location")
-    else:
-        pip_raw_install(package, "--no-warn-script-location")
 
 def vspaths():
     result = {
@@ -99,12 +54,6 @@ def vspaths():
 
     return result
 
-try:
-    import setuptools
-except ImportError:
-    pip_install("setuptools")
-    import setuptools
-
 bits = platform.architecture()[0]
 if bits == "64bit":
     bits = "x64"
@@ -147,12 +96,6 @@ if (
     zip_file = zipfile.ZipFile("assimpy/pybind11-2.13.6.zip")
     zip_file.extractall("assimpy")
     zip_file.close()
-
-    if shutil.which("cmake") is None:
-        pip_install("cmake")
-
-    if shutil.which("ninja") is None:
-        pip_install("ninja")
 
     if shutil.which("ninja") is not None:
         extra_flags = ["-G", "Ninja"]
