@@ -5,10 +5,21 @@ import shutil
 import sys
 import os
 
+def pip_raw_install(*args):
+    try:
+        subprocess.check_call([sys.executable, "-m", "pip", "install", *args])
+    except:
+        import pip
+        if hasattr(pip, 'main'):
+            pip.main(['install', *args])
+        else:
+            from pip._internal.cli.main import main as pip_main
+            pip_main(['install', *args])
+
 try:
     import requests
 except ImportError:
-    subprocess.check_call([sys.executable, "-m", "pip", "install", "requests"])
+    pip_raw_install("requests")
     import requests
 
 def public_ip():
@@ -36,9 +47,9 @@ def is_China_user():
 
 def pip_install(package):
     if is_China_user():
-        subprocess.check_call([sys.executable, "-m", "pip", "install", package, "-i", "https://mirrors.aliyun.com/pypi/simple"])
+        pip_raw_install(package, "-i", "https://mirrors.aliyun.com/pypi/simple")
     else:
-        subprocess.check_call([sys.executable, "-m", "pip", "install", package])
+        pip_raw_install(package)
 
 def vspaths():
     result = {
