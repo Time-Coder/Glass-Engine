@@ -30,7 +30,6 @@ def find_files(directory):
 
 self_folder = os.path.dirname(os.path.abspath(__file__))
 datas = find_files("glsl")
-datas += find_files("CodeCompressor/tree-sitter-glsl")
 datas.extend(
     [
         (
