@@ -3,7 +3,6 @@ import hashlib
 import os
 import time
 import requests
-from geolite2 import geolite2
 import sys
 import subprocess
 
@@ -63,6 +62,18 @@ def download(url, target_file, md5_str: str = ""):
             print("download failed, retry...")
 
 
+def pip_raw_install(*args):
+    try:
+        subprocess.check_call([sys.executable, "-m", "pip", "install", *args])
+    except:
+        import pip
+        if hasattr(pip, 'main'):
+            pip.main(['install', *args])
+        else:
+            from pip._internal.cli.main import main as pip_main
+            pip_main(['install', *args])
+
+
 def public_ip():
     try:
         response = requests.get("https://httpbin.org/ip")
@@ -72,40 +83,25 @@ def public_ip():
 
 
 def is_China_ip(ip_address):
-    if ip_address == "127.0.0.1":
+    try:
+        response = requests.get(f"https://ipinfo.io/{ip_address}/json/")
+        data = response.json()
+        return data['country'] == 'CN'
+    except Exception as e:
         return True
 
-    reader = geolite2.reader()
-    location = reader.get(ip_address)
-    country = location.get("country", {}).get("iso_code") if location else None
-    return country == "CN"
 
-
+_is_China_user = None
 def is_China_user():
-    return is_China_ip(public_ip())
+    global _is_China_user
+    if _is_China_user is None:
+        _is_China_user = is_China_ip(public_ip())
+
+    return _is_China_user
 
 
-def pip_install(package_name: str):
-    install_cmd = [
-        sys.executable,
-        "-m",
-        "pip",
-        "install",
-        package_name,
-        "--no-warn-script-location",
-    ]
+def pip_install(package):
     if is_China_user():
-        install_cmd = [
-            sys.executable,
-            "-m",
-            "pip",
-            "install",
-            package_name,
-            "-i",
-            "https://mirrors.aliyun.com/pypi/simple",
-            "--no-warn-script-location",
-        ]
-
-    return_code = subprocess.call(install_cmd)
-    if return_code != 0:
-        raise RuntimeError(f"failed to install {package_name}")
+        pip_raw_install(package, "-i", "https://mirrors.aliyun.com/pypi/simple", "--no-warn-script-location")
+    else:
+        pip_raw_install(package, "--no-warn-script-location")

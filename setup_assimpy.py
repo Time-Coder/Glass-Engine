@@ -47,9 +47,9 @@ def is_China_user():
 
 def pip_install(package):
     if is_China_user():
-        pip_raw_install(package, "-i", "https://mirrors.aliyun.com/pypi/simple")
+        pip_raw_install(package, "-i", "https://mirrors.aliyun.com/pypi/simple", "--no-warn-script-location")
     else:
-        pip_raw_install(package)
+        pip_raw_install(package, "--no-warn-script-location")
 
 def vspaths():
     result = {

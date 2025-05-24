@@ -3,7 +3,6 @@ tree-sitter
 PyGLM
 numpy
 opencv-python
-maxminddb-geolite2
 wget
 requests
 chardet
