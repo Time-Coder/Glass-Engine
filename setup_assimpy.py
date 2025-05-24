@@ -162,7 +162,7 @@ with open("assimpy/README_PYPI.md", "r", encoding='utf-8') as in_file:
 
 setuptools.setup(
     name="assimpy",
-    version="5.4.3.1",
+    version="5.4.3.2",
     author="王炳辉 (BingHui-WANG)",
     author_email="binghui.wang@foxmail.com",
     description="3D model loader for Glass-Engine",
