@@ -160,7 +160,6 @@ if (
         [
             "cmake", "assimpy/assimp-5.4.3",
             "-B", f"build/assimp-5.4.3/{bits}",
-            "-DCMAKE_CONFIGURATION_TYPES=MinSizeRel",
             "-DCMAKE_BUILD_TYPE=MinSizeRel",
             "-DBUILD_SHARED_LIBS=OFF",
             "-DASSIMP_BUILD_TESTS=OFF",
@@ -170,7 +169,6 @@ if (
             "-DASSIMP_WARNINGS_AS_ERRORS=OFF",
             "-DLIBRARY_SUFFIX=",
             "-DASSIMP_BUILD_ZLIB=ON"
-            
         ] + extra_flags
     )
     subprocess.check_call(
@@ -210,7 +208,7 @@ with open("assimpy/README_PYPI.md", "r", encoding='utf-8') as in_file:
 
 setuptools.setup(
     name="assimpy",
-    version="5.4.3",
+    version="5.4.3.1",
     author="王炳辉 (BingHui-WANG)",
     author_email="binghui.wang@foxmail.com",
     description="3D model loader for Glass-Engine",
