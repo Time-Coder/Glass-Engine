@@ -22,7 +22,7 @@ extra_files += find_files("glass_engine", "glass_engine/glsl")
 
 setuptools.setup(
     name="glass_engine",
-    version="0.1.63",
+    version="0.1.64",
     author="王炳辉 (BingHui-WANG)",
     author_email="binghui.wang@foxmail.com",
     description="An easy-to-use 3D rendering engine for Python",
@@ -36,8 +36,8 @@ setuptools.setup(
     include_package_data=False,
     python_requires=">=3.7",
     install_requires=[
-        "python-glass==0.1.63",
-        "assimpy>=5.4.3.2",
+        "python-glass==0.1.64",
+        "assimpy>=5.4.3.3",
         "pytweening"
     ],
     classifiers=[

@@ -1,4 +1,4 @@
-__version__ = "0.1.63"
+__version__ = "0.1.64"
 
 from .VAO import VAO
 from .VBO import VBO
