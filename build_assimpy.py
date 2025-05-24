@@ -4,7 +4,6 @@ import platform
 import glob
 import getpass
 
-
 if platform.system() == "Windows":
     import winreg
 
@@ -57,59 +56,60 @@ def get_all_python_paths():
 
     return paths
 
-with open("README_assimpy.rst", "r", encoding="utf-8") as in_file:
-    content = in_file.read()
+try:
+    with open("README_assimpy.rst", "r", encoding="utf-8") as in_file:
+        content = in_file.read()
 
-with open("README.rst", "w", encoding="utf-8") as out_file:
-    out_file.write(content)
+    with open("README.rst", "w", encoding="utf-8") as out_file:
+        out_file.write(content)
 
-with open("setup_assimpy.py", "r", encoding="utf-8") as in_file:
-    content = in_file.read()
+    with open("setup_assimpy.py", "r", encoding="utf-8") as in_file:
+        content = in_file.read()
 
-with open("setup.py", "w", encoding="utf-8") as out_file:
-    out_file.write(content)
+    with open("setup.py", "w", encoding="utf-8") as out_file:
+        out_file.write(content)
 
-with open("MANIFEST.in", "w") as out_file:
-    out_file.write(
-"""include assimpy/LICENSE
-include assimpy/README_PYPI.md
-include assimpy/assimpy_ext.h
-include assimpy/assimp-5.4.3.zip
-include assimpy/pybind11-2.13.6.zip
-include assimpy/__pyinstaller/assimp/LICENSE
-include assimpy/__pyinstaller/pybind11/LICENSE
-""")
+    with open("MANIFEST.in", "w") as out_file:
+        out_file.write(
+    """include assimpy/LICENSE
+    include assimpy/README_PYPI.md
+    include assimpy/assimpy_ext.h
+    include assimpy/assimp-5.4.3.zip
+    include assimpy/pybind11-2.13.6.zip
+    include assimpy/__pyinstaller/assimp/LICENSE
+    include assimpy/__pyinstaller/pybind11/LICENSE
+    """)
 
-python_paths = get_all_python_paths()
-i = 0
-for python_path in python_paths.values():
-    try:
-        if i == 0:
-            subprocess.check_call([python_path, "setup.py", "sdist", "bdist_wheel"])
-        else:
-            subprocess.check_call([python_path, "setup.py", "bdist_wheel"])
-    except:
-        subprocess.check_call([python_path, "-m", "pip", "install", "wheel"])
-        if i == 0:
-            subprocess.check_call([python_path, "setup.py", "sdist", "bdist_wheel"])
-        else:
-            subprocess.check_call([python_path, "setup.py", "bdist_wheel"])
+    python_paths = get_all_python_paths()
+    i = 0
+    for python_path in python_paths.values():
+        try:
+            if i == 0:
+                subprocess.check_call([python_path, "setup.py", "sdist", "bdist_wheel"])
+            else:
+                subprocess.check_call([python_path, "setup.py", "bdist_wheel"])
+        except:
+            subprocess.check_call([python_path, "-m", "pip", "install", "wheel"])
+            if i == 0:
+                subprocess.check_call([python_path, "setup.py", "sdist", "bdist_wheel"])
+            else:
+                subprocess.check_call([python_path, "setup.py", "bdist_wheel"])
 
-    if platform.system() == "Linux":
-        machine = platform.machine()
-        files = glob.glob(f"dist/assimpy-*-linux_{machine}.whl")
-        for file in files:
-            try:
-                subprocess.check_call([python_path, "-m", "auditwheel", "repair", file, "--plat=manylinux_2_24_" + machine, "-w", "dist"])
-            except:
-                subprocess.check_call([python_path, "-m", "pip", "install", "auditwheel"])
-                subprocess.check_call([python_path, "-m", "auditwheel", "repair", file, "--plat=manylinux_2_24_" + machine, "-w", "dist"])
-            os.remove(file)
+        if platform.system() == "Linux":
+            machine = platform.machine()
+            files = glob.glob(f"dist/assimpy-*-linux_{machine}.whl")
+            for file in files:
+                try:
+                    subprocess.check_call([python_path, "-m", "auditwheel", "repair", file, "--plat=manylinux_2_24_" + machine, "-w", "dist"])
+                except:
+                    subprocess.check_call([python_path, "-m", "pip", "install", "auditwheel"])
+                    subprocess.check_call([python_path, "-m", "auditwheel", "repair", file, "--plat=manylinux_2_24_" + machine, "-w", "dist"])
+                os.remove(file)
 
-    i += 1
+        i += 1
+finally:
+    with open("README_glass_engine.rst", "r", encoding="utf-8") as in_file:
+        content = in_file.read()
 
-with open("README_glass_engine.rst", "r", encoding="utf-8") as in_file:
-    content = in_file.read()
-
-with open("README.rst", "w", encoding="utf-8") as out_file:
-    out_file.write(content)
+    with open("README.rst", "w", encoding="utf-8") as out_file:
+        out_file.write(content)
