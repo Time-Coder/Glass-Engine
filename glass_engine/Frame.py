@@ -2,6 +2,7 @@ from glass import ShaderProgram, sampler2D, GLConfig, sampler2DArray
 
 import os
 from OpenGL import GL
+from typing import Union
 
 
 class Frame:
@@ -35,7 +36,7 @@ class Frame:
 
     def draw(
         self,
-        screen_image: (sampler2D, sampler2DArray),
+        screen_image: Union[sampler2D, sampler2DArray],
         gray: bool = False,
         invert: bool = False,
         layer: int = -1,

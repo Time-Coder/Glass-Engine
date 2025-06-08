@@ -10,6 +10,11 @@
 #define SHADING_MODEL_FRESNEL 10
 #define SHADING_MODEL_PBR 11
 
+#define VERTEX_COLOR_USAGE_NOT_USE 0
+#define VERTEX_COLOR_USAGE_BASE_COLOR 1
+#define VERTEX_COLOR_USAGE_BASE_COLOR_MASK 2
+
+
 struct Material
 {
 	uint shading_model;
@@ -29,6 +34,7 @@ struct Material
 	float roughness;
     int diffuse_bands;
     int specular_bands;
+	int vertex_color_usage;
     float diffuse_softness;
     float specular_softness;
     float rim_power;

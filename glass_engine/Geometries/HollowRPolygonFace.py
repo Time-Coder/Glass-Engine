@@ -5,6 +5,7 @@ from glass import Vertex
 
 import glm
 import math
+from typing import Union
 
 
 class HollowRPolygonFace(Mesh):
@@ -17,8 +18,8 @@ class HollowRPolygonFace(Mesh):
         total_sides: int = None,
         inner_radius: float = 1,
         outer_radius: float = 2,
-        color: (glm.vec3, glm.vec4) = glm.vec4(1),
-        back_color: (glm.vec3, glm.vec4) = None,
+        color: Union[glm.vec3, glm.vec4] = glm.vec4(1),
+        back_color: Union[glm.vec3, glm.vec4] = None,
         vertical: bool = False,
         normalize_tex_coord=False,
         name: str = "",

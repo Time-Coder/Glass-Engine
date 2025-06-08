@@ -7,7 +7,7 @@ import sys
 import subprocess
 
 
-def md5(file_name):
+def md5(file_name:str)->str:
     if not os.path.isfile(file_name):
         return ""
 
@@ -18,7 +18,7 @@ def md5(file_name):
     return md5_hash.hexdigest()
 
 
-def download(url, target_file, md5_str: str = ""):
+def download(url, target_file:str, md5_str: str = "")->None:
     target_folder = os.path.dirname(os.path.abspath(target_file))
     if not os.path.isdir(target_folder):
         os.makedirs(target_folder)
@@ -62,7 +62,7 @@ def download(url, target_file, md5_str: str = ""):
             print("download failed, retry...")
 
 
-def pip_raw_install(*args):
+def pip_raw_install(*args)->None:
     try:
         subprocess.check_call([sys.executable, "-m", "pip", "install", *args])
     except:
@@ -74,7 +74,7 @@ def pip_raw_install(*args):
             pip_main(['install', *args])
 
 
-def public_ip():
+def public_ip()->str:
     try:
         response = requests.get("https://httpbin.org/ip")
         return response.json().get("origin")
@@ -82,7 +82,7 @@ def public_ip():
         return "127.0.0.1"
 
 
-def is_China_ip(ip_address):
+def is_China_ip(ip_address)->bool:
     try:
         response = requests.get(f"https://ipinfo.io/{ip_address}/json/")
         data = response.json()
@@ -92,7 +92,7 @@ def is_China_ip(ip_address):
 
 
 _is_China_user = None
-def is_China_user():
+def is_China_user()->bool:
     global _is_China_user
     if _is_China_user is None:
         _is_China_user = is_China_ip(public_ip())
@@ -100,7 +100,7 @@ def is_China_user():
     return _is_China_user
 
 
-def pip_install(package):
+def pip_install(package: str):
     if is_China_user():
         pip_raw_install(package, "-i", "https://mirrors.aliyun.com/pypi/simple", "--no-warn-script-location")
     else:

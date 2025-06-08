@@ -1,5 +1,6 @@
 from ..Mesh import Mesh
 from ..ColorMap import ColorMap
+from ..Material import Material
 
 from glass.utils import checktype
 from glass import AttrList
@@ -7,9 +8,11 @@ from glass import AttrList
 import glm
 import numpy as np
 import copy
+from typing import Union
 
 
 class Surf(Mesh):
+    
     @checktype
     def __init__(
         self,
@@ -20,8 +23,8 @@ class Surf(Mesh):
         back_C: np.ndarray = None,
         color_map: ColorMap = None,
         back_color_map: ColorMap = None,
-        color: (glm.vec3, glm.vec4) = None,
-        back_color: (glm.vec3, glm.vec4) = None,
+        color: Union[glm.vec3, glm.vec4] = None,
+        back_color: Union[glm.vec3, glm.vec4] = None,
         surf_type: Mesh.SurfType = Mesh.SurfType.Smooth,
         name="",
     ):
@@ -33,6 +36,8 @@ class Surf(Mesh):
 
         self._back_CData_user_set = back_C is not None
         self._back_CData = back_C if self._back_CData_user_set else self._CData
+        self.material.vertex_color_usage = Material.VertexColorUsage.BaseColor
+
 
         Surf._set_colors(self, color, back_color, color_map, back_color_map)
         self.start_building()

@@ -3,6 +3,7 @@ from glass import ShaderProgram, FBO, sampler2D, GLInfo, samplerCube, sampler2DA
 from ..Frame import Frame
 
 import os
+from typing import Union
 
 
 class FXAAEffect(PostProcessEffect):
@@ -55,8 +56,8 @@ class FXAAEffect(PostProcessEffect):
         return False
 
     def apply(
-        self, screen_image: (sampler2D, samplerCube, sampler2DArray)
-    ) -> (sampler2D, samplerCube, sampler2DArray):
+        self, screen_image: Union[sampler2D, samplerCube, sampler2DArray]
+    ) -> Union[sampler2D, samplerCube, sampler2DArray]:
         if isinstance(screen_image, sampler2D):
             self.fbo.resize(screen_image.width, screen_image.height)
             with self.fbo:

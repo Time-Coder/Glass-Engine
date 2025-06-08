@@ -1,0 +1,14 @@
+* 完善 vertex_color_usage，包括 assimpy 内部
+* Mesh 获取 vertices 时再更新参数
+* 几何体的 normalize_tex_coord 修改为 tex_coord_per_meter
+* 场景变化时自动更新 screen
+* Buffer Object 使用零拷贝策略
+* Lights 优先采用 Uniform Buffer Object，超过 32 个再使用 Shader Storage Buffer Object
+* 不需要 geometry shader 的不使用 geometry shader
+* uniform, uniform block, buffer 采用 tree-sitter 解析，删除原来的正则解析
+* uniform, uniform block, buffer 结构体绑定变量，变量属性改变透传 uniform, uniform block, buffer 结构体属性改变
+
+* 尝试使用 QtPy 兼容 PySide 和 PyQt
+* 兼容 glfw, tikinter
+
+* 完善全部类型注解

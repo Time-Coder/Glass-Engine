@@ -3,6 +3,7 @@ import queue
 import threading
 import math
 import os
+from typing import Union
 
 os.environ["OPENCV_IO_ENABLE_OPENEXR"] = "1"
 import cv2
@@ -55,7 +56,7 @@ def convert_to_image(data: np.ndarray, viewport: tuple) -> np.ndarray:
 
 class VideoRecorder:
     def __init__(
-        self, screen, file_name: str, fourcc: list, viewport: tuple, fps: (float, int)
+        self, screen, file_name: str, fourcc: list, viewport: tuple, fps: Union[float, int]
     ) -> None:
         self._screen_id = id(screen)
 

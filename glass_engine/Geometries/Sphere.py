@@ -5,6 +5,7 @@ from glass import Vertex
 
 import glm
 import math
+from typing import Union
 
 
 class Sphere(Mesh):
@@ -13,8 +14,8 @@ class Sphere(Mesh):
     def __init__(
         self,
         radius: float = 1,
-        color: (glm.vec3, glm.vec4) = glm.vec4(1),
-        back_color: (glm.vec3, glm.vec4) = None,
+        color: Union[glm.vec3, glm.vec4] = glm.vec4(1),
+        back_color: Union[glm.vec3, glm.vec4] = None,
         n_lon_divide: int = 100,
         start_lon: float = 0,
         span_lon: float = 360,

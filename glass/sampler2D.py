@@ -8,6 +8,7 @@ from OpenGL import GL
 import OpenGL.GL.ARB.bindless_texture as bt
 import time
 from datetime import datetime
+from typing import Union
 
 from .FBOAttachment import FBOAttachment
 from .GLInfo import GLInfo
@@ -39,7 +40,7 @@ class sampler2D(FBOAttachment):
     @checktype
     def __init__(
         self,
-        image: (str, np.ndarray) = None,
+        image: Union[str, np.ndarray] = None,
         width: int = None,
         height: int = None,
         internal_format: GLInfo.internal_formats = None,
@@ -433,7 +434,7 @@ class sampler2D(FBOAttachment):
 
     @border_color.setter
     @FBOAttachment.param_setter
-    def border_color(self, color: (glm.vec3, glm.vec4)):
+    def border_color(self, color: Union[glm.vec3, glm.vec4]):
         if isinstance(color, glm.vec3):
             color = glm.vec4(color, 1)
 
@@ -455,7 +456,7 @@ class sampler2D(FBOAttachment):
 
     @image.setter
     @FBOAttachment.param_setter
-    def image(self, image: (np.ndarray, str)):
+    def image(self, image: Union[np.ndarray, str]):
         if isinstance(image, str):
             self._file_name = os.path.abspath(image).replace("\\", "/")
         else:

@@ -1,5 +1,6 @@
 from OpenGL import GL
 import numpy as np
+from typing import Union
 
 from .FBOAttachment import FBOAttachment
 from .GLInfo import GLInfo
@@ -17,7 +18,7 @@ class image2D(sampler2D):
     @checktype
     def __init__(
         self,
-        image: (str, np.ndarray) = None,
+        image: Union[str, np.ndarray] = None,
         width: int = None,
         height: int = None,
         internal_format: GLInfo.image_internal_formats = None,

@@ -13,6 +13,7 @@ import glm
 import math
 from enum import Enum
 import copy
+from typing import Union
 
 
 class Extruder(Mesh):
@@ -27,8 +28,8 @@ class Extruder(Mesh):
         section,
         path,
         join_style: JoinStyle = JoinStyle.MiterJoin,
-        color: (glm.vec3, glm.vec4) = glm.vec4(1),
-        back_color: (glm.vec3, glm.vec4) = None,
+        color: Union[glm.vec3, glm.vec4] = glm.vec4(1),
+        back_color: Union[glm.vec3, glm.vec4] = None,
         n_corner_divide: int = 100,
         normalize_tex_coord: bool = False,
         name: str = "",

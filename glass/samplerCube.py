@@ -6,6 +6,7 @@ import glm
 import numpy as np
 from OpenGL import GL
 import OpenGL.GL.ARB.bindless_texture as bt
+from typing import Union
 
 from .FBOAttachment import FBOAttachment
 from .GLInfo import GLInfo
@@ -125,7 +126,7 @@ class samplerCube(FBOAttachment):
 
         @image.setter
         @FBOAttachment.param_setter
-        def image(self, image: (np.ndarray, str)):
+        def image(self, image: Union[np.ndarray, str]):
             if isinstance(image, str):
                 image = ImageLoader.load(image)
 
@@ -236,7 +237,7 @@ class samplerCube(FBOAttachment):
 
         FBOAttachment.__del__(self)
 
-    def __getitem__(self, key: (str, int)):
+    def __getitem__(self, key: Union[str, int]):
         if key == "up":
             key = "top"
         elif key == "down":
@@ -245,7 +246,7 @@ class samplerCube(FBOAttachment):
         return self._faces[key]
 
     @checktype
-    def __setitem__(self, key: str, value: (np.ndarray, str)):
+    def __setitem__(self, key: str, value: Union[np.ndarray, str]):
         if key == "up":
             key = "top"
         elif key == "down":
@@ -459,7 +460,7 @@ class samplerCube(FBOAttachment):
 
     @border_color.setter
     @FBOAttachment.param_setter
-    def border_color(self, color: (glm.vec3, glm.vec4)):
+    def border_color(self, color: Union[glm.vec3, glm.vec4]):
         if isinstance(color, glm.vec3):
             color = glm.vec4(color, 1)
 

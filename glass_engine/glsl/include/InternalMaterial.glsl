@@ -21,12 +21,23 @@ InternalMaterial fetch_internal_material(vec4 frag_color, Material material, vec
         internal_material.opacity = max(texture(material.opacity_map, tex_coord).r, 0.0);
     }
 
-    internal_material.base_color = material.base_color;
-    if (textureValid(material.base_color_map))
+    if (material.vertex_color_usage == VERTEX_COLOR_USAGE_BASE_COLOR)
     {
-        internal_material.base_color = max(texture(material.base_color_map, tex_coord), 0.0).rgb;
+        internal_material.base_color = frag_color.rgb;
     }
-    internal_material.base_color = frag_color.rgb * internal_material.base_color;
+    else
+    {
+        internal_material.base_color = material.base_color;
+        if (textureValid(material.base_color_map))
+        {
+            internal_material.base_color = max(texture(material.base_color_map, tex_coord), 0.0).rgb;
+        }
+
+        if (material.vertex_color_usage == VERTEX_COLOR_USAGE_BASE_COLOR_MASK)
+        {
+            internal_material.base_color = frag_color.rgb * internal_material.base_color;
+        }
+    }
     
     // ambient
     internal_material.ambient = material.ambient;

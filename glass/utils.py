@@ -14,6 +14,7 @@ import chardet
 from _ctypes import PyObj_FromPtr
 
 from .GlassConfig import GlassConfig
+from typeguard import typechecked
 
 profiler = cProfile.Profile()
 
@@ -51,7 +52,6 @@ def uint64_to_uvec2(uint64_value):
 def same_type(var1, var2):
     return isinstance(var1, type(var2)) and isinstance(var2, type(var1))
 
-
 def checktype(func):
     if not GlassConfig.debug:
         return func
@@ -61,125 +61,7 @@ def checktype(func):
         if not GlassConfig.debug:
             return func(*args, **kwargs)
 
-        func_args = func.__code__.co_varnames[: func.__code__.co_argcount]
-        annotation = func.__annotations__
-        defaults = func.__defaults__
-        len_func_args = len(func_args)
-
-        len_defaults = 0
-        if defaults is not None:
-            len_defaults = len(defaults)
-        defauts_start = len_func_args - len_defaults
-
-        ext_kwargs = {}
-        for i in range(defauts_start, len_func_args):
-            ext_kwargs[func_args[i]] = defaults[i - defauts_start]
-        ext_kwargs.update(kwargs)
-
-        def change_annotation(arg_name):
-            if annotation[arg_name] is None:
-                annotation[arg_name] = (type(None),)
-
-            if isinstance(annotation[arg_name], type):
-                annotation[arg_name] = (annotation[arg_name], type(None))
-
-            if float in annotation[arg_name] and int not in annotation[arg_name]:
-                annotation[arg_name] = (*annotation[arg_name], int)
-
-            if None in annotation[arg_name]:
-                type_set = set(annotation[arg_name])
-                type_set.remove(None)
-                type_set.add(type(None))
-                annotation[arg_name] = tuple(type_set)
-
-            if type(None) not in annotation[arg_name]:
-                annotation[arg_name] = (*annotation[arg_name], type(None))
-
-        for i in range(min(len(args), len_func_args)):
-            arg_name = func_args[i]
-            arg_value = args[i]
-
-            if arg_name in annotation:
-                if isinstance(annotation[arg_name], (type, tuple, type(None))):
-                    change_annotation(arg_name)
-                    if not isinstance(arg_value, annotation[arg_name]):
-                        raise TypeError(
-                            func.__name__
-                            + "() argument "
-                            + arg_name
-                            + " should be in type "
-                            + str(annotation[arg_name])
-                            + ", "
-                            + str(type(arg_value))
-                            + " value passed."
-                        )
-                elif isinstance(annotation[arg_name], (list, set)):
-                    if arg_value not in annotation[arg_name]:
-                        raise ValueError(
-                            func.__name__
-                            + "() argument "
-                            + arg_name
-                            + " can only be in "
-                            + str(annotation[arg_name])
-                            + ", "
-                            + str(arg_value)
-                            + " passed."
-                        )
-
-        for arg_name in ext_kwargs:
-            arg_value = ext_kwargs[arg_name]
-            if arg_name in annotation:
-                if isinstance(annotation[arg_name], (type, tuple, type(None))):
-                    change_annotation(arg_name)
-                    if not isinstance(arg_value, annotation[arg_name]):
-                        raise TypeError(
-                            func.__name__
-                            + "() argument "
-                            + arg_name
-                            + " should be in type "
-                            + str(annotation[arg_name])
-                            + ", "
-                            + str(type(arg_value))
-                            + " value passed."
-                        )
-                elif isinstance(annotation[arg_name], (list, set)):
-                    if arg_value not in annotation[arg_name]:
-                        raise ValueError(
-                            func.__name__
-                            + "() argument "
-                            + arg_name
-                            + " can only be in "
-                            + str(annotation[arg_name])
-                            + ", "
-                            + str(arg_value)
-                            + " passed."
-                        )
-
-        return_value = func(*args, **kwargs)
-        if "return" in annotation:
-            if isinstance(annotation["return"], (type, tuple, type(None))):
-                change_annotation("return")
-                if not isinstance(return_value, annotation["return"]):
-                    raise TypeError(
-                        func.__name__
-                        + "() return value should be in type "
-                        + str(annotation["return"])
-                        + ", "
-                        + str(type(return_value))
-                        + " value returned."
-                    )
-            elif isinstance(annotation["return"], (list, set)):
-                if return_value not in annotation["return"]:
-                    raise ValueError(
-                        func.__name__
-                        + "() return value can only be in "
-                        + str(annotation["return"])
-                        + ", "
-                        + str(return_value)
-                        + " returned."
-                    )
-
-        return return_value
+        return typechecked(func)(*args, **kwargs)
 
     return wrapper
 

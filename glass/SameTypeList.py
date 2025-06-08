@@ -1,6 +1,7 @@
 import copy
 import numpy as np
 import glm
+from typing import Union
 
 from .utils import capacity_of
 from .helper import nitems
@@ -48,10 +49,10 @@ class SameTypeList:
             self.__current_index = 0
             return self
 
-    def __init__(self, _list: (list, np.ndarray) = None, dtype: type = None):
+    def __init__(self, _list: Union[list, np.ndarray] = None, dtype: type = None):
         self.reset(_list, dtype)
 
-    def reset(self, _list: (list, np.ndarray) = None, dtype: type = None):
+    def reset(self, _list: Union[list, np.ndarray] = None, dtype: type = None):
         if _list is None:
             _list = []
 
@@ -115,7 +116,7 @@ class SameTypeList:
             self._increment.reset(_list)
 
     @classmethod
-    def frombuffer(cls, buffer: (bytes, bytearray), dtype):
+    def frombuffer(cls, buffer: Union[bytes, bytearray], dtype):
         np_dtype = GLInfo.np_dtype_map[dtype]
         np_array = np.frombuffer(buffer, dtype=np_dtype).reshape((-1, nitems(dtype)))
         result = cls(np_array, dtype=dtype)
@@ -281,7 +282,7 @@ class SameTypeList:
         self._should_retest = True
         return True
 
-    def __getitem__(self, index: (int, slice)):
+    def __getitem__(self, index: Union[int, slice]):
         if self._increment is not None:
             if isinstance(index, slice):
                 start, stop, step = self.__process_slice(index)
@@ -323,7 +324,7 @@ class SameTypeList:
 
         self._checked_out_items.clear()
 
-    def __delitem__(self, index: (int, slice)):
+    def __delitem__(self, index: Union[int, slice]):
         self._change_to_list()
         self._check_in_items()
         del self._list[index]

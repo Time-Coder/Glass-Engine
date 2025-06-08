@@ -1,16 +1,17 @@
-from glass.utils import checktype
 from glass import sampler2D
 from glass.ImageLoader import ImageLoader
 from glass.WeakSet import WeakSet
 from glass.MetaInstancesRecorder import MetaInstancesRecorder
 from .callback_vec import callback_vec3, callback_vec4
 from .GlassEngineConfig import GlassEngineConfig
+from glass.utils import checktype
 
 import glm
 from enum import Enum
 import numpy as np
 import math
 from functools import wraps
+from typing import Union
 
 
 def param_setter(func):
@@ -89,6 +90,11 @@ class Material(metaclass=MetaInstancesRecorder):
         def __init__(self, ch_name):
             self.ch_name = ch_name
 
+    class VertexColorUsage(Enum):
+        NotUse = 0
+        BaseColor = 1
+        BaseColorMask = 2
+
     @MetaInstancesRecorder.init
     def __init__(self, name: str = ""):
         self._name: str = name
@@ -110,6 +116,7 @@ class Material(metaclass=MetaInstancesRecorder):
         )
         self._emission_strength: float = 1
         self._opacity: float = 1
+        self._vertex_color_usage: Material.VertexColorUsage = Material.VertexColorUsage.NotUse
         self._height_scale: float = 0.05
         self._metallic: float = 0.5
         self._roughness: float = 0
@@ -327,7 +334,7 @@ class Material(metaclass=MetaInstancesRecorder):
 
     @shading_model.setter
     @param_setter
-    def shading_model(self, shading_model: (ShadingModel, None)):
+    def shading_model(self, shading_model: Union[ShadingModel, None]):
         if shading_model is None:
             shading_model = Material.ShadingModel.Unlit
 
@@ -418,6 +425,15 @@ class Material(metaclass=MetaInstancesRecorder):
         self._shininess_strength = shininess_strength
 
     @property
+    def vertex_color_usage(self)->VertexColorUsage:
+        return self._vertex_color_usage
+    
+    @vertex_color_usage.setter
+    @param_setter
+    def vertex_color_usage(self, vertex_color_usage: VertexColorUsage):
+        self._vertex_color_usage = vertex_color_usage
+
+    @property
     def opacity(self):
         return self._opacity
 
@@ -460,7 +476,7 @@ class Material(metaclass=MetaInstancesRecorder):
         return self._reflection
 
     @reflection.setter
-    def reflection(self, reflection: (glm.vec4, glm.vec3, float)) -> None:
+    def reflection(self, reflection: Union[glm.vec4, glm.vec3, float]) -> None:
         if isinstance(reflection, glm.vec3):
             reflection = glm.vec4(reflection, 1)
         if isinstance(reflection, (float, int)):
@@ -540,7 +556,7 @@ class Material(metaclass=MetaInstancesRecorder):
 
     @ambient_map.setter
     @param_setter
-    def ambient_map(self, ambient_map: (sampler2D, str, np.ndarray)):
+    def ambient_map(self, ambient_map: Union[sampler2D, str, np.ndarray]):
         if isinstance(ambient_map, sampler2D) or ambient_map is None:
             self._ambient_map = ambient_map
         elif isinstance(ambient_map, (str, np.ndarray)):
@@ -559,7 +575,7 @@ class Material(metaclass=MetaInstancesRecorder):
         return self.base_color_map
 
     @diffuse_map.setter
-    def diffuse_map(self, diffuse_map: (sampler2D, str, np.ndarray)):
+    def diffuse_map(self, diffuse_map: Union[sampler2D, str, np.ndarray]):
         self.base_color_map = diffuse_map
 
     @property
@@ -568,7 +584,7 @@ class Material(metaclass=MetaInstancesRecorder):
 
     @specular_map.setter
     @param_setter
-    def specular_map(self, specular_map: (sampler2D, str, np.ndarray)):
+    def specular_map(self, specular_map: Union[sampler2D, str, np.ndarray]):
         if isinstance(specular_map, sampler2D) or specular_map is None:
             self._specular_map = specular_map
         elif isinstance(specular_map, (str, np.ndarray)):
@@ -583,7 +599,7 @@ class Material(metaclass=MetaInstancesRecorder):
 
     @shininess_map.setter
     @param_setter
-    def shininess_map(self, shininess_map: (sampler2D, str, np.ndarray)):
+    def shininess_map(self, shininess_map: Union[sampler2D, str, np.ndarray]):
         if isinstance(shininess_map, sampler2D) or shininess_map is None:
             self._shininess_map = shininess_map
         elif isinstance(shininess_map, (str, np.ndarray)):
@@ -598,7 +614,7 @@ class Material(metaclass=MetaInstancesRecorder):
 
     @emission_map.setter
     @param_setter
-    def emission_map(self, emission_map: (sampler2D, str, np.ndarray)):
+    def emission_map(self, emission_map: Union[sampler2D, str, np.ndarray]):
         if isinstance(emission_map, sampler2D) or emission_map is None:
             self._emission_map = emission_map
         elif isinstance(emission_map, (str, np.ndarray)):
@@ -613,7 +629,7 @@ class Material(metaclass=MetaInstancesRecorder):
 
     @normal_map.setter
     @param_setter
-    def normal_map(self, normal_map: (sampler2D, str, np.ndarray)):
+    def normal_map(self, normal_map: Union[sampler2D, str, np.ndarray]):
         if isinstance(normal_map, sampler2D) or normal_map is None:
             self._normal_map = normal_map
         elif isinstance(normal_map, (str, np.ndarray)):
@@ -628,7 +644,7 @@ class Material(metaclass=MetaInstancesRecorder):
 
     @height_map.setter
     @param_setter
-    def height_map(self, height_map: (sampler2D, str, np.ndarray)):
+    def height_map(self, height_map: Union[sampler2D, str, np.ndarray]):
         if isinstance(height_map, sampler2D) or height_map is None:
             self._height_map = height_map
         elif isinstance(height_map, (str, np.ndarray)):
@@ -643,7 +659,7 @@ class Material(metaclass=MetaInstancesRecorder):
 
     @opacity_map.setter
     @param_setter
-    def opacity_map(self, opacity_map: (sampler2D, str, np.ndarray)):
+    def opacity_map(self, opacity_map: Union[sampler2D, str, np.ndarray]):
         if isinstance(opacity_map, sampler2D) or opacity_map is None:
             self._opacity_map = opacity_map
         elif isinstance(opacity_map, (str, np.ndarray)):
@@ -660,7 +676,7 @@ class Material(metaclass=MetaInstancesRecorder):
 
     @ao_map.setter
     @param_setter
-    def ao_map(self, ao_map: (sampler2D, str, np.ndarray)):
+    def ao_map(self, ao_map: Union[sampler2D, str, np.ndarray]):
         if isinstance(ao_map, sampler2D) or ao_map is None:
             self._ao_map = ao_map
         elif isinstance(ao_map, (str, np.ndarray)):
@@ -675,7 +691,7 @@ class Material(metaclass=MetaInstancesRecorder):
 
     @arm_map.setter
     @param_setter
-    def arm_map(self, arm_map: (sampler2D, str, np.ndarray)):
+    def arm_map(self, arm_map: Union[sampler2D, str, np.ndarray]):
         if isinstance(arm_map, sampler2D) or arm_map is None:
             self._arm_map = arm_map
         elif isinstance(arm_map, (str, np.ndarray)):
@@ -690,7 +706,7 @@ class Material(metaclass=MetaInstancesRecorder):
 
     @reflection_map.setter
     @param_setter
-    def reflection_map(self, reflection_map: (sampler2D, str, np.ndarray)):
+    def reflection_map(self, reflection_map: Union[sampler2D, str, np.ndarray]):
         if isinstance(reflection_map, sampler2D) or reflection_map is None:
             self._reflection_map = reflection_map
         elif isinstance(reflection_map, (str, np.ndarray)):
@@ -707,7 +723,7 @@ class Material(metaclass=MetaInstancesRecorder):
 
     @base_color_map.setter
     @param_setter
-    def base_color_map(self, base_color_map: (sampler2D, str, np.ndarray)):
+    def base_color_map(self, base_color_map: Union[sampler2D, str, np.ndarray]):
         if isinstance(base_color_map, sampler2D) or base_color_map is None:
             self._base_color_map = base_color_map
         elif isinstance(base_color_map, (str, np.ndarray)):
@@ -722,7 +738,7 @@ class Material(metaclass=MetaInstancesRecorder):
 
     @metallic_map.setter
     @param_setter
-    def metallic_map(self, metallic_map: (sampler2D, str, np.ndarray)):
+    def metallic_map(self, metallic_map: Union[sampler2D, str, np.ndarray]):
         if isinstance(metallic_map, sampler2D) or metallic_map is None:
             self._metallic_map = metallic_map
         elif isinstance(metallic_map, (str, np.ndarray)):
@@ -737,7 +753,7 @@ class Material(metaclass=MetaInstancesRecorder):
 
     @roughness_map.setter
     @param_setter
-    def roughness_map(self, roughness_map: (sampler2D, str, np.ndarray)):
+    def roughness_map(self, roughness_map: Union[sampler2D, str, np.ndarray]):
         if isinstance(roughness_map, sampler2D) or roughness_map is None:
             self._roughness_map = roughness_map
         elif isinstance(roughness_map, (str, np.ndarray)):

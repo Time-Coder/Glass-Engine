@@ -5,6 +5,7 @@ from .utils import checktype
 from OpenGL import GL
 import OpenGL.GL.ARB.bindless_texture as bt
 import numpy as np
+from typing import Union
 
 
 class isampler2D(sampler2D):
@@ -17,7 +18,7 @@ class isampler2D(sampler2D):
     @checktype
     def __init__(
         self,
-        image: (str, np.ndarray) = None,
+        image: Union[str, np.ndarray] = None,
         width: int = None,
         height: int = None,
         internal_format: GLInfo.isampler_internal_formats = None,

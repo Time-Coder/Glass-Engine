@@ -5,6 +5,7 @@ from glass import Vertex
 
 import glm
 import math
+from typing import Union
 
 
 def init_Hexahedron(cls):
@@ -76,8 +77,8 @@ class Hexahedron(Mesh):
     def __init__(
         self,
         radius=1,
-        color: (glm.vec3, glm.vec4) = glm.vec4(1),
-        back_color: (glm.vec3, glm.vec4) = None,
+        color: Union[glm.vec3, glm.vec4] = glm.vec4(1),
+        back_color: Union[glm.vec3, glm.vec4] = None,
         normalize_tex_coord=False,
         name: str = "",
     ):

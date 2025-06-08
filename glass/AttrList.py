@@ -7,13 +7,14 @@ from .Increment import Increment
 from OpenGL import GL
 import numpy as np
 import glm
+from typing import Union
 
 
 class AttrList(SameTypeList):
 
     def __init__(
         self,
-        _list: (list, np.ndarray) = None,
+        _list: Union[list, np.ndarray] = None,
         draw_type: GLInfo.draw_types = GL.GL_STATIC_DRAW,
         dtype: GLInfo.attr_types = None,
     ):

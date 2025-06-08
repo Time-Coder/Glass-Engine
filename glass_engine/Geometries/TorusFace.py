@@ -5,6 +5,7 @@ from glass import Vertex
 
 import glm
 import math
+from typing import Union
 
 
 class TorusFace(Mesh):
@@ -14,8 +15,8 @@ class TorusFace(Mesh):
         self,
         inner_radius: float = 1,
         outer_radius: float = 2,
-        color: (glm.vec3, glm.vec4) = glm.vec4(1),
-        back_color: (glm.vec3, glm.vec4) = None,
+        color: Union[glm.vec3, glm.vec4] = glm.vec4(1),
+        back_color: Union[glm.vec3, glm.vec4] = None,
         n_divide: int = 100,
         start_angle: float = 0,
         span_angle: float = 360,

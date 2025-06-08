@@ -4,6 +4,7 @@ os.environ["OPENCV_IO_ENABLE_OPENEXR"] = "1"
 import cv2
 import numpy as np
 import re
+from typing import Union
 
 
 def generate_standard_LUT(LUT_3D_size: int = 64, dest_file_name: str = None):
@@ -69,7 +70,7 @@ def cube_info(cube_file_name: str):
 
 
 def apply_cube(
-    cube: (str, tuple), src_image: (str, np.ndarray), dest_file_name: str = None
+    cube: Union[str, tuple], src_image: Union[str, np.ndarray], dest_file_name: str = None
 ):
     N, data = None, None
     if isinstance(cube, str):

@@ -6,6 +6,7 @@ import numpy as np
 import glm
 from OpenGL import GL
 import OpenGL.GL.ARB.bindless_texture as bt
+from typing import Union
 
 from .FBOAttachment import FBOAttachment
 from .GLInfo import GLInfo
@@ -40,7 +41,7 @@ class sampler2DArray(FBOAttachment):
             return self._images[index]
 
         @checktype
-        def __setitem__(self, index: int, image: (str, np.ndarray)):
+        def __setitem__(self, index: int, image: Union[str, np.ndarray]):
             if isinstance(image, str):
                 image = ImageLoader.load(image)
 
@@ -73,7 +74,7 @@ class sampler2DArray(FBOAttachment):
         def __len__(self):
             return len(self._images)
 
-        def append(self, image: (str, np.ndarray)):
+        def append(self, image: Union[str, np.ndarray]):
             self._images.append(None)
             index = len(self._images) - 1
             self._parent._image_layer_changed.append(False)
@@ -81,7 +82,7 @@ class sampler2DArray(FBOAttachment):
 
             self[index] = image
 
-        def insert(self, index, image: (str, np.ndarray)):
+        def insert(self, index, image: Union[str, np.ndarray]):
             self._images.insert(index, image)
             self._parent._image_layer_changed.insert(index, False)
             self._parent._image_size_changed = True
@@ -511,7 +512,7 @@ class sampler2DArray(FBOAttachment):
 
     @border_color.setter
     @FBOAttachment.param_setter
-    def border_color(self, color: (glm.vec3, glm.vec4)):
+    def border_color(self, color: Union[glm.vec3, glm.vec4]):
         if isinstance(color, glm.vec3):
             color = glm.vec4(color, 1)
 

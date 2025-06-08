@@ -3,6 +3,7 @@ from .GLInfo import GLInfo
 from .utils import checktype
 
 from OpenGL import GL
+from typing import Union
 
 
 class Instance(Vertex):
@@ -30,7 +31,7 @@ class Instances(Vertices):
     def __eq__(self, other):
         return id(self) == id(other)
 
-    def __setitem__(self, index: (int, slice, str), instance):
+    def __setitem__(self, index: Union[int, slice, str], instance):
         if isinstance(index, str):
             path = index
             if path in self._path_index_map:
@@ -42,7 +43,7 @@ class Instances(Vertices):
         else:
             Vertices.__setitem__(self, index, instance)
 
-    def __getitem__(self, index: (int, slice, str)):
+    def __getitem__(self, index: Union[int, slice, str]):
         if isinstance(index, str):
             path = index
             if path in self._path_index_map:
@@ -53,7 +54,7 @@ class Instances(Vertices):
         else:
             return Vertices.__getitem__(self, index)
 
-    def __delitem__(self, index: (int, str, slice)):
+    def __delitem__(self, index: Union[int, str, slice]):
         if isinstance(index, str):
             path = index
             if path in self._path_index_map:
@@ -76,7 +77,7 @@ class Instances(Vertices):
             for i in range(start, stop, step):
                 del self[i]
 
-    def pop(self, index: (int, str, slice)):
+    def pop(self, index: Union[int, str, slice]):
         if isinstance(index, str):
             path = index
             if path in self._path_index_map:

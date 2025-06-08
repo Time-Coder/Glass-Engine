@@ -46,7 +46,8 @@ setuptools.setup(
         "chardet",
         "tree-sitter>=0.22.0",
         "tree-sitter-glsl",
-        "freetype-py"
+        "freetype-py",
+        "typeguard"
     ],
     classifiers=[
         "Programming Language :: Python :: 3",

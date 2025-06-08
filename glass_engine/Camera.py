@@ -11,6 +11,7 @@ from enum import Enum
 import numpy as np
 import sys
 import importlib
+from typing import Union
 
 Screen = {}
 
@@ -369,7 +370,7 @@ class Camera(SceneNode):
         return self.screen.capture(save_path, viewport)
 
     def record_video(
-        self, save_path: str, viewport: tuple = None, fps: (float, int) = None
+        self, save_path: str, viewport: tuple = None, fps: Union[float, int] = None
     ) -> VideoRecorder:
         return self.screen.capture_video(save_path, viewport, fps)
 

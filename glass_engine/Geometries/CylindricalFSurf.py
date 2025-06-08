@@ -1,5 +1,6 @@
 from ..Mesh import Mesh
 from ..ColorMap import ColorMap
+from ..Material import Material
 from .Surf import Surf
 
 from glass.utils import checktype
@@ -7,6 +8,7 @@ from glass.utils import checktype
 import numpy as np
 import glm
 import math
+from typing import Union
 
 
 class CylindricalFSurf(Mesh):
@@ -19,8 +21,8 @@ class CylindricalFSurf(Mesh):
         theta_range=[0, 2 * math.pi],
         color_map: ColorMap = None,
         back_color_map: ColorMap = None,
-        color: (glm.vec3, glm.vec4) = None,
-        back_color: (glm.vec3, glm.vec4) = None,
+        color: Union[glm.vec3, glm.vec4] = None,
+        back_color: Union[glm.vec3, glm.vec4] = None,
         surf_type: Mesh.SurfType = Mesh.SurfType.Smooth,
         name: str = "",
     ):
@@ -28,6 +30,7 @@ class CylindricalFSurf(Mesh):
         self._func = func
         self._theta_range = theta_range
         self._r_range = r_range
+        self.material.vertex_color_usage = Material.VertexColorUsage.BaseColor
 
         Surf._set_colors(self, color, back_color, color_map, back_color_map)
         self.start_building()

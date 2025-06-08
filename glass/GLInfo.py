@@ -3,6 +3,8 @@ import OpenGL.GL.ARB.gpu_shader_int64 as gsi64
 import numpy as np
 import glm
 import ctypes
+from .CustomLiteral import CustomLiteral
+from typing import Union, TypeAlias
 
 dtype_uint8 = np.array([], dtype=np.uint8).dtype
 dtype_int8 = np.array([], dtype=np.int8).dtype
@@ -18,7 +20,8 @@ dtype_float64 = np.array([], dtype=np.float64).dtype
 
 
 class GLInfo:
-    primary_types = [
+
+    primary_types = {
         int,
         float,
         bool,
@@ -54,7 +57,7 @@ class GLInfo:
         ctypes.c_uint64,
         ctypes.c_float,
         ctypes.c_double,
-    ]
+    }
 
     dtype_map = {
         GL.GL_BYTE: np.int8,
@@ -373,7 +376,7 @@ class GLInfo:
         if name.startswith("GL_") and isinstance(value, constant.IntConstant)
     }
 
-    internal_formats = [
+    internal_formats: TypeAlias = CustomLiteral[
         GL.GL_RED,
         GL.GL_R8,
         GL.GL_R8_SNORM,
@@ -471,7 +474,7 @@ class GLInfo:
         None,
     ]
 
-    color_internal_formats = [
+    color_internal_formats: TypeAlias = CustomLiteral[
         GL.GL_RED,
         GL.GL_R8,
         GL.GL_R8_SNORM,
@@ -555,7 +558,7 @@ class GLInfo:
         GL.GL_COMPRESSED_SRGB_ALPHA_BPTC_UNORM,
     ]
 
-    image_internal_formats = [
+    image_internal_formats: TypeAlias = CustomLiteral[
         GL.GL_RGBA32F,
         GL.GL_RGBA16F,
         GL.GL_RG32F,
@@ -578,7 +581,7 @@ class GLInfo:
         None,
     ]
 
-    isampler_internal_formats = [
+    isampler_internal_formats: TypeAlias = CustomLiteral[
         GL.GL_RGBA32I,
         GL.GL_RGBA16I,
         GL.GL_RGBA8I,
@@ -594,7 +597,7 @@ class GLInfo:
         None,
     ]
 
-    iimage_internal_formats = [
+    iimage_internal_formats: TypeAlias = CustomLiteral[
         GL.GL_RGBA32I,
         GL.GL_RGBA16I,
         GL.GL_RGBA8I,
@@ -607,7 +610,7 @@ class GLInfo:
         None,
     ]
 
-    usampler_internal_formats = [
+    usampler_internal_formats: TypeAlias = CustomLiteral[
         GL.GL_RGBA32UI,
         GL.GL_RGBA16UI,
         GL.GL_RGB10_A2UI,
@@ -624,7 +627,7 @@ class GLInfo:
         None,
     ]
 
-    uimage_internal_formats = [
+    uimage_internal_formats: TypeAlias = CustomLiteral[
         GL.GL_RGBA32UI,
         GL.GL_RGBA16UI,
         GL.GL_RGB10_A2UI,
@@ -638,7 +641,7 @@ class GLInfo:
         None,
     ]
 
-    depth_internal_formats = [
+    depth_internal_formats: TypeAlias = CustomLiteral[
         GL.GL_DEPTH_COMPONENT,
         GL.GL_DEPTH_COMPONENT16,
         GL.GL_DEPTH_COMPONENT24,
@@ -646,7 +649,7 @@ class GLInfo:
         GL.GL_DEPTH_COMPONENT32F,
     ]
 
-    stencil_internal_formats = [
+    stencil_internal_formats: TypeAlias = CustomLiteral[
         GL.GL_STENCIL_INDEX,
         GL.GL_STENCIL_INDEX1,
         GL.GL_STENCIL_INDEX4,
@@ -654,28 +657,15 @@ class GLInfo:
         GL.GL_STENCIL_INDEX16,
     ]
 
-    depth_stencil_internal_formats = [
+    depth_stencil_internal_formats: TypeAlias = CustomLiteral[
         GL.GL_DEPTH_STENCIL,
         GL.GL_DEPTH24_STENCIL8,
         GL.GL_DEPTH32F_STENCIL8,
     ]
 
-    fog_modes = [GL.GL_LINEAR, GL.GL_EXP, GL.GL_EXP2]
+    fog_modes: TypeAlias = CustomLiteral[GL.GL_LINEAR, GL.GL_EXP, GL.GL_EXP2]
 
-    dtypes = [
-        GL.GL_BYTE,
-        GL.GL_UNSIGNED_BYTE,
-        GL.GL_SHORT,
-        GL.GL_UNSIGNED_SHORT,
-        GL.GL_INT,
-        GL.GL_UNSIGNED_INT,
-        GL.GL_HALF_FLOAT,
-        GL.GL_FLOAT,
-        GL.GL_DOUBLE,
-        None,
-    ]
-
-    operations = [
+    operations: TypeAlias = CustomLiteral[
         GL.GL_KEEP,  # 保持模板缓冲区的当前值
         GL.GL_ZERO,  # 将模板缓冲区的值设置为 0
         GL.GL_REPLACE,  # 将模板缓冲区的值替换为参考值（通过 glStencilFunc() 设置）
@@ -716,9 +706,9 @@ class GLInfo:
         ],
     }
 
-    polygon_modes = [GL.GL_FILL, GL.GL_LINE, GL.GL_POINT]
+    polygon_modes: TypeAlias = CustomLiteral[GL.GL_FILL, GL.GL_LINE, GL.GL_POINT]
 
-    depth_funcs = [
+    depth_funcs: TypeAlias = CustomLiteral[
         GL.GL_ALWAYS,
         GL.GL_NEVER,
         GL.GL_LESS,
@@ -729,9 +719,9 @@ class GLInfo:
         GL.GL_GEQUAL,
     ]
 
-    depth_func_strs = ["always", "never", "<", "==", "<=", ">", "!=", ">="]
+    depth_func_strs: TypeAlias = CustomLiteral["always", "never", "<", "==", "<=", ">", "!=", ">="]
 
-    stencil_funcs = [
+    stencil_funcs: TypeAlias = CustomLiteral[
         GL.GL_ALWAYS,
         GL.GL_NEVER,
         GL.GL_LESS,
@@ -742,9 +732,9 @@ class GLInfo:
         GL.GL_GEQUAL,
     ]
 
-    stencil_func_strs = ["always", "never", "<", "==", "<=", ">", "!=", ">="]
+    stencil_func_strs: TypeAlias = CustomLiteral["always", "never", "<", "==", "<=", ">", "!=", ">="]
 
-    shader_types = [
+    shader_types: TypeAlias = CustomLiteral[
         GL.GL_VERTEX_SHADER,
         GL.GL_FRAGMENT_SHADER,
         GL.GL_GEOMETRY_SHADER,
@@ -753,7 +743,7 @@ class GLInfo:
         None,
     ]
 
-    wrap_types = [
+    wrap_types: TypeAlias = CustomLiteral[
         GL.GL_REPEAT,
         GL.GL_MIRRORED_REPEAT,
         GL.GL_CLAMP_TO_EDGE,
@@ -761,32 +751,33 @@ class GLInfo:
         GL.GL_MIRROR_CLAMP_TO_EDGE,
     ]
 
-    filter_types = [GL.GL_NEAREST, GL.GL_LINEAR, None]
+    filter_types: TypeAlias = CustomLiteral[GL.GL_NEAREST, GL.GL_LINEAR, None]
 
-    none_color_attachment_types = [
+    none_color_attachment_types: TypeAlias = CustomLiteral[
         GL.GL_DEPTH_ATTACHMENT,
         GL.GL_STENCIL_ATTACHMENT,
         GL.GL_DEPTH_STENCIL_ATTACHMENT,
     ]
 
-    draw_types = [
+    draw_types: TypeAlias = CustomLiteral[
         GL.GL_STATIC_DRAW,
         GL.GL_DYNAMIC_DRAW,
         GL.GL_STREAM_DRAW,
         GL.GL_DYNAMIC_COPY,
     ]
 
-    triangle_types = [GL.GL_TRIANGLES, GL.GL_TRIANGLE_STRIP, GL.GL_TRIANGLE_FAN]
+    triangle_types: TypeAlias = CustomLiteral[GL.GL_TRIANGLES, GL.GL_TRIANGLE_STRIP, GL.GL_TRIANGLE_FAN]
 
-    line_types = [GL.GL_LINES, GL.GL_LINE_LOOP, GL.GL_LINE_STRIP]
+    line_types: TypeAlias = CustomLiteral[GL.GL_LINES, GL.GL_LINE_LOOP, GL.GL_LINE_STRIP]
 
-    primitive_types = [*triangle_types, *line_types, GL.GL_POINTS, GL.GL_PATCHES]
+    primitive_types: TypeAlias = CustomLiteral[GL.GL_TRIANGLES, GL.GL_TRIANGLE_STRIP, GL.GL_TRIANGLE_FAN, GL.GL_LINES, GL.GL_LINE_LOOP, GL.GL_LINE_STRIP, GL.GL_POINTS, GL.GL_PATCHES]
 
-    cull_face_types = [GL.GL_BACK, GL.GL_FRONT, GL.GL_FRONT_AND_BACK, None]
+    cull_face_types: TypeAlias = CustomLiteral[GL.GL_BACK, GL.GL_FRONT, GL.GL_FRONT_AND_BACK, None]
 
-    blend_equations = [GL.GL_FUNC_ADD, GL.GL_FUNC_SUBTRACT, GL.GL_FUNC_REVERSE_SUBTRACT]
-
-    blend_funcs = [
+    blend_equations: TypeAlias = CustomLiteral[GL.GL_FUNC_ADD, GL.GL_FUNC_SUBTRACT, GL.GL_FUNC_REVERSE_SUBTRACT]
+    blend_equation_strs: TypeAlias = CustomLiteral["+", "-"]
+    
+    blend_funcs: TypeAlias = CustomLiteral[
         GL.GL_ZERO,
         GL.GL_ONE,
         GL.GL_SRC_COLOR,
@@ -803,7 +794,7 @@ class GLInfo:
         GL.GL_ONE_MINUS_CONSTANT_ALPHA,
     ]
 
-    attr_types = (
+    attr_types: TypeAlias = Union[
         int,
         float,
         glm.vec2,
@@ -836,9 +827,9 @@ class GLInfo:
         glm.dmat4x2,
         glm.dmat4x3,
         glm.dmat4x4,
-    )
+    ]
 
-    int_types = [
+    int_types: TypeAlias = CustomLiteral[
         GL.GL_BYTE,
         GL.GL_UNSIGNED_BYTE,
         GL.GL_SHORT,

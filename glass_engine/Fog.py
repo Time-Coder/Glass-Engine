@@ -2,10 +2,11 @@ import glm
 import math
 from enum import Enum
 from OpenGL import GL
+from typing import Union
 
 from glass.utils import checktype
 from glass.MetaInstancesRecorder import MetaInstancesRecorder
-from glass import GLInfo
+from glass import GLInfo, CustomLiteral
 from .GlassEngineConfig import GlassEngineConfig
 
 
@@ -28,7 +29,7 @@ class Fog(metaclass=MetaInstancesRecorder):
         pass
 
     def apply(
-        self, color: (glm.vec3, glm.vec4), camera_pos: glm.vec3, frag_pos: glm.vec3
+        self, color: Union[glm.vec3, glm.vec4], camera_pos: glm.vec3, frag_pos: glm.vec3
     ):
         if self.extinction_density < 1e-6 and self.inscattering_density < 1e-6:
             return color
@@ -58,7 +59,7 @@ class Fog(metaclass=MetaInstancesRecorder):
 
     @mode.setter
     @checktype
-    def mode(self, mode: [Mode.Linear, Mode.Exp, Mode.Exp2, *GLInfo.fog_modes]):
+    def mode(self, mode: Union[CustomLiteral[Mode.Linear, Mode.Exp, Mode.Exp2], GLInfo.fog_modes]):
         if mode in GLInfo.fog_modes:
             mode = Fog.Mode(mode)
 

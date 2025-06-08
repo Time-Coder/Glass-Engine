@@ -6,20 +6,21 @@ from glass import Vertex
 import math
 import glm
 import numpy as np
+from typing import Union
 
 
 class Rotator(Mesh):
     def __init__(
         self,
-        section: (list, tuple, np.ndarray),
+        section: Union[list, tuple, np.ndarray],
         axis_start: glm.vec3 = glm.vec3(0),
         axis_stop: glm.vec3 = glm.vec3(0, 0, 1),
         n_divide: int = 100,
         start_angle: float = 0,
         span_angle: float = 360,
         n_lat_divide: int = 100,
-        color: (glm.vec3, glm.vec4) = glm.vec4(1),
-        back_color: (glm.vec3, glm.vec4) = None,
+        color: Union[glm.vec3, glm.vec4] = glm.vec4(1),
+        back_color: Union[glm.vec3, glm.vec4] = None,
         normalize_tex_coord: bool = False,
         name: str = "",
         block=True,
@@ -137,7 +138,7 @@ class Rotator(Mesh):
 
     @section.setter
     @Mesh.param_setter
-    def section(self, section: (list, tuple, np.ndarray)):
+    def section(self, section: Union[list, tuple, np.ndarray]):
         self.__section = section
 
     @property

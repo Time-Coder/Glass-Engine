@@ -5,6 +5,7 @@ from .usampler2D import usampler2D
 
 from OpenGL import GL
 import numpy as np
+from typing import Union
 
 
 class uimage2D(usampler2D):
@@ -17,7 +18,7 @@ class uimage2D(usampler2D):
     @checktype
     def __init__(
         self,
-        image: (str, np.ndarray) = None,
+        image: Union[str, np.ndarray] = None,
         width: int = None,
         height: int = None,
         internal_format: GLInfo.uimage_internal_formats = None,

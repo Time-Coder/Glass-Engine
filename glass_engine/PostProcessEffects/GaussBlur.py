@@ -16,6 +16,7 @@ from glass.helper import get_channels
 from OpenGL import GL
 import glm
 import os
+from typing import Union, Tuple
 
 
 class GaussBlur(PostProcessEffect):
@@ -38,8 +39,8 @@ class GaussBlur(PostProcessEffect):
     @checktype
     def __init__(
         self,
-        kernel_shape: (int, tuple) = 32,
-        sigma: (float, tuple) = 0,
+        kernel_shape: Union[int, Tuple[int]] = 32,
+        sigma: Union[float, Tuple[float]] = 0,
         internal_format: GLInfo.internal_formats = GL.GL_RGBA32F,
     ):
         PostProcessEffect.__init__(self)
@@ -112,8 +113,8 @@ class GaussBlur(PostProcessEffect):
         return self._vertical_cube_fbo
 
     def apply(
-        self, screen_image: (sampler2D, sampler2DArray, samplerCube)
-    ) -> (sampler2D, sampler2DArray, samplerCube):
+        self, screen_image: Union[sampler2D, sampler2DArray, samplerCube]
+    ) -> Union[sampler2D, sampler2DArray, samplerCube]:
         if self.__sigma.x == 0:
             self.__sigma.x = 0.3 * ((self.__kernel_shape.x - 1) * 0.5 - 1) + 0.8
         if self.__sigma.y == 0:
@@ -229,7 +230,7 @@ class GaussBlur(PostProcessEffect):
 
     @kernel_shape.setter
     @checktype
-    def kernel_shape(self, shape: (int, tuple)):
+    def kernel_shape(self, shape: Union[int, tuple]):
         if isinstance(shape, tuple):
             self.__kernel_shape.x, self.__kernel_shape.y = shape
         else:
@@ -259,7 +260,7 @@ class GaussBlur(PostProcessEffect):
 
     @sigma.setter
     @checktype
-    def sigma(self, sigma: (float, tuple)):
+    def sigma(self, sigma: Union[float, tuple]):
         if isinstance(sigma, tuple):
             self.__sigma.x, self.__sigma.y = sigma
         else:

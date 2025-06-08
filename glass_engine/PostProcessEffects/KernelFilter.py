@@ -14,6 +14,7 @@ from glass import (
 import numpy as np
 from OpenGL import GL
 import os
+from typing import Union
 
 
 class KernelFilter(PostProcessEffect):
@@ -100,8 +101,8 @@ class KernelFilter(PostProcessEffect):
         return self._cube_fbo
 
     def __call__(
-        self, screen_image: (sampler2D, sampler2DArray, samplerCube)
-    ) -> (sampler2D, sampler2DArray, samplerCube):
+        self, screen_image: Union[sampler2D, sampler2DArray, samplerCube]
+    ) -> Union[sampler2D, sampler2DArray, samplerCube]:
         if isinstance(screen_image, sampler2D):
             self.fbo.resize(screen_image.width, screen_image.height)
             with GLConfig.LocalConfig(

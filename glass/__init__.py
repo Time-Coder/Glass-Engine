@@ -42,3 +42,4 @@ from .download import download
 from .ImageLoader import ImageLoader
 
 # from .TextLoader import TextLoader, Font
+from .CustomLiteral import CustomLiteral

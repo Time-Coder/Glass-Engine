@@ -5,6 +5,7 @@ from glass.utils import checktype
 
 import glm
 from OpenGL import GL
+from typing import Union
 
 
 class Point(Mesh):
@@ -12,7 +13,7 @@ class Point(Mesh):
     def __init__(
         self,
         position: glm.vec3 = glm.vec3(0),
-        color: (glm.vec3, glm.vec4) = glm.vec4(1),
+        color: Union[glm.vec3, glm.vec4] = glm.vec4(1),
         point_size: int = 5,
         name: str = "",
     ):

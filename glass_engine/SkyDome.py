@@ -10,6 +10,7 @@ import math
 import numpy as np
 from OpenGL import GL
 import os
+from typing import Union
 
 
 class SkyDome(Mesh):
@@ -106,7 +107,7 @@ class SkyDome(Mesh):
 
     @skydome_map.setter
     @checktype
-    def skydome_map(self, skydome_map: (sampler2D, np.ndarray, str)):
+    def skydome_map(self, skydome_map: Union[sampler2D, np.ndarray, str]):
         if isinstance(skydome_map, (np.ndarray, str)):
             if self.__skydome_map is None:
                 self.__skydome_map = sampler2D()

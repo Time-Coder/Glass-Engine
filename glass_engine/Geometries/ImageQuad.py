@@ -7,6 +7,7 @@ from glass.ImageLoader import ImageLoader
 import glm
 import numpy as np
 from enum import Enum
+from typing import Union
 
 
 class ImageQuad(Mesh):
@@ -25,7 +26,7 @@ class ImageQuad(Mesh):
     @checktype
     def __init__(
         self,
-        image: (str, np.ndarray),
+        image: Union[str, np.ndarray],
         align_center: AlignCenter = AlignCenter.BottomCenter,
         width: float = None,
         height: float = None,

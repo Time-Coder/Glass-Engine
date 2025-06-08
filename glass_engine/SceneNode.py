@@ -2,6 +2,7 @@ import glm
 import math
 import uuid
 import numpy as np
+from typing import Union
 
 from glass.DictList import DictList
 from glass.WeakSet import WeakSet
@@ -196,7 +197,7 @@ class SceneNode(metaclass=MetaInstancesRecorder):
     def __hash__(self):
         return id(self)
 
-    def __getitem__(self, name: (str, int)):
+    def __getitem__(self, name: Union[str, int]):
         if isinstance(name, str):
             if name not in self._children:
                 self.add_child(SceneNode(name))
@@ -266,7 +267,7 @@ class SceneNode(metaclass=MetaInstancesRecorder):
         return self._scale
 
     @scale.setter
-    def scale(self, scale: (glm.vec3, float)):
+    def scale(self, scale: Union[glm.vec3, float]):
         if isinstance(scale, (int, float)):
             self._scale.x = scale
             self._scale.y = scale

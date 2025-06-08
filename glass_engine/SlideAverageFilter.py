@@ -1,3 +1,6 @@
+from typing import Union
+
+
 class SlideAverageFilter:
 
     def __init__(self, window_width: int = 10) -> None:
@@ -5,7 +8,7 @@ class SlideAverageFilter:
         self._window_width = window_width
         self._data_list = []
 
-    def __call__(self, new_value: (float, int)) -> float:
+    def __call__(self, new_value: Union[float, int]) -> float:
         if len(self._data_list) >= self._window_width:
             old_value = self._data_list.pop(0)
             self._current_sum -= old_value

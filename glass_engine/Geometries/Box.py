@@ -4,6 +4,7 @@ from glass.utils import checktype
 from glass import Vertex
 
 import glm
+from typing import Union
 
 
 class Box(Mesh):
@@ -14,8 +15,8 @@ class Box(Mesh):
         Lx: float = 1,
         Ly: float = None,
         Lz: float = None,
-        color: (glm.vec3, glm.vec4) = glm.vec4(1),
-        back_color: (glm.vec3, glm.vec4) = None,
+        color: Union[glm.vec3, glm.vec4] = glm.vec4(1),
+        back_color: Union[glm.vec3, glm.vec4] = None,
         normalize_tex_coord=True,
         name: str = "",
     ):

@@ -6,6 +6,7 @@ from glass.utils import checktype
 import glm
 import math
 from OpenGL import GL
+from typing import Union
 
 
 class Circle(Mesh):
@@ -17,7 +18,7 @@ class Circle(Mesh):
         n_points: int = 100,
         start_angle: float = 0,
         span_angle: float = 360,
-        color: (glm.vec3, glm.vec4) = glm.vec4(1),
+        color: Union[glm.vec3, glm.vec4] = glm.vec4(1),
         line_width: int = 2,
         name: str = "",
     ):

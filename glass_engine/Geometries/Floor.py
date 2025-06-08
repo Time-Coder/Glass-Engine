@@ -5,6 +5,7 @@ from glass import Vertex
 
 import glm
 import numpy as np
+from typing import Union
 
 
 class Floor(Mesh):
@@ -14,8 +15,8 @@ class Floor(Mesh):
     @checktype
     def __init__(
         self,
-        color: (glm.vec3, glm.vec4) = glm.vec4(1),
-        back_color: (glm.vec3, glm.vec4) = None,
+        color: Union[glm.vec3, glm.vec4] = glm.vec4(1),
+        back_color: Union[glm.vec3, glm.vec4] = None,
         length: float = 1000,
         repeat_per_meter: float = 1,
         name: str = "",

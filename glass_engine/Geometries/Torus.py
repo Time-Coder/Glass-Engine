@@ -4,6 +4,7 @@ from glass import Vertex
 
 import glm
 import math
+from typing import Union
 
 
 class Torus(Mesh):
@@ -11,8 +12,8 @@ class Torus(Mesh):
         self,
         radius_tube: float = 0.5,
         radius_torus: float = 1,
-        color: (glm.vec3, glm.vec4) = glm.vec4(1),
-        back_color: (glm.vec3, glm.vec4) = None,
+        color: Union[glm.vec3, glm.vec4] = glm.vec4(1),
+        back_color: Union[glm.vec3, glm.vec4] = None,
         vertical: bool = False,
         normalize_tex_coord=False,
         n_lon_divide: int = 100,

@@ -1,11 +1,13 @@
 from ..Mesh import Mesh
 from ..ColorMap import ColorMap
+from ..Material import Material
 from .Surf import Surf
 
 from glass.utils import checktype
 
 import numpy as np
 import glm
+from typing import Union
 
 
 class FSurf(Mesh):
@@ -20,8 +22,8 @@ class FSurf(Mesh):
         dep_var="Z",
         color_map: ColorMap = None,
         back_color_map: ColorMap = None,
-        color: (glm.vec3, glm.vec4) = None,
-        back_color: (glm.vec3, glm.vec4) = None,
+        color: Union[glm.vec3, glm.vec4] = None,
+        back_color: Union[glm.vec3, glm.vec4] = None,
         surf_type: Mesh.SurfType = Mesh.SurfType.Smooth,
         name: str = "",
     ):
@@ -31,6 +33,7 @@ class FSurf(Mesh):
         self._y_range = y_range
         self._z_range = z_range
         self._dep_var = dep_var.upper()
+        self.material.vertex_color_usage = Material.VertexColorUsage.BaseColor
 
         Surf._set_colors(self, color, back_color, color_map, back_color_map)
         self.start_building()

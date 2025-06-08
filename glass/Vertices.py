@@ -2,6 +2,7 @@ import copy
 from OpenGL import GL
 import glm
 import numpy as np
+from typing import Union
 
 from .GLConfig import GLConfig
 from .VAO import VAO
@@ -296,7 +297,7 @@ class Vertices:
         vertex._add_array_index(self, len_self)
         self._index_vertex_map[len_self] = vertex
 
-    def __contains__(self, value: (Vertex, str)):
+    def __contains__(self, value: Union[Vertex, str]):
         if isinstance(value, str):
             return value in self._attr_list_map
         else:
@@ -308,7 +309,7 @@ class Vertices:
     def const_items(self):
         return SameTypeList.const_iterator(self)
 
-    def const_get(self, index: (int, slice)):
+    def const_get(self, index: Union[int, slice]):
         result = None
         if isinstance(index, slice):
             result = []
@@ -322,7 +323,7 @@ class Vertices:
 
         return result
 
-    def __getitem__(self, index: (int, slice, str)):
+    def __getitem__(self, index: Union[int, slice, str]):
         if isinstance(index, str):
             return self._attr_list_map[index]
 
@@ -347,7 +348,7 @@ class Vertices:
 
         return result
 
-    def __setitem__(self, index: (int, slice), value: Vertex):
+    def __setitem__(self, index: Union[int, slice], value: Vertex):
         for key in set.union(set(value.keys()), set(self._attr_list_map.keys())):
             if key not in self._attr_list_map:
                 self._attr_list_map[key] = AttrList(dtype=type(value[key]))
@@ -391,7 +392,7 @@ class Vertices:
             del self._index_vertex_map[sub_index]
             self._index_vertex_map[sub_index - 1] = vertex
 
-    def __delitem__(self, index: (str, int, slice)):
+    def __delitem__(self, index: Union[str, int, slice]):
         if isinstance(index, str):
             del self._attr_list_map[index]
             return

@@ -6,11 +6,12 @@ from glass.utils import extname
 import numpy as np
 import os
 from OpenGL import GL
+from typing import Union
 
 
 class LUTEffect(ShaderEffect):
 
-    def __init__(self, LUT: (str, np.ndarray, sampler2D), contribute: float = 1.0):
+    def __init__(self, LUT: Union[str, np.ndarray, sampler2D], contribute: float = 1.0):
         self_folder = os.path.dirname(os.path.abspath(__file__))
         ShaderEffect.__init__(
             self, self_folder + "/../glsl/PostProcessEffects/lut.glsl"
@@ -33,7 +34,7 @@ class LUTEffect(ShaderEffect):
         return self.__LUT
 
     @LUT.setter
-    def LUT(self, LUT: (str, np.ndarray, sampler2D)):
+    def LUT(self, LUT: Union[str, np.ndarray, sampler2D]):
         if isinstance(LUT, str) and extname(LUT) == "cube":
             LUT = lut.cube_to_LUT(LUT)
 

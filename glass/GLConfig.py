@@ -4,6 +4,7 @@ from OpenGL.platform import PLATFORM
 import glm
 import numpy as np
 import inspect
+from typing import Union, Tuple
 
 from .GLInfo import GLInfo
 from .helper import glGetEnum, glGetEnumi
@@ -13,7 +14,7 @@ class StencilFunc:
 
     def __init__(
         self,
-        func: [*GLInfo.stencil_funcs, *GLInfo.stencil_func_strs] = None,
+        func: Union[GLInfo.stencil_funcs, GLInfo.stencil_func_strs] = None,
         ref: int = None,
         mask: int = None,
     ):
@@ -300,8 +301,8 @@ class _MetaGLConfig(type):
         return GLInfo.depth_func_map[depth_func]
 
     @depth_func.setter
-    def depth_func(cls, depth_func):
-        if depth_func not in GLInfo.depth_funcs:
+    def depth_func(cls, depth_func: Union[GLInfo.depth_funcs, GLInfo.depth_func_strs]):
+        if isinstance(depth_func, str):
             depth_func = GLInfo.depth_func_map[depth_func]
 
         GL.glDepthFunc(depth_func)
@@ -323,7 +324,7 @@ class _MetaGLConfig(type):
         return GLInfo.blend_equation_map[blend_equation]
 
     @blend_equation.setter
-    def blend_equation(cls, blend_equation: list(GLInfo.blend_equation_map.keys())):
+    def blend_equation(cls, blend_equation: Union[GLInfo.blend_equations, GLInfo.blend_equation_strs]):
         if isinstance(blend_equation, str):
             blend_equation = GLInfo.blend_equation_map[blend_equation]
 
@@ -423,7 +424,7 @@ class _MetaGLConfig(type):
         return glm.vec4(color_array[0], color_array[1], color_array[2], color_array[3])
 
     @clear_color.setter
-    def clear_color(cls, color: (tuple, glm.vec3, glm.vec4, float)):
+    def clear_color(cls, color: Union[Tuple[float], glm.vec3, glm.vec4, float]):
         if isinstance(color, float):
             GL.glClearColor(color, color, color, color)
         elif len(color) == 3:
@@ -745,7 +746,7 @@ class GLConfig(metaclass=_MetaGLConfig):
         GL.glClear(bits)
 
     @staticmethod
-    def clear_buffer(target, color: (tuple, float, glm.vec3, glm.vec4)):
+    def clear_buffer(target, color: Union[Tuple[float], float, glm.vec3, glm.vec4]):
         np_color = np.array([0] * 4)
         if isinstance(color, float):
             np_color[0] = color

@@ -15,6 +15,7 @@ import types
 from enum import Enum
 import copy
 import numpy as np
+from typing import Union
 
 
 class Mesh(SceneNode):
@@ -28,8 +29,8 @@ class Mesh(SceneNode):
     def __init__(
         self,
         primitive_type: GLInfo.primitive_types = GL.GL_TRIANGLES,
-        color: (glm.vec3, glm.vec4) = glm.vec4(1, 1, 1, 1),
-        back_color: (glm.vec3, glm.vec4) = None,
+        color: Union[glm.vec3, glm.vec4] = glm.vec4(1, 1, 1, 1),
+        back_color: Union[glm.vec3, glm.vec4] = None,
         name: str = "",
         block: bool = True,
         auto_build: bool = True,
@@ -256,7 +257,7 @@ class Mesh(SceneNode):
         return self._color
 
     @color.setter
-    def color(self, color: (glm.vec3, glm.vec4)):
+    def color(self, color: Union[glm.vec3, glm.vec4]):
         if isinstance(color, glm.vec3):
             color = glm.vec4(color, 1)
 
@@ -354,7 +355,7 @@ class Mesh(SceneNode):
         return self._back_color
 
     @back_color.setter
-    def back_color(self, color: (glm.vec3, glm.vec4)):
+    def back_color(self, color: Union[glm.vec3, glm.vec4]):
         if isinstance(color, glm.vec3):
             color = glm.vec4(color, 1)
 
@@ -577,7 +578,7 @@ class Mesh(SceneNode):
 
     @vertices.setter
     @checktype
-    def vertices(self, vertices: (Vertices, list)):
+    def vertices(self, vertices: Union[Vertices, list]):
         if self._vertices is vertices:
             return
 
@@ -592,7 +593,7 @@ class Mesh(SceneNode):
 
     @indices.setter
     @checktype
-    def indices(self, indices: (Indices, list)):
+    def indices(self, indices: Union[Indices, list]):
         if self._indices is indices:
             return
 

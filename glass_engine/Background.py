@@ -4,6 +4,7 @@ from .SkyDome import SkyDome
 from glass import samplerCube, sampler2D
 
 import glm
+from typing import Union
 
 
 class Background:
@@ -50,7 +51,7 @@ class Background:
         return self._color
 
     @color.setter
-    def color(self, color: (glm.vec4, glm.vec3)) -> None:
+    def color(self, color: Union[glm.vec4, glm.vec3]) -> None:
         if isinstance(color, glm.vec3):
             color = glm.vec4(color, 1)
 

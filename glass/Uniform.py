@@ -3,8 +3,10 @@ import OpenGL.GL.ARB.gpu_shader_int64 as gsi64
 import glm
 import copy
 from enum import Enum
+from typing import Union
 
 from .utils import checktype, get_subscript_chain, uint64_to_uvec2, di
+from .CustomLiteral import CustomLiteral
 from .sampler2D import sampler2D
 from .image2D import image2D
 from .FBOAttachment import FBOAttachment
@@ -137,7 +139,7 @@ class Uniform:
 
             self._bound_var = None
 
-        def __contains__(self, name: (str, int)):
+        def __contains__(self, name: Union[str, int]):
             full_name = self._name
             if isinstance(name, str):
                 full_name += "." + name
@@ -146,7 +148,7 @@ class Uniform:
 
             return full_name in self.uniform.program._uniform_map
 
-        def __getitem__(self, name: (str, int)):
+        def __getitem__(self, name: Union[str, int]):
             full_name = self._name
             if isinstance(name, str):
                 full_name += "." + name
@@ -172,7 +174,7 @@ class Uniform:
             return uniform._uniform_var_map[full_name]
 
         @checktype
-        def __setitem__(self, name: (str, int), value):
+        def __setitem__(self, name: Union[str, int], value):
             full_name = self._name
             if isinstance(name, str):
                 full_name += "." + name
@@ -367,7 +369,7 @@ class Uniform:
 
         GL.glUniform4i(location, value.x, value.y, value.z, value.w)
 
-    def _set_uvec2(self, location: int, value: (glm.uvec2, int)):
+    def _set_uvec2(self, location: int, value: Union[glm.uvec2, int]):
         if isinstance(value, glm.uvec2):
             GL.glUniform2ui(location, value.x, value.y)
         else:
@@ -573,8 +575,8 @@ class Uniform:
     def _set_sampler2D(
         self,
         location: int,
-        value: (sampler2D, str),
-        sampler_type: [sampler2D, isampler2D, usampler2D] = sampler2D,
+        value: Union[sampler2D, str],
+        sampler_type: CustomLiteral[sampler2D, isampler2D, usampler2D] = sampler2D,
     ):
         if isinstance(value, str):
             value = sampler_type.load(value)
@@ -587,11 +589,11 @@ class Uniform:
         program._sampler_map[self._current_atom_name]["sampler"] = value
 
     @checktype
-    def _set_isampler2D(self, location: int, value: (isampler2D, str)):
+    def _set_isampler2D(self, location: int, value: Union[isampler2D, str]):
         self._set_sampler2D(location, value, isampler2D)
 
     @checktype
-    def _set_usampler2D(self, location: int, value: (usampler2D, str)):
+    def _set_usampler2D(self, location: int, value: Union[usampler2D, str]):
         self._set_sampler2D(location, value, usampler2D)
 
     @checktype
@@ -623,8 +625,8 @@ class Uniform:
     def __set_general_image2D(
         self,
         location: int,
-        value: (image2D, iimage2D, uimage2D, str),
-        image_type: [image2D, iimage2D, uimage2D] = image2D,
+        value: Union[image2D, iimage2D, uimage2D, str],
+        image_type: CustomLiteral[image2D, iimage2D, uimage2D] = image2D,
     ):
         if isinstance(value, str):
             value = image_type.load(
@@ -658,15 +660,15 @@ class Uniform:
         program._sampler_map[self._current_atom_name]["sampler"] = value
 
     @checktype
-    def _set_iimage2D(self, location: int, value: (iimage2D, str)):
+    def _set_iimage2D(self, location: int, value: Union[iimage2D, str]):
         self.__set_general_image2D(location, value, image_type=iimage2D)
 
     @checktype
-    def _set_uimage2D(self, location: int, value: (uimage2D, str)):
+    def _set_uimage2D(self, location: int, value: Union[uimage2D, str]):
         self.__set_general_image2D(location, value, image_type=uimage2D)
 
     @checktype
-    def _set_image2D(self, location: int, value: (image2D, str)):
+    def _set_image2D(self, location: int, value: Union[image2D, str]):
         self.__set_general_image2D(location, value, image_type=image2D)
 
     @checktype

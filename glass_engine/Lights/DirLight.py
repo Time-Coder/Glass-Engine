@@ -3,6 +3,7 @@ from glass.DictList import DictList
 from glass import Block
 
 import glm
+from typing import Union
 
 
 class DirLight(Light):
@@ -24,15 +25,15 @@ class DirLights(Block.HostClass):
         Block.HostClass.__init__(self)
         self.dir_lights = DictList()
 
-    def __getitem__(self, key: (str, int)):
+    def __getitem__(self, key: Union[str, int]):
         return self.dir_lights[key]
 
     @Block.HostClass.not_const
-    def __setitem__(self, key: (str, int), dir_light: FlatDirLight):
+    def __setitem__(self, key: Union[str, int], dir_light: FlatDirLight):
         self.dir_lights[key] = dir_light
 
     @Block.HostClass.not_const
-    def __delitem__(self, key: (str, int)):
+    def __delitem__(self, key: Union[str, int]):
         del self.dir_lights[key]
 
     def __contains__(self, path_str: str):

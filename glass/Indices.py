@@ -1,6 +1,7 @@
 import glm
 from OpenGL import GL
 import numpy as np
+from typing import Union
 
 from .GLInfo import GLInfo
 from .EBO import EBO
@@ -14,7 +15,7 @@ class Indices(SameTypeList):
     @checktype
     def __init__(
         self,
-        _list: (list, np.ndarray) = None,
+        _list: Union[list, np.ndarray] = None,
         draw_type: GLInfo.draw_types = GL.GL_STATIC_DRAW,
         dtype=None,
     ):

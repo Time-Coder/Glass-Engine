@@ -3,6 +3,7 @@ import numpy as np
 import struct
 from OpenGL import GL
 from enum import Enum
+from typing import Union
 
 from .GLConfig import GLConfig
 from .GLInfo import GLInfo
@@ -374,7 +375,7 @@ class SSUBO(BO):
 
         self.bufferSubData(offset, sizeof(value), np.array(value, dtype=np.int32))
 
-    def _set_uvec2(self, offset: int, value: (glm.uvec2, int)):
+    def _set_uvec2(self, offset: int, value: Union[glm.uvec2, int]):
         if isinstance(value, glm.uvec2):
             self.bufferSubData(offset, sizeof(value), np.array(value, dtype=np.uint32))
         else:

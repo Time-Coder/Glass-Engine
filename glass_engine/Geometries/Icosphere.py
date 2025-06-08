@@ -8,6 +8,7 @@ from glass import Vertex
 import glm
 import math
 import copy
+from typing import Union
 
 
 class Icosphere(Mesh):
@@ -19,8 +20,8 @@ class Icosphere(Mesh):
     def __init__(
         self,
         radius: float = 1,
-        color: (glm.vec3, glm.vec4) = glm.vec4(1),
-        back_color: (glm.vec3, glm.vec4) = None,
+        color: Union[glm.vec3, glm.vec4] = glm.vec4(1),
+        back_color: Union[glm.vec3, glm.vec4] = None,
         n_levels: int = 4,
         name: str = "",
         block=True,

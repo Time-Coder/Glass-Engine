@@ -5,6 +5,7 @@ from glass import Vertex
 
 import glm
 import math
+from typing import Union
 
 
 class Pyramid(Mesh):
@@ -17,13 +18,13 @@ class Pyramid(Mesh):
         total_sides: int = None,
         radius: float = 1,
         height: float = 1,
-        color: (glm.vec3, glm.vec4) = glm.vec4(1),
-        back_color: (glm.vec3, glm.vec4) = None,
+        color: Union[glm.vec3, glm.vec4] = glm.vec4(1),
+        back_color: Union[glm.vec3, glm.vec4] = None,
         normalize_tex_coord: bool = False,
         name: str = "",
         block: bool = True,
     ):
-        Mesh.__init__(self, name=name, block=block)
+        Mesh.__init__(self, color=color, back_color=back_color, name=name, block=block)
         self.__radius = radius
         self.__height = height
         self.__start_side = start_side

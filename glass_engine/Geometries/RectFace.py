@@ -4,6 +4,7 @@ from glass.utils import checktype
 from glass import Vertex
 
 import glm
+from typing import Union
 
 
 class RectFace(Mesh):
@@ -13,8 +14,8 @@ class RectFace(Mesh):
         self,
         width: float = 2,
         height: float = 1,
-        color: (glm.vec3, glm.vec4) = glm.vec4(1),
-        back_color: (glm.vec3, glm.vec4) = None,
+        color: Union[glm.vec3, glm.vec4] = glm.vec4(1),
+        back_color: Union[glm.vec3, glm.vec4] = None,
         vertical: bool = False,
         normalize_tex_coord: bool = False,
         name: str = "",
