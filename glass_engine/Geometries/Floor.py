@@ -14,7 +14,7 @@ class Floor(Mesh):
     @checktype
     def __init__(
         self,
-        color: (glm.vec3, glm.vec4) = glm.vec4(0.396, 0.74151, 0.69102, 1),
+        color: (glm.vec3, glm.vec4) = glm.vec4(1),
         back_color: (glm.vec3, glm.vec4) = None,
         length: float = 1000,
         repeat_per_meter: float = 1,

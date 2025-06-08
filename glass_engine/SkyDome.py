@@ -130,8 +130,8 @@ class SkyDome(Mesh):
             self_folder = os.path.dirname(os.path.abspath(__file__))
             program = ShaderProgram()
             GlassEngineConfig.define_for_program(program)
-            program.compile(self_folder + "/glsl/Pipelines/skydome/skydome.vs")
-            program.compile(self_folder + "/glsl/Pipelines/skydome/skydome.fs")
+            program.compile(self_folder + "/glsl/Pipelines/skydome/skydome.vert")
+            program.compile(self_folder + "/glsl/Pipelines/skydome/skydome.frag")
             self.__program = program
 
         return self.__program

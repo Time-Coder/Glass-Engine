@@ -20,8 +20,8 @@ from glass import *
 
 # 创建 shader 程序
 program = ShaderProgram()
-program.compile("path/to/vertex_shader.vs")
-program.compile("path/to/fragment_shader.fs")
+program.compile("path/to/vertex_shader.vert")
+program.compile("path/to/fragment_shader.frag")
 # 上述两个 compile 并不会每次运行都编译，仅首次以及 Shader 文件修改后才编译
 # shader 文件中可含有 #include 语法
 

@@ -73,7 +73,7 @@ class KernelFilter(PostProcessEffect):
             self._program.compile(Frame.draw_frame_vs)
             self._program.compile(
                 os.path.dirname(os.path.abspath(__file__))
-                + "/../glsl/PostProcessEffects/kernel_filter.fs"
+                + "/../glsl/PostProcessEffects/kernel_filter.frag"
             )
             self._program["Kernel"].bind(self._kernel)
         return self._program

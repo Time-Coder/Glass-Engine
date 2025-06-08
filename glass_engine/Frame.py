@@ -22,14 +22,14 @@ class Frame:
     @property
     def draw_frame_vs(self) -> str:
         self_folder = os.path.dirname(os.path.abspath(__file__))
-        return os.path.abspath(self_folder + "/../glass/glsl/draw_frame.vs").replace(
+        return os.path.abspath(self_folder + "/../glass/glsl/draw_frame.vert").replace(
             "\\", "/"
         )
 
     @property
     def draw_frame_fs(self) -> str:
         self_folder = os.path.dirname(os.path.abspath(__file__))
-        return os.path.abspath(self_folder + "/glsl/Pipelines/draw_frame.fs").replace(
+        return os.path.abspath(self_folder + "/glsl/Pipelines/draw_frame.frag").replace(
             "\\", "/"
         )
 

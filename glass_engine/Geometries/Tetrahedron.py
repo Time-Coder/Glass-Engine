@@ -61,7 +61,7 @@ class Tetrahedron(Mesh):
     def __init__(
         self,
         radius=1,
-        color: (glm.vec3, glm.vec4) = glm.vec4(0.396, 0.74151, 0.69102, 1),
+        color: (glm.vec3, glm.vec4) = glm.vec4(1),
         back_color: (glm.vec3, glm.vec4) = None,
         normalize_tex_coord=False,
         name: str = "",

@@ -38,7 +38,7 @@ class BloomEffect(PostProcessEffect):
             self._down_program.compile(Frame.draw_frame_vs)
             self._down_program.compile(
                 os.path.dirname(os.path.abspath(__file__))
-                + "/../glsl/PostProcessEffects/bloom_downsampling.fs"
+                + "/../glsl/PostProcessEffects/bloom_downsampling.frag"
             )
 
         return self._down_program
@@ -50,7 +50,7 @@ class BloomEffect(PostProcessEffect):
             self._up_program.compile(Frame.draw_frame_vs)
             self._up_program.compile(
                 os.path.dirname(os.path.abspath(__file__))
-                + "/../glsl/PostProcessEffects/bloom_upsampling.fs"
+                + "/../glsl/PostProcessEffects/bloom_upsampling.frag"
             )
 
         return self._up_program
@@ -70,7 +70,7 @@ class BloomEffect(PostProcessEffect):
             self._mix_program.compile(Frame.draw_frame_vs)
             self._mix_program.compile(
                 os.path.dirname(os.path.abspath(__file__))
-                + "/../glsl/PostProcessEffects/bloom_mix.fs"
+                + "/../glsl/PostProcessEffects/bloom_mix.frag"
             )
 
         return self._mix_program

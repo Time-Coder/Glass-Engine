@@ -11,7 +11,7 @@ class Torus(Mesh):
         self,
         radius_tube: float = 0.5,
         radius_torus: float = 1,
-        color: (glm.vec3, glm.vec4) = glm.vec4(0.396, 0.74151, 0.69102, 1),
+        color: (glm.vec3, glm.vec4) = glm.vec4(1),
         back_color: (glm.vec3, glm.vec4) = None,
         vertical: bool = False,
         normalize_tex_coord=False,

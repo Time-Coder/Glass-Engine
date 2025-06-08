@@ -26,7 +26,7 @@ class FXAAEffect(PostProcessEffect):
             FXAAEffect.__program.compile(Frame.draw_frame_vs)
             FXAAEffect.__program.compile(
                 os.path.dirname(os.path.abspath(__file__))
-                + "/../glsl/PostProcessEffects/FXAA.fs"
+                + "/../glsl/PostProcessEffects/FXAA.frag"
             )
         return FXAAEffect.__program
 

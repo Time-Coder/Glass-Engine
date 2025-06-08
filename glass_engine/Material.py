@@ -19,51 +19,6 @@ def param_setter(func):
         self = args[0]
         value = args[1]
 
-        should_test_transparent = False
-        if (
-            func.__name__
-            in [
-                "ambient_map",
-                "specular_map",
-                "emission_map",
-                "reflection_map",
-                "refractive_index",
-                "base_color_map",
-            ]
-            and not self._opacity_user_set
-            and self._opacity == 0
-        ):
-            self._opacity = 1
-            should_test_transparent = True
-
-            for mesh in self._parent_meshes:
-                colors = None
-                if mesh.material is self:
-                    if "color" in mesh.vertices:
-                        colors = mesh.vertices["color"].ndarray
-                elif mesh._back_material is self:
-                    if "back_color" in mesh.vertices:
-                        colors = mesh.vertices["back_color"].ndarray
-
-                if colors is not None and (
-                    len(colors.shape) != 2 or colors.shape[1] != 4
-                ):
-                    colors = colors.reshape(-1, 4)
-
-                if (
-                    colors is not None
-                    and colors.size > 0
-                    and np.all(colors == colors[0, :])
-                ):
-                    used_color = glm.vec3(colors[0, 0], colors[0, 1], colors[0, 2])
-
-                    old_should_callback = self._should_callback
-                    self._should_callback = False
-                    self.base_color = used_color
-                    self._should_callback = old_should_callback
-
-                break
-
         equal = False
         try:
             lvalue = getattr(self, func.__name__)
@@ -83,9 +38,6 @@ def param_setter(func):
         self._update_all_env_maps()
         if func.__name__ == "generate_shadows":
             self._update_all_depth_maps()
-
-        if should_test_transparent:
-            self._test_transparent()
 
         return return_value
 
@@ -157,7 +109,7 @@ class Material(metaclass=MetaInstancesRecorder):
             0, 0, 0, self._color_change_callback
         )
         self._emission_strength: float = 1
-        self._opacity: float = 0
+        self._opacity: float = 1
         self._height_scale: float = 0.05
         self._metallic: float = 0.5
         self._roughness: float = 0
@@ -193,10 +145,9 @@ class Material(metaclass=MetaInstancesRecorder):
         self._arm_map: sampler2D = None
 
         self.arm_use_a: bool = True
-        self._opacity_user_set: bool = False
         self._reflection_user_set: bool = False
-        self._has_transparent: bool = True
-        self._has_opaque: bool = False
+        self._has_transparent: bool = False
+        self._has_opaque: bool = True
         self._parent_meshes: WeakSet = WeakSet()
         self._should_callback: bool = True
         self._prop_name: str = ""
@@ -233,35 +184,7 @@ class Material(metaclass=MetaInstancesRecorder):
             if glm.length(self._ambient) < 1e-6:
                 self.ambient = glm.vec3(1e-6)
 
-        if not self._opacity_user_set and self._opacity == 0:
-            self._opacity = 1
-            for mesh in self._parent_meshes:
-                colors = None
-                if mesh.material is self:
-                    if "color" in mesh.vertices:
-                        colors = mesh.vertices["color"].ndarray
-                elif mesh._back_material is self:
-                    if "back_color" in mesh.vertices:
-                        colors = mesh.vertices["back_color"].ndarray
-
-                if colors is not None and (
-                    len(colors.shape) != 2 or colors.shape[1] != 4
-                ):
-                    colors = colors.reshape(-1, 4)
-
-                if (
-                    colors is not None
-                    and colors.size > 0
-                    and np.all(colors == colors[0, :])
-                ):
-                    used_color = glm.vec3(colors[0, 0], colors[0, 1], colors[0, 2])
-                    if self._prop_name != "base_color":
-                        self.base_color = used_color
-
-                break
-
         self._update_all_env_maps()
-        self._test_transparent()
 
         self._should_callback = old_should_callback
 
@@ -502,8 +425,6 @@ class Material(metaclass=MetaInstancesRecorder):
     @param_setter
     def opacity(self, opacity: float):
         self._opacity = opacity
-        self._opacity_user_set = True
-
         self._test_transparent()
 
     @property
@@ -731,7 +652,6 @@ class Material(metaclass=MetaInstancesRecorder):
             else:
                 self._opacity_map.image = opacity_map
 
-        self._opacity_user_set = True
         self._test_transparent()
 
     @property
@@ -975,29 +895,5 @@ class Material(metaclass=MetaInstancesRecorder):
                     self._has_transparent = np.any(image < 1 - 1e-6)
                     self._has_opaque = np.any(image >= 1 - 1e-6)
         else:
-            self._has_transparent = self.opacity < 1 - 1e-6
-            self._has_opaque = self.opacity >= 1 - 1e-6
-
-        if self.diffuse_map is not None:
-            image = self.diffuse_map.image
-            if image is None:
-                self._has_transparent = True
-                self._has_opaque = True
-            elif len(image.shape) > 2 and image.shape[2] > 3:
-                if "int" in str(image.dtype):
-                    self._has_transparent = (
-                        np.any(image[:, :, 3] < 255) or self._has_transparent
-                    )
-                    self._has_opaque = (
-                        np.any(image[:, :, 3] >= 255) and self._has_opaque
-                    )
-                else:
-                    self._has_transparent = (
-                        np.any(image[:, :, 3] < 1 - 1e-6) or self._has_transparent
-                    )
-                    self._has_opaque = (
-                        np.any(image[:, :, 3] >= 1 - 1e-6) and self._has_opaque
-                    )
-
-        for mesh in self._parent_meshes:
-            mesh._test_transparent()
+            self._has_transparent = (self.opacity < 1 - 1e-6)
+            self._has_opaque = (self.opacity >= 1 - 1e-6)

@@ -58,7 +58,7 @@ class DOFEffect(PostProcessEffect):
             self._program.compile(Frame.draw_frame_vs)
             self._program.compile(
                 os.path.dirname(os.path.abspath(__file__))
-                + "/../glsl/PostProcessEffects/dof.fs"
+                + "/../glsl/PostProcessEffects/dof.frag"
             )
             self._program["CurrentFocus"].bind(self.current_focus)
         return self._program

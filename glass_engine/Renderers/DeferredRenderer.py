@@ -39,7 +39,7 @@ class DeferredRenderer(CommonRenderer):
         GlassEngineConfig.define_for_program(program)
         program.compile(Frame.draw_frame_vs)
         program.compile(
-            self_folder + "/../glsl/Pipelines/deferred_rendering/deferred_rendering.fs"
+            self_folder + "/../glsl/Pipelines/deferred_rendering/deferred_rendering.frag"
         )
 
         program["DirLights"].bind(self.scene.dir_lights)
@@ -59,13 +59,13 @@ class DeferredRenderer(CommonRenderer):
         program = ShaderProgram()
         GlassEngineConfig.define_for_program(program)
         program.compile(
-            self_folder + "/../glsl/Pipelines/forward_rendering/forward_rendering.vs"
+            self_folder + "/../glsl/Pipelines/forward_rendering/forward_rendering.vert"
         )
         program.compile(
-            self_folder + "/../glsl/Pipelines/forward_rendering/forward_rendering.gs"
+            self_folder + "/../glsl/Pipelines/forward_rendering/forward_rendering.geom"
         )
         program.compile(
-            self_folder + "/../glsl/Pipelines/deferred_rendering/draw_to_gbuffer.fs"
+            self_folder + "/../glsl/Pipelines/deferred_rendering/draw_to_gbuffer.frag"
         )
 
         program["DirLights"].bind(self.scene.dir_lights)
@@ -84,11 +84,11 @@ class DeferredRenderer(CommonRenderer):
         program = ShaderProgram()
         GlassEngineConfig.define_for_program(program)
         program.compile(
-            self_folder + "/../glsl/Pipelines/forward_rendering/forward_draw_lines.vs"
+            self_folder + "/../glsl/Pipelines/forward_rendering/forward_draw_lines.vert"
         )
         program.compile(
             self_folder
-            + "/../glsl/Pipelines/deferred_rendering/draw_points_to_gbuffer.fs"
+            + "/../glsl/Pipelines/deferred_rendering/draw_points_to_gbuffer.frag"
         )
 
         program["DirLights"].bind(self.scene.dir_lights)
@@ -107,11 +107,11 @@ class DeferredRenderer(CommonRenderer):
         program = ShaderProgram()
         GlassEngineConfig.define_for_program(program)
         program.compile(
-            self_folder + "/../glsl/Pipelines/forward_rendering/forward_draw_points.vs"
+            self_folder + "/../glsl/Pipelines/forward_rendering/forward_draw_points.vert"
         )
         program.compile(
             self_folder
-            + "/../glsl/Pipelines/deferred_rendering/draw_points_to_gbuffer.fs"
+            + "/../glsl/Pipelines/deferred_rendering/draw_points_to_gbuffer.frag"
         )
 
         program["DirLights"].bind(self.scene.dir_lights)

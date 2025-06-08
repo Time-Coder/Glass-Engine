@@ -4,7 +4,7 @@ from .algorithm import generate_auto_TBN, generate_smooth_TBN
 from .callback_vec import callback_vec4
 
 from glass import ShaderProgram, Instances, Vertices, Indices, GLInfo, RenderHints
-from glass.utils import checktype, md5s
+from glass.utils import checktype
 from glass.AttrList import AttrList
 
 import glm
@@ -19,10 +19,6 @@ import numpy as np
 
 class Mesh(SceneNode):
 
-    __geometry_map = {}
-    __builder_map = {}
-    __mesh_vars = None
-
     class SurfType(Enum):
         Auto = 0
         Smooth = 1
@@ -32,11 +28,10 @@ class Mesh(SceneNode):
     def __init__(
         self,
         primitive_type: GLInfo.primitive_types = GL.GL_TRIANGLES,
-        color: (glm.vec3, glm.vec4) = glm.vec4(0.396, 0.74151, 0.69102, 1),
+        color: (glm.vec3, glm.vec4) = glm.vec4(1, 1, 1, 1),
         back_color: (glm.vec3, glm.vec4) = None,
         name: str = "",
         block: bool = True,
-        shared: bool = True,
         auto_build: bool = True,
         surf_type: SurfType = None,
     ):
@@ -45,6 +40,13 @@ class Mesh(SceneNode):
         draw_type = GL.GL_DYNAMIC_DRAW if not block else GL.GL_STATIC_DRAW
         self._vertices = Vertices(draw_type=draw_type)
         self._indices = Indices(draw_type=draw_type)
+        self._x_min = 0
+        self._x_max = 0
+        self._y_min = 0
+        self._y_max = 0
+        self._z_min = 0
+        self._z_max = 0
+        self._builder = None
 
         if isinstance(color, glm.vec3):
             color = glm.vec4(color, 1)
@@ -73,7 +75,6 @@ class Mesh(SceneNode):
         self._should_callback = True
 
         self._material = Material()
-        self._material._opacity = 0
         self._material._parent_meshes.add(self)
         self._back_material = self._material
         self._back_material_user_set = False
@@ -82,14 +83,10 @@ class Mesh(SceneNode):
         self._propagation_props["explode_distance"] = 0
 
         self.__block = block
-        self.__shared = shared
         self.__auto_build = auto_build
         self.__surf_type = surf_type
         self.__primitive = primitive_type
-        self.__geometry_info = None
         self.__self_calculated_normal = False
-        self.__has_transparent = False
-        self.__has_opaque = True
 
     def __hash__(self):
         return id(self)
@@ -113,14 +110,6 @@ class Mesh(SceneNode):
             self.__class__.__name__ == "Icosphere"
             and self.scale.x == self.scale.y == self.scale.z
         )
-
-    @property
-    def has_transparent(self):
-        return self.__has_transparent
-
-    @property
-    def has_opaque(self):
-        return self.__has_opaque
 
     @property
     def is_filled(self):
@@ -160,7 +149,6 @@ class Mesh(SceneNode):
 
     def __set_color(self):
         if not self._should_add_color:
-            self._test_transparent()
             return
 
         color_array = np.dot(
@@ -198,8 +186,6 @@ class Mesh(SceneNode):
         else:
             self.vertices._attr_list_map["back_color"].ndarray = back_color_array
 
-        self._test_transparent()
-
     def _color_change_callback(self):
         if not self._should_callback:
             return
@@ -227,8 +213,6 @@ class Mesh(SceneNode):
                 )
             else:
                 self.vertices._attr_list_map["back_color"].ndarray = color_array
-
-        self._test_transparent()
 
         self._should_callback = True
 
@@ -295,8 +279,6 @@ class Mesh(SceneNode):
             else:
                 self.vertices._attr_list_map["back_color"].ndarray = color_array
 
-        self._test_transparent()
-
     def _back_color_change_callback(self):
         if not self._should_callback:
             return
@@ -325,8 +307,6 @@ class Mesh(SceneNode):
             )
         else:
             self.vertices._attr_list_map["back_color"].ndarray = color_array
-
-        self._test_transparent()
 
         self._should_callback = True
 
@@ -390,8 +370,6 @@ class Mesh(SceneNode):
         else:
             self.vertices._attr_list_map["back_color"].ndarray = color_array
 
-        self._test_transparent()
-
     @property
     def back_material(self):
         if self._back_material is self._material and not self._back_material_user_set:
@@ -412,8 +390,6 @@ class Mesh(SceneNode):
             self._back_material = material
 
         self._back_material_user_set = True
-
-        self._test_transparent()
 
     @property
     def render_hints(self):
@@ -468,15 +444,6 @@ class Mesh(SceneNode):
         self.__block = flag
 
     @property
-    def shared(self):
-        return self.__shared
-
-    @shared.setter
-    @checktype
-    def shared(self, flag: bool):
-        self.__shared = flag
-
-    @property
     def auto_build(self):
         return self.__auto_build
 
@@ -499,251 +466,107 @@ class Mesh(SceneNode):
 
     @property
     def x_min(self):
-        if self.__geometry_info is None:
-            return 0
-
-        return self.__geometry_info["x_min"]
+        return self._x_min
 
     @x_min.setter
     @checktype
     def x_min(self, x_min: float):
-        if self.__geometry_info is None:
-            return
-
-        self.__geometry_info["x_min"] = x_min
+        self._x_min = x_min
 
     @property
     def x_max(self):
-        if self.__geometry_info is None:
-            return 0
-
-        return self.__geometry_info["x_max"]
+        return self._x_max
 
     @x_max.setter
     @checktype
     def x_max(self, x_max: float):
-        if self.__geometry_info is None:
-            return
-
-        self.__geometry_info["x_max"] = x_max
+        self._x_max = x_max
 
     @property
     def y_min(self):
-        if self.__geometry_info is None:
-            return 0
-
-        return self.__geometry_info["y_min"]
+        return self._y_min
 
     @y_min.setter
     @checktype
     def y_min(self, y_min: float):
-        if self.__geometry_info is None:
-            return
-
-        self.__geometry_info["y_min"] = y_min
+        self._y_min = y_min
 
     @property
     def y_max(self):
-        if self.__geometry_info is None:
-            return 0
-
-        return self.__geometry_info["y_max"]
+        return self._y_max
 
     @y_max.setter
     @checktype
     def y_max(self, y_max: float):
-        if self.__geometry_info is None:
-            return
-
-        self.__geometry_info["y_max"] = y_max
+        self._y_max = y_max
 
     @property
     def z_min(self):
-        if self.__geometry_info is None:
-            return 0
-
-        return self.__geometry_info["z_min"]
+        return self._z_min
 
     @z_min.setter
     @checktype
     def z_min(self, z_min: float):
-        if self.__geometry_info is None:
-            return
-
-        self.__geometry_info["z_min"] = z_min
+        self._z_min = z_min
 
     @property
     def z_max(self):
-        if self.__geometry_info is None:
-            return 0
-
-        return self.__geometry_info["z_max"]
+        return self._z_max
 
     @z_max.setter
     @checktype
     def z_max(self, z_max: float):
-        if self.__geometry_info is None:
-            return
-
-        self.__geometry_info["z_max"] = z_max
-
-    def __copy_vertices(self, shared_vertices):
-        if self._vertices is shared_vertices:
-            return
-
-        for key, value in shared_vertices._attr_list_map.items():
-            if key not in ["color", "back_color"]:
-                self._vertices._attr_list_map[key] = value
-
-        self.__set_color()
+        self._z_max = z_max
 
     def start_building(self):
         if self.__class__.__name__ == "Mesh":
             return
 
-        if self.__shared:
-            instance_key = self.__instance_key
-            if instance_key in Mesh.__geometry_map:
-                geometry_info = Mesh.__geometry_map[instance_key]
-                self.__copy_vertices(geometry_info["vertices"])
-                self._indices = geometry_info["indices"]
-                self.__geometry_info = geometry_info
-                if not self.__block:
-                    return
-
-                builder = self.__geometry_info["builder"]
-                if builder is None:
-                    return
-
-                try:
-                    while True:
-                        next(builder)
-                except StopIteration:
-                    del Mesh.__builder_map[builder]
-                    self.__post_build(self.__geometry_info)
-                    self.__geometry_info["builder"] = None
-
-                return
-            else:
-                draw_type = (
-                    GL.GL_DYNAMIC_DRAW if not self.__block else GL.GL_STATIC_DRAW
-                )
-                geometry_info = {
-                    "vertices": Vertices(draw_type=draw_type),
-                    "indices": Indices(draw_type=draw_type),
-                    "builder": None,
-                    "x_min": 0,
-                    "x_max": 0,
-                    "y_min": 0,
-                    "y_max": 0,
-                    "z_min": 0,
-                    "z_max": 0,
-                }
-                Mesh.__geometry_map[instance_key] = geometry_info
-                self._vertices = geometry_info["vertices"]
-                self._indices = geometry_info["indices"]
-                self.__geometry_info = geometry_info
-        elif self.__geometry_info is None:
-            draw_type = GL.GL_DYNAMIC_DRAW if not self.__block else GL.GL_STATIC_DRAW
-            self.__geometry_info = {
-                "vertices": Vertices(draw_type=draw_type),
-                "indices": Indices(draw_type=draw_type),
-                "builder": None,
-                "x_min": 0,
-                "x_max": 0,
-                "y_min": 0,
-                "y_max": 0,
-                "z_min": 0,
-                "z_max": 0,
-            }
-            self._vertices = self.__geometry_info["vertices"]
-            self._indices = self.__geometry_info["indices"]
-
         if self.__block:
             if inspect.isgeneratorfunction(self.build):
-                builder = self.build()
+                self._builder = self.build()
                 try:
                     while True:
-                        next(builder)
+                        next(self._builder)
                 except StopIteration:
-                    self.__post_build(self.__geometry_info)
-                    self.__geometry_info["builder"] = None
+                    self.__post_build()
+                    self._builder = None
 
             else:  # not generator
                 self.build()
-                self.__post_build(self.__geometry_info)
-                self.__geometry_info["builder"] = None
+                self.__post_build()
+                self._builder = None
 
         else:  # not block
             if inspect.isgeneratorfunction(self.build):
-                builder = self.build()
-                self.__geometry_info["builder"] = builder
-                Mesh.__builder_map[builder] = self.__geometry_info
+                self._builder = self.build()
                 try:
-                    next(builder)
+                    next(self._builder)
                 except StopIteration:
-                    del Mesh.__builder_map[builder]
-                    self.__post_build(self.__geometry_info)
-                    self.__geometry_info["builder"] = None
+                    self.__post_build()
+                    self._builder = None
             else:
                 self.build()
-                self.__post_build(self.__geometry_info)
-                self.__geometry_info["builder"] = None
-
-    @property
-    def __instance_key(self):
-        if Mesh.__mesh_vars is None:
-            temp_mesh = Mesh()
-            Mesh.__mesh_vars = set(temp_mesh.__dict__.keys())
-
-        self_vars = set(self.__dict__.keys())
-        new_vars = sorted(list(self_vars - Mesh.__mesh_vars))
-        len_new_vars = len(new_vars)
-        instance_key = self.__class__.__name__ + "("
-        for i in range(len_new_vars):
-            key = new_vars[i]
-            value = self.__dict__[key]
-            str_value = None
-            if isinstance(value, (int, float, bool, complex, str, bytes, bytearray)):
-                str_value = str(value)
-            else:
-                try:
-                    str_value = f"md5({md5s(value)})"
-                except:
-                    str_value = f"id({id(value)})"
-
-            instance_key += key + "=" + str_value
-            if i < len_new_vars - 1:
-                instance_key += ", "
-        instance_key += ")"
-        return instance_key
+                self.__post_build()
+                self._builder = None
 
     @property
     def is_building(self):
-        return (
-            self.__geometry_info is not None
-            and self.__geometry_info["builder"] is not None
-        )
+        return (self._builder is not None)
 
     @property
     def is_generating(self):
-        return (
-            self.__geometry_info is not None
-            and self.__geometry_info["builder"] is not None
-            and isinstance(self.__geometry_info["builder"], types.GeneratorType)
-        )
+        return isinstance(self._builder, types.GeneratorType)
 
     def generate(self):
-        builder = self.__geometry_info["builder"]
-        if builder is None:
+        if self._builder is None:
             return
 
         try:
-            next(builder)
+            next(self._builder)
         except StopIteration:
-            del Mesh.__builder_map[builder]
-            self.__post_build(self.__geometry_info)
-            self.__geometry_info["builder"] = None
+            self.__post_build()
+            self._builder = None
 
     def __eq__(self, other):
         return id(self) == id(other)
@@ -763,8 +586,6 @@ class Mesh(SceneNode):
         else:
             self._vertices = Vertices(vertices)
 
-        self.__geometry_info["vertices"] = self._vertices
-
     @property
     def indices(self):
         return self._indices
@@ -779,8 +600,6 @@ class Mesh(SceneNode):
             self._indices = indices
         else:
             self._indices = Indices(indices)
-
-        self.__geometry_info["indices"] = self._indices
 
     @property
     def material(self):
@@ -806,32 +625,29 @@ class Mesh(SceneNode):
         if not self._back_color_user_set:
             self._back_material = material
 
-        self._test_transparent()
-
-    def __post_build(self, geometry_info):
+    def __post_build(self):
         self.__set_color()
-        self.__calculate_bounding_box(geometry_info)
-        self.__generate_TBN(geometry_info)
+        self.__calculate_bounding_box()
+        self.__generate_TBN()
 
-    def __calculate_bounding_box(self, geometry_info):
-        vertices = geometry_info["vertices"]
-        if not vertices or "position" not in vertices:
+    def __calculate_bounding_box(self):
+        if not self._vertices or "position" not in self._vertices:
             return
 
         if (
-            geometry_info["x_min"] == 0
-            and geometry_info["x_max"] == 0
-            and geometry_info["y_min"] == 0
-            and geometry_info["y_max"] == 0
-            and geometry_info["z_min"] == 0
-            and geometry_info["z_max"] == 0
+            self._x_min == 0
+            and self._x_max == 0
+            and self._y_min == 0
+            and self._y_max == 0
+            and self._z_min == 0
+            and self._z_max == 0
         ):
-            geometry_info["x_min"] = vertices["position"].ndarray[:, 0].min()
-            geometry_info["x_max"] = vertices["position"].ndarray[:, 0].max()
-            geometry_info["y_min"] = vertices["position"].ndarray[:, 1].min()
-            geometry_info["y_max"] = vertices["position"].ndarray[:, 1].max()
-            geometry_info["z_min"] = vertices["position"].ndarray[:, 2].min()
-            geometry_info["z_max"] = vertices["position"].ndarray[:, 2].max()
+            self._x_min = self._vertices["position"].ndarray[:, 0].min()
+            self._x_max = self._vertices["position"].ndarray[:, 0].max()
+            self._y_min = self._vertices["position"].ndarray[:, 1].min()
+            self._y_max = self._vertices["position"].ndarray[:, 1].max()
+            self._z_min = self._vertices["position"].ndarray[:, 2].min()
+            self._z_max = self._vertices["position"].ndarray[:, 2].max()
 
     @property
     def primitive_type(self):
@@ -884,37 +700,34 @@ class Mesh(SceneNode):
             vertex1.normal = normal
             vertex2.normal = normal
 
-    def __generate_TBN(self, geometry_info):
-        vertices = geometry_info["vertices"]
-        indices = geometry_info["indices"]
-
+    def __generate_TBN(self):
         if (
-            not vertices
-            or not indices
-            or "position" not in vertices
-            or "color" not in vertices
+            not self._vertices
+            or not self._indices
+            or "position" not in self._vertices
+            or "color" not in self._vertices
         ):
             return
 
-        if "tangent" not in vertices._attr_list_map:
-            vertices._attr_list_map["tangent"] = AttrList(
-                np.zeros_like(vertices["position"].ndarray), dtype=glm.vec3
+        if "tangent" not in self._vertices._attr_list_map:
+            self._vertices._attr_list_map["tangent"] = AttrList(
+                np.zeros_like(self._vertices["position"].ndarray), dtype=glm.vec3
             )
 
-        if "bitangent" not in vertices._attr_list_map:
-            vertices._attr_list_map["bitangent"] = AttrList(
-                np.zeros_like(vertices["position"].ndarray), dtype=glm.vec3
+        if "bitangent" not in self._vertices._attr_list_map:
+            self._vertices._attr_list_map["bitangent"] = AttrList(
+                np.zeros_like(self._vertices["position"].ndarray), dtype=glm.vec3
             )
 
-        if "normal" not in vertices._attr_list_map:
-            vertices._attr_list_map["normal"] = AttrList(
-                np.zeros_like(vertices["position"].ndarray), dtype=glm.vec3
+        if "normal" not in self._vertices._attr_list_map:
+            self._vertices._attr_list_map["normal"] = AttrList(
+                np.zeros_like(self._vertices["position"].ndarray), dtype=glm.vec3
             )
 
         if self.__surf_type == Mesh.SurfType.Auto:
-            generate_auto_TBN(vertices, indices, not self.self_calculated_normal)
+            generate_auto_TBN(self._vertices, self._indices, not self.self_calculated_normal)
         elif self.__surf_type == Mesh.SurfType.Smooth:
-            generate_smooth_TBN(vertices, indices, not self.self_calculated_normal)
+            generate_smooth_TBN(self._vertices, self._indices, not self.self_calculated_normal)
 
     def draw(self, program: ShaderProgram, instances: Instances = None):
         if not self.visible:
@@ -948,21 +761,3 @@ class Mesh(SceneNode):
                 program.draw_patches(
                     vertices=self._vertices, indices=self._indices, instances=instances
                 )
-
-    def _test_transparent(self):
-        if not self._vertices:
-            return
-
-        front_has_transparent = (
-            self._vertices.front_has_transparent and self._material.has_transparent
-        )
-        back_has_transparent = (
-            self._vertices.back_has_transparent and self._back_material.has_transparent
-        )
-        self.__has_transparent = front_has_transparent or back_has_transparent
-
-        front_has_opaque = self._vertices.front_has_opaque or self._material.has_opaque
-        back_has_opaque = (
-            self._vertices.back_has_opaque or self._back_material.has_opaque
-        )
-        self.__has_opaque = front_has_opaque or back_has_opaque

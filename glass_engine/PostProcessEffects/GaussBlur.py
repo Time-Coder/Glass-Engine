@@ -31,7 +31,7 @@ class GaussBlur(PostProcessEffect):
             GaussBlur.__program.compile(Frame.draw_frame_vs)
             GaussBlur.__program.compile(
                 os.path.dirname(os.path.abspath(__file__))
-                + "/../glsl/PostProcessEffects/gauss_blur.fs"
+                + "/../glsl/PostProcessEffects/gauss_blur.frag"
             )
         return GaussBlur.__program
 

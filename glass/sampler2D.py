@@ -551,8 +551,8 @@ class sampler2D(FBOAttachment):
         self_folder = os.path.dirname(os.path.abspath(__file__))
         program = ShaderProgram()
         program.define("FILE_NAME", f'"{shader_path}"')
-        program.compile(self_folder + "/glsl/draw_frame.vs")
-        program.compile(self_folder + "/glsl/shadertoy_template.fs")
+        program.compile(self_folder + "/glsl/draw_frame.vert")
+        program.compile(self_folder + "/glsl/shadertoy_template.frag")
 
         fbo = FBO(self.width, self.height)
         fbo.attach(0, attachment=self)

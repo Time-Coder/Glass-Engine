@@ -18,7 +18,7 @@ class PyramidTrustum(Mesh):
         bottom_radius: float = 2,
         top_radius: float = 1,
         height: float = 1,
-        color: (glm.vec3, glm.vec4) = glm.vec4(0.396, 0.74151, 0.69102, 1),
+        color: (glm.vec3, glm.vec4) = glm.vec4(1),
         back_color: (glm.vec3, glm.vec4) = None,
         normalize_tex_coord: bool = False,
         name: str = "",

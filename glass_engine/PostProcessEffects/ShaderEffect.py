@@ -75,7 +75,7 @@ class ShaderEffect(PostProcessEffect):
                 )
                 template_filename = (
                     self_folder
-                    + "/../glsl/PostProcessEffects/shader_effect_template.fs"
+                    + "/../glsl/PostProcessEffects/shader_effect_template.frag"
                 )
                 self._program = ShaderProgram()
                 self._program.define("FILE_NAME", f'"{self._shader_path}"')

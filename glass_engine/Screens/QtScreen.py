@@ -248,6 +248,9 @@ Try to change default graphics card of python.exe to high performance one.
 
     self._is_gl_init = True
 
+    if GlassConfig.print:
+        print("rendering with:", GLConfig.renderer)
+
 
 def makeCurrent(self) -> None:
     self.__class__.__base__.makeCurrent(self)
