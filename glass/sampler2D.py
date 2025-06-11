@@ -588,7 +588,10 @@ class sampler2D(FBOAttachment):
             fps = 1 / time_delta
         t = current_time - self._shadertoy_start_time
 
-        with GLConfig.LocalConfig(cull_face=None, polygon_mode=GL.GL_FILL):
+        with GLConfig.LocalEnv():
+            GLConfig.cull_face = None
+            GLConfig.polygon_mode = GL.GL_FILL
+            
             with self.fbo:
                 resolution = glm.vec3(self._width, self._height, 1)
                 self._shadertoy_program["iResolution"] = resolution

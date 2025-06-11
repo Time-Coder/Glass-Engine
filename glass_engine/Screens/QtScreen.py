@@ -274,7 +274,9 @@ def _draw_to_before_PPE(self, should_update_scene: bool) -> bool:
             clear_color = scene.fog.apply(
                 scene.background.color, glm.vec3(0), glm.vec3(0, self.camera.far, 0)
             )
-            with GLConfig.LocalConfig(clear_color=clear_color):
+            with GLConfig.LocalEnv():
+                GLConfig.clear_color = clear_color
+
                 with self.render_hints:
                     should_update_scene = self.renderer.render() or should_update_scene
 
@@ -330,7 +332,9 @@ def paintGL(self) -> None:
         clear_color = scene.fog.apply(
             scene.background.color, glm.vec3(0), glm.vec3(0, self.camera.far, 0)
         )
-        with GLConfig.LocalConfig(clear_color=clear_color):
+        with GLConfig.LocalEnv():
+            GLConfig.clear_color = clear_color
+
             with self.render_hints:
                 should_update_scene = self.renderer.render() or should_update_scene
 
@@ -696,7 +700,9 @@ def capture(self, save_path: str = None, viewport: tuple = None) -> np.ndarray:
         clear_color = scene.fog.apply(
             scene.background.color, glm.vec3(0), glm.vec3(0, self.camera.far, 0)
         )
-        with GLConfig.LocalConfig(clear_color=clear_color):
+        with GLConfig.LocalEnv():
+            GLConfig.clear_color = clear_color
+
             with self.render_hints:
                 self.renderer.render()
 

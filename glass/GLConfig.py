@@ -5,9 +5,31 @@ import glm
 import numpy as np
 import inspect
 from typing import Union, Tuple
+import functools
 
 from .GLInfo import GLInfo
 from .helper import glGetEnum, glGetEnumi
+
+
+def record_old_value(func):
+
+    @functools.wraps(func)
+    def wrapper(*args, **kwargs):
+        if _MetaGLConfig._active_local_env is not None:
+            cls = args[0]
+            new_value = args[1]
+            old_value = getattr(cls, func.__name__)
+
+            if old_value == new_value:
+                return
+
+            _MetaGLConfig._active_local_env.add_old_value(
+                func.__name__, old_value
+            )
+
+        return func(*args, **kwargs)
+
+    return wrapper
 
 
 class StencilFunc:
@@ -35,6 +57,14 @@ class StencilFunc:
         self.__mask = mask
 
     def apply(self):
+        if _MetaGLConfig._active_local_env is not None:
+            _MetaGLConfig._active_local_env.add_recover_func(
+                GL.glStencilFunc,
+                glGetEnum(GL.GL_STENCIL_FUNC),
+                glGetEnum(GL.GL_STENCIL_REF),
+                glGetEnum(GL.GL_STENCIL_VALUE_MASK)
+            )
+
         GL.glStencilFunc(self.__func, self.__ref, self.__mask)
 
     def update(self):
@@ -117,7 +147,14 @@ class _MetaGLConfig(type):
             return glGetEnumi(GL.GL_BLEND_SRC_RGB, index)
 
         def __setitem__(self, index: int, value: GLInfo.blend_funcs):
-            GL.glBlendFunci(index, value, glGetEnumi(GL.GL_BLEND_DST_RGB, index))
+            dst = glGetEnumi(GL.GL_BLEND_DST_RGB, index)
+            if _MetaGLConfig._active_local_env is not None:
+                _MetaGLConfig._active_local_env.add_recover_func(
+                    GL.glBlendFunci,
+                    index, glGetEnumi(GL.GL_BLEND_SRC_RGB, index), dst
+                )
+
+            GL.glBlendFunci(index, value, dst)
 
     BlendSrcRGBi = BlendSrcRGBi()
 
@@ -126,7 +163,14 @@ class _MetaGLConfig(type):
             return glGetEnumi(GL.GL_BLEND_DST_RGB, index)
 
         def __setitem__(self, index: int, value: GLInfo.blend_funcs):
-            GL.glBlendFunci(index, glGetEnumi(GL.GL_BLEND_SRC_RGB, index), value)
+            src = glGetEnumi(GL.GL_BLEND_SRC_RGB, index)
+            if _MetaGLConfig._active_local_env is not None:
+                _MetaGLConfig._active_local_env.add_recover_func(
+                    GL.glBlendFunci,
+                    index, src, glGetEnumi(GL.GL_BLEND_DST_RGB, index)
+                )
+
+            GL.glBlendFunci(index, src, value)
 
     BlendDstRGBi = BlendDstRGBi()
 
@@ -135,7 +179,14 @@ class _MetaGLConfig(type):
             return glGetEnumi(GL.GL_BLEND_SRC_ALPHA, index)
 
         def __setitem__(self, index: int, value: GLInfo.blend_funcs):
-            GL.glBlendFunci(index, value, glGetEnumi(GL.GL_BLEND_DST_ALPHA, index))
+            dst = glGetEnumi(GL.GL_BLEND_DST_ALPHA, index)
+            if _MetaGLConfig._active_local_env is not None:
+                _MetaGLConfig._active_local_env.add_recover_func(
+                    GL.glBlendFunci,
+                    index, glGetEnumi(GL.GL_BLEND_SRC_ALPHA, index), dst
+                )
+
+            GL.glBlendFunci(index, value, dst)
 
     BlendSrcAlphai = BlendSrcAlphai()
 
@@ -144,7 +195,14 @@ class _MetaGLConfig(type):
             return glGetEnumi(GL.GL_BLEND_DST_ALPHA, index)
 
         def __setitem__(self, index: int, value: GLInfo.blend_funcs):
-            GL.glBlendFunci(index, glGetEnumi(GL.GL_BLEND_SRC_ALPHA, index), value)
+            src = glGetEnumi(GL.GL_BLEND_SRC_ALPHA, index)
+            if _MetaGLConfig._active_local_env is not None:
+                _MetaGLConfig._active_local_env.add_recover_func(
+                    GL.glBlendFunci,
+                    index, src, glGetEnumi(GL.GL_BLEND_DST_ALPHA, index)
+                )
+
+            GL.glBlendFunci(index, src, value)
 
     BlendDstAlphai = BlendDstAlphai()
 
@@ -170,16 +228,16 @@ class _MetaGLConfig(type):
     __available_image_units = None
     __available_extensions = None
     __depth_bits = None
+    _active_local_env = None
+    _all_setters = None
 
     @property
     def debug(cls):
         return _MetaGLConfig.__debug
 
     @debug.setter
+    @record_old_value
     def debug(cls, flag: bool):
-        if _MetaGLConfig.__debug == flag:
-            return
-
         _MetaGLConfig.__debug = flag
         OpenGL.ERROR_CHECKING = flag
 
@@ -188,6 +246,7 @@ class _MetaGLConfig(type):
         return bool(GL.glIsEnabled(GL.GL_STENCIL_TEST))
 
     @stencil_test.setter
+    @record_old_value
     def stencil_test(cls, flag: bool):
         if flag:
             GL.glEnable(GL.GL_STENCIL_TEST)
@@ -199,6 +258,7 @@ class _MetaGLConfig(type):
         return glGetEnum(GL.GL_STENCIL_VALUE_MASK)
 
     @stencil_mask.setter
+    @record_old_value
     def stencil_mask(cls, mask: int):
         GL.glStencilMask(mask)
 
@@ -211,6 +271,11 @@ class _MetaGLConfig(type):
         if isinstance(func, StencilFunc):
             func.apply()
             return
+        
+        if _MetaGLConfig._active_local_env is not None:
+            _MetaGLConfig._active_local_env.add_old_value(
+                "stencil_func", GLConfig.stencil_func
+            )
 
         if func in [True, "always", GL.GL_ALWAYS]:
             GL.glStencilFunc(GL.GL_ALWAYS, 1, 0xFF)
@@ -227,6 +292,7 @@ class _MetaGLConfig(type):
         return glGetEnum(GL.GL_STENCIL_FAIL)
 
     @stencil_fail.setter
+    @record_old_value
     def stencil_fail(cls, operation: GLInfo.operations):
         GL.glStencilOp(
             operation, cls.stencil_pass_depth_fail, cls.stencil_pass_depth_pass
@@ -237,6 +303,7 @@ class _MetaGLConfig(type):
         return glGetEnum(GL.GL_STENCIL_PASS_DEPTH_FAIL)
 
     @stencil_pass_depth_fail.setter
+    @record_old_value
     def stencil_pass_depth_fail(cls, operation: GLInfo.operations):
         GL.glStencilOp(cls.stencil_fail, operation, cls.stencil_pass_depth_pass)
 
@@ -245,6 +312,7 @@ class _MetaGLConfig(type):
         return glGetEnum(GL.GL_STENCIL_PASS_DEPTH_PASS)
 
     @stencil_pass_depth_pass.setter
+    @record_old_value
     def stencil_pass_depth_pass(cls, operation: GLInfo.operations):
         GL.glStencilOp(cls.stencil_fail, cls.stencil_pass_depth_fail, operation)
 
@@ -257,6 +325,7 @@ class _MetaGLConfig(type):
         )
 
     @stencil_op.setter
+    @record_old_value
     def stencil_op(cls, stencil_op):
         GL.glStencilOp(*stencil_op)
 
@@ -265,6 +334,7 @@ class _MetaGLConfig(type):
         return bool(GL.glIsEnabled(GL.GL_DEPTH_TEST))
 
     @depth_test.setter
+    @record_old_value
     def depth_test(cls, flag: bool):
         if flag:
             GL.glEnable(GL.GL_DEPTH_TEST)
@@ -277,6 +347,7 @@ class _MetaGLConfig(type):
         return bool(result)
 
     @depth_mask.setter
+    @record_old_value
     def depth_mask(cls, flag: bool):
         if flag:
             GL.glDepthMask(GL.GL_TRUE)
@@ -289,6 +360,7 @@ class _MetaGLConfig(type):
         return bool(result)
 
     @depth_write.setter
+    @record_old_value
     def depth_write(cls, flag: bool):
         if flag:
             GL.glDepthMask(GL.GL_TRUE)
@@ -301,6 +373,7 @@ class _MetaGLConfig(type):
         return GLInfo.depth_func_map[depth_func]
 
     @depth_func.setter
+    @record_old_value
     def depth_func(cls, depth_func: Union[GLInfo.depth_funcs, GLInfo.depth_func_strs]):
         if isinstance(depth_func, str):
             depth_func = GLInfo.depth_func_map[depth_func]
@@ -312,6 +385,7 @@ class _MetaGLConfig(type):
         return bool(GL.glIsEnabled(GL.GL_BLEND))
 
     @blend.setter
+    @record_old_value
     def blend(cls, flag: bool):
         if flag:
             GL.glEnable(GL.GL_BLEND)
@@ -324,6 +398,7 @@ class _MetaGLConfig(type):
         return GLInfo.blend_equation_map[blend_equation]
 
     @blend_equation.setter
+    @record_old_value
     def blend_equation(cls, blend_equation: Union[GLInfo.blend_equations, GLInfo.blend_equation_strs]):
         if isinstance(blend_equation, str):
             blend_equation = GLInfo.blend_equation_map[blend_equation]
@@ -335,6 +410,7 @@ class _MetaGLConfig(type):
         return cls.blend_src_rgb, cls.blend_dest_rgb
 
     @blend_func.setter
+    @record_old_value
     def blend_func(cls, args: tuple):
         GL.glBlendFunc(*args)
 
@@ -359,10 +435,8 @@ class _MetaGLConfig(type):
         return glGetEnum(GL.GL_BLEND_SRC_RGB)
 
     @blend_src_rgb.setter
+    @record_old_value
     def blend_src_rgb(cls, value: GLInfo.blend_funcs):
-        if value == cls.blend_src_rgb:
-            return
-
         GL.glBlendFunc(value, cls.blend_dest_rgb)
 
     @property
@@ -370,10 +444,8 @@ class _MetaGLConfig(type):
         return glGetEnum(GL.GL_BLEND_DST_RGB)
 
     @blend_dest_rgb.setter
+    @record_old_value
     def blend_dest_rgb(cls, value: GLInfo.blend_funcs):
-        if value == cls.blend_dest_rgb:
-            return
-
         GL.glBlendFunc(cls.blend_src_rgb, value)
 
     @property
@@ -381,10 +453,8 @@ class _MetaGLConfig(type):
         return glGetEnum(GL.GL_BLEND_SRC_ALPHA)
 
     @blend_src_alpha.setter
+    @record_old_value
     def blend_src_alpha(cls, value: GLInfo.blend_funcs):
-        if value == cls.blend_src_alpha:
-            return
-
         GL.glBlendFuncSeparate(
             cls.blend_src_rgb, cls.blend_dest_rgb, value, cls.blend_dest_alpha
         )
@@ -394,10 +464,8 @@ class _MetaGLConfig(type):
         return glGetEnum(GL.GL_BLEND_DST_ALPHA)
 
     @blend_dest_alpha.setter
+    @record_old_value
     def blend_dest_alpha(cls, value: GLInfo.blend_funcs):
-        if value == cls.blend_dest_alpha:
-            return
-
         GL.glBlendFuncSeparate(
             cls.blend_src_rgb, cls.blend_dest_rgb, cls.blend_src_alpha, value
         )
@@ -410,6 +478,7 @@ class _MetaGLConfig(type):
         return glGetEnum(GL.GL_CULL_FACE_MODE)
 
     @cull_face.setter
+    @record_old_value
     def cull_face(cls, face: GLInfo.cull_face_types):
         if face is None:
             GL.glDisable(GL.GL_CULL_FACE)
@@ -424,6 +493,7 @@ class _MetaGLConfig(type):
         return glm.vec4(color_array[0], color_array[1], color_array[2], color_array[3])
 
     @clear_color.setter
+    @record_old_value
     def clear_color(cls, color: Union[Tuple[float], glm.vec3, glm.vec4, float]):
         if isinstance(color, float):
             GL.glClearColor(color, color, color, color)
@@ -439,6 +509,7 @@ class _MetaGLConfig(type):
         return glGetEnum(GL.GL_POLYGON_MODE)
 
     @polygon_mode.setter
+    @record_old_value
     def polygon_mode(cls, mode: GLInfo.polygon_modes):
         GL.glPolygonMode(GL.GL_FRONT_AND_BACK, mode)
 
@@ -447,6 +518,7 @@ class _MetaGLConfig(type):
         return GL.glGetFloatv(GL.GL_LINE_WIDTH)
 
     @line_width.setter
+    @record_old_value
     def line_width(cls, line_width: float):
         GL.glLineWidth(line_width)
 
@@ -455,6 +527,7 @@ class _MetaGLConfig(type):
         return GL.glGetFloatv(GL.GL_POINT_SIZE)
 
     @point_size.setter
+    @record_old_value
     def point_size(cls, point_size: float):
         GL.glPointSize(point_size)
 
@@ -469,6 +542,7 @@ class _MetaGLConfig(type):
         )
 
     @viewport.setter
+    @record_old_value
     def viewport(cls, viewport: tuple):
         GL.glViewport(*viewport)
 
@@ -481,6 +555,7 @@ class _MetaGLConfig(type):
         return _MetaGLConfig.__buffered_viewport[current_context]
 
     @buffered_viewport.setter
+    @record_old_value
     def buffered_viewport(cls, viewport):
         current_context = cls.buffered_current_context
         _MetaGLConfig.__buffered_viewport[current_context] = viewport
@@ -501,6 +576,7 @@ class _MetaGLConfig(type):
         return int(GL.glGetIntegerv(GL.GL_ACTIVE_TEXTURE) - GL.GL_TEXTURE0)
 
     @active_texture_unit.setter
+    @record_old_value
     def active_texture_unit(cls, unit):
         if unit >= cls.max_texture_units:
             raise ValueError(
@@ -614,6 +690,7 @@ class _MetaGLConfig(type):
             return _MetaGLConfig.__buffered_current_context
 
     @buffered_current_context.setter
+    @record_old_value
     def buffered_current_context(cls, context_id: int):
         _MetaGLConfig.__buffered_current_context = context_id
 
@@ -688,51 +765,37 @@ def setter_methods(cls):
 
 class GLConfig(metaclass=_MetaGLConfig):
 
-    class LocalConfig(dict):
-        __all_attrs = {*dir({}), "__getattr__", "__enter__", "__exit__", "_old_values"}
-        __setters = setter_methods(_MetaGLConfig)
+    class LocalEnv:
 
-        def __init__(self, **kwargs):
-            dict.__init__(self, **kwargs)
+        def __init__(self):
+            self._recover_funcs = []
             self._old_values = {}
 
-        def __getattr__(self, name):
-            if name in GLConfig.LocalConfig.__all_attrs:
-                return dict.__getattr__(self, name)
+        def add_recover_func(self, func, *args, **kwargs):
+            self._recover_funcs.append({"func": func, "args": args, "kwargs": kwargs})
 
-            return dict.__getitem__(self, name)
-
-        def __setitem__(self, name, value):
-            if name not in GLConfig.LocalConfig.__setters:
-                raise AttributeError(f"'{name}' is not an attribute of GLConfig")
-
-            dict.__setitem__(self, name, value)
-
-        def __setattr__(self, name, value):
-            if name in GLConfig.LocalConfig.__all_attrs:
-                return dict.__setattr__(self, name, value)
-
-            self.__setitem__(name, value)
-
-        def __delattr__(self, name):
-            if name in GLConfig.LocalConfig.__all_attrs:
-                return dict.__delattr__(self, name)
-
-            if name in self:
-                dict.__delitem__(self, name)
+        def add_old_value(self, key, old_value):
+            self._old_values[key] = old_value
 
         def __enter__(self):
-            self._old_values.clear()
-            for name in self:
-                old_value = getattr(GLConfig, name)
-                new_value = self[name]
-                if old_value != new_value:
-                    self._old_values[name] = old_value
-                    setattr(GLConfig, name, new_value)
+            _MetaGLConfig._active_local_env = self
+            self._recover_funcs.clear()
 
         def __exit__(self, *exc_details):
-            for name, value in self._old_values.items():
-                setattr(GLConfig, name, value)
+            _MetaGLConfig._active_local_env = None
+
+            for func_info in self._recover_funcs:
+                func_info["func"](*func_info["args"], **func_info["kwargs"])
+
+            for key, value in self._old_values.items():
+                setattr(GLConfig, key, value)
+
+    @staticmethod
+    def hassetter(name:str):
+        if _MetaGLConfig._all_setters is None:
+            _MetaGLConfig._all_setters = setter_methods(_MetaGLConfig)
+
+        return (name in _MetaGLConfig._all_setters)
 
     @staticmethod
     def clear_buffers(bits=None):
@@ -771,7 +834,7 @@ class GLConfig(metaclass=_MetaGLConfig):
         elif (
             GL.GL_COLOR_ATTACHMENT0
             <= target
-            < GLConfig.GL_COLOR_ATTACHMENT0 + GLConfig.max_color_attachments
+            < GL.GL_COLOR_ATTACHMENT0 + GLConfig.max_color_attachments
         ):
             GL.glClearBufferfv(GL.GL_COLOR, target - GL.GL_COLOR_ATTACHMENT0, np_color)
         elif target in [GL.GL_DEPTH, GL.GL_DEPTH_BUFFER_BIT, GL.GL_DEPTH_ATTACHMENT]:

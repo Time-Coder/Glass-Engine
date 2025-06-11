@@ -1,4 +1,4 @@
-* 完善 vertex_color_usage，包括 assimpy 内部
+* 完善 LocalEnv
 * Mesh 获取 vertices 时再更新参数
 * 几何体的 normalize_tex_coord 修改为 tex_coord_per_meter
 * 场景变化时自动更新 screen

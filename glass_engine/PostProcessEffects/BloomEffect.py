@@ -84,7 +84,9 @@ class BloomEffect(PostProcessEffect):
     def __get_bloom_image(self, screen_image: sampler2D):
         self.__update_fbo_list(screen_image.width, screen_image.height)
 
-        with GLConfig.LocalConfig(cull_face=None, polygon_mode=GL.GL_FILL):
+        with GLConfig.LocalEnv():
+            GLConfig.cull_face = None
+            GLConfig.polygon_mode = GL.GL_FILL
             current_index = 0
             for i in range(self.blur_times):
                 down_fbo = self.bloom_down_fbo(i)
@@ -100,13 +102,13 @@ class BloomEffect(PostProcessEffect):
                 screen_image = down_fbo.color_attachment(0)
                 current_index = i
 
-            with GLConfig.LocalConfig(
-                blend=True,
-                blend_src_rgb=GL.GL_ONE,
-                blend_dest_rgb=GL.GL_ONE,
-                blend_src_alpha=GL.GL_ONE,
-                blend_dest_alpha=GL.GL_ONE,
-            ):
+            with GLConfig.LocalEnv():
+                GLConfig.blend = True
+                GLConfig.blend_src_rgb = GL.GL_ONE
+                GLConfig.blend_dest_rgb = GL.GL_ONE
+                GLConfig.blend_src_alpha = GL.GL_ONE
+                GLConfig.blend_dest_alpha = GL.GL_ONE
+
                 for i in range(current_index, -1, -1):
                     down_fbo = self.bloom_down_fbo(i)
                     with down_fbo:
@@ -119,7 +121,10 @@ class BloomEffect(PostProcessEffect):
 
     def draw_to_active(self, screen_image: sampler2D) -> None:
         bloom_image = self.__get_bloom_image(screen_image)
-        with GLConfig.LocalConfig(cull_face=None, polygon_mode=GL.GL_FILL):
+        with GLConfig.LocalEnv():
+            GLConfig.cull_face = None
+            GLConfig.polygon_mode = GL.GL_FILL
+
             self.mix_program["screen_image"] = screen_image
             self.mix_program["bloom_image"] = bloom_image
             self.mix_program.draw_triangles(start_index=0, total=6)
@@ -127,7 +132,10 @@ class BloomEffect(PostProcessEffect):
     def apply(self, screen_image: sampler2D) -> sampler2D:
         bloom_image = self.__get_bloom_image(screen_image)
         self.mix_fbo.resize(screen_image.width, screen_image.height)
-        with GLConfig.LocalConfig(cull_face=None, polygon_mode=GL.GL_FILL):
+        with GLConfig.LocalEnv():
+            GLConfig.cull_face = None
+            GLConfig.polygon_mode = GL.GL_FILL
+            
             with self.mix_fbo:
                 self.mix_program["screen_image"] = screen_image
                 self.mix_program["bloom_image"] = bloom_image

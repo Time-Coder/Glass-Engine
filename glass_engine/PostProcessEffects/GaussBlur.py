@@ -125,7 +125,9 @@ class GaussBlur(PostProcessEffect):
             self.vertical_fbo.resize(screen_image.width, screen_image.height)
 
             program = GaussBlur.program()
-            with GLConfig.LocalConfig(cull_face=None, polygon_mode=GL.GL_FILL):
+            with GLConfig.LocalEnv():
+                GLConfig.cull_face = None
+                GLConfig.polygon_mode = GL.GL_FILL
 
                 program["kernel_shape"] = self.__kernel_shape
                 program["sigma"] = self.__sigma
@@ -152,7 +154,9 @@ class GaussBlur(PostProcessEffect):
 
             program = GaussBlur.array_program(screen_image.layers)
 
-            with GLConfig.LocalConfig(cull_face=None, polygon_mode=GL.GL_FILL):
+            with GLConfig.LocalEnv():
+                GLConfig.cull_face = None
+                GLConfig.polygon_mode = GL.GL_FILL
 
                 program["kernel_shape"] = self.__kernel_shape
                 program["sigma"] = self.__sigma
@@ -177,7 +181,9 @@ class GaussBlur(PostProcessEffect):
 
             program = GaussBlur.cube_program()
 
-            with GLConfig.LocalConfig(cull_face=None, polygon_mode=GL.GL_FILL):
+            with GLConfig.LocalEnv():
+                GLConfig.cull_face = None
+                GLConfig.polygon_mode = GL.GL_FILL
 
                 program["kernel_shape"] = self.__kernel_shape
                 program["sigma"] = self.__sigma
@@ -208,8 +214,10 @@ class GaussBlur(PostProcessEffect):
 
         program = GaussBlur.program()
 
-        with GLConfig.LocalConfig(cull_face=None, polygon_mode=GL.GL_FILL):
-
+        with GLConfig.LocalEnv():
+            GLConfig.cull_face = None
+            GLConfig.polygon_mode = GL.GL_FILL
+            
             program["kernel_shape"] = self.__kernel_shape
             program["sigma"] = self.__sigma
             program["channels"] = self.__channels

@@ -334,9 +334,12 @@ class CommonRenderer(Renderer):
                 spot_light.depth_fbo.attach(GL.GL_DEPTH_ATTACHMENT, samplerCube)
                 spot_light.depth_fbo.depth_attachment.wrap = GL.GL_CLAMP_TO_EDGE
 
-            with GLConfig.LocalConfig(
-                depth_test=True, blend=False, cull_face=None, polygon_mode=GL.GL_FILL
-            ):
+            with GLConfig.LocalEnv():
+                GLConfig.depth_test = True
+                GLConfig.blend = False
+                GLConfig.cull_face = None
+                GLConfig.polygon_mode = GL.GL_FILL
+                
                 with spot_light.depth_fbo:
                     if self._meshes_cast_shadows:
                         self.spot_light_depth_program["spot_light"] = spot_light
@@ -402,9 +405,12 @@ class CommonRenderer(Renderer):
                 point_light.depth_fbo.attach(GL.GL_DEPTH_ATTACHMENT, samplerCube)
                 point_light.depth_fbo.depth_attachment.wrap = GL.GL_CLAMP_TO_EDGE
 
-            with GLConfig.LocalConfig(
-                depth_test=True, blend=False, cull_face=None, polygon_mode=GL.GL_FILL
-            ):
+            with GLConfig.LocalEnv():
+                GLConfig.depth_test = True
+                GLConfig.blend = False
+                GLConfig.cull_face = None
+                GLConfig.polygon_mode = GL.GL_FILL
+
                 with point_light.depth_fbo:
                     if self._meshes_cast_shadows:
                         self.point_light_depth_program["point_light"] = point_light
@@ -494,13 +500,13 @@ class CommonRenderer(Renderer):
                 dir_light.depth_fbo.depth_attachment.wrap_t = GL.GL_CLAMP_TO_BORDER
                 dir_light.depth_fbo.depth_attachment.border_color = glm.vec4(1, 1, 1, 1)
 
-            with GLConfig.LocalConfig(
-                clear_color=glm.vec4(1, 1, 1, 1),
-                depth_test=True,
-                blend=False,
-                cull_face=None,
-                polygon_mode=GL.GL_FILL,
-            ):
+            with GLConfig.LocalEnv():
+                GLConfig.clear_color = glm.vec4(1, 1, 1, 1)
+                GLConfig.depth_test = True
+                GLConfig.blend = False
+                GLConfig.cull_face = None
+                GLConfig.polygon_mode = GL.GL_FILL
+
                 with dir_light.depth_fbo:
                     if self._meshes_cast_shadows:
                         self.dir_light_depth_program["dir_light"] = dir_light
@@ -863,7 +869,11 @@ class CommonRenderer(Renderer):
             instance.visible = 0
             env_map_fbo = self.env_map_fbo(instance)
 
-            with GLConfig.LocalConfig(depth_test=True, depth_write=True, blend=False):
+            with GLConfig.LocalEnv():
+                GLConfig.depth_test = True
+                GLConfig.depth_write = True
+                GLConfig.blend = False
+
                 with env_map_fbo:
                     GLConfig.clear_buffers()
 
@@ -890,19 +900,19 @@ class CommonRenderer(Renderer):
                 or self._transparent_points
                 or self._transparent_lines
             ):
-                with GLConfig.LocalConfig(
-                    depth_test=True,
-                    depth_write=False,
-                    blend=True,
-                    blend_src_rgb=GL.GL_ONE,
-                    blend_dest_rgb=GL.GL_ONE,
-                    blend_src_alpha=GL.GL_ONE,
-                    blend_dest_alpha=GL.GL_ONE,
-                ):
+                with GLConfig.LocalEnv():
+                    GLConfig.depth_test = True
+                    GLConfig.depth_write = False
+                    GLConfig.blend = True
+                    GLConfig.blend_src_rgb = GL.GL_ONE
+                    GLConfig.blend_dest_rgb = GL.GL_ONE
+                    GLConfig.blend_src_alpha = GL.GL_ONE
+                    GLConfig.blend_dest_alpha = GL.GL_ONE
                     GLConfig.blend_src_rgbi[1] = GL.GL_ONE
                     GLConfig.blend_dest_rgbi[1] = GL.GL_ONE
                     GLConfig.blend_src_rgbi[2] = GL.GL_ONE
                     GLConfig.blend_dest_rgbi[2] = GL.GL_ONE
+
                     with env_map_fbo:
                         GLConfig.clear_buffer(1, glm.vec4(0))
                         GLConfig.clear_buffer(2, glm.vec4(0))
@@ -929,9 +939,11 @@ class CommonRenderer(Renderer):
                     reveal_map = env_map_fbo.color_attachment(2)
 
             env_OIT_blend_fbo = self.env_OIT_blend_fbo(instance)
-            with GLConfig.LocalConfig(
-                polygon_mode=GL.GL_FILL, cull_face=None, depth_func=GL.GL_ALWAYS
-            ):
+            with GLConfig.LocalEnv():
+                GLConfig.polygon_mode = GL.GL_FILL
+                GLConfig.cull_face = None
+                GLConfig.depth_func = GL.GL_ALWAYS
+
                 with env_OIT_blend_fbo:
                     self.env_OIT_blend_program["opaque_color_map"] = opaque_color_map
                     self.env_OIT_blend_program["accum_map"] = accum_map
@@ -1101,11 +1113,15 @@ class CommonRenderer(Renderer):
         ):
             return
 
-        with GLConfig.LocalConfig(depth_test=True, depth_write=False, blend=True):
+        with GLConfig.LocalEnv():
+            GLConfig.depth_test = True
+            GLConfig.depth_write = False
+            GLConfig.blend = True
             GLConfig.blend_src_rgbi[1] = GL.GL_ONE
             GLConfig.blend_dest_rgbi[1] = GL.GL_ONE
             GLConfig.blend_src_rgbi[2] = GL.GL_ONE
             GLConfig.blend_dest_rgbi[2] = GL.GL_ONE
+
             with self.OIT_fbo:
                 GLConfig.clear_buffer(1, glm.vec4(0))
                 GLConfig.clear_buffer(2, glm.vec4(0))
@@ -1130,13 +1146,13 @@ class CommonRenderer(Renderer):
         accum_map = resolved.color_attachment(1)
         reveal_map = resolved.color_attachment(2)
 
-        with GLConfig.LocalConfig(
-            polygon_mode=GL.GL_FILL,
-            cull_face=None,
-            depth_func=GL.GL_ALWAYS,
-            blend=True,
-            blend_func=(GL.GL_ONE_MINUS_SRC_ALPHA, GL.GL_SRC_ALPHA),
-        ):
+        with GLConfig.LocalEnv():
+            GLConfig.polygon_mode = GL.GL_FILL
+            GLConfig.cull_face = None
+            GLConfig.depth_func = GL.GL_ALWAYS
+            GLConfig.blend = True
+            GLConfig.blend_func = (GL.GL_ONE_MINUS_SRC_ALPHA, GL.GL_SRC_ALPHA)
+
             self.OIT_blend_program["accum_map"] = accum_map
             self.OIT_blend_program["reveal_map"] = reveal_map
             self.OIT_blend_program.draw_triangles(start_index=0, total=6)
@@ -1148,7 +1164,11 @@ class CommonRenderer(Renderer):
             elif self.__class__.__name__ == "DeferredRenderer":
                 used_fbo = self.gbuffer
 
-            with GLConfig.LocalConfig(depth_test=True, depth_write=True, blend=False):
+            with GLConfig.LocalEnv():
+                GLConfig.depth_test = True
+                GLConfig.depth_write = True
+                GLConfig.blend = False
+
                 with used_fbo:
                     if self._transparent_meshes:
                         self.draw_geometry_program["camera"] = self.camera

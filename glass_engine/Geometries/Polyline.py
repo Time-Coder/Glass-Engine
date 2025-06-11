@@ -13,7 +13,7 @@ class Polyline(Mesh):
     def __init__(
         self,
         points: list = [],
-        color: Union[glm.vec3, glm.vec4] = glm.vec4(1),
+        color: Union[glm.vec3, glm.vec4] = glm.vec4(0.396, 0.74151, 0.69102, 1),
         line_width: int = 2,
         loop: bool = False,
         name: str = "",

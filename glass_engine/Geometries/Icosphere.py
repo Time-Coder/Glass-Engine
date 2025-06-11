@@ -20,7 +20,7 @@ class Icosphere(Mesh):
     def __init__(
         self,
         radius: float = 1,
-        color: Union[glm.vec3, glm.vec4] = glm.vec4(1),
+        color: Union[glm.vec3, glm.vec4] = glm.vec4(0.396, 0.74151, 0.69102, 1),
         back_color: Union[glm.vec3, glm.vec4] = None,
         n_levels: int = 4,
         name: str = "",

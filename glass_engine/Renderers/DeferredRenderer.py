@@ -221,7 +221,9 @@ class DeferredRenderer(CommonRenderer):
         ):
             return
 
-        with GLConfig.LocalConfig(clear_color=glm.vec4(0)):
+        with GLConfig.LocalEnv():
+            GLConfig.clear_color = glm.vec4(0)
+
             with self.gbuffer:
                 GLConfig.clear_buffers()
 
@@ -254,7 +256,10 @@ class DeferredRenderer(CommonRenderer):
         self._view_normal_map = view_normal_and_emission_r_map
         self._depth_map = resolved.depth_attachment
 
-        with GLConfig.LocalConfig(cull_face=None, polygon_mode=GL.GL_FILL):
+        with GLConfig.LocalEnv():
+            GLConfig.cull_face = None
+            GLConfig.polygon_mode = GL.GL_FILL
+
             GLConfig.clear_buffers()
             self.deferred_render_program["camera"] = self.camera
             self.deferred_render_program["view_pos_and_alpha_map"] = (

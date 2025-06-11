@@ -105,9 +105,11 @@ class KernelFilter(PostProcessEffect):
     ) -> Union[sampler2D, sampler2DArray, samplerCube]:
         if isinstance(screen_image, sampler2D):
             self.fbo.resize(screen_image.width, screen_image.height)
-            with GLConfig.LocalConfig(
-                depth_test=False, cull_face=None, polygon_mode=GL.GL_FILL
-            ):
+            with GLConfig.LocalEnv():
+                GLConfig.depth_test = False
+                GLConfig.cull_face = None
+                GLConfig.polygon_mode = GL.GL_FILL
+
                 with self.fbo:
                     self.program["screen_image"] = screen_image
                     self.program.draw_triangles(start_index=0, total=6)
@@ -118,9 +120,11 @@ class KernelFilter(PostProcessEffect):
                 screen_image.width, screen_image.height, layers=screen_image.layers
             )
             program = self.array_program(screen_image.layers)
-            with GLConfig.LocalConfig(
-                depth_test=False, cull_face=None, polygon_mode=GL.GL_FILL
-            ):
+            with GLConfig.LocalEnv():
+                GLConfig.depth_test = False
+                GLConfig.cull_face = None
+                GLConfig.polygon_mode = GL.GL_FILL
+
                 with self.array_fbo:
                     program["screen_image"] = screen_image
                     program.draw_triangles(start_index=0, total=6)
@@ -128,9 +132,11 @@ class KernelFilter(PostProcessEffect):
             return self.array_fbo.color_attachment(0)
         elif isinstance(screen_image, samplerCube):
             self.cube_fbo.resize(screen_image.width, screen_image.height)
-            with GLConfig.LocalConfig(
-                depth_test=False, cull_face=None, polygon_mode=GL.GL_FILL
-            ):
+            with GLConfig.LocalEnv():
+                GLConfig.depth_test = False
+                GLConfig.cull_face = None
+                GLConfig.polygon_mode = GL.GL_FILL
+
                 with self.cube_fbo:
                     self.cube_program["screen_image"] = screen_image
                     self.cube_program.draw_triangles(start_index=0, total=6)
@@ -138,9 +144,11 @@ class KernelFilter(PostProcessEffect):
             return self.cube_fbo.color_attachment(0)
 
     def draw_to_active(self, screen_image: sampler2D) -> None:
-        with GLConfig.LocalConfig(
-            depth_test=False, cull_face=None, polygon_mode=GL.GL_FILL
-        ):
+        with GLConfig.LocalEnv():
+            GLConfig.depth_test = False
+            GLConfig.cull_face = None
+            GLConfig.polygon_mode = GL.GL_FILL
+            
             self.program["screen_image"] = screen_image
             self.program.draw_triangles(start_index=0, total=6)
 

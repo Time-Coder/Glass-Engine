@@ -57,7 +57,10 @@ class ForwardRenderer(CommonRenderer):
             or self.screen._post_process_effects.has_valid
         )
 
-        with GLConfig.LocalConfig(depth_test=True, blend=False):
+        with GLConfig.LocalEnv():
+            GLConfig.depth_test = True
+            GLConfig.blend = False
+
             if need_fbo:
                 with self.OIT_fbo:
                     self._draw_opaque()

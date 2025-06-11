@@ -67,7 +67,10 @@ class DOFEffect(PostProcessEffect):
         self.horizontal_fbo.resize(screen_image.width, screen_image.height)
         self.vertical_fbo.resize(screen_image.width, screen_image.height)
 
-        with GLConfig.LocalConfig(cull_face=None, polygon_mode=GL.GL_FILL):
+        with GLConfig.LocalEnv():
+            GLConfig.cull_face = None
+            GLConfig.polygon_mode = GL.GL_FILL
+
             self.program["camera"] = self.camera
             self.program["view_pos_map"] = self.view_pos_map
             self.program["fps"] = self.camera.screen.smooth_fps
@@ -87,7 +90,10 @@ class DOFEffect(PostProcessEffect):
         self.horizontal_fbo.resize(screen_image.width, screen_image.height)
         self.vertical_fbo.resize(screen_image.width, screen_image.height)
 
-        with GLConfig.LocalConfig(cull_face=None, polygon_mode=GL.GL_FILL):
+        with GLConfig.LocalEnv():
+            GLConfig.cull_face = None
+            GLConfig.polygon_mode = GL.GL_FILL
+            
             self.program["camera"] = self.camera
             self.program["view_pos_map"] = self.view_pos_map
             self.program["fps"] = self.camera.screen.smooth_fps

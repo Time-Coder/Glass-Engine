@@ -13,7 +13,7 @@ class Points(Mesh):
     def __init__(
         self,
         points: list = [],
-        color: Union[glm.vec3, glm.vec4] = glm.vec4(1),
+        color: Union[glm.vec3, glm.vec4] = glm.vec4(0.396, 0.74151, 0.69102, 1),
         point_size: int = 5,
         name: str = "",
         block: bool = True,

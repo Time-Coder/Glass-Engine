@@ -94,6 +94,16 @@ class Material(metaclass=MetaInstancesRecorder):
         NotUse = 0
         BaseColor = 1
         BaseColorMask = 2
+        AmbientColor = 3
+        AmbientColorMask = 4
+        SpecularColor = 5
+        SpecularColorMask = 6
+        EmissionColor = 7
+        EmissionColorMask = 8
+        ARM = 9
+        ARMMask = 10
+        ReflectionColor = 11
+        ReflectionColorMask = 12
 
     @MetaInstancesRecorder.init
     def __init__(self, name: str = ""):

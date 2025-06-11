@@ -144,12 +144,18 @@ class ShaderEffect(PostProcessEffect):
         self.program.draw_triangles(start_index=0, total=6)
 
     def draw_to_active(self, screen_image: sampler2D) -> None:
-        with GLConfig.LocalConfig(cull_face=None, polygon_mode=GL.GL_FILL):
+        with GLConfig.LocalEnv():
+            GLConfig.cull_face = None
+            GLConfig.polygon_mode = GL.GL_FILL
+
             self.draw(screen_image)
 
     def apply(self, screen_image: sampler2D) -> sampler2D:
         self.fbo.resize(screen_image.width, screen_image.height)
-        with GLConfig.LocalConfig(cull_face=None, polygon_mode=GL.GL_FILL):
+        with GLConfig.LocalEnv():
+            GLConfig.cull_face = None
+            GLConfig.polygon_mode = GL.GL_FILL
+            
             with self.fbo:
                 self.draw(screen_image)
 

@@ -42,7 +42,10 @@ class Frame:
         layer: int = -1,
         index: int = 0,
     ):
-        with GLConfig.LocalConfig(cull_face=None, polygon_mode=GL.GL_FILL):
+        with GLConfig.LocalEnv():
+            GLConfig.cull_face = None
+            GLConfig.polygon_mode = GL.GL_FILL
+            
             if isinstance(screen_image, sampler2D):
                 self.program["screen_image"] = screen_image
                 self.program["layer"] = -1

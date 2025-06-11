@@ -18,7 +18,7 @@ class HollowRPolygonFace(Mesh):
         total_sides: int = None,
         inner_radius: float = 1,
         outer_radius: float = 2,
-        color: Union[glm.vec3, glm.vec4] = glm.vec4(1),
+        color: Union[glm.vec3, glm.vec4] = glm.vec4(0.396, 0.74151, 0.69102, 1),
         back_color: Union[glm.vec3, glm.vec4] = None,
         vertical: bool = False,
         normalize_tex_coord=False,
