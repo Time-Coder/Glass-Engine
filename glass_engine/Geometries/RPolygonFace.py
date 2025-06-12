@@ -5,7 +5,7 @@ from glass import Vertex
 
 import glm
 import math
-from typing import Union
+from typing import Union, Optional
 
 
 class RPolygonFace(Mesh):
@@ -15,10 +15,10 @@ class RPolygonFace(Mesh):
         self,
         n_sides: int = 5,
         start_side: int = 0,
-        total_sides: int = None,
+        total_sides: Optional[int] = None,
         radius: float = 1,
         color: Union[glm.vec3, glm.vec4] = glm.vec4(0.396, 0.74151, 0.69102, 1),
-        back_color: Union[glm.vec3, glm.vec4] = None,
+        back_color: Union[glm.vec3, glm.vec4, None] = None,
         vertical: bool = False,
         normalize_tex_coord: bool = False,
         name: str = "",

@@ -16,7 +16,7 @@ class TorusFace(Mesh):
         inner_radius: float = 1,
         outer_radius: float = 2,
         color: Union[glm.vec3, glm.vec4] = glm.vec4(0.396, 0.74151, 0.69102, 1),
-        back_color: Union[glm.vec3, glm.vec4] = None,
+        back_color: Union[glm.vec3, glm.vec4, None] = None,
         n_divide: int = 100,
         start_angle: float = 0,
         span_angle: float = 360,

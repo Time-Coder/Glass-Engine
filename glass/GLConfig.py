@@ -4,7 +4,7 @@ from OpenGL.platform import PLATFORM
 import glm
 import numpy as np
 import inspect
-from typing import Union, Tuple
+from typing import Union, Tuple, Dict
 import functools
 
 from .GLInfo import GLInfo
@@ -229,7 +229,7 @@ class _MetaGLConfig(type):
     __available_extensions = None
     __depth_bits = None
     _active_local_env = None
-    _all_setters = None
+    _all_setters:Dict[str, str] = None
 
     @property
     def debug(cls):
@@ -770,16 +770,22 @@ class GLConfig(metaclass=_MetaGLConfig):
         def __init__(self):
             self._recover_funcs = []
             self._old_values = {}
+            self._last_local_env = None
 
         def add_recover_func(self, func, *args, **kwargs):
             self._recover_funcs.append({"func": func, "args": args, "kwargs": kwargs})
 
         def add_old_value(self, key, old_value):
+            if key in self._old_values:
+                return
+            
             self._old_values[key] = old_value
 
         def __enter__(self):
+            self._last_local_env = _MetaGLConfig._active_local_env
             _MetaGLConfig._active_local_env = self
             self._recover_funcs.clear()
+            self._old_values.clear()
 
         def __exit__(self, *exc_details):
             _MetaGLConfig._active_local_env = None
@@ -789,6 +795,8 @@ class GLConfig(metaclass=_MetaGLConfig):
 
             for key, value in self._old_values.items():
                 setattr(GLConfig, key, value)
+
+            _MetaGLConfig._active_local_env = self._last_local_env
 
     @staticmethod
     def hassetter(name:str):

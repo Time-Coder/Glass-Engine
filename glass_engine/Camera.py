@@ -1,3 +1,4 @@
+from __future__ import annotations
 from .SceneNode import SceneNode
 from .Manipulators.SceneRoamManipulator import SceneRoamManipulator
 from .Renderers.ForwardRenderer import ForwardRenderer
@@ -56,7 +57,7 @@ class Camera(SceneNode):
     def __init__(
         self,
         gui_system="",
-        projection_mode: ProjectionMode = ProjectionMode.Perspective,
+        projection_mode: Camera.ProjectionMode = ProjectionMode.Perspective,
         name: str = "",
     ):
         SceneNode.__init__(self, name, unique_path=True)

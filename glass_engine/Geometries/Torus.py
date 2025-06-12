@@ -13,7 +13,7 @@ class Torus(Mesh):
         radius_tube: float = 0.5,
         radius_torus: float = 1,
         color: Union[glm.vec3, glm.vec4] = glm.vec4(0.396, 0.74151, 0.69102, 1),
-        back_color: Union[glm.vec3, glm.vec4] = None,
+        back_color: Union[glm.vec3, glm.vec4, None] = None,
         vertical: bool = False,
         normalize_tex_coord=False,
         n_lon_divide: int = 100,

@@ -8,7 +8,7 @@ from glass import AttrList
 import glm
 import numpy as np
 import copy
-from typing import Union
+from typing import Union, Optional
 
 
 class Surf(Mesh):
@@ -19,12 +19,12 @@ class Surf(Mesh):
         X: np.ndarray,
         Y: np.ndarray,
         Z: np.ndarray,
-        C: np.ndarray = None,
-        back_C: np.ndarray = None,
-        color_map: ColorMap = None,
-        back_color_map: ColorMap = None,
-        color: Union[glm.vec3, glm.vec4] = None,
-        back_color: Union[glm.vec3, glm.vec4] = None,
+        C: Optional[np.ndarray] = None,
+        back_C: Optional[np.ndarray] = None,
+        color_map: Optional[ColorMap] = None,
+        back_color_map: Optional[ColorMap] = None,
+        color: Union[glm.vec3, glm.vec4, None] = None,
+        back_color: Union[glm.vec3, glm.vec4, None] = None,
         surf_type: Mesh.SurfType = Mesh.SurfType.Smooth,
         name="",
     ):

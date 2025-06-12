@@ -2,6 +2,8 @@ from .Cylinder import Cylinder
 from .Cone import Cone
 from ..SceneNode import SceneNode
 
+from typing import Union
+
 import glm
 
 
@@ -10,8 +12,8 @@ class CoordSys(SceneNode):
     def __init__(
         self,
         x_length: float = 1,
-        y_length: float = None,
-        z_length: float = None,
+        y_length: Union[float, None] = None,
+        z_length: Union[float, None] = None,
         alpha: float = 1,
         name: str = "",
     ):

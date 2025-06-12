@@ -25,8 +25,7 @@ class Polyline(Mesh):
             primitive_type=primitive_type,
             color=color,
             name=name,
-            block=block,
-            shared=False,
+            block=block
         )
         self.render_hints.line_width = line_width
         self.__points = points

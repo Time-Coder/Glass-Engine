@@ -123,7 +123,7 @@ InternalMaterial fetch_internal_material(vec4 frag_color, Material material, vec
     // reflection
     if (material.vertex_color_usage == VERTEX_COLOR_USAGE_REFLECTION_COLOR)
     {
-        internal_material.reflection = frag_color.rgb;
+        internal_material.reflection = frag_color;
     }
     else
     {
@@ -140,7 +140,7 @@ InternalMaterial fetch_internal_material(vec4 frag_color, Material material, vec
 
         if (material.vertex_color_usage == VERTEX_COLOR_USAGE_REFLECTION_COLOR_MASK)
         {
-            internal_material.reflection *= frag_color.rgb;
+            internal_material.reflection *= frag_color;
         }
     }
 

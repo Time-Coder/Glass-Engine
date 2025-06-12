@@ -1,3 +1,4 @@
+from __future__ import annotations
 from .SceneNode import SceneNode
 from .Material import Material
 from .algorithm import generate_auto_TBN, generate_smooth_TBN
@@ -30,11 +31,11 @@ class Mesh(SceneNode):
         self,
         primitive_type: GLInfo.primitive_types = GL.GL_TRIANGLES,
         color: Union[glm.vec3, glm.vec4] = glm.vec4(1, 1, 1, 1),
-        back_color: Union[glm.vec3, glm.vec4] = None,
+        back_color: Union[glm.vec3, glm.vec4, None] = None,
         name: str = "",
         block: bool = True,
         auto_build: bool = True,
-        surf_type: SurfType = None,
+        surf_type: Union[Mesh.SurfType, None] = None,
     ):
         SceneNode.__init__(self, name)
 

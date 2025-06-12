@@ -55,13 +55,23 @@ def same_type(var1, var2):
 def checktype(func):
     if not GlassConfig.debug:
         return func
+    
+    try:
+        func._typechecked_func = typechecked(func)
+    except:
+        pass
 
     @wraps(func)
     def wrapper(*args, **kwargs):
         if not GlassConfig.debug:
             return func(*args, **kwargs)
 
-        return typechecked(func)(*args, **kwargs)
+        try:
+            typechecked_func = func._typechecked_func
+        except:
+            typechecked_func = typechecked(func)
+
+        return typechecked_func(*args, **kwargs)
 
     return wrapper
 

@@ -23,8 +23,7 @@ class Points(Mesh):
             primitive_type=GL.GL_POINTS,
             color=color,
             name=name,
-            block=block,
-            shared=False,
+            block=block
         )
         self.render_hints.point_size = point_size
         self.__points = points
