@@ -1,10 +1,11 @@
+from __future__ import annotations
 import OpenGL
 from OpenGL import GL
 from OpenGL.platform import PLATFORM
 import glm
 import numpy as np
 import inspect
-from typing import Union, Tuple, Dict
+from typing import Union, Tuple, Dict, Optional, Set
 import functools
 
 from .GLInfo import GLInfo
@@ -36,9 +37,9 @@ class StencilFunc:
 
     def __init__(
         self,
-        func: Union[GLInfo.stencil_funcs, GLInfo.stencil_func_strs] = None,
-        ref: int = None,
-        mask: int = None,
+        func: Union[GLInfo.stencil_funcs, GLInfo.stencil_func_strs, None] = None,
+        ref: Optional[int] = None,
+        mask: Optional[int] = None,
     ):
         if func is None:
             func = glGetEnum(GL.GL_STENCIL_FUNC)
@@ -59,6 +60,7 @@ class StencilFunc:
     def apply(self):
         if _MetaGLConfig._active_local_env is not None:
             _MetaGLConfig._active_local_env.add_recover_func(
+                "glStencilFunc($, $, $)",
                 GL.glStencilFunc,
                 glGetEnum(GL.GL_STENCIL_FUNC),
                 glGetEnum(GL.GL_STENCIL_REF),
@@ -150,6 +152,7 @@ class _MetaGLConfig(type):
             dst = glGetEnumi(GL.GL_BLEND_DST_RGB, index)
             if _MetaGLConfig._active_local_env is not None:
                 _MetaGLConfig._active_local_env.add_recover_func(
+                    f"glBlendFunci({index}, $, $)",
                     GL.glBlendFunci,
                     index, glGetEnumi(GL.GL_BLEND_SRC_RGB, index), dst
                 )
@@ -166,6 +169,7 @@ class _MetaGLConfig(type):
             src = glGetEnumi(GL.GL_BLEND_SRC_RGB, index)
             if _MetaGLConfig._active_local_env is not None:
                 _MetaGLConfig._active_local_env.add_recover_func(
+                    f"glBlendFunci({index}, $, $)",
                     GL.glBlendFunci,
                     index, src, glGetEnumi(GL.GL_BLEND_DST_RGB, index)
                 )
@@ -182,6 +186,7 @@ class _MetaGLConfig(type):
             dst = glGetEnumi(GL.GL_BLEND_DST_ALPHA, index)
             if _MetaGLConfig._active_local_env is not None:
                 _MetaGLConfig._active_local_env.add_recover_func(
+                    f"glBlendFunci({index}, $, $)",
                     GL.glBlendFunci,
                     index, glGetEnumi(GL.GL_BLEND_SRC_ALPHA, index), dst
                 )
@@ -198,6 +203,7 @@ class _MetaGLConfig(type):
             src = glGetEnumi(GL.GL_BLEND_SRC_ALPHA, index)
             if _MetaGLConfig._active_local_env is not None:
                 _MetaGLConfig._active_local_env.add_recover_func(
+                    f"glBlendFunci({index}, $, $)",
                     GL.glBlendFunci,
                     index, src, glGetEnumi(GL.GL_BLEND_DST_ALPHA, index)
                 )
@@ -228,8 +234,8 @@ class _MetaGLConfig(type):
     __available_image_units = None
     __available_extensions = None
     __depth_bits = None
-    _active_local_env = None
-    _all_setters:Dict[str, str] = None
+    _active_local_env:Optional[GLConfig.LocalEnv] = None
+    _all_setters:Optional[Set[str]] = None
 
     @property
     def debug(cls):
@@ -755,7 +761,7 @@ class _MetaGLConfig(type):
         return _MetaGLConfig.__available_extensions
 
 
-def setter_methods(cls):
+def setter_methods(cls)->Set[str]:
     setters = set()
     for name, member in inspect.getmembers(cls):
         if isinstance(member, property) and member.fset is not None:
@@ -768,12 +774,15 @@ class GLConfig(metaclass=_MetaGLConfig):
     class LocalEnv:
 
         def __init__(self):
-            self._recover_funcs = []
+            self._recover_funcs = {}
             self._old_values = {}
             self._last_local_env = None
 
-        def add_recover_func(self, func, *args, **kwargs):
-            self._recover_funcs.append({"func": func, "args": args, "kwargs": kwargs})
+        def add_recover_func(self, key:str, func, *args, **kwargs):
+            if key in self._recover_funcs:
+                return
+            
+            self._recover_funcs[key] = {"func": func, "args": args, "kwargs": kwargs}
 
         def add_old_value(self, key, old_value):
             if key in self._old_values:
@@ -790,7 +799,7 @@ class GLConfig(metaclass=_MetaGLConfig):
         def __exit__(self, *exc_details):
             _MetaGLConfig._active_local_env = None
 
-            for func_info in self._recover_funcs:
+            for func_info in self._recover_funcs.values():
                 func_info["func"](*func_info["args"], **func_info["kwargs"])
 
             for key, value in self._old_values.items():
@@ -808,11 +817,7 @@ class GLConfig(metaclass=_MetaGLConfig):
     @staticmethod
     def clear_buffers(bits=None):
         if bits is None:
-            bits = (
-                GL.GL_COLOR_BUFFER_BIT
-                | GL.GL_DEPTH_BUFFER_BIT
-                | GL.GL_STENCIL_BUFFER_BIT
-            )
+            bits = (GL.GL_COLOR_BUFFER_BIT | GL.GL_DEPTH_BUFFER_BIT | GL.GL_STENCIL_BUFFER_BIT)
 
         GL.glClear(bits)
 
