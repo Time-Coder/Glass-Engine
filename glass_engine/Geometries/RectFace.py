@@ -31,8 +31,8 @@ class RectFace(Mesh):
         self.is_closed = False
         self.self_calculated_normal = True
 
-        vertices = self.vertices
-        indices = self.indices
+        vertices = self._vertices
+        indices = self._indices
         width = self.__width
         height = self.__height
         vertical = self.__vertical

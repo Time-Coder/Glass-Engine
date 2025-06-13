@@ -37,8 +37,8 @@ class RPolygonFace(Mesh):
         self.is_closed = False
         self.self_calculated_normal = True
 
-        vertices = self.vertices
-        indices = self.indices
+        vertices = self._vertices
+        indices = self._indices
         radius = self.__radius
         start_side = self.__start_side
         total_sides = self.__total_sides

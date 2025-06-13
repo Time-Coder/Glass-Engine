@@ -44,8 +44,8 @@ class TrefoilKnot(Mesh):
         self.is_closed = True
         self.self_calculated_normal = True
 
-        vertices = self.vertices
-        indices = self.indices
+        vertices = self._vertices
+        indices = self._indices
         r = self.__tube_radius
         R = self.__knot_radius / 3
         vertical = self.__vertical

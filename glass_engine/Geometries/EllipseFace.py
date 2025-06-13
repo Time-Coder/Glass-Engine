@@ -39,8 +39,8 @@ class EllipseFace(Mesh):
         self.is_closed = False
         self.self_calculated_normal = True
 
-        vertices = self.vertices
-        indices = self.indices
+        vertices = self._vertices
+        indices = self._indices
         a = self.__a
         b = self.__b
         start_angle = self.__start_angle / 180 * math.pi

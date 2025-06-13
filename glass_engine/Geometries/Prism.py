@@ -35,8 +35,8 @@ class Prism(Mesh):
 
     def build(self):
         self.is_closed = True
-        vertices = self.vertices
-        indices = self.indices
+        vertices = self._vertices
+        indices = self._indices
         radius = self.__radius
         height = self.__height
         start_side = self.__start_side

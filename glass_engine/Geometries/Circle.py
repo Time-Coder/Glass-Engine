@@ -20,19 +20,27 @@ class Circle(Mesh):
         span_angle: float = 360,
         color: Union[glm.vec3, glm.vec4] = glm.vec4(0.396, 0.74151, 0.69102, 1),
         line_width: int = 2,
+        normalize_tex_coords: bool = False,
+        tex_coords_per_unit: float = 1,
         name: str = "",
     ):
-        Mesh.__init__(self, primitive_type=GL.GL_LINE_STRIP, color=color, name=name)
+        Mesh.__init__(
+            self, primitive_type=GL.GL_LINE_STRIP,
+            color=color,
+            normalize_tex_coords=normalize_tex_coords,
+            tex_coords_per_unit=tex_coords_per_unit,
+            name=name, block=True
+        )
+
         self.render_hints.line_width = line_width
         self.__radius: float = radius
         self.__vertical: bool = vertical
         self.__n_points: int = n_points
         self.__start_angle: float = start_angle
         self.__span_angle: float = span_angle
-        self.start_building()
 
     def build(self):
-        vertices = self.vertices
+        vertices = self._vertices
         radius: float = self.__radius
         vertical: bool = self.__vertical
         n_points: int = self.__n_points
@@ -40,7 +48,8 @@ class Circle(Mesh):
         span_angle: float = self.__span_angle
 
         for i in range(n_points):
-            theta = (start_angle + i / (n_points - 1) * span_angle) / 180 * math.pi
+            theta_deg = start_angle + i / (n_points - 1) * span_angle
+            theta = theta_deg / 180 * math.pi
 
             position = radius * glm.vec3(math.cos(theta), math.sin(theta), 0)
             bitangent = glm.vec3(-math.sin(theta), math.cos(theta), 0)
@@ -51,7 +60,11 @@ class Circle(Mesh):
             vertices[i] = Vertex(
                 position=position,
                 bitangent=bitangent,
-                tex_coord=glm.vec3(radius * theta, 0, 0),
+                tex_coord=(
+                    glm.vec3((start_angle + theta_deg) / (start_angle + span_angle), 0, 0)
+                    if self.normalize_tex_coords else
+                    glm.vec3(self.tex_coords_per_unit * radius * theta, 0, 0)
+                )
             )
 
         del vertices[n_points:]

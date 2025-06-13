@@ -24,7 +24,6 @@ class Block:
                 Block.upload_var(self)
                 self._dirty = False
 
-        @staticmethod
         def not_const(func):
             @wraps(func)
             def wrapper(*args, **kwargs):

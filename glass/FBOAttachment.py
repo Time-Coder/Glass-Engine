@@ -24,7 +24,6 @@ class FBOAttachment(GLObject):
     def dynamic(self):
         return self._dynamic
 
-    @staticmethod
     def param_setter(func):
         @wraps(func)
         def wrapper(*args, **kwargs):

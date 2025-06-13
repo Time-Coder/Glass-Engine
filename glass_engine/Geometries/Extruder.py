@@ -65,8 +65,8 @@ class Extruder(Mesh):
             i += 1
 
         if len_path < 2:
-            self.vertices.clear()
-            self.indices.clear()
+            self._vertices.clear()
+            self._indices.clear()
             return
 
         centroid = polygon_centroid(section)
@@ -122,8 +122,8 @@ class Extruder(Mesh):
     def bevel_join_build(
         self, current_section, accumulate_length, section_offset, path
     ):
-        vertices = self.vertices
-        indices = self.indices
+        vertices = self._vertices
+        indices = self._indices
         normalize_tex_coord = self.__normalize_tex_coord
         len_section = len(current_section)
 
@@ -340,8 +340,8 @@ class Extruder(Mesh):
     def round_join_build(
         self, current_section, accumulate_length, section_offset, path
     ):
-        vertices = self.vertices
-        indices = self.indices
+        vertices = self._vertices
+        indices = self._indices
         n_corner_divide = self.__n_corner_divide
         normalize_tex_coord = self.__normalize_tex_coord
         len_section = len(current_section)
@@ -535,8 +535,8 @@ class Extruder(Mesh):
     def miter_join_build(
         self, current_section, accumulate_length, section_offset, path
     ):
-        vertices = self.vertices
-        indices = self.indices
+        vertices = self._vertices
+        indices = self._indices
         normalize_tex_coord = self.__normalize_tex_coord
         len_section = len(current_section)
 

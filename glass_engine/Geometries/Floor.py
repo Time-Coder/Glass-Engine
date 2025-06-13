@@ -40,12 +40,12 @@ class Floor(Mesh):
         self.is_closed = False
         self.self_calculated_normal = True
 
-        vertices = self.vertices
-        indices = self.indices
+        vertices = self._vertices
+        indices = self._indices
         length = self.__length
         repeat_per_meter = self.__repeat_per_meter
-        vertices = self.vertices
-        indices = self.indices
+        vertices = self._vertices
+        indices = self._indices
 
         vertices[0] = Vertex(
             position=glm.vec3(-length / 2, -length / 2, -0.001),

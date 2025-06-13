@@ -45,7 +45,7 @@ class ModelMesh(Mesh):
         self.z_max = assimp_mesh.z_max
 
         self.should_add_color = False
-        self.vertices = Vertices(
+        self._vertices = Vertices(
             position=AttrList.frombuffer(assimp_mesh.position_buffer, glm.vec3),
             tangent=AttrList.frombuffer(assimp_mesh.tangent_buffer, glm.vec3),
             bitangent=AttrList.frombuffer(assimp_mesh.bitangent_buffer, glm.vec3),
@@ -54,7 +54,7 @@ class ModelMesh(Mesh):
             color=AttrList.frombuffer(assimp_mesh.color_buffers[0], glm.vec4),
             back_color=AttrList.frombuffer(assimp_mesh.color_buffers[1], glm.vec4),
         )
-        self.indices = Indices.frombuffer(assimp_mesh.indices_buffer, glm.uvec3)
+        self._indices = Indices.frombuffer(assimp_mesh.indices_buffer, glm.uvec3)
 
 
 class Model(SceneNode):

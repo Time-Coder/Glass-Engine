@@ -45,8 +45,8 @@ class Rotator(Mesh):
         self.start_building()
 
     def build(self):
-        vertices = self.vertices
-        indices = self.indices
+        vertices = self._vertices
+        indices = self._indices
         section = self.__used_section
         axis_start = self.__axis_start
         axis_stop = self.__axis_stop

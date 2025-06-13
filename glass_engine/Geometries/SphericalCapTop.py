@@ -36,8 +36,8 @@ class SphericalCapTop(Mesh):
     def build(self):
         self.is_closed = True
 
-        vertices = self.vertices
-        indices = self.indices
+        vertices = self._vertices
+        indices = self._indices
         base_radius = self.__base_radius
         height = self.__height
         radius = (base_radius**2 + height**2) / (2 * height)

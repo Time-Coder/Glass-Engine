@@ -37,8 +37,8 @@ class PyramidTrustum(Mesh):
 
     def build(self):
         self.is_closed = True
-        vertices = self.vertices
-        indices = self.indices
+        vertices = self._vertices
+        indices = self._indices
         bottom_radius = self.__bottom_radius
         top_radius = self.__top_radius
         height = self.__height

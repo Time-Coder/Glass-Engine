@@ -56,7 +56,7 @@ class Frame:
             self.program["gray"] = gray
             self.program["invert"] = invert
             self.program["index"] = index
-            self.program.draw_triangles(vertices=self.vertices, indices=self.indices)
+            self.program.draw_triangles(vertices=self._vertices, indices=self._indices)
 
 
 Frame = Frame()

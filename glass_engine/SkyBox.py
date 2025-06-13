@@ -60,8 +60,8 @@ class SkyBox(Mesh):
         self.y_min, self.y_max = -1, 1
         self.z_min, self.z_max = -1, 1
 
-        vertices = self.vertices
-        indices = self.indices
+        vertices = self._vertices
+        indices = self._indices
 
         # 左面
         vertices[0] = Vertex(position=glm.vec3(-1, 1, -1))

@@ -42,8 +42,8 @@ class Torus(Mesh):
         self.is_closed = True
         self.self_calculated_normal = True
 
-        vertices = self.vertices
-        indices = self.indices
+        vertices = self._vertices
+        indices = self._indices
         r = self.__r
         R = self.__R
         start_lon = self.__start_lon / 180 * math.pi

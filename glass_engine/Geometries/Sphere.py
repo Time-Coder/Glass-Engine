@@ -39,8 +39,8 @@ class Sphere(Mesh):
         self.is_closed = True
         self.self_calculated_normal = True
 
-        vertices = self.vertices
-        indices = self.indices
+        vertices = self._vertices
+        indices = self._indices
         radius = self.__radius
         start_lon = self.__start_lon / 180 * math.pi
         span_lon = self.__span_lon / 180 * math.pi

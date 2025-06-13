@@ -14,35 +14,7 @@ from functools import wraps
 from typing import Union
 
 
-def param_setter(func):
-    @wraps(func)
-    def wrapper(*args, **kwargs):
-        self = args[0]
-        value = args[1]
 
-        equal = False
-        try:
-            lvalue = getattr(self, func.__name__)
-            if type(lvalue) != type(value):
-                equal = False
-            else:
-                equal = bool(getattr(self, func.__name__) == value)
-        except:
-            equal = False
-
-        if equal:
-            return
-
-        safe_func = checktype(func)
-        return_value = safe_func(*args, **kwargs)
-
-        self._update_all_env_maps()
-        if func.__name__ == "generate_shadows":
-            self._update_all_depth_maps()
-
-        return return_value
-
-    return wrapper
 
 
 class Material(metaclass=MetaInstancesRecorder):
@@ -178,6 +150,36 @@ class Material(metaclass=MetaInstancesRecorder):
     @MetaInstancesRecorder.delete
     def __del__(self):
         pass
+
+    def param_setter(func):
+        @wraps(func)
+        def wrapper(*args, **kwargs):
+            self = args[0]
+            value = args[1]
+
+            equal = False
+            try:
+                lvalue = getattr(self, func.__name__)
+                if type(lvalue) != type(value):
+                    equal = False
+                else:
+                    equal = bool(getattr(self, func.__name__) == value)
+            except:
+                equal = False
+
+            if equal:
+                return
+
+            safe_func = checktype(func)
+            return_value = safe_func(*args, **kwargs)
+
+            self._update_all_env_maps()
+            if func.__name__ == "generate_shadows":
+                self._update_all_depth_maps()
+
+            return return_value
+
+        return wrapper
 
     @property
     def name(self) -> str:

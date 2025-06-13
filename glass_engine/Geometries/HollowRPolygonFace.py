@@ -39,8 +39,8 @@ class HollowRPolygonFace(Mesh):
         self.is_closed = False
         self.self_calculated_normal = True
 
-        vertices = self.vertices
-        indices = self.indices
+        vertices = self._vertices
+        indices = self._indices
         inner_radius = self.__inner_radius
         outer_radius = self.__outer_radius
         start_side = self.__start_side

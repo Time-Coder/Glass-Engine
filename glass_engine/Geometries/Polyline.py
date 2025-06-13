@@ -33,7 +33,7 @@ class Polyline(Mesh):
 
     def build(self):
         points = self.__points
-        vertices = self.vertices
+        vertices = self._vertices
 
         length = 0
         len_points = len(points)

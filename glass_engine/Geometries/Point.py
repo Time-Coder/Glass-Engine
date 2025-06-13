@@ -24,7 +24,7 @@ class Point(Mesh):
 
     def build(self):
         position = self.__position
-        vertices = self.vertices
+        vertices = self._vertices
 
         vertices[0] = Vertex(position=position, tex_coord=glm.vec3(0.5, 0.5, 0))
         del vertices[1:]

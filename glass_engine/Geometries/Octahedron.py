@@ -81,8 +81,8 @@ class Octahedron(Mesh):
         self.is_closed = True
         self.self_calculated_normal = True
 
-        vertices = self.vertices
-        indices = self.indices
+        vertices = self._vertices
+        indices = self._indices
         radius = self.__radius
         stable = self.__stable
         normalize_tex_coord = self.__normalize_tex_coord

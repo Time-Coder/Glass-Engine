@@ -69,8 +69,8 @@ class Icosphere(Mesh):
 
     def build(self):
         self.is_closed = True
-        vertices = self.vertices
-        indices = self.indices
+        vertices = self._vertices
+        indices = self._indices
         self.__generate_base_data()
 
         radius = self.__radius

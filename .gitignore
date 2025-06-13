@@ -22,5 +22,4 @@ assimpy/pybind11/*
 *.sqlite
 glass/CodeCompressor/tree-sitter-glsl/src/*
 test_*
-.venv
-.venv312
+.venv*

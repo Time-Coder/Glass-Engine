@@ -26,16 +26,22 @@ class Mesh(SceneNode):
         Smooth = 1
         Flat = 2
 
+    class BuildState(Enum):
+        NotBuilt = 0
+        Building = 1
+        Built = 2
+
     @checktype
     def __init__(
         self,
         primitive_type: GLInfo.primitive_types = GL.GL_TRIANGLES,
         color: Union[glm.vec3, glm.vec4] = glm.vec4(1, 1, 1, 1),
         back_color: Union[glm.vec3, glm.vec4, None] = None,
-        name: str = "",
-        block: bool = True,
-        auto_build: bool = True,
         surf_type: Union[Mesh.SurfType, None] = None,
+        normalize_tex_coords: bool = False,
+        tex_coords_per_unit: float = 1,
+        name: str = "",
+        block: bool = True
     ):
         SceneNode.__init__(self, name)
 
@@ -49,6 +55,9 @@ class Mesh(SceneNode):
         self._z_min = 0
         self._z_max = 0
         self._builder = None
+        self._build_state = Mesh.BuildState.NotBuilt
+        self._normalize_tex_coords = normalize_tex_coords
+        self._tex_coords_per_unit = tex_coords_per_unit
 
         if isinstance(color, glm.vec3):
             color = glm.vec4(color, 1)
@@ -85,13 +94,41 @@ class Mesh(SceneNode):
         self._propagation_props["explode_distance"] = 0
 
         self.__block = block
-        self.__auto_build = auto_build
         self.__surf_type = surf_type
         self.__primitive = primitive_type
         self.__self_calculated_normal = False
 
     def __hash__(self):
         return id(self)
+    
+    def param_setter(func):
+
+        @wraps(func)
+        def wrapper(*args, **kwargs):
+            self = args[0]
+            value = args[1]
+
+            equal = False
+            try:
+                lvalue = getattr(self, func.__name__)
+                if type(lvalue) != type(value):
+                    equal = False
+                else:
+                    equal = bool(getattr(self, func.__name__) == value)
+            except:
+                equal = False
+
+            if equal:
+                return
+
+            safe_func = checktype(func)
+            return_value = safe_func(*args, **kwargs)
+
+            self._build_state = Mesh.BuildState.NotBuilt
+
+            return return_value
+
+        return wrapper
 
     @property
     def self_calculated_normal(self):
@@ -154,21 +191,21 @@ class Mesh(SceneNode):
             return
 
         color_array = np.dot(
-            np.ones((len(self.vertices), 1), dtype=np.float32),
+            np.ones((len(self._vertices), 1), dtype=np.float32),
             np.array(
                 [[self._color.r, self._color.g, self._color.b, self._color.a]],
                 dtype=np.float32,
             ),
         )
-        if "color" not in self.vertices._attr_list_map:
-            self.vertices._attr_list_map["color"] = AttrList(
+        if "color" not in self._vertices._attr_list_map:
+            self._vertices._attr_list_map["color"] = AttrList(
                 color_array, dtype=glm.vec4
             )
         else:
-            self.vertices._attr_list_map["color"].ndarray = color_array
+            self._vertices._attr_list_map["color"].ndarray = color_array
 
         back_color_array = np.dot(
-            np.ones((len(self.vertices), 1), dtype=np.float32),
+            np.ones((len(self._vertices), 1), dtype=np.float32),
             np.array(
                 [
                     [
@@ -181,12 +218,12 @@ class Mesh(SceneNode):
                 dtype=np.float32,
             ),
         )
-        if "back_color" not in self.vertices._attr_list_map:
-            self.vertices._attr_list_map["back_color"] = AttrList(
+        if "back_color" not in self._vertices._attr_list_map:
+            self._vertices._attr_list_map["back_color"] = AttrList(
                 back_color_array, dtype=glm.vec4
             )
         else:
-            self.vertices._attr_list_map["back_color"].ndarray = back_color_array
+            self._vertices._attr_list_map["back_color"].ndarray = back_color_array
 
     def _color_change_callback(self):
         if not self._should_callback:
@@ -195,26 +232,26 @@ class Mesh(SceneNode):
         self._should_callback = False
 
         color_array = np.dot(
-            np.ones((len(self.vertices), 1), dtype=np.float32),
+            np.ones((len(self._vertices), 1), dtype=np.float32),
             np.array(
                 [[self._color.r, self._color.g, self._color.b, self._color.a]],
                 dtype=np.float32,
             ),
         )
-        if "color" not in self.vertices._attr_list_map:
-            self.vertices._attr_list_map["color"] = AttrList(
+        if "color" not in self._vertices._attr_list_map:
+            self._vertices._attr_list_map["color"] = AttrList(
                 color_array, dtype=glm.vec4
             )
         else:
-            self.vertices._attr_list_map["color"].ndarray = color_array
+            self._vertices._attr_list_map["color"].ndarray = color_array
 
         if not self._back_color_user_set:
-            if "back_color" not in self.vertices._attr_list_map:
-                self.vertices._attr_list_map["back_color"] = AttrList(
+            if "back_color" not in self._vertices._attr_list_map:
+                self._vertices._attr_list_map["back_color"] = AttrList(
                     color_array, dtype=glm.vec4
                 )
             else:
-                self.vertices._attr_list_map["back_color"].ndarray = color_array
+                self._vertices._attr_list_map["back_color"].ndarray = color_array
 
         self._should_callback = True
 
@@ -222,13 +259,13 @@ class Mesh(SceneNode):
     def color(self) -> callback_vec4:
         old_should_callback = self._should_callback
         self._should_callback = False
-        if "color" not in self.vertices._attr_list_map:
+        if "color" not in self._vertices._attr_list_map:
             self._color.r = 0
             self._color.g = 0
             self._color.b = 0
             self._color.a = 0
         else:
-            color_array = self.vertices._attr_list_map["color"].ndarray
+            color_array = self._vertices._attr_list_map["color"].ndarray
             if len(color_array.shape) != 2 or color_array.shape[1] != 4:
                 color_array = color_array.reshape(-1, 4)
 
@@ -263,23 +300,41 @@ class Mesh(SceneNode):
             color = glm.vec4(color, 1)
 
         color_array = np.dot(
-            np.ones((len(self.vertices), 1), dtype=np.float32),
+            np.ones((len(self._vertices), 1), dtype=np.float32),
             np.array([[color.r, color.g, color.b, color.a]], dtype=np.float32),
         )
-        if "color" not in self.vertices._attr_list_map:
-            self.vertices._attr_list_map["color"] = AttrList(
+        if "color" not in self._vertices._attr_list_map:
+            self._vertices._attr_list_map["color"] = AttrList(
                 color_array, dtype=glm.vec4
             )
         else:
-            self.vertices._attr_list_map["color"].ndarray = color_array
+            self._vertices._attr_list_map["color"].ndarray = color_array
 
         if not self._back_color_user_set:
-            if "back_color" not in self.vertices._attr_list_map:
-                self.vertices._attr_list_map["back_color"] = AttrList(
+            if "back_color" not in self._vertices._attr_list_map:
+                self._vertices._attr_list_map["back_color"] = AttrList(
                     color_array, dtype=glm.vec4
                 )
             else:
-                self.vertices._attr_list_map["back_color"].ndarray = color_array
+                self._vertices._attr_list_map["back_color"].ndarray = color_array
+
+    @property
+    def normalize_tex_coords(self)->bool:
+        return self._normalize_tex_coords
+    
+    @normalize_tex_coords.setter
+    @param_setter
+    def normalize_tex_coords(self, flag:bool):
+        self._normalize_tex_coords = flag
+
+    @property
+    def tex_coords_per_unit(self)->float:
+        return self._tex_coords_per_unit
+    
+    @tex_coords_per_unit.setter
+    @param_setter
+    def tex_coords_per_unit(self, tex_coords_per_unit:float):
+        self._tex_coords_per_unit = tex_coords_per_unit
 
     def _back_color_change_callback(self):
         if not self._should_callback:
@@ -290,7 +345,7 @@ class Mesh(SceneNode):
         self._back_color_user_set = True
 
         color_array = np.dot(
-            np.ones((len(self.vertices), 1), dtype=np.float32),
+            np.ones((len(self._vertices), 1), dtype=np.float32),
             np.array(
                 [
                     [
@@ -303,12 +358,12 @@ class Mesh(SceneNode):
                 dtype=np.float32,
             ),
         )
-        if "back_color" not in self.vertices._attr_list_map:
-            self.vertices._attr_list_map["back_color"] = AttrList(
+        if "back_color" not in self._vertices._attr_list_map:
+            self._vertices._attr_list_map["back_color"] = AttrList(
                 color_array, dtype=glm.vec4
             )
         else:
-            self.vertices._attr_list_map["back_color"].ndarray = color_array
+            self._vertices._attr_list_map["back_color"].ndarray = color_array
 
         self._should_callback = True
 
@@ -316,13 +371,13 @@ class Mesh(SceneNode):
     def back_color(self) -> callback_vec4:
         old_should_callback = self._should_callback
         self._should_callback = False
-        if "back_color" not in self.vertices._attr_list_map:
+        if "back_color" not in self._vertices._attr_list_map:
             self._back_color.r = 0
             self._back_color.g = 0
             self._back_color.b = 0
             self._back_color.a = 0
         else:
-            color_array = self.vertices._attr_list_map["back_color"].ndarray
+            color_array = self._vertices._attr_list_map["back_color"].ndarray
             if len(color_array.shape) != 2 or color_array.shape[1] != 4:
                 color_array = color_array.reshape(-1, 4)
 
@@ -362,15 +417,15 @@ class Mesh(SceneNode):
 
         self._back_color_user_set = True
         color_array = np.dot(
-            np.ones((len(self.vertices), 1), dtype=np.float32),
+            np.ones((len(self._vertices), 1), dtype=np.float32),
             np.array([[color.r, color.g, color.b, color.a]], dtype=np.float32),
         )
-        if "back_color" not in self.vertices._attr_list_map:
-            self.vertices._attr_list_map["back_color"] = AttrList(
+        if "back_color" not in self._vertices._attr_list_map:
+            self._vertices._attr_list_map["back_color"] = AttrList(
                 color_array, dtype=glm.vec4
             )
         else:
-            self.vertices._attr_list_map["back_color"].ndarray = color_array
+            self._vertices._attr_list_map["back_color"].ndarray = color_array
 
     @property
     def back_material(self):
@@ -397,35 +452,7 @@ class Mesh(SceneNode):
     def render_hints(self):
         return self._render_hints
 
-    @staticmethod
-    def param_setter(func):
-        @wraps(func)
-        def wrapper(*args, **kwargs):
-            self = args[0]
-            value = args[1]
-
-            equal = False
-            try:
-                lvalue = getattr(self, func.__name__)
-                if type(lvalue) != type(value):
-                    equal = False
-                else:
-                    equal = bool(getattr(self, func.__name__) == value)
-            except:
-                equal = False
-
-            if equal:
-                return
-
-            safe_func = checktype(func)
-            return_value = safe_func(*args, **kwargs)
-
-            if self.auto_build:
-                self.start_building()
-
-            return return_value
-
-        return wrapper
+    
 
     @property
     def surf_type(self):
@@ -446,13 +473,8 @@ class Mesh(SceneNode):
         self.__block = flag
 
     @property
-    def auto_build(self):
-        return self.__auto_build
-
-    @auto_build.setter
-    @checktype
-    def auto_build(self, flag: bool):
-        self.__auto_build = flag
+    def build_state(self)->Mesh.BuildState:
+        return self._build_state
 
     @property
     def bounding_box(self):
@@ -520,10 +542,11 @@ class Mesh(SceneNode):
     def z_max(self, z_max: float):
         self._z_max = z_max
 
-    def start_building(self):
-        if self.__class__.__name__ == "Mesh":
+    def __build(self):
+        if self.__class__.__name__ == "Mesh" or self._build_state != Mesh.BuildState.NotBuilt:
             return
 
+        self._build_state = Mesh.BuildState.Building
         if self.__block:
             if inspect.isgeneratorfunction(self.build):
                 self._builder = self.build()
@@ -539,6 +562,8 @@ class Mesh(SceneNode):
                 self.__post_build()
                 self._builder = None
 
+            self._build_state = Mesh.BuildState.Built
+
         else:  # not block
             if inspect.isgeneratorfunction(self.build):
                 self._builder = self.build()
@@ -547,10 +572,12 @@ class Mesh(SceneNode):
                 except StopIteration:
                     self.__post_build()
                     self._builder = None
+                    self._build_state = Mesh.BuildState.Built
             else:
                 self.build()
                 self.__post_build()
                 self._builder = None
+                self._build_state = Mesh.BuildState.Built
 
     @property
     def is_building(self):
@@ -569,12 +596,14 @@ class Mesh(SceneNode):
         except StopIteration:
             self.__post_build()
             self._builder = None
+            self._build_state = Mesh.BuildState.Built
 
     def __eq__(self, other):
         return id(self) == id(other)
 
     @property
     def vertices(self):
+        self.__build()
         return self._vertices
 
     @vertices.setter
@@ -588,8 +617,11 @@ class Mesh(SceneNode):
         else:
             self._vertices = Vertices(vertices)
 
+        self._build_state = Mesh.BuildState.Built
+
     @property
     def indices(self):
+        self.__build()
         return self._indices
 
     @indices.setter
@@ -602,6 +634,8 @@ class Mesh(SceneNode):
             self._indices = indices
         else:
             self._indices = Indices(indices)
+
+        self._build_state = Mesh.BuildState.Built
 
     @property
     def material(self):

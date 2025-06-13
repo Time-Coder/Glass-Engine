@@ -20,31 +20,34 @@ class Cylinder(Mesh):
         n_divide: int = 100,
         color: Union[glm.vec3, glm.vec4] = glm.vec4(0.396, 0.74151, 0.69102, 1),
         back_color: Union[glm.vec3, glm.vec4, None] = None,
-        normalize_tex_coord=False,
+        normalize_tex_coords:bool=False,
+        tex_coords_per_unit: float = 1,
         name: str = "",
         block=True,
     ):
-        Mesh.__init__(self, color=color, back_color=back_color, name=name, block=block)
+        Mesh.__init__(
+            self, color=color, back_color=back_color,
+            normalize_tex_coords=normalize_tex_coords,
+            tex_coords_per_unit=tex_coords_per_unit,
+            name=name, block=block
+        )
         self.__radius = radius
         self.__height = height
         self.__start_angle = start_angle
         self.__span_angle = span_angle
         self.__n_divide = n_divide
-        self.__normalize_tex_coord = normalize_tex_coord
-        self.start_building()
 
     def build(self):
         self.is_closed = True
         self.self_calculated_normal = True
 
-        vertices = self.vertices
-        indices = self.indices
+        vertices = self._vertices
+        indices = self._indices
         radius = self.__radius
         height = self.__height
         start_angle = self.__start_angle / 180 * math.pi
         span_angle = self.__span_angle / 180 * math.pi
         n_divide = self.__n_divide
-        normalize_tex_coord = self.__normalize_tex_coord
 
         i_vertex = 0
         i_index = 0
@@ -65,8 +68,14 @@ class Cylinder(Mesh):
         vertices[i_vertex] = vertex_bottom
         i_vertex += 1
 
-        tex_coord_radius = 0.5 if normalize_tex_coord else radius
-        t = 1 if normalize_tex_coord else height
+        tex_coord_radius = (
+            0.5 if self.normalize_tex_coords
+            else self.tex_coords_per_unit * radius
+        )
+        t = (
+            1 if self.normalize_tex_coords
+            else self.tex_coords_per_unit * height
+        )
 
         for j in range(n_divide):
             theta = start_angle + span_angle * j / (n_divide - 1)

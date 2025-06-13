@@ -35,8 +35,8 @@ class PyramidSide(Mesh):
 
     def build(self):
         self.is_closed = False
-        vertices = self.vertices
-        indices = self.indices
+        vertices = self._vertices
+        indices = self._indices
         radius = self.__radius
         height = self.__height
         start_side = self.__start_side

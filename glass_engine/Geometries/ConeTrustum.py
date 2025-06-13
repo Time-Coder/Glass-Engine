@@ -21,26 +21,30 @@ class ConeTrustum(Mesh):
         n_divide: int = 100,
         color: Union[glm.vec3, glm.vec4] = glm.vec4(0.396, 0.74151, 0.69102, 1),
         back_color: Union[glm.vec3, glm.vec4, None] = None,
-        normalize_tex_coord=False,
+        normalize_tex_coords:bool=False,
+        tex_coords_per_unit:float=1,
         name: str = "",
         block=True,
     ):
-        Mesh.__init__(self, color=color, back_color=back_color, name=name, block=block)
+        Mesh.__init__(
+            self, color=color, back_color=back_color,
+            normalize_tex_coords=normalize_tex_coords,
+            tex_coords_per_unit=tex_coords_per_unit,
+            name=name, block=block
+        )
         self.__bottom_radius = bottom_radius
         self.__top_radius = top_radius
         self.__height = height
         self.__start_angle = start_angle
         self.__span_angle = span_angle
         self.__n_divide = n_divide
-        self.__normalize_tex_coord = normalize_tex_coord
-        self.start_building()
 
     def build(self):
         self.is_closed = True
         self.self_calculated_normal = True
 
-        vertices = self.vertices
-        indices = self.indices
+        vertices = self._vertices
+        indices = self._indices
 
         bottom_radius = self.__bottom_radius
         top_radius = self.__top_radius
@@ -48,7 +52,6 @@ class ConeTrustum(Mesh):
         start_angle = self.__start_angle / 180 * math.pi
         span_angle = self.__span_angle / 180 * math.pi
         n_divide = self.__n_divide
-        normalize_tex_coord = self.__normalize_tex_coord
 
         i_vertex = 0
         i_index = 0
@@ -73,20 +76,20 @@ class ConeTrustum(Mesh):
 
         k = math.sqrt(1 + (height / (bottom_radius - top_radius)) ** 2)
         tex_coord_top_side_radius = 0.5 / bottom_radius * top_radius
-        if not normalize_tex_coord:
-            tex_coord_top_side_radius = top_radius * k
+        if not self.normalize_tex_coords:
+            tex_coord_top_side_radius = self.tex_coords_per_unit * top_radius * k
 
         tex_coord_bottom_side_radius = 0.5
-        if not normalize_tex_coord:
-            tex_coord_bottom_side_radius = bottom_radius * k
+        if not self.normalize_tex_coords:
+            tex_coord_bottom_side_radius = self.tex_coords_per_unit * bottom_radius * k
 
         tex_coord_bottom_radius = 0.5
-        if not normalize_tex_coord:
-            tex_coord_bottom_radius = bottom_radius
+        if not self.normalize_tex_coords:
+            tex_coord_bottom_radius = self.tex_coords_per_unit * bottom_radius
 
         tex_coord_top_radius = 0.5 / bottom_radius * top_radius
-        if not normalize_tex_coord:
-            tex_coord_top_radius = top_radius
+        if not self.normalize_tex_coords:
+            tex_coord_top_radius = self.tex_coords_per_unit * top_radius
 
         for j in range(n_divide):
             theta = start_angle + span_angle * j / (n_divide - 1)
@@ -251,12 +254,3 @@ class ConeTrustum(Mesh):
     @Mesh.param_setter
     def height(self, height: float):
         self.__height = height
-
-    @property
-    def normalize_tex_coord(self):
-        return self.__normalize_tex_coord
-
-    @normalize_tex_coord.setter
-    @Mesh.param_setter
-    def normalize_tex_coord(self, flag: bool):
-        self.__normalize_tex_coord = flag

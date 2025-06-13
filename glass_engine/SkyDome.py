@@ -35,8 +35,8 @@ class SkyDome(Mesh):
         self.y_min, self.y_max = -1, 1
         self.z_min, self.z_max = -1, 1
 
-        vertices = self.vertices
-        indices = self.indices
+        vertices = self._vertices
+        indices = self._indices
         n_lon_divide = self.__n_lon_divide
         n_lat_divide = self.__n_lat_divide
 
