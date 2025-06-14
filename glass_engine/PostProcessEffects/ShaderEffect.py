@@ -37,7 +37,7 @@ class ShaderEffect(PostProcessEffect):
         self._frame_index = 0
 
         if shader_path is not None:
-            self.shader_path = shader_path
+            self._shader_path = shader_path
 
     @property
     def fbo(self):
@@ -54,7 +54,7 @@ class ShaderEffect(PostProcessEffect):
         return self._shader_path
 
     @shader_path.setter
-    @checktype
+    @PostProcessEffect.param_setter
     def shader_path(self, shader_path: str):
         shader_path = os.path.abspath(shader_path).replace("\\", "/")
 
@@ -172,17 +172,6 @@ class ShaderEffect(PostProcessEffect):
             self._uniforms[name] = value
         else:
             self.program[name] = value
-
-    @property
-    def should_update(self):
-        if not self.enabled:
-            return False
-
-        return self._should_update or self._dynamic
-
-    @should_update.setter
-    def should_update(self, flag: bool):
-        self._should_update = flag
 
     def need_pos_info(self) -> bool:
         return (

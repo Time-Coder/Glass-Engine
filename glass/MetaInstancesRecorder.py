@@ -15,8 +15,8 @@ class MetaInstancesRecorder(type):
 
         return all_instances
 
-    @staticmethod
     def init(func):
+        
         @functools.wraps(func)
         def wrapper(*args, **kwargs):
             self = args[0]
@@ -28,7 +28,6 @@ class MetaInstancesRecorder(type):
 
         return wrapper
 
-    @staticmethod
     def delete(func):
 
         @functools.wraps(func)

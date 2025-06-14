@@ -1,4 +1,3 @@
-from glass.utils import di
 from enum import Flag, IntEnum
 
 import glm
@@ -506,43 +505,43 @@ class Manipulator:
         Key_Dead_Longsolidusoverlay = 16781971
 
     def __init__(self):
-        self._camera_id = id(None)
+        self._camera = None
 
     @property
     def camera(self):
-        return di(self._camera_id)
+        return self._camera
 
-    def startup(self) -> bool:
-        return False
+    def startup(self) -> None:
+        pass
 
     def on_mouse_pressed(
         self, button: MouseButton, screen_pos: glm.vec2, global_pos: glm.vec2
-    ) -> bool:
-        return False
+    ) -> None:
+        pass
 
     def on_mouse_released(
         self, button: MouseButton, screen_pos: glm.vec2, global_pos: glm.vec2
-    ) -> bool:
-        return False
+    ) -> None:
+        pass
 
     def on_mouse_double_clicked(
         self, button: MouseButton, screen_pos: glm.vec2, global_pos: glm.vec2
-    ) -> bool:
-        return False
+    ) -> None:
+        pass
 
-    def on_mouse_moved(self, screen_pos: glm.vec2, global_pos: glm.vec2) -> bool:
-        return False
+    def on_mouse_moved(self, screen_pos: glm.vec2, global_pos: glm.vec2) -> None:
+        pass
 
     def on_wheel_scrolled(
         self, angle: glm.vec2, screen_pos: glm.vec2, global_pos: glm.vec2
-    ) -> bool:
-        return False
+    ) -> None:
+        pass
 
-    def on_key_pressed(self, key: Key) -> bool:
-        return False
+    def on_key_pressed(self, key: Key) -> None:
+        pass
 
-    def on_key_released(self, key: Key) -> bool:
-        return False
+    def on_key_released(self, key: Key) -> None:
+        pass
 
-    def on_key_repeated(self, keys: set) -> bool:
-        return False
+    def on_key_repeated(self, keys: set) -> None:
+        pass

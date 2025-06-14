@@ -9,6 +9,7 @@ from glass.WeakSet import WeakSet
 from glass.WeakDict import WeakDict
 from glass.MetaInstancesRecorder import MetaInstancesRecorder
 from .callback_vec import callback_quat, callback_vec3
+from .Pivot import Pivot
 
 
 class SceneNode(metaclass=MetaInstancesRecorder):
@@ -27,6 +28,7 @@ class SceneNode(metaclass=MetaInstancesRecorder):
         )
         self._scale: callback_vec3 = callback_vec3(1, 1, 1, callback=self._set_dirty)
         self._yaw_pitch_roll: glm.vec3 = glm.vec3(0, 0, 0)
+        self._pivot:Pivot = Pivot(self)
 
         self.abs_position = glm.vec3(0, 0, 0)
         self.abs_orientation = glm.quat(1, 0, 0, 0)
@@ -39,6 +41,7 @@ class SceneNode(metaclass=MetaInstancesRecorder):
             weak_ref_keys=True, weak_ref_values=False
         )
         self._should_update_yaw_pitch_roll: bool = True
+        self._should_callback:bool = True
 
         self._propagation_props: dict = {}
         self._block_propagation: set = set()
@@ -48,6 +51,14 @@ class SceneNode(metaclass=MetaInstancesRecorder):
     @MetaInstancesRecorder.delete
     def __del__(self):
         pass
+
+    def update_screens(self):
+        for scene in self._scenes:
+            scene.update_screens()
+
+    @property
+    def pivot(self)->Pivot:
+        return self._pivot
 
     @property
     def unique_path(self) -> bool:
@@ -64,6 +75,7 @@ class SceneNode(metaclass=MetaInstancesRecorder):
     @visible.setter
     def visible(self, visible: bool):
         self.set_propagation_prop("visible", visible)
+        self.update_screens()
 
     def hide(self):
         self.visible = False
@@ -124,13 +136,15 @@ class SceneNode(metaclass=MetaInstancesRecorder):
                     callback(child, *args, **kwargs)
                 child_queues.extend(child._children)
 
-    def has_parent(self, parent):
+        self.update_screens()
+
+    def has_parent(self, parent)->bool:
         return parent in self._parents
 
-    def has_child(self, child):
+    def has_child(self, child)->bool:
         return child in self._children
 
-    def add_child(self, node):
+    def add_child(self, node)->None:
         if node.has_parent(self):
             return
 
@@ -158,8 +172,9 @@ class SceneNode(metaclass=MetaInstancesRecorder):
 
         node._add_scenes(self._scenes)
         self._set_dirty(False, True)
+        self.update_screens()
 
-    def remove_child(self, child):
+    def remove_child(self, child)->None:
         detached_node = None
         paths_prefix = None
         if isinstance(child, str):
@@ -185,10 +200,14 @@ class SceneNode(metaclass=MetaInstancesRecorder):
         for scene in self.scenes:
             scene._remove_paths_prefix(paths_prefix)
 
-    def clear_children(self):
+        self.update_screens()
+
+    def clear_children(self)->None:
         children_names = self.children_names
         for child_name in children_names:
             self.remove_child(child_name)
+
+        self.update_screens()
 
     @property
     def children_names(self):
@@ -258,8 +277,11 @@ class SceneNode(metaclass=MetaInstancesRecorder):
 
     @position.setter
     def position(self, position: glm.vec3):
+        self._should_callback = False
         self._position.x = position.x
         self._position.y = position.y
+        self._should_callback = True
+
         self._position.z = position.z
 
     @property
@@ -269,12 +291,18 @@ class SceneNode(metaclass=MetaInstancesRecorder):
     @scale.setter
     def scale(self, scale: Union[glm.vec3, float]):
         if isinstance(scale, (int, float)):
+            self._should_callback = False
             self._scale.x = scale
             self._scale.y = scale
+            self._should_callback = True
+
             self._scale.z = scale
         else:
+            self._should_callback = False
             self._scale.x = scale.x
             self._scale.y = scale.y
+            self._should_callback = True
+
             self._scale.z = scale.z
 
     @property
@@ -283,22 +311,31 @@ class SceneNode(metaclass=MetaInstancesRecorder):
 
     @orientation.setter
     def orientation(self, orientation: glm.quat):
+        self._should_callback = False
         self._orientation.w = orientation.w
         self._orientation.x = orientation.x
         self._orientation.y = orientation.y
+        self._should_callback = True
+
         self._orientation.z = orientation.z
 
     def rotate(self, axis:glm.vec3, angle:float):
         angle_rad = angle/180*math.pi
         new_orientation = glm.quat(math.cos(angle_rad/2), math.sin(angle_rad/2)*axis) * self._orientation
+        self._should_callback = False
         self._orientation.w = new_orientation.w
         self._orientation.x = new_orientation.x
         self._orientation.y = new_orientation.y
+        self._should_callback = True
+
         self._orientation.z = new_orientation.z
 
     def translate(self, translation:glm.vec3):
+        self._should_callback = False
         self._position.x = self._position.x + translation.x
         self._position.y = self._position.x + translation.y
+        self._should_callback = True
+
         self._position.z = self._position.x + translation.z
 
     def _add_scenes(self, scenes):
@@ -437,6 +474,9 @@ class SceneNode(metaclass=MetaInstancesRecorder):
             return True
 
     def _set_dirty(self, self_transform_dirty=True, upstream=True, scenes=None):
+        if not self._should_callback:
+            return
+
         if scenes is None:
             scenes = self._scenes
 
@@ -457,6 +497,8 @@ class SceneNode(metaclass=MetaInstancesRecorder):
 
         if upstream and (self_transform_dirty_set or self._children):
             self._set_upstream_dirty(scenes)
+
+        self.update_screens()
 
     @property
     def parent(self):

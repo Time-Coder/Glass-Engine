@@ -36,12 +36,14 @@ class RenderHints:
         "__weakref__",
         "__getattr__",
         "_temp_env",
-        "_values"
+        "_values",
+        "_parent",
     }
 
-    def __init__(self):
+    def __init__(self, parent):
         self._temp_env = GLConfig.LocalEnv()
         self._values = {}
+        self._parent = parent
 
     def __enter__(self):
         self._temp_env.__enter__()
@@ -71,6 +73,24 @@ class RenderHints:
             raise AttributeError(f"GLConfig has no attribute '{name}'")
 
         if value == RenderHints.inherit:
+            if name not in self._values:
+                return
+            
             del self._values[name]
         else:
+            if name in self._values and self._values[name] == value:
+                return
+
             self._values[name] = value
+
+        self.update_screens()
+
+    def clear(self):
+        if not self._values:
+            return
+
+        self._values.clear()
+        self.update_screens()
+
+    def update_screens(self):
+        self._parent.update_screens()

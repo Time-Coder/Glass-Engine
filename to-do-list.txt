@@ -1,8 +1,4 @@
-* 完善 LocalEnv
-* Mesh 获取 vertices 时再更新参数
-* 几何体的 normalize_tex_coord 修改为 tex_coord_per_meter
-* 场景变化时自动更新 screen
-* Buffer Object 使用零拷贝策略
+* 场景变化时自动更新 screens
 * Lights 优先采用 Uniform Buffer Object，超过 32 个再使用 Shader Storage Buffer Object
 * 不需要 geometry shader 的不使用 geometry shader
 * uniform, uniform block, buffer 采用 tree-sitter 解析，删除原来的正则解析

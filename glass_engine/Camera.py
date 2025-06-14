@@ -13,6 +13,7 @@ import numpy as np
 import sys
 import importlib
 from typing import Union
+from functools import wraps
 
 Screen = {}
 
@@ -33,25 +34,135 @@ class Camera(SceneNode):
 
     class Lens:
 
-        def __init__(self):
-            self.focus: float = 0.09
-            self.aperture: float = 0.05
-            self.auto_focus: bool = True
-            self.focus_tex_coord: glm.vec2 = glm.vec2(0.5, 0.5)
-            self.focus_change_time: float = 2
+        def __init__(self, camera):
+            self.camera = camera
+            self.__focus: float = 0.09
+            self.__aperture: float = 0.05
+            self.__auto_focus: bool = True
+            self.__focus_tex_coord: glm.vec2 = glm.vec2(0.5, 0.5)
+            self.__focus_change_time: float = 2
+            self.__exposure: float = 1
+            self.__auto_exposure: bool = True
+            self.__local_exposure: bool = False
+            self.__exposure_adapt_time: float = 2
 
-            self.explosure: float = 1
-            self.auto_explosure: bool = True
-            self.local_explosure: bool = False
-            self.explosure_adapt_time: float = 2
+        def param_setter(func):
+
+            @wraps(func)
+            def wrapper(*args, **kwargs):
+                self = args[0]
+                value = args[1]
+
+                equal = False
+                try:
+                    lvalue = getattr(self, func.__name__)
+                    if type(lvalue) != type(value):
+                        equal = False
+                    else:
+                        equal = bool(getattr(self, func.__name__) == value)
+                except:
+                    equal = False
+
+                if equal:
+                    return
+
+                safe_func = checktype(func)
+                return_value = safe_func(*args, **kwargs)
+                self.camera.screen.update()
+
+                return return_value
+
+            return wrapper
 
         @property
         def clear_distance(self):
-            return 1 / (1 / self.focus - 1 / self.near)
+            return 1 / (1 / self.focus - 1 / self.camera.near)
 
         @clear_distance.setter
+        @param_setter
         def clear_distance(self, distance: float):
-            self.focus = 1 / (1 / self.near + 1 / distance)
+            self.focus = 1 / (1 / self.camera.near + 1 / distance)
+
+        @property
+        def focus(self)->float:
+            return self.__focus
+        
+        @focus.setter
+        @param_setter
+        def focus(self, focus: float):
+            self.__focus = focus
+
+        @property
+        def aperture(self)->float:
+            return self.__aperture
+        
+        @aperture.setter
+        @param_setter
+        def aperture(self, aperture: float):
+            self.__aperture = aperture
+
+        @property
+        def auto_focus(self)->bool:
+            return self.__auto_focus
+        
+        @auto_focus.setter
+        @param_setter
+        def auto_focus(self, auto_focus: bool):
+            self.__auto_focus = auto_focus
+
+        @property
+        def focus_tex_coord(self):
+            return self.__focus_tex_coord
+        
+        @focus_tex_coord.setter
+        @param_setter
+        def focus_tex_coord(self, focus_tex_coord: glm.vec2):
+            self.__focus_tex_coord = focus_tex_coord
+
+        @property
+        def focus_change_time(self):
+            return self.__focus_change_time
+        
+        @focus_change_time.setter
+        @param_setter
+        def focus_change_time(self, focus_change_time: float):
+            self.__focus_change_time = focus_change_time
+
+        @property
+        def exposure(self):
+            return self.__exposure
+        
+        @exposure.setter
+        @param_setter
+        def exposure(self, exposure: float):
+            self.__exposure = exposure
+
+        @property
+        def auto_exposure(self):
+            return self.__auto_exposure
+        
+        @auto_exposure.setter
+        @param_setter
+        def auto_exposure(self, auto_exposure: bool):
+            self.__auto_exposure = auto_exposure
+
+        @property
+        def local_exposure(self)->bool:
+            return self.__local_exposure
+        
+        @local_exposure.setter
+        @param_setter
+        def local_exposure(self, local_exposure: bool):
+            self.__local_exposure = local_exposure
+
+        @property
+        def exposure_adapt_time(self):
+            return self.__exposure_adapt_time
+        
+        @exposure_adapt_time.setter
+        @param_setter
+        def exposure_adapt_time(self, exposure_adapt_time: float):
+            self.__exposure_adapt_time = exposure_adapt_time
 
     @checktype
     def __init__(
@@ -82,8 +193,8 @@ class Camera(SceneNode):
             40 * 2 * self.__near * math.tan(self.__min_fov / 2 / 180 * math.pi)
         )
         self.__CSM_levels: int = 5
-        self.aspect_ratio: float = 1
-        self.__lens: Camera.Lens = Camera.Lens()
+        self.__aspect_ratio: float = 1
+        self.__lens: Camera.Lens = Camera.Lens(self)
 
         self._set_screen(gui_system)
 
@@ -131,6 +242,42 @@ class Camera(SceneNode):
         self.__screen.manipulator = SceneRoamManipulator()
         self.__screen.renderer = ForwardRenderer()
 
+    def param_setter(func):
+        @wraps(func)
+        def wrapper(*args, **kwargs):
+            self = args[0]
+            value = args[1]
+
+            equal = False
+            try:
+                lvalue = getattr(self, func.__name__)
+                if type(lvalue) != type(value):
+                    equal = False
+                else:
+                    equal = bool(getattr(self, func.__name__) == value)
+            except:
+                equal = False
+
+            if equal:
+                return
+
+            safe_func = checktype(func)
+            return_value = safe_func(*args, **kwargs)
+            self.screen.update()
+
+            return return_value
+
+        return wrapper
+
+    @property
+    def aspect_ratio(self)->float:
+        return self.__aspect_ratio
+    
+    @aspect_ratio.setter
+    @param_setter
+    def aspect_ratio(self, aspect_ratio: float) -> None:
+        self.__aspect_ratio = aspect_ratio
+
     @property
     def lens(self) -> Lens:
         return self.__lens
@@ -140,6 +287,7 @@ class Camera(SceneNode):
         return self.__gui_system
 
     @lens.setter
+    @param_setter
     def lens(self, lens: Lens) -> None:
         self.__lens = lens
 
@@ -148,6 +296,7 @@ class Camera(SceneNode):
         return self.__projection_mode
 
     @projection_mode.setter
+    @param_setter
     def projection_mode(self, projection_mode: ProjectionMode) -> None:
         self.__projection_mode = projection_mode
 
@@ -168,6 +317,7 @@ class Camera(SceneNode):
         return self.__fov_deg
 
     @fov.setter
+    @param_setter
     def fov(self, fov_deg: float) -> None:
         if fov_deg < self.min_fov:
             fov_deg = self.min_fov
@@ -190,6 +340,7 @@ class Camera(SceneNode):
         return self.__max_fov
 
     @max_fov.setter
+    @param_setter
     def max_fov(self, max_fov):
         if self.__max_fov == max_fov:
             return
@@ -213,6 +364,7 @@ class Camera(SceneNode):
         return self.__min_fov
 
     @min_fov.setter
+    @param_setter
     def min_fov(self, min_fov):
         if self.__min_fov == min_fov:
             return
@@ -236,6 +388,7 @@ class Camera(SceneNode):
         return self.__max_height
 
     @max_height.setter
+    @param_setter
     def max_height(self, max_height):
         if self.__max_height == max_height:
             return
@@ -259,6 +412,7 @@ class Camera(SceneNode):
         return self.__min_height
 
     @min_height.setter
+    @param_setter
     def min_height(self, min_height: float):
         if self.__min_height == min_height:
             return
@@ -282,6 +436,7 @@ class Camera(SceneNode):
         return 2 * math.atan(self.aspect * self.__tan_half_fov) / math.pi * 180
 
     @fov_x.setter
+    @param_setter
     def fov_x(self, fov_x):
         self.fov = (
             2
@@ -295,6 +450,7 @@ class Camera(SceneNode):
         return self.fov
 
     @fov_y.setter
+    @param_setter
     def fov_y(self, fov_y: float):
         self.fov = fov_y
 
@@ -303,6 +459,7 @@ class Camera(SceneNode):
         return self.__near
 
     @near.setter
+    @param_setter
     def near(self, near: float) -> None:
         self.__near = near
         self.__clip = self.__far - self.__near
@@ -319,6 +476,7 @@ class Camera(SceneNode):
         return self.__far
 
     @far.setter
+    @param_setter
     def far(self, far: float) -> None:
         self.__far = far
         self.__clip = self.__far - self.__near
@@ -332,6 +490,7 @@ class Camera(SceneNode):
         return self.__height
 
     @height.setter
+    @param_setter
     def height(self, height: float) -> None:
         if height > self.max_height:
             height = self.max_height
@@ -352,6 +511,7 @@ class Camera(SceneNode):
         return self.__height * self.aspect
 
     @width.setter
+    @param_setter
     def width(self, width: float) -> None:
         self.height = width / self.aspect
 
@@ -364,6 +524,7 @@ class Camera(SceneNode):
         return self.__CSM_levels
 
     @CSM_levels.setter
+    @param_setter
     def CSM_levels(self, levels: int):
         self.__CSM_levels = levels
 

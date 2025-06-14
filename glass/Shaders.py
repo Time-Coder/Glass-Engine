@@ -8,7 +8,6 @@ import sys
 
 from .CodeCompressor.minifyc import macros_expand
 from .utils import (
-    di,
     defines_key,
     delete,
     md5s,
@@ -53,7 +52,7 @@ class BaseShader(GLObject):
 
     def __init__(self, program):
         GLObject.__init__(self)
-        self._program_id: int = id(program)
+        self._program: int = program
         self._code: str = ""
         self._clean_code: str = ""
         self._used_code:str = ""
@@ -383,7 +382,7 @@ class BaseShader(GLObject):
 
     @property
     def include_paths(self) -> list:
-        return self._include_paths + di(self._program_id).include_paths
+        return self._include_paths + self._program.include_paths
 
     def define(self, name: str, value=None) -> bool:
         if name in self._defines and self._defines[name] == value:
@@ -402,7 +401,7 @@ class BaseShader(GLObject):
     @property
     def defines(self) -> dict:
         defines = {}
-        program = di(self._program_id)
+        program = self._program
         defines.update(program.defines)
         defines.update(self._defines)
         return defines

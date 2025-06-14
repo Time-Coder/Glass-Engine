@@ -110,8 +110,6 @@ class ModelViewManipulator(Manipulator):
         elif button == Manipulator.MouseButton.XButton2:
             self.drag_sensitivity *= pow(2, 1 / 2)
 
-        return False
-
     def on_mouse_released(
         self,
         button: Manipulator.MouseButton,
@@ -128,27 +126,21 @@ class ModelViewManipulator(Manipulator):
                 s = x / (width - 1)
                 t = 1 - y / (height - 1)
                 self.camera.lens.focus_tex_coord = glm.vec2(s, t)
-                return True
         elif button == Manipulator.MouseButton.RightButton:
             self.__is_right_pressed = False
-
-        return False
 
     def on_mouse_double_clicked(
         self,
         button: Manipulator.MouseButton,
         screen_pos: glm.vec2,
         global_pos: glm.vec2,
-    ) -> bool:
+    ) -> None:
         if button == Manipulator.MouseButton.LeftButton:
             self.__offset = glm.vec2(0, 0)
             self.camera.fov = 45
             self.__update_camera()
-            return True
 
-        return False
-
-    def on_mouse_moved(self, screen_pos: glm.vec2, global_pos: glm.vec2):
+    def on_mouse_moved(self, screen_pos: glm.vec2, global_pos: glm.vec2)->None:
         if self.__is_left_pressed:
             d = global_pos - self.__left_press_global_posF
             dx = d.x
@@ -160,8 +152,6 @@ class ModelViewManipulator(Manipulator):
             self.__azimuth = self.__left_press_azimuth + d_yaw
             self.__elevation = self.__left_press_elevation + d_pitch
             self.__update_camera()
-
-            return True
 
         elif self.__is_right_pressed:
             d = global_pos - self.__right_press_global_posF
@@ -187,10 +177,6 @@ class ModelViewManipulator(Manipulator):
             self.__offset = self.__right_press_offset + offset_delta
             self.__update_camera()
 
-            return True
-
-        return False
-
     def on_wheel_scrolled(
         self, angle: glm.vec2, screen_pos: glm.vec2, global_pos: glm.vec2
     ):
@@ -201,9 +187,7 @@ class ModelViewManipulator(Manipulator):
         else:
             self.camera.height /= scale
 
-        return True
-
-    def on_key_pressed(self, key: Manipulator.Key) -> bool:
+    def on_key_pressed(self, key: Manipulator.Key) -> None:
         if key == Manipulator.Key.Key_R:
             polygon_mode = self.camera.screen.render_hints.polygon_mode
             if polygon_mode in [GL.GL_FILL, RenderHints.inherit]:
@@ -214,28 +198,22 @@ class ModelViewManipulator(Manipulator):
                 self.camera.screen.render_hints.point_size = 1.5
             elif polygon_mode == GL.GL_POINT:
                 self.camera.screen.render_hints.polygon_mode = GL.GL_FILL
-            return True
         elif key == Manipulator.Key.Key_P:
             now = datetime.datetime.now()
             file_name = "capture_" + now.strftime("%Y-%m-%d_%H-%M-%S") + ".png"
             self.camera.screen.capture(file_name)
         elif key == Manipulator.Key.Key_O:
             self.camera.screen.SSAO.enabled = not self.camera.screen.SSAO.enabled
-            return True
         elif key == Manipulator.Key.Key_M:
             self.camera.screen.DOF.enabled = not self.camera.screen.DOF.enabled
-            return True
 
-    def on_key_repeated(self, keys) -> bool:
-        should_update = False
+    def on_key_repeated(self, keys) -> None:
         if Manipulator.Key.Key_W in keys and Manipulator.Key.Key_S not in keys:
             self.__distance /= pow(2, 1 / self.camera.screen.smooth_fps)
             self.__update_camera()
-            should_update = True
         if Manipulator.Key.Key_S in keys and Manipulator.Key.Key_W not in keys:
             self.__distance *= pow(2, 1 / self.camera.screen.smooth_fps)
             self.__update_camera()
-            should_update = True
         if Manipulator.Key.Key_A in keys and Manipulator.Key.Key_D not in keys:
             self.__offset.x -= (
                 0.5
@@ -244,7 +222,6 @@ class ModelViewManipulator(Manipulator):
                 * self.camera.tan_half_fov
             )
             self.__update_camera()
-            should_update = True
         if Manipulator.Key.Key_D in keys and Manipulator.Key.Key_A not in keys:
             self.__offset.x += (
                 0.5
@@ -253,7 +230,6 @@ class ModelViewManipulator(Manipulator):
                 * self.camera.tan_half_fov
             )
             self.__update_camera()
-            should_update = True
         if Manipulator.Key.Key_E in keys and Manipulator.Key.Key_C not in keys:
             self.__offset.y += (
                 0.5
@@ -262,7 +238,6 @@ class ModelViewManipulator(Manipulator):
                 * self.camera.tan_half_fov
             )
             self.__update_camera()
-            should_update = True
         if Manipulator.Key.Key_C in keys and Manipulator.Key.Key_E not in keys:
             self.__offset.y -= (
                 0.5
@@ -271,10 +246,8 @@ class ModelViewManipulator(Manipulator):
                 * self.camera.tan_half_fov
             )
             self.__update_camera()
-            should_update = True
         if Manipulator.Key.Key_F in keys:
             screen = self.camera.screen
+            screen.update()
             print("fps:", screen.fps, "draw calls:", screen.draw_calls)
-            should_update = True
 
-        return should_update

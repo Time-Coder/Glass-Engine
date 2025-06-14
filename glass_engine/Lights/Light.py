@@ -1,7 +1,7 @@
 from ..SceneNode import SceneNode
 from ..callback_vec import callback_vec3
 
-from glass.utils import checktype, di
+from glass.utils import checktype
 from glass import GLConfig
 from ..GlassEngineConfig import GlassEngineConfig
 
@@ -123,6 +123,8 @@ class Light(SceneNode):
             elif self.__class__.__name__ == "SpotLight":
                 scene._spot_lights.dirty = True
 
+            scene.update_screens()
+
     def _update_color(self):
         for flat in self._flats:
             flat.color = self._color
@@ -141,7 +143,7 @@ class FlatLight:
     def __init__(self, light: Light):
         self.depth_fbo_map = {}
         self.depth_map_handle = 0
-        self._source_id = 0
+        self._source = None
         self.update(light)
 
     @property
@@ -157,12 +159,11 @@ class FlatLight:
         self.generate_shadows = light._generate_shadows
         self.rim_power = light._rim_power
 
-        self._source_id = id(light)
+        self._source = light
         light._flats.add(self)
 
     def before_del(self):
-        if self._source_id == 0:
+        if self._source is None:
             return
 
-        light = di(self._source_id)
-        light._flats.remove(self)
+        self._source._flats.remove(self)

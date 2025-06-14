@@ -5,7 +5,7 @@ import copy
 from enum import Enum
 from typing import Union
 
-from .utils import checktype, get_subscript_chain, uint64_to_uvec2, di
+from .utils import checktype, get_subscript_chain, uint64_to_uvec2
 from .CustomLiteral import CustomLiteral
 from .sampler2D import sampler2D
 from .image2D import image2D
@@ -47,7 +47,7 @@ class Uniform:
             "__setitem__",
             "__getattr__",
             "__setattr__",
-            "_uniform_id",
+            "_uniform",
             "_name",
             "_bound_var",
             "bind",
@@ -55,14 +55,14 @@ class Uniform:
             "location",
         }
 
-        def __init__(self, uniform_id, name):
-            self._uniform_id = uniform_id
+        def __init__(self, uniform, name):
+            self._uniform = uniform
             self._name = name
             self._bound_var = None
 
         @property
         def uniform(self):
-            return di(self._uniform_id)
+            return self._uniform
 
         def __del__(self):
             self.unbind()
@@ -115,7 +115,7 @@ class Uniform:
                 atom_info["subscript_chain"] = subscript_chain
                 if "uniforms" not in atom_info:
                     atom_info["uniforms"] = set()
-                atom_info["uniforms"].add(self._uniform_id)
+                atom_info["uniforms"].add(self._uniform)
 
             self._bound_var = var
 
@@ -128,8 +128,8 @@ class Uniform:
                 var_info = Uniform._bound_vars[id_var]
                 should_remove_atoms = []
                 for atom_name, info in var_info.items():
-                    if self._uniform_id in info["uniforms"]:
-                        info["uniforms"].remove(self._uniform_id)
+                    if self._uniform in info["uniforms"]:
+                        info["uniforms"].remove(self._uniform)
                     if not info["uniforms"]:
                         should_remove_atoms.append(atom_name)
                 for atom_name in should_remove_atoms:
@@ -168,7 +168,7 @@ class Uniform:
 
             if full_name not in uniform._uniform_var_map:
                 uniform._uniform_var_map[full_name] = Uniform.Variable(
-                    self._uniform_id, full_name
+                    self._uniform, full_name
                 )
 
             return uniform._uniform_var_map[full_name]
@@ -196,7 +196,7 @@ class Uniform:
 
         def __getattr__(self, name: str):
             if name in Uniform.Variable._all_attrs:
-                return super().__getattr__(name)
+                return super().__getattribute__(name)
 
             return self.__getitem__(name)
 
@@ -207,7 +207,7 @@ class Uniform:
             self.__setitem__(name, value)
 
     def __init__(self, shader_program):
-        self._program_id = id(shader_program)
+        self._program = shader_program
         self._atoms_to_update = {}
         self._uniform_var_map = {}
         self._atom_value_map = {}
@@ -216,7 +216,7 @@ class Uniform:
 
     @property
     def program(self):
-        return di(self._program_id)
+        return self._program
 
     def __getitem__(self, name: str):
         program = self.program
@@ -228,7 +228,7 @@ class Uniform:
             raise NameError(error_message)
 
         if name not in self._uniform_var_map:
-            self._uniform_var_map[name] = Uniform.Variable(id(self), name)
+            self._uniform_var_map[name] = Uniform.Variable(self, name)
 
         return self._uniform_var_map[name]
 

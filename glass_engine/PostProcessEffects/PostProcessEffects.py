@@ -7,12 +7,10 @@ from ..Frame import Frame
 
 class PostProcessEffects(DictList):
 
-    def __init__(self):
+    def __init__(self, screen):
         DictList.__init__(self)
-        self._screen_update_time = 0
-        self._should_update = False
+        self._screen = screen
 
-        self.camera = None
         self.view_pos_map = None
         self.view_normal_map = None
         self.depth_map = None
@@ -43,28 +41,19 @@ class PostProcessEffects(DictList):
         return None
 
     def apply(self, screen_image: sampler2D) -> sampler2D:
-        self._should_update = False
         for effect in self:
             if effect is None or not effect.enabled:
                 continue
 
             effect.depth_map = self.depth_map
-            effect.camera = self.camera
+            effect.camera = self._screen._camera
             effect.view_pos_map = self.view_pos_map
             effect.view_normal_map = self.view_normal_map
             screen_image = effect.apply(screen_image)
 
-            self._should_update = self._should_update or effect.should_update
-            effect.should_update = False
-
         return screen_image
 
-    @property
-    def should_update(self) -> bool:
-        return self._should_update
-
-    def draw_to_active(self, screen_image: sampler2D) -> bool:
-        should_update = False
+    def draw_to_active(self, screen_image: sampler2D) -> None:
         last_effect = None
         last_effect_index = -1
         for i in range(len(self) - 1, -1, -1):
@@ -84,32 +73,22 @@ class PostProcessEffects(DictList):
                 continue
 
             effect.depth_map = self.depth_map
-            effect.camera = self.camera
+            effect.camera = self._screen._camera
             effect.view_pos_map = self.view_pos_map
             effect.view_normal_map = self.view_normal_map
             screen_image = effect.apply(screen_image)
 
-            should_update = effect.should_update or should_update
-            effect.should_update = False
-
         last_effect.depth_map = self.depth_map
-        last_effect.camera = self.camera
+        last_effect.camera = self._screen._camera
         last_effect.view_pos_map = self.view_pos_map
         last_effect.view_normal_map = self.view_normal_map
         last_effect.draw_to_active(screen_image)
 
-        should_update = last_effect.should_update or should_update
-        last_effect.should_update = False
-
-        return should_update
-
     @property
-    def screen_update_time(self) -> float:
-        return self._screen_update_time
-
-    @screen_update_time.setter
-    def screen_update_time(self, screen_update_time: float) -> None:
-        self._screen_update_time = screen_update_time
+    def should_update_until(self) -> float:
+        until_time = 0.0
         for effect in self:
-            if effect is not None:
-                effect.screen_update_time = screen_update_time
+            effect_until = effect.should_update_until
+            if effect_until > until_time:
+                until_time = effect_until
+        return until_time

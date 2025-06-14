@@ -305,12 +305,9 @@ class DeferredRenderer(CommonRenderer):
             self.gbuffer.draw_to(self.OIT_fbo, GL.GL_DEPTH_ATTACHMENT)
 
     def render(self):
-        self._should_update = False
-        sampler2D._should_update = False
         self.classify_meshes()
         self.update_dir_lights_depth()
         self.update_point_lights_depth()
         self.update_spot_lights_depth()
         self.draw_opaque()
         self.draw_transparent()
-        return self._should_update or sampler2D._should_update

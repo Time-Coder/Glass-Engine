@@ -9,25 +9,6 @@ from .GLInfo import GLInfo
 from .GLConfig import GLConfig
 
 
-def contex_check(func):
-    @functools.wraps(func)
-    def wraps(*args, **kwargs):
-        self = args[0]
-        cls = self.__class__
-        if (
-            self._vao.context != 0
-            and self._vao.context != GLConfig.buffered_current_context
-        ):
-            if self._vao.context not in cls._cmd_buffer:
-                cls._cmd_buffer[self._vao.context] = []
-            cls._cmd_buffer[self._vao.context].append((func, args, kwargs))
-            return
-
-        return func(*args, **kwargs)
-
-    return wraps
-
-
 class VAP:
 
     _cmd_buffer = {}
@@ -41,6 +22,25 @@ class VAP:
         self._offset = 0
         self._divisor = 0
         self._enabled = False
+
+    def contex_check(func):
+        
+        @functools.wraps(func)
+        def wraps(*args, **kwargs):
+            self = args[0]
+            cls = self.__class__
+            if (
+                self._vao.context != 0
+                and self._vao.context != GLConfig.buffered_current_context
+            ):
+                if self._vao.context not in cls._cmd_buffer:
+                    cls._cmd_buffer[self._vao.context] = []
+                cls._cmd_buffer[self._vao.context].append((func, args, kwargs))
+                return
+
+            return func(*args, **kwargs)
+
+        return wraps
 
     @contex_check
     def interp(self, vbo, element_type, stride=0, offset=0):

@@ -5,7 +5,7 @@ import time
 import os
 
 
-class ExplosureAdaptor(ShaderEffect):
+class ExposureAdaptor(ShaderEffect):
 
     class CurrentLuma(Block.HostClass):
         def __init__(self):
@@ -25,11 +25,11 @@ class ExplosureAdaptor(ShaderEffect):
         self_folder = os.path.dirname(os.path.abspath(__file__))
         ShaderEffect.__init__(
             self,
-            self_folder + "/../glsl/PostProcessEffects/explosure_adaptor.glsl",
+            self_folder + "/../glsl/PostProcessEffects/exposure_adaptor.glsl",
             generate_mipmap=True,
         )
 
-        self.current_luma = ExplosureAdaptor.CurrentLuma()
+        self.current_luma = ExposureAdaptor.CurrentLuma()
         self["CurrentLuma"] = self.current_luma
 
     def apply(self, screen_image: sampler2D) -> sampler2D:
@@ -41,19 +41,14 @@ class ExplosureAdaptor(ShaderEffect):
         ShaderEffect.draw_to_active(self, screen_image)
 
     @property
-    def should_update(self) -> bool:
+    def should_update_until(self)->float:
         if not self._enabled:
-            return False
+            return 0
+
+        if self.camera is None:
+            return 0
 
         if (not self.camera.lens.auto_explosure) or self.camera.lens.local_explosure:
-            return False
+            return 0
 
-        return (
-            self.screen_update_time == 0
-            or time.time() - self.screen_update_time
-            <= self.camera.lens.explosure_adapt_time
-        )
-
-    @should_update.setter
-    def should_update(self, flag: bool):
-        pass
+        return self.camera.screen.scene_update_time + self.camera.lens.explosure_adapt_time

@@ -1,4 +1,5 @@
 from .ShaderEffect import ShaderEffect
+from .PostProcessEffect import PostProcessEffect
 from .. import lut
 from glass import sampler2D
 from glass.utils import extname
@@ -34,6 +35,7 @@ class LUTEffect(ShaderEffect):
         return self.__LUT
 
     @LUT.setter
+    @PostProcessEffect.param_setter
     def LUT(self, LUT: Union[str, np.ndarray, sampler2D]):
         if isinstance(LUT, str) and extname(LUT) == "cube":
             LUT = lut.cube_to_LUT(LUT)
@@ -50,6 +52,7 @@ class LUTEffect(ShaderEffect):
         return self.__contribute
 
     @contribute.setter
+    @PostProcessEffect.param_setter
     def contribute(self, contribute: float):
         self.__contribute = contribute
         self["contribute"] = contribute

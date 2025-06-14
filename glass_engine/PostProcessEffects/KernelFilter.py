@@ -157,5 +157,6 @@ class KernelFilter(PostProcessEffect):
         return self._kernel.kernel
 
     @kernel.setter
+    @PostProcessEffect.param_setter
     def kernel(self, kernel: np.ndarray):
         self._kernel.kernel = kernel

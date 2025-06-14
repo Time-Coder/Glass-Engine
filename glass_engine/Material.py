@@ -191,6 +191,8 @@ class Material(metaclass=MetaInstancesRecorder):
             if func.__name__ == "generate_shadows":
                 self._update_all_depth_maps()
 
+            self.update_screens()
+
             return return_value
 
         return wrapper
@@ -218,6 +220,7 @@ class Material(metaclass=MetaInstancesRecorder):
                 self.ambient = glm.vec3(1e-6)
 
         self._update_all_env_maps()
+        self.update_screens()
 
         self._should_callback = old_should_callback
 
@@ -331,6 +334,10 @@ class Material(metaclass=MetaInstancesRecorder):
     def cast_shadows(self, flag: bool):
         self._cast_shadows = flag
         GlassEngineConfig._update_cast_shadows(flag)
+
+    def update_screens(self):
+        for mesh in self._parent_meshes:
+            mesh.update_screens()
 
     @property
     def has_transparent(self):

@@ -12,10 +12,10 @@ struct CameraLens
 	bool auto_focus;
 	vec2 focus_tex_coord;
 	float focus_change_time;
-	float explosure;
-	bool auto_explosure;
-	bool local_explosure;
-	float explosure_adapt_time;
+	float exposure;
+	bool auto_exposure;
+	bool local_exposure;
+	float exposure_adapt_time;
 };
 
 struct Camera

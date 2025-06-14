@@ -11,4 +11,4 @@ from .FXAAEffect import FXAAEffect
 from .LUTEffect import LUTEffect
 from .SSAOEffect import SSAOEffect
 from .MulFilter import MulFilter
-from .ExplosureAdaptor import ExplosureAdaptor
+from .ExposureAdaptor import ExposureAdaptor

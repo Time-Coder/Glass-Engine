@@ -138,22 +138,21 @@ class Scene:
             * quat_to_mat4(scene_node.orientation)
             * scale_to_mat4(scene_node.scale)
         )
+        if scene_node.pivot._is_set:
+            new_mat = (
+                new_mat
+                * scale_to_mat4(1 / scene_node.pivot.scale)
+                * quat_to_mat4(glm.conjugate(scene_node.pivot.orientation))
+                * translate_to_mat4(-scene_node.pivot.position)
+            )
         new_path = current_path + "/" + scene_node.name
 
         if self in scene_node._transform_dirty:
             if isinstance(scene_node, Mesh):
                 mesh = scene_node
                 mesh_scale = glm.determinant(new_mat)
-
-                new_mat = (
-                    new_mat
-                    * scale_to_mat4(1 / mesh.pivot.scale)
-                    * quat_to_mat4(glm.conjugate(mesh.pivot.orientation))
-                    * translate_to_mat4(-mesh.pivot.position)
-                )
                 mesh.material._mesh_scale = mesh_scale
-                if mesh._back_material is not None:
-                    mesh._back_material._mesh_scale = mesh_scale
+                mesh._back_material._mesh_scale = mesh_scale
 
                 if mesh not in self._all_meshes:
                     self._all_meshes[mesh] = {}
@@ -308,6 +307,16 @@ class Scene:
 
         self.__anything_changed = True
         return True
+    
+    def update_screens(self, scene_node=None):
+        if scene_node is None:
+            scene_node = self._root
+
+        if isinstance(scene_node, Camera):
+            scene_node.screen.update()
+
+        for child in scene_node._children:
+            self.update_screens(child)
 
     @staticmethod
     def __remove_path_prefix(instance_map, path_str):

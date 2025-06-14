@@ -237,7 +237,7 @@ class GaussBlur(PostProcessEffect):
         return (self.__kernel_shape.x, self.__kernel_shape.y)
 
     @kernel_shape.setter
-    @checktype
+    @PostProcessEffect.param_setter
     def kernel_shape(self, shape: Union[int, tuple]):
         if isinstance(shape, tuple):
             self.__kernel_shape.x, self.__kernel_shape.y = shape
@@ -249,7 +249,7 @@ class GaussBlur(PostProcessEffect):
         return self.__kernel_shape.x
 
     @kernel_width.setter
-    @checktype
+    @PostProcessEffect.param_setter
     def kernel_width(self, width: int):
         self.__kernel_shape.x = width
 
@@ -258,7 +258,7 @@ class GaussBlur(PostProcessEffect):
         return self.__kernel_shape.y
 
     @kernel_height.setter
-    @checktype
+    @PostProcessEffect.param_setter
     def kernel_height(self, height: int):
         self.__kernel_shape.y = height
 
@@ -267,7 +267,7 @@ class GaussBlur(PostProcessEffect):
         return (self.__sigma.x, self.__sigma.y)
 
     @sigma.setter
-    @checktype
+    @PostProcessEffect.param_setter
     def sigma(self, sigma: Union[float, tuple]):
         if isinstance(sigma, tuple):
             self.__sigma.x, self.__sigma.y = sigma
@@ -279,6 +279,7 @@ class GaussBlur(PostProcessEffect):
         return self.__sigma.x
 
     @sigma_x.setter
+    @PostProcessEffect.param_setter
     def sigma_x(self, value: float):
         self.__sigma.x = value
 
@@ -287,5 +288,6 @@ class GaussBlur(PostProcessEffect):
         return self.__sigma.y
 
     @sigma_y.setter
+    @PostProcessEffect.param_setter
     def sigma_y(self, value: float):
         self.__sigma.y = value

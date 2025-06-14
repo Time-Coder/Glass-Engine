@@ -8,7 +8,7 @@ from ..PostProcessEffects import (
     FXAAEffect,
     DOFEffect,
     SSAOEffect,
-    ExplosureAdaptor,
+    ExposureAdaptor,
 )
 from ..SlideAverageFilter import SlideAverageFilter
 from ..VideoRecorder import VideoRecorder, convert_to_image
@@ -27,7 +27,7 @@ from glass import (
     UBO,
     VAO,
 )
-from glass.utils import extname, di
+from glass.utils import extname
 
 import time
 import glm
@@ -35,6 +35,7 @@ import sys
 from OpenGL import GL
 import OpenGL.GL.ARB.bindless_texture as bt
 import os
+from typing import Union
 
 os.environ["OPENCV_IO_ENABLE_OPENEXR"] = "1"
 import cv2
@@ -82,37 +83,47 @@ def __init__(self, camera, parent=None) -> None:
     self._before_PPE_fbo_ms = None
     self._is_gl_init = False
     self._before_PPE_image = None
+    self._scene_update_time = 0
     self._video_recorders = []
 
-    self._camera_id = id(camera)
+    self._camera = camera
 
     self._manipulator = None
     self._renderer = None
 
-    self._render_hints = RenderHints()
+    self._render_hints = RenderHints(self)
     self._render_hints.depth_test = True
 
     self._listen_cursor_timer = self.startTimer(10)
 
-    self._post_process_effects = PostProcessEffects()
+    self._post_process_effects = PostProcessEffects(self)
 
     self._post_process_effects["SSAO"] = SSAOEffect()
     self._post_process_effects["bloom"] = BloomEffect()
     self._post_process_effects["DOF"] = DOFEffect()
-    self._post_process_effects["explosure_adaptor"] = ExplosureAdaptor()
+    self._post_process_effects["exposure_adaptor"] = ExposureAdaptor()
     self._post_process_effects["tone_mapper"] = ACESToneMapper()
     self._post_process_effects["FXAA"] = FXAAEffect(internal_format=GL.GL_RGBA8)
 
     self._post_process_effects["SSAO"].enabled = False
     self._post_process_effects["bloom"].enabled = False
     self._post_process_effects["DOF"].enabled = False
-    self._post_process_effects["explosure_adaptor"].enabled = False
+    self._post_process_effects["exposure_adaptor"].enabled = False
     self._post_process_effects["tone_mapper"].enabled = False
     self._post_process_effects["FXAA"].enabled = False
 
 
 def update(self) -> None:
     self._before_PPE_image = None
+    self.__class__.__base__.update(self)
+
+
+def update_screens(self)->None:
+    self._before_PPE_image = None
+    self.__class__.__base__.update(self)
+
+
+def update_PPEs(self):
     self.__class__.__base__.update(self)
 
 
@@ -133,7 +144,7 @@ def sizeHint(self):
 
 @property
 def camera(self):
-    return di(self._camera_id)
+    return self._camera
 
 
 @property
@@ -170,18 +181,16 @@ def renderer(self, renderer: Renderer) -> None:
         return
 
     if renderer is None:
-        self._renderer._camera_id = id(None)
+        self._renderer._camera = None
         self._renderer = None
         return
 
-    if renderer._camera_id != id(None):
+    if renderer._camera is not None:
         renderer.camera.screen.renderer = None
 
     self._renderer = renderer
-    renderer._camera_id = self._camera_id
-    should_update = renderer.startup()
-    if should_update:
-        self.update()
+    renderer._camera = self._camera
+    renderer.startup()
 
 
 @property
@@ -195,31 +204,21 @@ def manipulator(self, manipulator: Manipulator):
         return
 
     if manipulator is None:
-        self._manipulator._camera_id = id(None)
+        self._manipulator._camera = None
         self._manipulator = None
         return
 
-    if manipulator._camera_id != id(None):
+    if manipulator._camera is not None:
         manipulator.camera.screen.manipulator = None
 
     self._manipulator = manipulator
-    manipulator._camera_id = self._camera_id
-    should_update = manipulator.startup()
-    if should_update:
-        self.update()
+    manipulator._camera = self._camera
+    manipulator.startup()
 
 
 @property
 def render_hints(self) -> RenderHints:
     return self._render_hints
-
-
-@render_hints.setter
-def render_hints(self, hint: RenderHints) -> None:
-    if hint is None:
-        hint = RenderHints()
-
-    self._render_hints = hint
 
 
 def initializeGL(self) -> None:
@@ -267,24 +266,24 @@ def resizeGL(self, width: int, height: int) -> None:
     self._before_PPE_image = None
 
 
-def _draw_to_before_PPE(self, should_update_scene: bool) -> bool:
-    if self._before_PPE_image is None or should_update_scene:
-        with self._before_PPE_fbo:
-            scene = self.camera.scene
-            clear_color = scene.fog.apply(
-                scene.background.color, glm.vec3(0), glm.vec3(0, self.camera.far, 0)
-            )
-            with GLConfig.LocalEnv():
-                GLConfig.clear_color = clear_color
+def _draw_to_before_PPE(self) -> None:
+    if self._before_PPE_image is not None:
+        return
 
-                with self.render_hints:
-                    should_update_scene = self.renderer.render() or should_update_scene
+    with self._before_PPE_fbo:
+        scene = self.camera.scene
+        clear_color = scene.fog.apply(
+            scene.background.color, glm.vec3(0), glm.vec3(0, self.camera.far, 0)
+        )
+        with GLConfig.LocalEnv():
+            GLConfig.clear_color = clear_color
 
-        resolved = self._before_PPE_fbo.resolved
-        self._before_PPE_image = resolved.color_attachment(0)
-        self._post_process_effects.screen_update_time = time.time()
+            with self.render_hints:
+                self.renderer.render()
 
-    return should_update_scene
+    resolved = self._before_PPE_fbo.resolved
+    self._before_PPE_image = resolved.color_attachment(0)
+    self._scene_update_time = time.time()
 
 
 def _mark_draw_calls(self):
@@ -303,15 +302,13 @@ def paintGL(self) -> None:
     camera = self.camera
     scene = camera.scene
 
-    should_update_scene = scene.generate_meshes()
-    should_update_PPEs = False
+    scene.generate_meshes()
 
     if self._video_recorders:
-        should_update_scene = self._draw_to_before_PPE(should_update_scene)
+        self._draw_to_before_PPE()
         if self._post_process_effects.has_valid:
             self._assign_values_to_PPEs()
             screen_image = self._post_process_effects.apply(self._before_PPE_image)
-            should_update_PPEs = self._post_process_effects.should_update
         else:
             screen_image = self._before_PPE_image
 
@@ -323,11 +320,9 @@ def paintGL(self) -> None:
                 video_recorder._start(view_port, self.smooth_fps)
                 video_recorder._frame_queue.put((time.time(), screen_image.fbo.data(0)))
     elif self._post_process_effects.has_valid:
-        should_update_scene = self._draw_to_before_PPE(should_update_scene)
+        self._draw_to_before_PPE()
         self._assign_values_to_PPEs()
-        should_update_PPEs = self._post_process_effects.draw_to_active(
-            self._before_PPE_image
-        )
+        self._post_process_effects.draw_to_active(self._before_PPE_image)
     else:
         clear_color = scene.fog.apply(
             scene.background.color, glm.vec3(0), glm.vec3(0, self.camera.far, 0)
@@ -336,7 +331,7 @@ def paintGL(self) -> None:
             GLConfig.clear_color = clear_color
 
             with self.render_hints:
-                should_update_scene = self.renderer.render() or should_update_scene
+                self.renderer.render()
 
     self._calc_fps()
     self.frame_ended.emit()
@@ -346,11 +341,8 @@ def paintGL(self) -> None:
         for animation in Animation.all_instances:
             if animation._wait_to_start:
                 animation._start()
-
-    if should_update_scene or should_update_PPEs or Animation.has_valid():
-        if should_update_scene:
-            self._before_PPE_image = None
-
+    
+    if sampler2D._should_update or time.time() < self._post_process_effects.should_update_until:
         self._update()
 
 
@@ -415,16 +407,10 @@ def mousePressEvent(self, mouse_event) -> None:
 
     self.makeCurrent()
 
-    should_update = False
     if self.manipulator is not None:
-        should_update = self.manipulator.on_mouse_pressed(
-            button, screen_pos, global_pos
-        )
+        self.manipulator.on_mouse_pressed(button, screen_pos, global_pos)
 
     self.mouse_pressed.emit(button, screen_pos, global_pos)
-
-    if should_update:
-        self.update()
 
 
 def mouseReleaseEvent(self, mouse_event) -> None:
@@ -432,16 +418,10 @@ def mouseReleaseEvent(self, mouse_event) -> None:
 
     self.makeCurrent()
 
-    should_update = False
     if self.manipulator is not None:
-        should_update = self.manipulator.on_mouse_released(
-            button, screen_pos, global_pos
-        )
+        self.manipulator.on_mouse_released(button, screen_pos, global_pos)
 
     self.mouse_released.emit(button, screen_pos, global_pos)
-
-    if should_update:
-        self.update()
 
 
 def mouseDoubleClickEvent(self, mouse_event) -> None:
@@ -449,29 +429,19 @@ def mouseDoubleClickEvent(self, mouse_event) -> None:
 
     self.makeCurrent()
 
-    should_update = False
     if self.manipulator is not None:
-        should_update = self.manipulator.on_mouse_double_clicked(
-            button, screen_pos, global_pos
-        )
+        self.manipulator.on_mouse_double_clicked(button, screen_pos, global_pos)
 
     self.mouse_double_clicked.emit(button, screen_pos, global_pos)
-
-    if should_update:
-        self.update()
 
 
 def _mouseMoveEvent(self, screen_pos: glm.vec2, global_pos: glm.vec2) -> bool:
     self.makeCurrent()
 
-    should_update = False
     if self.manipulator is not None:
-        should_update = self.manipulator.on_mouse_moved(screen_pos, global_pos)
+        self.manipulator.on_mouse_moved(screen_pos, global_pos)
 
     self.mouse_moved.emit(screen_pos, global_pos)
-
-    if should_update:
-        self.update()
 
 
 def keyPressEvent(self, key_event) -> None:
@@ -481,14 +451,10 @@ def keyPressEvent(self, key_event) -> None:
 
     self.makeCurrent()
 
-    should_update = False
     if self.manipulator is not None:
-        should_update = self.manipulator.on_key_pressed(key)
+        self.manipulator.on_key_pressed(key)
 
     self.key_pressed.emit(key)
-
-    if should_update:
-        self.update()
 
 
 def keyReleaseEvent(self, key_event) -> None:
@@ -498,27 +464,19 @@ def keyReleaseEvent(self, key_event) -> None:
 
     self.makeCurrent()
 
-    should_update = False
     if self.manipulator is not None:
-        should_update = self.manipulator.on_key_released(key)
+        self.manipulator.on_key_released(key)
 
     self.key_released.emit(key)
-
-    if should_update:
-        self.update()
 
 
 def _keyRepeateEvent(self, keys: set) -> bool:
     self.makeCurrent()
 
-    should_update = False
     if self.manipulator is not None:
-        should_update = self.manipulator.on_key_repeated(keys)
+        self.manipulator.on_key_repeated(keys)
 
     self.key_repeated.emit(keys)
-
-    if should_update:
-        self.update()
 
 
 def wheelEvent(self, wheel_event) -> None:
@@ -526,16 +484,10 @@ def wheelEvent(self, wheel_event) -> None:
 
     self.makeCurrent()
 
-    should_update = False
     if self.manipulator is not None:
-        should_update = self.manipulator.on_wheel_scrolled(
-            angle, screen_pos, global_pos
-        )
+        self.manipulator.on_wheel_scrolled(angle, screen_pos, global_pos)
 
     self.wheel_scrolled.emit(angle, screen_pos, global_pos)
-
-    if should_update:
-        self.update()
 
 
 def _calc_fps(self) -> None:
@@ -642,9 +594,8 @@ def timerEvent(self, timer_event) -> None:
 
         cursor_global_posF = self.__class__.qt.QtCore.QPointF(cursor_global_pos)
 
-        should_update = False
         if self._pressed_keys:
-            should_update = self._keyRepeateEvent(self._pressed_keys) or should_update
+            self._keyRepeateEvent(self._pressed_keys)
 
         if self._is_cursor_hiden:
             try:
@@ -685,12 +636,7 @@ def timerEvent(self, timer_event) -> None:
 
             screen_pos = glm.vec2(screen_pos.x(), screen_pos.y())
             global_pos = glm.vec2(cursor_global_posF.x(), cursor_global_posF.y())
-            should_update = (
-                self._mouseMoveEvent(screen_pos, global_pos) or should_update
-            )
-
-        if should_update:
-            self.update()
+            self._mouseMoveEvent(screen_pos, global_pos)
 
 
 def capture(self, save_path: str = None, viewport: tuple = None) -> np.ndarray:
@@ -710,7 +656,7 @@ def capture(self, save_path: str = None, viewport: tuple = None) -> np.ndarray:
     resolved = self._before_PPE_fbo.resolved
     if self._post_process_effects.has_valid:
         self._before_PPE_image = resolved.color_attachment(0)
-        self._post_process_effects.screen_update_time = time.time()
+        self._scene_update_time = time.time()
         self._assign_values_to_PPEs()
         result_sampler = self._post_process_effects.apply(self._before_PPE_image)
         image = result_sampler.fbo.data(0)
@@ -732,7 +678,7 @@ def capture(self, save_path: str = None, viewport: tuple = None) -> np.ndarray:
 
 
 def capture_video(
-    self, save_path: str, viewport: tuple = None, fps: (float, int) = None
+    self, save_path: str, viewport: tuple = None, fps: Union[float, int] = None
 ) -> VideoRecorder:
     ext_name = extname(save_path)
     if ext_name not in ["mp4", "avi"]:
@@ -815,13 +761,13 @@ def DOF(self, flag: bool):
 
 
 @property
-def explosure_adaptor(self):
-    return self._post_process_effects["explosure_adaptor"]
+def exposure_adaptor(self):
+    return self._post_process_effects["exposure_adaptor"]
 
 
-@explosure_adaptor.setter
-def explosure_adaptor(self, flag: bool):
-    self._post_process_effects["explosure_adaptor"].enabled = flag
+@exposure_adaptor.setter
+def exposure_adaptor(self, flag: bool):
+    self._post_process_effects["exposure_adaptor"].enabled = flag
 
 
 @property
@@ -842,6 +788,7 @@ def init_QtScreen(cls):
     cls.__new__ = __new__
     cls.__init__ = __init__
     cls.update = update
+    cls.update_screens = update_screens
     cls._assign_values_to_PPEs = _assign_values_to_PPEs
     cls._update = _update
     cls.sizeHint = sizeHint
@@ -889,7 +836,7 @@ def init_QtScreen(cls):
     cls.SSAO = SSAO
     cls.tone_mapper = tone_mapper
     cls.DOF = DOF
-    cls.explosure_adaptor = explosure_adaptor
+    cls.exposure_adaptor = exposure_adaptor
     cls.FXAA = FXAA
 
     return cls

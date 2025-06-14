@@ -28,7 +28,6 @@ class CommonRenderer(Renderer):
         self._view_pos_map = None
         self._view_normal_map = None
 
-        self._should_update = False
         self._all_meshes = []
         self._all_lines = []
         self._all_points = []
@@ -549,7 +548,10 @@ class CommonRenderer(Renderer):
             if dir_light.depth_map_handle != new_handle:
                 dir_light.depth_map_handle = new_handle
                 self.scene.dir_lights.dirty = True
-                self._should_update = True
+                self.update_screens()
+
+    def update_screens(self):
+        self.camera.screen.update()
 
     @property
     def forward_program(self):
@@ -963,7 +965,7 @@ class CommonRenderer(Renderer):
             self.increase_bake_times(instance)
 
             if self.env_bake_times(instance) <= max_bake_times:
-                self._should_update = True
+                self.update_screens()
 
     def prepare_forward_draw_mesh(self, is_opaque_pass: bool):
         camera = self.camera

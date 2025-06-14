@@ -2,13 +2,13 @@ from abc import ABC, abstractmethod
 from glass import sampler2D
 from glass.utils import checktype
 
+from functools import wraps
+
 
 class PostProcessEffect(ABC):
 
     def __init__(self):
-        self._should_update = False
         self._enabled = True
-        self._screen_update_time = 0
 
         self.depth_map = None
         self.view_pos_map = None
@@ -17,6 +17,34 @@ class PostProcessEffect(ABC):
 
     def __bool__(self) -> bool:
         return self._enabled
+    
+    def param_setter(func):
+        @wraps(func)
+        def wrapper(*args, **kwargs):
+            self = args[0]
+            value = args[1]
+
+            equal = False
+            try:
+                lvalue = getattr(self, func.__name__)
+                if type(lvalue) != type(value):
+                    equal = False
+                else:
+                    equal = bool(getattr(self, func.__name__) == value)
+            except:
+                equal = False
+
+            if equal:
+                return
+
+            safe_func = checktype(func)
+            return_value = safe_func(*args, **kwargs)
+            if self.camera is not None:
+                self.camera.screen.update_PPEs()
+
+            return return_value
+
+        return wrapper
 
     @abstractmethod
     def apply(self, screen_image: sampler2D) -> sampler2D:
@@ -35,24 +63,10 @@ class PostProcessEffect(ABC):
         return self._enabled
 
     @enabled.setter
-    @checktype
+    @param_setter
     def enabled(self, flag: bool):
         self._enabled = flag
 
     @property
-    def should_update(self) -> bool:
-        return self._should_update and self._enabled
-
-    @should_update.setter
-    @checktype
-    def should_update(self, flag: bool):
-        self._should_update = flag
-
-    @property
-    def screen_update_time(self):
-        return self._screen_update_time
-
-    @screen_update_time.setter
-    @checktype
-    def screen_update_time(self, screen_update_time: float):
-        self._screen_update_time = screen_update_time
+    def should_update_until(self)->float:
+        return 0.0

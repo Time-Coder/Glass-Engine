@@ -5,32 +5,11 @@ from OpenGL.platform import PLATFORM
 import glm
 import numpy as np
 import inspect
-from typing import Union, Tuple, Dict, Optional, Set
+from typing import Union, Tuple, Optional, Set
 import functools
 
 from .GLInfo import GLInfo
 from .helper import glGetEnum, glGetEnumi
-
-
-def record_old_value(func):
-
-    @functools.wraps(func)
-    def wrapper(*args, **kwargs):
-        if _MetaGLConfig._active_local_env is not None:
-            cls = args[0]
-            new_value = args[1]
-            old_value = getattr(cls, func.__name__)
-
-            if old_value == new_value:
-                return
-
-            _MetaGLConfig._active_local_env.add_old_value(
-                func.__name__, old_value
-            )
-
-        return func(*args, **kwargs)
-
-    return wrapper
 
 
 class StencilFunc:
@@ -240,6 +219,26 @@ class _MetaGLConfig(type):
     @property
     def debug(cls):
         return _MetaGLConfig.__debug
+
+    def record_old_value(func):
+
+        @functools.wraps(func)
+        def wrapper(*args, **kwargs):
+            if _MetaGLConfig._active_local_env is not None:
+                cls = args[0]
+                new_value = args[1]
+                old_value = getattr(cls, func.__name__)
+
+                if old_value == new_value:
+                    return
+
+                _MetaGLConfig._active_local_env.add_old_value(
+                    func.__name__, old_value
+                )
+
+            return func(*args, **kwargs)
+
+        return wrapper
 
     @debug.setter
     @record_old_value

@@ -24,9 +24,9 @@ class BloomEffect(PostProcessEffect):
         self._mix_fbo = None
         self._mix_program = None
 
-        self.strength: float = 0.5
-        self.threshold: float = 1
-        self.blur_times: int = 6
+        self.__strength: float = 0.5
+        self.__threshold: float = 1
+        self.__blur_times: int = 6
 
     def need_pos_info(self) -> bool:
         return False
@@ -195,3 +195,30 @@ class BloomEffect(PostProcessEffect):
 
         self._src_width = src_width
         self._src_height = src_height
+
+    @property
+    def strength(self)->float:
+        return self.__strength
+    
+    @strength.setter
+    @PostProcessEffect.param_setter
+    def strength(self, strength: float):
+        self.__strength = strength
+
+    @property
+    def threshold(self)->float:
+        return self.__threshold
+
+    @threshold.setter
+    @PostProcessEffect.param_setter
+    def threshold(self, threshold: float):
+        self.__threshold = threshold
+
+    @property
+    def blur_times(self)->int:
+        return self.__blur_times
+
+    @blur_times.setter
+    @PostProcessEffect.param_setter
+    def blur_times(self, blur_times: int):
+        self.__blur_times = blur_times

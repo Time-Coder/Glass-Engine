@@ -203,6 +203,7 @@ class ExtendableList:
 
 
 class DictList(ExtendableList):
+
     def __init__(
         self,
         values: Union[Dict[str, Any], Iterable, None] = None,

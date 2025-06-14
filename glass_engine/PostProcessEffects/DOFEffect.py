@@ -108,20 +108,14 @@ class DOFEffect(PostProcessEffect):
             self.program.draw_triangles(start_index=0, total=6)
 
     @property
-    def should_update(self) -> bool:
+    def should_update_until(self)->float:
         if not self._enabled:
-            return False
+            return 0
+        
+        if self.camera is None:
+            return 0
 
         if not self.camera.lens.auto_focus:
-            return False
+            return 0
 
-        return (
-            self.screen_update_time == 0
-            or time.time() - self.screen_update_time
-            <= self.camera.lens.focus_change_time + 1
-        )
-
-    @should_update.setter
-    @checktype
-    def should_update(self, flag: bool):
-        pass
+        return self.camera.screen._scene_update_time + self.camera.lens.focus_change_time + 1

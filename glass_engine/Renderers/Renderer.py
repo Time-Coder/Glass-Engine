@@ -1,16 +1,14 @@
 from abc import ABC, abstractmethod
 
-from glass.utils import di
-
 
 class Renderer(ABC):
 
     def __init__(self):
-        self._camera_id = id(None)
+        self._camera = None
 
     @property
     def camera(self):
-        return di(self._camera_id)
+        return self._camera
 
     @property
     def scene(self):

@@ -1,5 +1,4 @@
 from OpenGL import GL
-from .utils import di
 from functools import wraps
 
 
@@ -36,7 +35,7 @@ class Block:
 
     class Variable:
         def __init__(self, block, name: str) -> None:
-            self._block_id: int = id(block)
+            self._block = block
             self._name: str = name
             self._bound_var: object = None
             self._binding_point: int = 0
@@ -58,7 +57,7 @@ class Block:
 
         @property
         def block(self):
-            return di(self._block_id)
+            return self._block
 
         def bind(self, var: object) -> None:
             if var is self._bound_var:
@@ -171,13 +170,13 @@ class Block:
             self.bind_to_point(binding_point)
 
     def __init__(self, program):
-        self._program_id = id(program)
+        self._program = program
         self._block_var_map = {}
         self._auto_upload = True
 
     @property
     def program(self):
-        return di(self._program_id)
+        return self._program
 
     @property
     def auto_upload(self) -> bool:

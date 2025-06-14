@@ -61,9 +61,6 @@ class Mesh(SceneNode):
         if isinstance(st_per_unit, (float,int)):
             self._st_per_unit = glm.vec2(st_per_unit, st_per_unit)
 
-        self._pivot = SceneNode("pivot")
-        self.add_child(self._pivot)
-
         if isinstance(color, glm.vec3):
             color = glm.vec4(color, 1)
 
@@ -94,7 +91,7 @@ class Mesh(SceneNode):
         self._material._parent_meshes.add(self)
         self._back_material = self._material
         self._back_material_user_set = False
-        self._render_hints = RenderHints()
+        self._render_hints = RenderHints(self)
 
         self._propagation_props["explode_distance"] = 0
 
@@ -130,6 +127,7 @@ class Mesh(SceneNode):
             return_value = safe_func(*args, **kwargs)
 
             self._build_state = Mesh.BuildState.NotBuilt
+            self.update_screens()
 
             return return_value
 
@@ -142,10 +140,6 @@ class Mesh(SceneNode):
     @self_calculated_normal.setter
     def self_calculated_normal(self, flag: bool):
         self.__self_calculated_normal = flag
-
-    @property
-    def pivot(self):
-        return self._pivot
 
     @property
     def is_sphere(self):
@@ -233,6 +227,8 @@ class Mesh(SceneNode):
             )
         else:
             self._vertices._attr_list_map["back_color"].ndarray = back_color_array
+
+        self.update_screens()
 
     def _color_change_callback(self):
         if not self._should_callback:
@@ -327,6 +323,8 @@ class Mesh(SceneNode):
             else:
                 self._vertices._attr_list_map["back_color"].ndarray = color_array
 
+        self.update_screens()
+
     @property
     def normalize_st(self)->bool:
         return self._normalize_st
@@ -405,6 +403,7 @@ class Mesh(SceneNode):
             self._vertices._attr_list_map["back_color"].ndarray = color_array
 
         self._should_callback = True
+        self.update_screens()
 
     @property
     def back_color(self) -> callback_vec4:
@@ -465,6 +464,7 @@ class Mesh(SceneNode):
             )
         else:
             self._vertices._attr_list_map["back_color"].ndarray = color_array
+        self.update_screens()
 
     @property
     def back_material(self):
@@ -486,19 +486,18 @@ class Mesh(SceneNode):
             self._back_material = material
 
         self._back_material_user_set = True
+        self.update_screens()
 
     @property
     def render_hints(self):
         return self._render_hints
-
-    
 
     @property
     def surf_type(self):
         return self.__surf_type
 
     @surf_type.setter
-    @checktype
+    @param_setter
     def surf_type(self, surf_type: SurfType):
         self.__surf_type = surf_type
 
@@ -657,6 +656,7 @@ class Mesh(SceneNode):
             self._vertices = Vertices(vertices)
 
         self._build_state = Mesh.BuildState.Built
+        self.update_screens()
 
     @property
     def indices(self):
@@ -675,6 +675,7 @@ class Mesh(SceneNode):
             self._indices = Indices(indices)
 
         self._build_state = Mesh.BuildState.Built
+        self.update_screens()
 
     @property
     def material(self):
@@ -699,6 +700,8 @@ class Mesh(SceneNode):
 
         if not self._back_color_user_set:
             self._back_material = material
+
+        self.update_screens()
 
     def __post_build(self):
         self.__set_color()
@@ -732,6 +735,7 @@ class Mesh(SceneNode):
     @checktype
     def primitive_type(self, primitive_type: GLInfo.primitive_types):
         self.__primitive = primitive_type
+        self.update_screens()
 
     def generate_temp_TBN(self, vertex0, vertex1, vertex2):
         v01 = vertex1.position - vertex0.position

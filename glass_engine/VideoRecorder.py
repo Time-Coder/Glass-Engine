@@ -10,8 +10,6 @@ import cv2
 
 import time
 
-from glass.utils import di
-
 
 def convert_to_image(data: np.ndarray, viewport: tuple) -> np.ndarray:
     if (
@@ -58,7 +56,7 @@ class VideoRecorder:
     def __init__(
         self, screen, file_name: str, fourcc: list, viewport: tuple, fps: Union[float, int]
     ) -> None:
-        self._screen_id = id(screen)
+        self._screen = screen
 
         self._file_name = file_name
         self._fourcc = fourcc
@@ -121,7 +119,6 @@ class VideoRecorder:
 
         self._cv_video_writer.release()
         try:
-            screen = di(self._screen_id)
-            screen._screen_video_writers.remove(self)
+            self._screen._screen_video_writers.remove(self)
         except:
             pass
