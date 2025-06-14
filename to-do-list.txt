@@ -1,10 +1,8 @@
-* 场景变化时自动更新 screens
 * Lights 优先采用 Uniform Buffer Object，超过 32 个再使用 Shader Storage Buffer Object
 * 不需要 geometry shader 的不使用 geometry shader
 * uniform, uniform block, buffer 采用 tree-sitter 解析，删除原来的正则解析
 * uniform, uniform block, buffer 结构体绑定变量，变量属性改变透传 uniform, uniform block, buffer 结构体属性改变
 
-* 尝试使用 QtPy 兼容 PySide 和 PyQt
 * 兼容 glfw, tikinter
 
 * 完善全部类型注解
