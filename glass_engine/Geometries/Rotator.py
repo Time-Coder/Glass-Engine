@@ -18,21 +18,20 @@ class Rotator(Mesh):
         n_divide: int = 100,
         start_angle: float = 0,
         span_angle: float = 360,
-        n_lat_divide: int = 100,
         color: Union[glm.vec3, glm.vec4] = glm.vec4(0.396, 0.74151, 0.69102, 1),
         back_color: Union[glm.vec3, glm.vec4, None] = None,
-        normalize_tex_coord: bool = False,
+        surf_type: Mesh.SurfType = Mesh.SurfType.Auto,
+        normalize_st: bool = False,
+        st_per_unit: float = 1,
         name: str = "",
         block=True,
-        surf_type: Mesh.SurfType = Mesh.SurfType.Auto,
     ):
         Mesh.__init__(
-            self,
-            color=color,
-            back_color=back_color,
-            name=name,
-            block=block,
+            self, color=color, back_color=back_color,
             surf_type=surf_type,
+            normalize_st=normalize_st,
+            st_per_unit=st_per_unit,
+            name=name, block=block,
         )
         self.__section = section
         self.__axis_start = axis_start
@@ -40,9 +39,6 @@ class Rotator(Mesh):
         self.__start_angle = start_angle
         self.__span_angle = span_angle
         self.__n_divide = n_divide
-        self.__n_lat_divide = n_lat_divide
-        self.__normalize_tex_coord = normalize_tex_coord
-        self.start_building()
 
     def build(self):
         vertices = self._vertices
@@ -53,7 +49,6 @@ class Rotator(Mesh):
         start_angle = self.__start_angle / 180 * math.pi
         span_angle = self.__span_angle / 180 * math.pi
         n_divide = self.__n_divide
-        normalize_tex_coord = self.__normalize_tex_coord
 
         i_vertex = 0
         i_index = 0
@@ -94,8 +89,11 @@ class Rotator(Mesh):
                 if j > 0:
                     l += glm.length(section[j] - section[j - 1])
 
-                if not normalize_tex_coord:
-                    vertex.tex_coord = glm.vec3(D * theta, 1 - l, 0)
+                if not self.normalize_st:
+                    vertex.tex_coord = glm.vec3(
+                        self.s_per_unit * D * theta,
+                        1 - self.t_per_unit * l, 0
+                    )
                 else:
                     vertex.tex_coord = glm.vec3(D / L * theta, 1 - l / L, 0)
 
@@ -203,12 +201,3 @@ class Rotator(Mesh):
     @Mesh.param_setter
     def span_angle(self, span_angle: float):
         self.__span_angle = span_angle
-
-    @property
-    def normalize_tex_coord(self):
-        return self.__normalize_tex_coord
-
-    @normalize_tex_coord.setter
-    @Mesh.param_setter
-    def normalize_tex_coord(self, flag: bool):
-        self.__normalize_tex_coord = flag

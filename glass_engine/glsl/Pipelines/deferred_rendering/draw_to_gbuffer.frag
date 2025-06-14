@@ -53,27 +53,11 @@ void main()
     {
         change_geometry(material, tex_coord, view_TBN, view_pos);
         internal_material = fetch_internal_material(fs_in.color, material, tex_coord);
-
-#if USE_SHADING_MODEL_FLAT || USE_SHADING_MODEL_GOURAUD
-        if (material.shading_model == SHADING_MODEL_FLAT ||
-            material.shading_model == SHADING_MODEL_GOURAUD)
-        {
-            internal_material.base_color = fs_in.color.rgb;
-        }
-#endif
     }
     else
     {
         change_geometry(back_material, tex_coord, view_TBN, view_pos);
         internal_material = fetch_internal_material(fs_in.back_color, back_material, tex_coord);
-
-#if USE_SHADING_MODEL_FLAT || USE_SHADING_MODEL_GOURAUD
-        if (back_material.shading_model == SHADING_MODEL_FLAT ||
-            back_material.shading_model == SHADING_MODEL_GOURAUD)
-        {
-            internal_material.base_color = fs_in.back_color.rgb;
-        }
-#endif
     }
     
     write_to_gbuffer(

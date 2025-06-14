@@ -14,6 +14,20 @@ InternalMaterial fetch_internal_material(vec4 frag_color, Material material, vec
     internal_material.fog = material.fog;
     internal_material.dynamic_env_mapping = material.dynamic_env_mapping;
 
+    // tex_coord
+    if (material.st_scale_with_mesh)
+    {
+        tex_coord *= material._mesh_scale;
+    }
+
+    tex_coord *= material.st_scale;
+    float angle_rad = material.st_rotation / 180.0 * PI;
+    tex_coord = mat2(
+        cos(angle_rad), sin(angle_rad),
+        -sin(angle_rad), cos(angle_rad)
+    ) * tex_coord;
+    tex_coord += material.st_offset;
+
     // opacity
     internal_material.opacity = material.opacity;
     if (textureValid(material.opacity_map))
@@ -37,6 +51,10 @@ InternalMaterial fetch_internal_material(vec4 frag_color, Material material, vec
         if (material.vertex_color_usage == VERTEX_COLOR_USAGE_BASE_COLOR_MASK)
         {
             internal_material.base_color *= frag_color.rgb;
+        }
+        if (material.vertex_color_usage == VERTEX_COLOR_USAGE_BASE_COLOR_MIX)
+        {
+            internal_material.base_color = mix(internal_material.base_color, frag_color.rgb, frag_color.a);
         }
     }
     
@@ -65,6 +83,10 @@ InternalMaterial fetch_internal_material(vec4 frag_color, Material material, vec
         {
             internal_material.ambient *= frag_color.rgb;
         }
+        if (material.vertex_color_usage == VERTEX_COLOR_USAGE_AMBIENT_COLOR_MIX)
+        {
+            internal_material.ambient = mix(internal_material.ambient, frag_color.rgb, frag_color.a);
+        }
     }
     
     // specular
@@ -83,6 +105,10 @@ InternalMaterial fetch_internal_material(vec4 frag_color, Material material, vec
         if (material.vertex_color_usage == VERTEX_COLOR_USAGE_SPECULAR_COLOR_MASK)
         {
             internal_material.specular *= frag_color.rgb;
+        }
+        if (material.vertex_color_usage == VERTEX_COLOR_USAGE_SPECULAR_COLOR_MIX)
+        {
+            internal_material.specular = mix(internal_material.specular, frag_color.rgb, frag_color.a);
         }
     }
     
@@ -118,6 +144,10 @@ InternalMaterial fetch_internal_material(vec4 frag_color, Material material, vec
         {
             internal_material.emission *= frag_color.rgb;
         }
+        if (material.vertex_color_usage == VERTEX_COLOR_USAGE_EMISSION_COLOR_MIX)
+        {
+            internal_material.emission = mix(internal_material.emission, frag_color.rgb, frag_color.a);
+        }
     }
 
     // reflection
@@ -141,6 +171,10 @@ InternalMaterial fetch_internal_material(vec4 frag_color, Material material, vec
         if (material.vertex_color_usage == VERTEX_COLOR_USAGE_REFLECTION_COLOR_MASK)
         {
             internal_material.reflection *= frag_color;
+        }
+        if (material.vertex_color_usage == VERTEX_COLOR_USAGE_REFLECTION_COLOR_MIX)
+        {
+            internal_material.reflection = mix(internal_material.reflection, frag_color, frag_color.a);
         }
     }
 
@@ -188,6 +222,12 @@ InternalMaterial fetch_internal_material(vec4 frag_color, Material material, vec
             internal_material.ao *= frag_color.r;
             internal_material.roughness *= frag_color.g;
             internal_material.metallic *= frag_color.b;
+        }
+        if (material.vertex_color_usage == VERTEX_COLOR_USAGE_ARM_MIX)
+        {
+            internal_material.ao = mix(internal_material.ao, frag_color.r, frag_color.a);
+            internal_material.roughness = mix(internal_material.roughness, frag_color.g, frag_color.a);
+            internal_material.metallic = mix(internal_material.metallic, frag_color.b, frag_color.a);
         }
     }
 

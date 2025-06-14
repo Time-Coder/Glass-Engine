@@ -38,8 +38,8 @@ class Mesh(SceneNode):
         color: Union[glm.vec3, glm.vec4] = glm.vec4(1, 1, 1, 1),
         back_color: Union[glm.vec3, glm.vec4, None] = None,
         surf_type: Union[Mesh.SurfType, None] = None,
-        normalize_tex_coords: bool = False,
-        tex_coords_per_unit: float = 1,
+        normalize_st: bool = False,
+        st_per_unit: Union[float, glm.vec2] = 1,
         name: str = "",
         block: bool = True
     ):
@@ -56,8 +56,13 @@ class Mesh(SceneNode):
         self._z_max = 0
         self._builder = None
         self._build_state = Mesh.BuildState.NotBuilt
-        self._normalize_tex_coords = normalize_tex_coords
-        self._tex_coords_per_unit = tex_coords_per_unit
+        self._normalize_st = normalize_st
+        self._st_per_unit = st_per_unit
+        if isinstance(st_per_unit, (float,int)):
+            self._st_per_unit = glm.vec2(st_per_unit, st_per_unit)
+
+        self._pivot = SceneNode("pivot")
+        self.add_child(self._pivot)
 
         if isinstance(color, glm.vec3):
             color = glm.vec4(color, 1)
@@ -137,6 +142,10 @@ class Mesh(SceneNode):
     @self_calculated_normal.setter
     def self_calculated_normal(self, flag: bool):
         self.__self_calculated_normal = flag
+
+    @property
+    def pivot(self):
+        return self._pivot
 
     @property
     def is_sphere(self):
@@ -319,22 +328,52 @@ class Mesh(SceneNode):
                 self._vertices._attr_list_map["back_color"].ndarray = color_array
 
     @property
-    def normalize_tex_coords(self)->bool:
-        return self._normalize_tex_coords
+    def normalize_st(self)->bool:
+        return self._normalize_st
     
-    @normalize_tex_coords.setter
+    @normalize_st.setter
     @param_setter
-    def normalize_tex_coords(self, flag:bool):
-        self._normalize_tex_coords = flag
+    def normalize_st(self, flag:bool):
+        self._normalize_st = flag
 
     @property
-    def tex_coords_per_unit(self)->float:
-        return self._tex_coords_per_unit
+    def st_per_unit(self)->glm.vec2:
+        if self._normalize_st:
+            return glm.vec2(1, 1)
+        
+        return self._st_per_unit
     
-    @tex_coords_per_unit.setter
+    @property
+    def str_per_unit(self)->glm.vec3:
+        if self._normalize_st:
+            return glm.vec2(1, 1, 1)
+        
+        return glm.vec3(self._st_per_unit, 1)
+    
+    @st_per_unit.setter
     @param_setter
-    def tex_coords_per_unit(self, tex_coords_per_unit:float):
-        self._tex_coords_per_unit = tex_coords_per_unit
+    def st_per_unit(self, st_per_unit:Union[float, glm.vec2]):
+        self._st_per_unit = st_per_unit
+        if isinstance(st_per_unit, (float,int)):
+            self._st_per_unit = glm.vec2(st_per_unit)
+
+    @property
+    def s_per_unit(self):
+        return self._st_per_unit.s
+    
+    @s_per_unit.setter
+    @param_setter
+    def s_per_unit(self, s_per_unit:float):
+        self._st_per_unit.s = s_per_unit
+
+    @property
+    def t_per_unit(self):
+        return self._st_per_unit.t
+    
+    @t_per_unit.setter
+    @param_setter
+    def t_per_unit(self, t_per_unit:float):
+        self._st_per_unit.t = t_per_unit
 
     def _back_color_change_callback(self):
         if not self._should_callback:
@@ -769,6 +808,7 @@ class Mesh(SceneNode):
         if not self.visible:
             return
 
+        self.__build()
         with self.render_hints:
             if self.__primitive in GLInfo.triangle_types:
                 program.draw_triangles(

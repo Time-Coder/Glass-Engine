@@ -38,9 +38,7 @@ class Surf(Mesh):
         self._back_CData = back_C if self._back_CData_user_set else self._CData
         self.material.vertex_color_usage = Material.VertexColorUsage.BaseColor
 
-
         Surf._set_colors(self, color, back_color, color_map, back_color_map)
-        self.start_building()
 
     @staticmethod
     def _set_colors(obj, color, back_color, color_map, back_color_map):

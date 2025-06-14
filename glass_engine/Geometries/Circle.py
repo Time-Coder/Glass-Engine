@@ -20,15 +20,15 @@ class Circle(Mesh):
         span_angle: float = 360,
         color: Union[glm.vec3, glm.vec4] = glm.vec4(0.396, 0.74151, 0.69102, 1),
         line_width: int = 2,
-        normalize_tex_coords: bool = False,
-        tex_coords_per_unit: float = 1,
+        normalize_st: bool = False,
+        st_per_unit: float = 1,
         name: str = "",
     ):
         Mesh.__init__(
             self, primitive_type=GL.GL_LINE_STRIP,
             color=color,
-            normalize_tex_coords=normalize_tex_coords,
-            tex_coords_per_unit=tex_coords_per_unit,
+            normalize_st=normalize_st,
+            st_per_unit=st_per_unit,
             name=name, block=True
         )
 
@@ -62,8 +62,8 @@ class Circle(Mesh):
                 bitangent=bitangent,
                 tex_coord=(
                     glm.vec3((start_angle + theta_deg) / (start_angle + span_angle), 0, 0)
-                    if self.normalize_tex_coords else
-                    glm.vec3(self.tex_coords_per_unit * radius * theta, 0, 0)
+                    if self.normalize_st else
+                    glm.vec3(self.s_per_unit * radius * theta, 0, 0)
                 )
             )
 

@@ -149,7 +149,6 @@ class Dodecahedron(Mesh):
         self.__radius = radius
         self.__stable = stable
         self.__normalize_tex_coord = normalize_tex_coord
-        self.start_building()
 
     def build(self):
         self.is_closed = True
@@ -159,7 +158,6 @@ class Dodecahedron(Mesh):
         indices = self._indices
         radius = self.__radius
         stable = self.__stable
-        normalize_tex_coord = self.__normalize_tex_coord
 
         quat = glm.quat(1, 0, 0, 0)
         if stable:
@@ -169,8 +167,8 @@ class Dodecahedron(Mesh):
         sin_pi_5 = math.sin(math.pi / 5)
         for i, fix_vert in enumerate(Dodecahedron.fixed_vertices):
             tex_coord = fix_vert.tex_coord
-            if not normalize_tex_coord:
-                tex_coord = radius * (
+            if not self.normalize_st:
+                tex_coord = self.str_per_unit * radius * (
                     tex_coord - glm.vec3(0.5, 0.5, 0)
                 ) * Dodecahedron.edge_length / sin_pi_5 + glm.vec3(0.5, 0.5, 0)
 
@@ -196,15 +194,6 @@ class Dodecahedron(Mesh):
     @Mesh.param_setter
     def radius(self, radius: float):
         self.__radius = radius
-
-    @property
-    def normalize_tex_coord(self):
-        return self.__normalize_tex_coord
-
-    @normalize_tex_coord.setter
-    @Mesh.param_setter
-    def normalize_tex_coord(self, flag: bool):
-        self.__normalize_tex_coord = flag
 
     @property
     def is_stable(self):

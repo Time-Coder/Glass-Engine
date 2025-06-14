@@ -18,12 +18,16 @@ class Floor(Mesh):
         color: Union[glm.vec3, glm.vec4] = glm.vec4(0.396, 0.74151, 0.69102, 1),
         back_color: Union[glm.vec3, glm.vec4, None] = None,
         length: float = 1000,
-        repeat_per_meter: float = 1,
+        st_per_units: float = 1,
         name: str = "",
     ):
-        Mesh.__init__(self, color=color, back_color=back_color, name=name, block=True)
+        Mesh.__init__(
+            self, color=color, back_color=back_color,
+            normalize_st=False,
+            st_per_unit=st_per_units,
+            name=name, block=True
+        )
         self.__length = length
-        self.__repeat_per_meter = repeat_per_meter
 
         if Floor.__default_image is None:
             Floor.__default_image = np.zeros((100, 100, 3), dtype=np.uint8)
@@ -34,7 +38,6 @@ class Floor(Mesh):
 
         self.material.diffuse_map = Floor.__default_image
         self.material.cast_shadows = False
-        self.start_building()
 
     def build(self):
         self.is_closed = False
@@ -43,37 +46,36 @@ class Floor(Mesh):
         vertices = self._vertices
         indices = self._indices
         length = self.__length
-        repeat_per_meter = self.__repeat_per_meter
         vertices = self._vertices
         indices = self._indices
 
         vertices[0] = Vertex(
             position=glm.vec3(-length / 2, -length / 2, -0.001),
-            tangent=glm.vec3(1 / repeat_per_meter, 0, 0),
-            bitangent=glm.vec3(0, 1 / repeat_per_meter, 0),
+            tangent=glm.vec3(1 / self.s_per_unit, 0, 0),
+            bitangent=glm.vec3(0, 1 / self.t_per_unit, 0),
             normal=glm.vec3(0, 0, 1),
             tex_coord=glm.vec3(0),
         )
         vertices[1] = Vertex(
             position=glm.vec3(length / 2, -length / 2, -0.001),
-            tangent=glm.vec3(1 / repeat_per_meter, 0, 0),
-            bitangent=glm.vec3(0, 1 / repeat_per_meter, 0),
+            tangent=glm.vec3(1 / self.s_per_unit, 0, 0),
+            bitangent=glm.vec3(0, 1 / self.t_per_unit, 0),
             normal=glm.vec3(0, 0, 1),
-            tex_coord=repeat_per_meter * glm.vec3(length / 2, 0, 0),
+            tex_coord=self.str_per_unit * glm.vec3(length / 2, 0, 0),
         )
         vertices[2] = Vertex(
             position=glm.vec3(length / 2, length / 2, -0.001),
-            tangent=glm.vec3(1 / repeat_per_meter, 0, 0),
-            bitangent=glm.vec3(0, 1 / repeat_per_meter, 0),
+            tangent=glm.vec3(1 / self.s_per_unit, 0, 0),
+            bitangent=glm.vec3(0, 1 / self.t_per_unit, 0),
             normal=glm.vec3(0, 0, 1),
-            tex_coord=repeat_per_meter * glm.vec3(length / 2, length / 2, 0),
+            tex_coord=self.str_per_unit * glm.vec3(length / 2, length / 2, 0),
         )
         vertices[3] = Vertex(
             position=glm.vec3(-length / 2, length / 2, -0.001),
-            tangent=glm.vec3(1 / repeat_per_meter, 0, 0),
-            bitangent=glm.vec3(0, 1 / repeat_per_meter, 0),
+            tangent=glm.vec3(1 / self.s_per_unit, 0, 0),
+            bitangent=glm.vec3(0, 1 / self.t_per_unit, 0),
             normal=glm.vec3(0, 0, 1),
-            tex_coord=repeat_per_meter * glm.vec3(0, length / 2, 0),
+            tex_coord=self.str_per_unit * glm.vec3(0, length / 2, 0),
         )
 
         indices[0] = glm.uvec3(0, 1, 2)
@@ -90,12 +92,3 @@ class Floor(Mesh):
     @Mesh.param_setter
     def length(self, length: glm.vec3):
         self.__length = length
-
-    @property
-    def repeat_per_meter(self):
-        return self.__repeat_per_meter
-
-    @repeat_per_meter.setter
-    @Mesh.param_setter
-    def repeat_per_meter(self, repeat_per_meter: int):
-        self.__repeat_per_meter = repeat_per_meter

@@ -21,19 +21,23 @@ class HollowRPolygonFace(Mesh):
         color: Union[glm.vec3, glm.vec4] = glm.vec4(0.396, 0.74151, 0.69102, 1),
         back_color: Union[glm.vec3, glm.vec4, None] = None,
         vertical: bool = False,
-        normalize_tex_coord=False,
+        normalize_st:bool=False,
+        tex_coord_per_unit: float = 1,
         name: str = "",
         block: bool = True,
     ):
-        Mesh.__init__(self, color=color, back_color=back_color, name=name, block=block)
+        Mesh.__init__(
+            self, color=color, back_color=back_color,
+            normalize_st=normalize_st,
+            st_per_unit=tex_coord_per_unit,
+            name=name, block=block
+        )
         self.__inner_radius = inner_radius
         self.__outer_radius = outer_radius
         self.__start_side = start_side
         self.__total_sides = total_sides
         self.__n_sides = n_sides
         self.__vertical = vertical
-        self.__normalize_tex_coord = normalize_tex_coord
-        self.start_building()
 
     def build(self):
         self.is_closed = False
@@ -51,7 +55,6 @@ class HollowRPolygonFace(Mesh):
 
         n_sides = self.__n_sides
         vertical = self.__vertical
-        normalize_tex_coord = self.__normalize_tex_coord
 
         i_vertex = 0
         i_index = 0
@@ -62,7 +65,7 @@ class HollowRPolygonFace(Mesh):
 
         tex_coord_inner_radius = inner_radius
         tex_coord_outer_radius = outer_radius
-        if normalize_tex_coord:
+        if self.normalize_st:
             tex_coord_outer_radius = 0.5
             tex_coord_inner_radius = 0.5 * inner_radius / outer_radius
 
@@ -81,8 +84,8 @@ class HollowRPolygonFace(Mesh):
             vertex_inner.position = edge_inner
             vertex_inner.normal = normal
             vertex_inner.tex_coord = glm.vec3(
-                0.5 + tex_coord_inner_radius * cos_theta,
-                0.5 + tex_coord_inner_radius * sin_theta,
+                0.5 + self.s_per_unit * tex_coord_inner_radius * cos_theta,
+                0.5 + self.t_per_unit * tex_coord_inner_radius * sin_theta,
                 0,
             )
 
@@ -171,12 +174,3 @@ class HollowRPolygonFace(Mesh):
     @Mesh.param_setter
     def outer_radius(self, outer_radius: float):
         self.__outer_radius = outer_radius
-
-    @property
-    def normalize_tex_coord(self):
-        return self.__normalize_tex_coord
-
-    @normalize_tex_coord.setter
-    @Mesh.param_setter
-    def normalize_tex_coord(self, flag: bool):
-        self.__normalize_tex_coord = flag

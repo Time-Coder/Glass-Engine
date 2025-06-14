@@ -33,7 +33,6 @@ class CylindricalFSurf(Mesh):
         self.material.vertex_color_usage = Material.VertexColorUsage.BaseColor
 
         Surf._set_colors(self, color, back_color, color_map, back_color_map)
-        self.start_building()
 
     def build(self):
         func = self._func

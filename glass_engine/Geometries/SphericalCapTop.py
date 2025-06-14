@@ -24,14 +24,16 @@ class SphericalCapTop(Mesh):
         name: str = "",
         block=True,
     ):
-        Mesh.__init__(self, color=color, back_color=back_color, name=name, block=block)
+        Mesh.__init__(
+            self, color=color, back_color=back_color,
+            name=name, block=block
+        )
         self.__base_radius = base_radius
         self.__height = height
         self.__start_lon = start_lon
         self.__span_lon = span_lon
         self.__n_lon_divide = n_lon_divide
         self.__n_lat_divide = n_lat_divide
-        self.start_building()
 
     def build(self):
         self.is_closed = True

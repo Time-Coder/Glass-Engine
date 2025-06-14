@@ -29,7 +29,6 @@ class Polyline(Mesh):
         )
         self.render_hints.line_width = line_width
         self.__points = points
-        self.start_building()
 
     def build(self):
         points = self.__points
@@ -60,7 +59,7 @@ class Polyline(Mesh):
     @points.setter
     def points(self, points):
         self.__points = points
-        self.start_building()
+        self._build_state = Mesh.BuildState.NotBuilt
 
     @property
     def line_width(self):

@@ -79,13 +79,17 @@ class Hexahedron(Mesh):
         radius=1,
         color: Union[glm.vec3, glm.vec4] = glm.vec4(0.396, 0.74151, 0.69102, 1),
         back_color: Union[glm.vec3, glm.vec4, None] = None,
-        normalize_tex_coord=False,
+        normalize_st:bool =False,
+        st_per_unit:float=1,
         name: str = "",
     ):
-        Mesh.__init__(self, color=color, back_color=back_color, name=name, block=True)
+        Mesh.__init__(
+            self, color=color, back_color=back_color,
+            normalize_st=normalize_st,
+            st_per_unit=st_per_unit,
+            name=name, block=True
+        )
         self.__radius = radius
-        self.__normalize_tex_coord = normalize_tex_coord
-        self.start_building()
 
     def build(self):
         self.is_closed = True
@@ -94,12 +98,11 @@ class Hexahedron(Mesh):
         vertices = self._vertices
         indices = self._indices
         radius = self.__radius
-        normalize_tex_coord = self.__normalize_tex_coord
 
         for i, fix_vert in enumerate(Hexahedron.fixed_vertices):
             tex_coord = fix_vert.tex_coord
-            if not normalize_tex_coord:
-                tex_coord = tex_coord * Hexahedron.edge_length
+            if not self.normalize_st:
+                tex_coord = self.str_per_unit * Hexahedron.edge_length * tex_coord
 
             vertices[i] = Vertex(
                 position=radius * fix_vert.position,
@@ -119,12 +122,3 @@ class Hexahedron(Mesh):
     @Mesh.param_setter
     def radius(self, radius: float):
         self.__radius = radius
-
-    @property
-    def normalize_tex_coord(self):
-        return self.__normalize_tex_coord
-
-    @normalize_tex_coord.setter
-    @Mesh.param_setter
-    def normalize_tex_coord(self, flag: bool):
-        self.__normalize_tex_coord = flag

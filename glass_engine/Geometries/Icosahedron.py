@@ -88,14 +88,18 @@ class Icosahedron(Mesh):
         color: Union[glm.vec3, glm.vec4] = glm.vec4(0.396, 0.74151, 0.69102, 1),
         back_color: Union[glm.vec3, glm.vec4, None] = None,
         stable=False,
-        normalize_tex_coord=False,
+        normalize_st:bool=False,
+        st_per_unit:float=1,
         name: str = "",
     ):
-        Mesh.__init__(self, color=color, back_color=back_color, name=name, block=True)
+        Mesh.__init__(
+            self, color=color, back_color=back_color,
+            normalize_st=normalize_st,
+            st_per_unit=st_per_unit,
+            name=name, block=True
+        )
         self.__radius = radius
         self.__stable = stable
-        self.__normalize_tex_coord = normalize_tex_coord
-        self.start_building()
 
     def build(self):
         self.is_closed = True
@@ -105,7 +109,6 @@ class Icosahedron(Mesh):
         indices = self._indices
         radius = self.__radius
         stable = self.__stable
-        normalize_tex_coord = self.__normalize_tex_coord
 
         quat = glm.quat(1, 0, 0, 0)
         if stable:
@@ -114,8 +117,8 @@ class Icosahedron(Mesh):
 
         for i, fix_vert in enumerate(Icosahedron.fixed_vertices):
             tex_coord = fix_vert.tex_coord
-            if not normalize_tex_coord:
-                tex_coord = 2 * radius * (
+            if not self.normalize_st:
+                tex_coord = 2 * self.str_per_unit * radius * (
                     tex_coord - glm.vec3(0.5, 0.5, 0)
                 ) * Icosahedron.edge_length / math.sqrt(3) + glm.vec3(0.5, 0.5, 0)
 
@@ -141,15 +144,6 @@ class Icosahedron(Mesh):
     @Mesh.param_setter
     def radius(self, radius: float):
         self.__radius = radius
-
-    @property
-    def normalize_tex_coord(self):
-        return self.__normalize_tex_coord
-
-    @normalize_tex_coord.setter
-    @Mesh.param_setter
-    def normalize_tex_coord(self, flag: bool):
-        self.__normalize_tex_coord = flag
 
     @property
     def is_stable(self):

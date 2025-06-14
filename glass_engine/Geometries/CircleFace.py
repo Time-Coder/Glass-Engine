@@ -20,15 +20,15 @@ class CircleFace(Mesh):
         span_angle: float = 360,
         n_divide: int = 100,
         vertical:bool=False,
-        normalize_tex_coords:bool=False,
-        tex_coords_per_unit:float=1,
+        normalize_st:bool=False,
+        st_per_unit:float=1,
         name: str = "",
         block=True,
     ):
         Mesh.__init__(
             self, color=color, back_color=back_color,
-            normalize_tex_coords=normalize_tex_coords,
-            tex_coords_per_unit=tex_coords_per_unit,
+            normalize_st=normalize_st,
+            st_per_unit=st_per_unit,
             name=name, block=block
         )
         self.__radius = radius
@@ -53,7 +53,7 @@ class CircleFace(Mesh):
         i_vertex = 0
         i_index = 0
 
-        tex_coord_radius = 0.5 if self.normalize_tex_coords else self.tex_coords_per_unit * radius
+        tex_coord_radius = 0.5 if self.normalize_st else radius
 
         normal = glm.vec3(0, 0, 1)
         if vertical:
@@ -79,8 +79,8 @@ class CircleFace(Mesh):
             vertex_edge.position = edge
             vertex_edge.normal = normal
             vertex_edge.tex_coord = glm.vec3(
-                0.5 + tex_coord_radius * cos_theta,
-                0.5 + tex_coord_radius * sin_theta,
+                0.5 + self.s_per_unit * tex_coord_radius * cos_theta,
+                0.5 + self.t_per_unit * tex_coord_radius * sin_theta,
                 0,
             )
 
@@ -147,12 +147,3 @@ class CircleFace(Mesh):
     @Mesh.param_setter
     def radius(self, radius: float):
         self.__radius = radius
-
-    @property
-    def normalize_tex_coord(self):
-        return self.__normalize_tex_coord
-
-    @normalize_tex_coord.setter
-    @Mesh.param_setter
-    def normalize_tex_coord(self, flag: bool):
-        self.__normalize_tex_coord = flag

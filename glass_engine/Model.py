@@ -32,7 +32,6 @@ class ModelMesh(Mesh):
             primitive_type=GLInfo.enum_map[assimp_mesh.primitive_type],
         )
         self.__assimp_mesh = assimp_mesh
-        self.start_building()
 
     def build(self):
         assimp_mesh = self.__assimp_mesh

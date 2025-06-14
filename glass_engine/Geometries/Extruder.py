@@ -31,25 +31,23 @@ class Extruder(Mesh):
         color: Union[glm.vec3, glm.vec4] = glm.vec4(0.396, 0.74151, 0.69102, 1),
         back_color: Union[glm.vec3, glm.vec4, None] = None,
         n_corner_divide: int = 100,
-        normalize_tex_coord: bool = False,
+        surf_type: Mesh.SurfType = Mesh.SurfType.Auto,
+        normalize_st: bool = False,
+        st_per_unit: float = 1,
         name: str = "",
         block: bool = True,
-        surf_type: Mesh.SurfType = Mesh.SurfType.Auto,
     ):
         Mesh.__init__(
-            self,
-            color=color,
-            back_color=back_color,
-            name=name,
-            block=block,
+            self, color=color, back_color=back_color,
             surf_type=surf_type,
+            normalize_st=normalize_st,
+            st_per_unit=st_per_unit,
+            name=name, block=block, 
         )
         self.__section = section
         self.__path = path
         self.__join_style = join_style
         self.__n_corner_divide = n_corner_divide
-        self.__normalize_tex_coord = normalize_tex_coord
-        self.start_building()
 
     def build(self):
         section = self.__section
@@ -537,7 +535,6 @@ class Extruder(Mesh):
     ):
         vertices = self._vertices
         indices = self._indices
-        normalize_tex_coord = self.__normalize_tex_coord
         len_section = len(current_section)
 
         i_vertex = 0
@@ -582,10 +579,10 @@ class Extruder(Mesh):
                         )
 
             for j in range(len_section):
-                t = accumulate_length[j]
-                s = L + glm.dot(current_section[j] - path[i], d1)
+                t = self.t_per_unit * accumulate_length[j]
+                s = self.s_per_unit * (L + glm.dot(current_section[j] - path[i], d1))
 
-                if normalize_tex_coord:
+                if self.normalize_st:
                     t /= accumulate_length[-1]
                     s /= accumulate_length[-1]
 
@@ -624,9 +621,9 @@ class Extruder(Mesh):
 
             if should_add_corner:
                 for j in range(len_section):
-                    t = accumulate_length[j]
-                    s = L - glm.dot(current_section[j] - path[i], d1)
-                    if normalize_tex_coord:
+                    t = self.t_per_unit * accumulate_length[j]
+                    s = self.s_per_unit * (L - glm.dot(current_section[j] - path[i], d1))
+                    if self.normalize_st:
                         t /= accumulate_length[-1]
                         s /= accumulate_length[-1]
 
@@ -646,7 +643,7 @@ class Extruder(Mesh):
     @section.setter
     def section(self, section):
         self.__section = section
-        self.start_building()
+        self._build_state = Mesh.BuildState.NotBuilt
 
     @property
     def __used_section(self):
@@ -673,7 +670,7 @@ class Extruder(Mesh):
     @path.setter
     def path(self, path):
         self.__path = path
-        self.start_building()
+        self._build_state = Mesh.BuildState.NotBuilt
 
     @property
     def join_style(self):
@@ -692,12 +689,3 @@ class Extruder(Mesh):
     @Mesh.param_setter
     def n_corner_divide(self, n: int):
         self.__n_corner_divide = n
-
-    @property
-    def normalize_tex_coord(self):
-        return self.__normalize_tex_coord
-
-    @normalize_tex_coord.setter
-    @Mesh.param_setter
-    def normalize_tex_coord(self, flag: bool):
-        self.__normalize_tex_coord = flag

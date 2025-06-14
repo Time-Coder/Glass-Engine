@@ -25,7 +25,10 @@ class Sphere(Mesh):
         name: str = "",
         block=True,
     ):
-        Mesh.__init__(self, color=color, back_color=back_color, name=name, block=block)
+        Mesh.__init__(
+            self, color=color, back_color=back_color,
+            name=name, block=block
+        )
         self.__radius = radius
         self.__start_lon = start_lon
         self.__span_lon = span_lon
@@ -33,7 +36,6 @@ class Sphere(Mesh):
         self.__start_lat = start_lat
         self.__span_lat = span_lat
         self.__n_lat_divide = n_lat_divide
-        self.start_building()
 
     def build(self):
         self.is_closed = True

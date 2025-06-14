@@ -20,7 +20,6 @@ class Point(Mesh):
         Mesh.__init__(self, primitive_type=GL.GL_POINTS, color=color, name=name)
         self.render_hints.point_size = point_size
         self.__position = position
-        self.start_building()
 
     def build(self):
         position = self.__position

@@ -29,7 +29,6 @@ class Icosphere(Mesh):
         Mesh.__init__(self, color=color, back_color=back_color, name=name, block=block)
         self.__radius = radius
         self.__n_levels = n_levels
-        self.start_building()
 
     def __generate_base_data(self):
         if Icosphere.__base_indices:

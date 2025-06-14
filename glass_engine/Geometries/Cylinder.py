@@ -20,15 +20,15 @@ class Cylinder(Mesh):
         n_divide: int = 100,
         color: Union[glm.vec3, glm.vec4] = glm.vec4(0.396, 0.74151, 0.69102, 1),
         back_color: Union[glm.vec3, glm.vec4, None] = None,
-        normalize_tex_coords:bool=False,
-        tex_coords_per_unit: float = 1,
+        normalize_st:bool=False,
+        st_per_unit: float = 1,
         name: str = "",
         block=True,
     ):
         Mesh.__init__(
             self, color=color, back_color=back_color,
-            normalize_tex_coords=normalize_tex_coords,
-            tex_coords_per_unit=tex_coords_per_unit,
+            normalize_st=normalize_st,
+            st_per_unit=st_per_unit,
             name=name, block=block
         )
         self.__radius = radius
@@ -68,14 +68,8 @@ class Cylinder(Mesh):
         vertices[i_vertex] = vertex_bottom
         i_vertex += 1
 
-        tex_coord_radius = (
-            0.5 if self.normalize_tex_coords
-            else self.tex_coords_per_unit * radius
-        )
-        t = (
-            1 if self.normalize_tex_coords
-            else self.tex_coords_per_unit * height
-        )
+        tex_coord_radius = 0.5 if self.normalize_st else radius
+        t = 1 if self.normalize_st else height
 
         for j in range(n_divide):
             theta = start_angle + span_angle * j / (n_divide - 1)
@@ -92,8 +86,8 @@ class Cylinder(Mesh):
             vertex_top_top.position = top
             vertex_top_top.normal = glm.vec3(0, 0, 1)
             vertex_top_top.tex_coord = glm.vec3(
-                0.5 + tex_coord_radius * cos_theta,
-                0.5 + tex_coord_radius * sin_theta,
+                0.5 + self.s_per_unit * tex_coord_radius * cos_theta,
+                0.5 + self.t_per_unit * tex_coord_radius * sin_theta,
                 0,
             )
 

@@ -20,20 +20,24 @@ class EllipseFace(Mesh):
         start_angle: float = 0,
         span_angle: float = 360,
         n_divide: int = 100,
-        vertical=False,
-        normalize_tex_coord=False,
+        vertical:bool=False,
+        normalize_st:bool=False,
+        st_per_unit:float=1,
         name: str = "",
         block=True,
     ):
-        Mesh.__init__(self, color=color, back_color=back_color, name=name, block=block)
+        Mesh.__init__(
+            self, color=color, back_color=back_color,
+            normalize_st=normalize_st,
+            st_per_unit=st_per_unit,
+            name=name, block=block
+        )
         self.__a = a
         self.__b = b
         self.__start_angle = start_angle
         self.__span_angle = span_angle
         self.__n_divide = n_divide
         self.__vertical = vertical
-        self.__normalize_tex_coord = normalize_tex_coord
-        self.start_building()
 
     def build(self):
         self.is_closed = False
@@ -47,7 +51,6 @@ class EllipseFace(Mesh):
         span_angle = self.__span_angle / 180 * math.pi
         n_divide = self.__n_divide
         vertical = self.__vertical
-        normalize_tex_coord = self.__normalize_tex_coord
 
         i_vertex = 0
         i_index = 0
@@ -73,7 +76,10 @@ class EllipseFace(Mesh):
             sin2_theta = sin_theta**2
 
             r = 1 / math.sqrt(cos2_theta / a**2 + sin2_theta / b**2)
-            tex_coord_radius = r if not normalize_tex_coord else r / max_len * 0.5
+            tex_coord_radius = (
+                r if not self.normalize_st
+                else r / max_len * 0.5
+            )
 
             edge = r * glm.vec3(cos_theta, sin_theta, 0)
             if vertical:
@@ -83,8 +89,8 @@ class EllipseFace(Mesh):
             vertex_edge.position = edge
             vertex_edge.normal = normal
             vertex_edge.tex_coord = glm.vec3(
-                0.5 + tex_coord_radius * cos_theta,
-                0.5 + tex_coord_radius * sin_theta,
+                0.5 + self.s_per_unit * tex_coord_radius * cos_theta,
+                0.5 + self.t_per_unit * tex_coord_radius * sin_theta,
                 0,
             )
 
@@ -161,12 +167,3 @@ class EllipseFace(Mesh):
     @Mesh.param_setter
     def b(self, b: float):
         self.__b = b
-
-    @property
-    def normalize_tex_coord(self):
-        return self.__normalize_tex_coord
-
-    @normalize_tex_coord.setter
-    @Mesh.param_setter
-    def normalize_tex_coord(self, flag: bool):
-        self.__normalize_tex_coord = flag

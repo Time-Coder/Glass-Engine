@@ -20,18 +20,22 @@ class Prism(Mesh):
         height: float = 1,
         color: Union[glm.vec3, glm.vec4] = glm.vec4(0.396, 0.74151, 0.69102, 1),
         back_color: Union[glm.vec3, glm.vec4, None] = None,
-        normalize_tex_coord: bool = False,
+        normalize_st: bool = False,
+        st_per_unit: float = 1,
         name: str = "",
         block: bool = True,
     ):
-        Mesh.__init__(self, color=color, back_color=back_color, name=name, block=block)
+        Mesh.__init__(
+            self, color=color, back_color=back_color,
+            normalize_st=normalize_st,
+            st_per_unit=st_per_unit,
+            name=name, block=block
+        )
         self.__radius = radius
         self.__height = height
         self.__start_side = start_side
         self.__total_sides = total_sides
         self.__n_sides = n_sides
-        self.__normalize_tex_coord = normalize_tex_coord
-        self.start_building()
 
     def build(self):
         self.is_closed = True
@@ -45,7 +49,6 @@ class Prism(Mesh):
             total_sides = self.__n_sides
         total_sides = min(self.__n_sides, total_sides)
         n_sides = self.__n_sides
-        normalize_tex_coord = self.__normalize_tex_coord
 
         i_vertex = 0
         i_index = 0
@@ -66,12 +69,16 @@ class Prism(Mesh):
         vertices[i_vertex] = vertex_bottom
         i_vertex += 1
 
-        t = 1 if normalize_tex_coord else height
+        t = 1 if self.normalize_st else self.t_per_unit * height
         side_width = 2 * radius * math.sin(math.pi / n_sides)
-        s_step = side_width
-        if normalize_tex_coord:
+        s_step = self.s_per_unit * side_width
+        if self.normalize_st:
             s_step = side_width / height
-        tex_coord_radius = 0.5 if normalize_tex_coord else radius
+            
+        tex_coord_radius = (
+            0.5 if self.normalize_st else
+            radius
+        )
 
         for j in range(total_sides + 1):
             s = s_step * (j + start_side)
@@ -86,8 +93,8 @@ class Prism(Mesh):
             vertex_top_top.position = top
             vertex_top_top.normal = glm.vec3(0, 0, 1)
             vertex_top_top.tex_coord = glm.vec3(
-                0.5 + tex_coord_radius * cos_theta,
-                0.5 + tex_coord_radius * sin_theta,
+                0.5 + self.s_per_unit * tex_coord_radius * cos_theta,
+                0.5 + self.t_per_unit * tex_coord_radius * sin_theta,
                 0,
             )
 
@@ -111,8 +118,8 @@ class Prism(Mesh):
             vertex_bottom_bottom.position = bottom
             vertex_bottom_bottom.normal = glm.vec3(0, 0, -1)
             vertex_bottom_bottom.tex_coord = glm.vec3(
-                0.5 + tex_coord_radius * cos_theta,
-                0.5 + tex_coord_radius * sin_theta,
+                0.5 + self.s_per_unit * tex_coord_radius * cos_theta,
+                0.5 + self.t_per_unit * tex_coord_radius * sin_theta,
                 0,
             )
 
@@ -228,12 +235,3 @@ class Prism(Mesh):
     @Mesh.param_setter
     def height(self, height: float):
         self.__height = height
-
-    @property
-    def normalize_tex_coord(self):
-        return self.__normalize_tex_coord
-
-    @normalize_tex_coord.setter
-    @Mesh.param_setter
-    def normalize_tex_coord(self, flag: bool):
-        self.__normalize_tex_coord = flag

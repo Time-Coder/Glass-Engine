@@ -20,15 +20,15 @@ class Cone(Mesh):
         n_divide: int = 100,
         color: Union[glm.vec3, glm.vec4] = glm.vec4(0.396, 0.74151, 0.69102, 1),
         back_color: Union[glm.vec3, glm.vec4, None] = None,
-        normalize_tex_coords=False,
-        tex_coords_per_unit: float = 1,
+        normalize_st=False,
+        st_per_unit: float = 1,
         name: str = "",
         block=True,
     ):
         Mesh.__init__(
             self, color=color, back_color=back_color,
-            normalize_tex_coords=normalize_tex_coords,
-            tex_coords_per_unit=tex_coords_per_unit,
+            normalize_st=normalize_st,
+            st_per_unit=st_per_unit,
             name=name, block=block
         )
         self.__radius = radius
@@ -63,12 +63,12 @@ class Cone(Mesh):
         i_vertex += 1
 
         tex_coord_side_radius = (
-            0.5 if self.normalize_tex_coords else
-            self.tex_coords_per_unit * math.sqrt(radius**2 + height**2)
+            0.5 if self.normalize_st else
+            math.sqrt(radius**2 + height**2)
         )
         tex_coord_bottom_radius = (
-            0.5 if self.normalize_tex_coords else
-            self.tex_coords_per_unit * radius
+            0.5 if self.normalize_st else
+            radius
         )
 
         for j in range(n_divide):
@@ -92,8 +92,8 @@ class Cone(Mesh):
             vertex_bottom.position = bottom
             vertex_bottom.normal = normal
             vertex_bottom.tex_coord = glm.vec3(
-                0.5 + tex_coord_side_radius * cos_theta,
-                0.5 + tex_coord_side_radius * sin_theta,
+                0.5 + self.s_per_unit * tex_coord_side_radius * cos_theta,
+                0.5 + self.t_per_unit * tex_coord_side_radius * sin_theta,
                 0,
             )
 
@@ -101,8 +101,8 @@ class Cone(Mesh):
             vertex_bottom_bottom.position = bottom
             vertex_bottom_bottom.normal = glm.vec3(0, 0, -1)
             vertex_bottom_bottom.tex_coord = glm.vec3(
-                0.5 + tex_coord_bottom_radius * cos_theta,
-                0.5 + tex_coord_bottom_radius * sin_theta,
+                0.5 + self.s_per_unit * tex_coord_bottom_radius * cos_theta,
+                0.5 + self.t_per_unit * tex_coord_bottom_radius * sin_theta,
                 0,
             )
 

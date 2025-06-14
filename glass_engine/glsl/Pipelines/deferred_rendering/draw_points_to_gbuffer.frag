@@ -48,11 +48,6 @@ void main()
     vec3 env_center = transform_apply(fs_in.affine_transform, mesh_center);
     change_geometry(material, tex_coord, view_TBN, view_pos);
     InternalMaterial internal_material = fetch_internal_material(fs_in.color, material, tex_coord);
-    if (material.shading_model == SHADING_MODEL_FLAT ||
-        material.shading_model == SHADING_MODEL_GOURAUD)
-    {
-        internal_material.base_color = fs_in.color.rgb;
-    }
 
     write_to_gbuffer(
         internal_material, view_pos, view_TBN[2], env_center,

@@ -63,7 +63,6 @@ class ImageQuad(Mesh):
         self.__vertical = vertical
 
         self.material.diffuse_map = image
-        self.start_building()
 
     def build(self):
         self.is_closed = False

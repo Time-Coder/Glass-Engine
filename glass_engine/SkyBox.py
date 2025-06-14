@@ -20,7 +20,6 @@ class SkyBox(Mesh):
         self.__skybox_map = None
         self.__program = None
         self.should_add_color = False
-        self.start_building()
 
     @property
     def skybox_map(self):

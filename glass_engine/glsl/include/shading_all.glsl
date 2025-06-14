@@ -21,7 +21,7 @@ vec4 post_shading_all(
 #if USE_FOG
         if (shading_info.material.fog)
         {
-            final_color.rgb = fog_apply(fog, final_color.rgb, length(camera.abs_position-shading_info.world_pos));
+            final_color.rgb = fog_apply(fog, final_color.rgb, length(camera.abs_position - shading_info.world_pos));
         }
 #endif
         return final_color;
@@ -100,7 +100,7 @@ vec4 post_shading_all(
 #if USE_FOG
     if (shading_info.material.fog)
     {
-        out_color3 = fog_apply(fog, out_color3, length(camera.abs_position-shading_info.world_pos));
+        out_color3 = fog_apply(fog, out_color3, length(camera.abs_position - shading_info.world_pos));
     }
 #endif
 

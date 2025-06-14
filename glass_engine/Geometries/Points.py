@@ -27,7 +27,6 @@ class Points(Mesh):
         )
         self.render_hints.point_size = point_size
         self.__points = points
-        self.start_building()
 
     def build(self):
         points = self.__points
@@ -49,7 +48,7 @@ class Points(Mesh):
     @points.setter
     def points(self, points):
         self.__points = points
-        self.start_building()
+        self._build_state = Mesh.BuildState.NotBuilt
 
     @property
     def point_size(self):

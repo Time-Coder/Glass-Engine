@@ -20,18 +20,22 @@ class RPolygonFace(Mesh):
         color: Union[glm.vec3, glm.vec4] = glm.vec4(0.396, 0.74151, 0.69102, 1),
         back_color: Union[glm.vec3, glm.vec4, None] = None,
         vertical: bool = False,
-        normalize_tex_coord: bool = False,
+        normalize_st: bool = False,
+        st_per_unit: float = 1,
         name: str = "",
         block: bool = True,
     ):
-        Mesh.__init__(self, color=color, back_color=back_color, name=name, block=block)
+        Mesh.__init__(
+            self, color=color, back_color=back_color,
+            normalize_st=normalize_st,
+            st_per_unit=st_per_unit,
+            name=name, block=block
+        )
         self.__radius = radius
         self.__start_side = start_side
         self.__total_sides = total_sides
         self.__n_sides = n_sides
         self.__vertical = vertical
-        self.__normalize_tex_coord = normalize_tex_coord
-        self.start_building()
 
     def build(self):
         self.is_closed = False
@@ -47,7 +51,6 @@ class RPolygonFace(Mesh):
         total_sides = min(self.__n_sides, total_sides)
         n_sides = self.__n_sides
         vertical = self.__vertical
-        normalize_tex_coord = self.__normalize_tex_coord
 
         i_vertex = 0
         i_index = 0
@@ -65,7 +68,7 @@ class RPolygonFace(Mesh):
         vertices[i_vertex] = vertex_center
         i_vertex += 1
 
-        tex_coord_radius = 0.5 if normalize_tex_coord else radius
+        tex_coord_radius = 0.5 if self.normalize_st else radius
 
         for j in range(total_sides + 1):
             theta = 2 * math.pi * (j + start_side) / n_sides
@@ -80,8 +83,8 @@ class RPolygonFace(Mesh):
             vertex_edge.position = edge
             vertex_edge.normal = normal
             vertex_edge.tex_coord = glm.vec3(
-                0.5 + tex_coord_radius * cos_theta,
-                0.5 + tex_coord_radius * sin_theta,
+                0.5 + self.s_per_unit * tex_coord_radius * cos_theta,
+                0.5 + self.t_per_unit * tex_coord_radius * sin_theta,
                 0,
             )
 
@@ -139,12 +142,3 @@ class RPolygonFace(Mesh):
     @Mesh.param_setter
     def radius(self, radius: float):
         self.__radius = radius
-
-    @property
-    def normalize_tex_coord(self):
-        return self.__normalize_tex_coord
-
-    @normalize_tex_coord.setter
-    @Mesh.param_setter
-    def normalize_tex_coord(self, flag: bool):
-        self.__normalize_tex_coord = flag

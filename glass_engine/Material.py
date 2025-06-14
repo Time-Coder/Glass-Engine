@@ -14,9 +14,6 @@ from functools import wraps
 from typing import Union
 
 
-
-
-
 class Material(metaclass=MetaInstancesRecorder):
 
     class ShadingModel(Enum):
@@ -64,18 +61,30 @@ class Material(metaclass=MetaInstancesRecorder):
 
     class VertexColorUsage(Enum):
         NotUse = 0
+
         BaseColor = 1
         BaseColorMask = 2
-        AmbientColor = 3
-        AmbientColorMask = 4
-        SpecularColor = 5
-        SpecularColorMask = 6
-        EmissionColor = 7
-        EmissionColorMask = 8
-        ARM = 9
-        ARMMask = 10
-        ReflectionColor = 11
-        ReflectionColorMask = 12
+        BaseColorMix = 3
+
+        AmbientColor = 4
+        AmbientColorMask = 5
+        AmbientColorMix = 6
+
+        SpecularColor = 7
+        SpecularColorMask = 8
+        SpecularColorMix = 9
+
+        EmissionColor = 10
+        EmissionColorMask = 11
+        EmissionColorMix = 12
+
+        ARM = 13
+        ARMMask = 14
+        ARMMix = 15
+
+        ReflectionColor = 16
+        ReflectionColorMask = 17
+        ReflectionColorMix = 18
 
     @MetaInstancesRecorder.init
     def __init__(self, name: str = ""):
@@ -99,6 +108,11 @@ class Material(metaclass=MetaInstancesRecorder):
         self._emission_strength: float = 1
         self._opacity: float = 1
         self._vertex_color_usage: Material.VertexColorUsage = Material.VertexColorUsage.NotUse
+        self._st_scale_with_mesh:bool = False
+        self._mesh_scale:float = 1
+        self._st_scale:glm.vec2 = glm.vec2(1, 1)
+        self._st_offset:glm.vec2 = glm.vec2(0, 0)
+        self._st_rotation:float = 0
         self._height_scale: float = 0.05
         self._metallic: float = 0.5
         self._roughness: float = 0
@@ -216,6 +230,42 @@ class Material(metaclass=MetaInstancesRecorder):
     def fog(self, fog: bool):
         self._fog = fog
         GlassEngineConfig._update_recv_fog(fog)
+
+    @property
+    def st_scale_with_mesh(self)->bool:
+        return self._st_scale_with_mesh
+    
+    @st_scale_with_mesh.setter
+    @param_setter
+    def st_scale_with_mesh(self, flag:bool):
+        self._st_scale_with_mesh = flag
+
+    @property
+    def st_scale(self)->float:
+        return self._st_scale
+    
+    @st_scale.setter
+    @param_setter
+    def st_scale(self, scale:float):
+        self._st_scale = scale
+
+    @property
+    def st_offset(self)->glm.vec2:
+        return self._st_offset
+    
+    @st_offset.setter
+    @param_setter
+    def st_offset(self, offset:glm.vec2):
+        self._st_offset = offset
+
+    @property
+    def st_rotation(self)->float:
+        return self._st_rotation
+    
+    @st_rotation.setter
+    @param_setter
+    def st_rotation(self, rotation:float):
+        self._st_rotation = rotation
 
     @property
     def diffuse_bands(self) -> int:

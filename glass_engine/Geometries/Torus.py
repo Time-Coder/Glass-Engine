@@ -12,20 +12,26 @@ class Torus(Mesh):
         self,
         radius_tube: float = 0.5,
         radius_torus: float = 1,
-        color: Union[glm.vec3, glm.vec4] = glm.vec4(0.396, 0.74151, 0.69102, 1),
-        back_color: Union[glm.vec3, glm.vec4, None] = None,
-        vertical: bool = False,
-        normalize_tex_coord=False,
         n_lon_divide: int = 100,
         start_lon: float = 0,
         span_lon: float = 360,
         n_lat_divide: int = 100,
         start_lat: float = 0,
         span_lat: float = 360,
+        color: Union[glm.vec3, glm.vec4] = glm.vec4(0.396, 0.74151, 0.69102, 1),
+        back_color: Union[glm.vec3, glm.vec4, None] = None,
+        vertical: bool = False,
+        normalize_st:bool=False,
+        st_per_unit:float=1,
         name: str = "",
         block: bool = True,
     ):
-        Mesh.__init__(self, color=color, back_color=back_color, name=name, block=block)
+        Mesh.__init__(
+            self, color=color, back_color=back_color,
+            normalize_st=normalize_st,
+            st_per_unit=st_per_unit,
+            name=name, block=block
+        )
         self.__r = radius_tube
         self.__R = radius_torus
         self.__start_lon = start_lon
@@ -35,8 +41,6 @@ class Torus(Mesh):
         self.__span_lat = span_lat
         self.__n_lat_divide = n_lat_divide
         self.__vertical = vertical
-        self.__normalize_tex_coord = normalize_tex_coord
-        self.start_building()
 
     def build(self):
         self.is_closed = True
@@ -53,7 +57,6 @@ class Torus(Mesh):
         span_lat = self.__span_lat / 180 * math.pi
         n_lat_divide = self.__n_lat_divide
         vertical = self.__vertical
-        normalize_tex_coord = self.__normalize_tex_coord
 
         i_vertex = 0
         i_index = 0
@@ -67,8 +70,8 @@ class Torus(Mesh):
 
             tube_center = R * glm.vec3(cos_theta, sin_theta, 0)
             s = R / r * theta / (2 * math.pi)
-            if not normalize_tex_coord:
-                s = 2 * math.pi * R * theta / (2 * math.pi)
+            if not self.normalize_st:
+                s = self.s_per_unit * 2 * math.pi * R * theta / (2 * math.pi)
 
             for j in range(n_lat_divide):
                 phi = start_lat + span_lat * j / (n_lat_divide - 1)
@@ -76,8 +79,8 @@ class Torus(Mesh):
                 sin_phi = math.sin(phi)
 
                 t = phi / (2 * math.pi)
-                if not normalize_tex_coord:
-                    t = tube_perimeter * phi / (2 * math.pi)
+                if not self.normalize_st:
+                    t = self.t_per_unit * tube_perimeter * phi / (2 * math.pi)
 
                 vertex = Vertex()
                 vertex.normal = glm.vec3(
@@ -198,15 +201,6 @@ class Torus(Mesh):
     @Mesh.param_setter
     def span_lat(self, angle: float):
         self.__span_lat = angle
-
-    @property
-    def normalize_tex_coord(self):
-        return self.__normalize_tex_coord
-
-    @normalize_tex_coord.setter
-    @Mesh.param_setter
-    def normalize_tex_coord(self, flag: bool):
-        self.__normalize_tex_coord = flag
 
     @property
     def vertical(self):

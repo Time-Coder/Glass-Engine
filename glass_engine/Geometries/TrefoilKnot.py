@@ -16,7 +16,8 @@ class TrefoilKnot(Mesh):
         color: Union[glm.vec3, glm.vec4] = glm.vec4(0.396, 0.74151, 0.69102, 1),
         back_color: Union[glm.vec3, glm.vec4, None] = None,
         vertical: bool = False,
-        normalize_tex_coord=False,
+        normalize_st=False,
+        st_per_unit: float = 1,
         n_lon_divide: int = 200,
         start_lon: float = 0,
         span_lon: float = 360,
@@ -27,18 +28,21 @@ class TrefoilKnot(Mesh):
         block: bool = True,
     ):
 
-        Mesh.__init__(self, color=color, back_color=back_color, name=name, block=block)
+        Mesh.__init__(
+            self, color=color, back_color=back_color,
+            normalize_st=normalize_st,
+            st_per_unit=st_per_unit,
+            name=name, block=block
+        )
         self.__tube_radius = tube_radius
         self.__knot_radius = knot_radius
         self.__vertical = vertical
-        self.__normalize_tex_coord = normalize_tex_coord
         self.__n_lon_divide = n_lon_divide
         self.__start_lon = start_lon
         self.__span_lon = span_lon
         self.__n_lat_divide = n_lat_divide
         self.__start_lat = start_lat
         self.__span_lat = span_lat
-        self.start_building()
 
     def build(self):
         self.is_closed = True
@@ -49,7 +53,6 @@ class TrefoilKnot(Mesh):
         r = self.__tube_radius
         R = self.__knot_radius / 3
         vertical = self.__vertical
-        normalize_tex_coord = self.__normalize_tex_coord
         n_lon_divide = self.__n_lon_divide
         start_lon = self.__start_lon / 180 * math.pi
         span_lon = self.__span_lon / 180 * math.pi
@@ -106,9 +109,9 @@ class TrefoilKnot(Mesh):
                 x = x0 + r * normal.x
                 y = y0 + r * normal.y
                 z = z0 + r * normal.z
-                s = L
-                t = r * phi
-                if normalize_tex_coord:
+                s = self.s_per_unit * L
+                t = self.t_per_unit * r * phi
+                if self.normalize_st:
                     t = t / r / (2 * math.pi)
                     s = s / r / (2 * math.pi)
 
@@ -184,15 +187,6 @@ class TrefoilKnot(Mesh):
     @Mesh.param_setter
     def vertical(self, flag: bool):
         self.__vertical = flag
-
-    @property
-    def normalize_tex_coord(self):
-        return self.__normalize_tex_coord
-
-    @normalize_tex_coord.setter
-    @Mesh.param_setter
-    def normalize_tex_coord(self, flag: bool):
-        self.__normalize_tex_coord = flag
 
     @property
     def n_lon_divide(self):

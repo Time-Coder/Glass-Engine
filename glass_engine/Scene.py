@@ -143,6 +143,18 @@ class Scene:
         if self in scene_node._transform_dirty:
             if isinstance(scene_node, Mesh):
                 mesh = scene_node
+                mesh_scale = glm.determinant(new_mat)
+
+                new_mat = (
+                    new_mat
+                    * scale_to_mat4(1 / mesh.pivot.scale)
+                    * quat_to_mat4(glm.conjugate(mesh.pivot.orientation))
+                    * translate_to_mat4(-mesh.pivot.position)
+                )
+                mesh.material._mesh_scale = mesh_scale
+                if mesh._back_material is not None:
+                    mesh._back_material._mesh_scale = mesh_scale
+
                 if mesh not in self._all_meshes:
                     self._all_meshes[mesh] = {}
 

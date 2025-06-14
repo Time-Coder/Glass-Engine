@@ -21,15 +21,15 @@ class ConeTrustum(Mesh):
         n_divide: int = 100,
         color: Union[glm.vec3, glm.vec4] = glm.vec4(0.396, 0.74151, 0.69102, 1),
         back_color: Union[glm.vec3, glm.vec4, None] = None,
-        normalize_tex_coords:bool=False,
-        tex_coords_per_unit:float=1,
+        normalize_st:bool=False,
+        st_per_unit:float=1,
         name: str = "",
         block=True,
     ):
         Mesh.__init__(
             self, color=color, back_color=back_color,
-            normalize_tex_coords=normalize_tex_coords,
-            tex_coords_per_unit=tex_coords_per_unit,
+            normalize_st=normalize_st,
+            st_per_unit=st_per_unit,
             name=name, block=block
         )
         self.__bottom_radius = bottom_radius
@@ -76,20 +76,20 @@ class ConeTrustum(Mesh):
 
         k = math.sqrt(1 + (height / (bottom_radius - top_radius)) ** 2)
         tex_coord_top_side_radius = 0.5 / bottom_radius * top_radius
-        if not self.normalize_tex_coords:
-            tex_coord_top_side_radius = self.tex_coords_per_unit * top_radius * k
+        if not self.normalize_st:
+            tex_coord_top_side_radius = top_radius * k
 
         tex_coord_bottom_side_radius = 0.5
-        if not self.normalize_tex_coords:
-            tex_coord_bottom_side_radius = self.tex_coords_per_unit * bottom_radius * k
+        if not self.normalize_st:
+            tex_coord_bottom_side_radius = bottom_radius * k
 
         tex_coord_bottom_radius = 0.5
-        if not self.normalize_tex_coords:
-            tex_coord_bottom_radius = self.tex_coords_per_unit * bottom_radius
+        if not self.normalize_st:
+            tex_coord_bottom_radius = bottom_radius
 
         tex_coord_top_radius = 0.5 / bottom_radius * top_radius
-        if not self.normalize_tex_coords:
-            tex_coord_top_radius = self.tex_coords_per_unit * top_radius
+        if not self.normalize_st:
+            tex_coord_top_radius = top_radius
 
         for j in range(n_divide):
             theta = start_angle + span_angle * j / (n_divide - 1)
@@ -107,8 +107,8 @@ class ConeTrustum(Mesh):
             vertex_top_top.position = top
             vertex_top_top.normal = glm.vec3(0, 0, 1)
             vertex_top_top.tex_coord = glm.vec3(
-                0.5 + tex_coord_top_radius * cos_theta,
-                0.5 + tex_coord_top_radius * sin_theta,
+                0.5 + self.s_per_unit * tex_coord_top_radius * cos_theta,
+                0.5 + self.t_per_unit * tex_coord_top_radius * sin_theta,
                 0,
             )
 
@@ -116,8 +116,8 @@ class ConeTrustum(Mesh):
             vertex_top_side.position = top
             vertex_top_side.normal = normal
             vertex_top_side.tex_coord = glm.vec3(
-                0.5 + tex_coord_top_side_radius * cos_theta,
-                0.5 + tex_coord_top_side_radius * sin_theta,
+                0.5 + self.s_per_unit * tex_coord_top_side_radius * cos_theta,
+                0.5 + self.t_per_unit * tex_coord_top_side_radius * sin_theta,
                 0,
             )
 
@@ -125,8 +125,8 @@ class ConeTrustum(Mesh):
             vertex_bottom_side.position = bottom
             vertex_bottom_side.normal = normal
             vertex_bottom_side.tex_coord = glm.vec3(
-                0.5 + tex_coord_bottom_side_radius * cos_theta,
-                0.5 + tex_coord_bottom_side_radius * sin_theta,
+                0.5 + self.s_per_unit * tex_coord_bottom_side_radius * cos_theta,
+                0.5 + self.t_per_unit * tex_coord_bottom_side_radius * sin_theta,
                 0,
             )
 
@@ -134,8 +134,8 @@ class ConeTrustum(Mesh):
             vertex_bottom_bottom.position = bottom
             vertex_bottom_bottom.normal = glm.vec3(0, 0, -1)
             vertex_bottom_bottom.tex_coord = glm.vec3(
-                0.5 + tex_coord_bottom_radius * cos_theta,
-                0.5 + tex_coord_bottom_radius * sin_theta,
+                0.5 + self.s_per_unit * tex_coord_bottom_radius * cos_theta,
+                0.5 + self.t_per_unit * tex_coord_bottom_radius * sin_theta,
                 0,
             )
 

@@ -26,7 +26,6 @@ class SkyDome(Mesh):
         self.render_hints.depth_func = "<="
         self.render_hints.cull_face = GL.GL_FRONT
         self.should_add_color = False
-        self.start_building()
 
     def build(self):
         self.is_closed = True

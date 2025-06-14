@@ -17,14 +17,14 @@ class Box(Mesh):
         Lz: Union[float, None] = None,
         color: Union[glm.vec3, glm.vec4] = glm.vec4(0.396, 0.74151, 0.69102, 1),
         back_color: Union[glm.vec3, glm.vec4, None] = None,
-        normalize_tex_coords: bool = False,
-        tex_coords_per_unit: float = 1,
+        normalize_st: bool = False,
+        st_per_unit: float = 1,
         name: str = "",
     ):
         Mesh.__init__(
             self, color=color, back_color=back_color,
-            tex_coords_per_unit = tex_coords_per_unit,
-            normalize_tex_coords = normalize_tex_coords,
+            st_per_unit = st_per_unit,
+            normalize_st = normalize_st,
             name=name, block=True
         )
 
@@ -53,8 +53,8 @@ class Box(Mesh):
         position = glm.vec3(-Lx / 2, Ly / 2, -Lz / 2)
         tex_coord = (
             glm.vec3(0)
-            if self.normalize_tex_coords
-            else glm.vec3(0.5 - self.tex_coords_per_unit*position.y, 0.5 + self.tex_coords_per_unit*position.z, 0)
+            if self.normalize_st
+            else glm.vec3(0.5 - self.s_per_unit*position.y, 0.5 + self.t_per_unit*position.z, 0)
         )
         vertices[0] = Vertex(
             position=position, normal=glm.vec3(-1, 0, 0), tex_coord=tex_coord
@@ -63,8 +63,8 @@ class Box(Mesh):
         position = glm.vec3(-Lx / 2, -Ly / 2, -Lz / 2)
         tex_coord = (
             glm.vec3(1, 0, 0)
-            if self.normalize_tex_coords
-            else glm.vec3(0.5 - self.tex_coords_per_unit*position.y, 0.5 + self.tex_coords_per_unit*position.z, 0)
+            if self.normalize_st
+            else glm.vec3(0.5 - self.s_per_unit*position.y, 0.5 + self.t_per_unit*position.z, 0)
         )
         vertices[1] = Vertex(
             position=position, normal=glm.vec3(-1, 0, 0), tex_coord=tex_coord
@@ -73,8 +73,8 @@ class Box(Mesh):
         position = glm.vec3(-Lx / 2, -Ly / 2, Lz / 2)
         tex_coord = (
             glm.vec3(1, 1, 0)
-            if self.normalize_tex_coords
-            else glm.vec3(0.5 - self.tex_coords_per_unit*position.y, 0.5 + self.tex_coords_per_unit*position.z, 0)
+            if self.normalize_st
+            else glm.vec3(0.5 - self.s_per_unit*position.y, 0.5 + self.t_per_unit*position.z, 0)
         )
         vertices[2] = Vertex(
             position=position, normal=glm.vec3(-1, 0, 0), tex_coord=tex_coord
@@ -83,8 +83,8 @@ class Box(Mesh):
         position = glm.vec3(-Lx / 2, Ly / 2, Lz / 2)
         tex_coord = (
             glm.vec3(0, 1, 0)
-            if self.normalize_tex_coords
-            else glm.vec3(0.5 - self.tex_coords_per_unit*position.y, 0.5 + self.tex_coords_per_unit*position.z, 0)
+            if self.normalize_st
+            else glm.vec3(0.5 - self.s_per_unit*position.y, 0.5 + self.t_per_unit*position.z, 0)
         )
         vertices[3] = Vertex(
             position=position, normal=glm.vec3(-1, 0, 0), tex_coord=tex_coord
@@ -94,8 +94,8 @@ class Box(Mesh):
         position = glm.vec3(Lx / 2, -Ly / 2, -Lz / 2)
         tex_coord = (
             glm.vec3(0)
-            if self.normalize_tex_coords
-            else glm.vec3(0.5 + self.tex_coords_per_unit*position.y, 0.5 + self.tex_coords_per_unit*position.z, 0)
+            if self.normalize_st
+            else glm.vec3(0.5 + self.s_per_unit*position.y, 0.5 + self.t_per_unit*position.z, 0)
         )
         vertices[4] = Vertex(
             position=position, normal=glm.vec3(1, 0, 0), tex_coord=tex_coord
@@ -104,8 +104,8 @@ class Box(Mesh):
         position = glm.vec3(Lx / 2, Ly / 2, -Lz / 2)
         tex_coord = (
             glm.vec3(1, 0, 0)
-            if self.normalize_tex_coords
-            else glm.vec3(0.5 + self.tex_coords_per_unit*position.y, 0.5 + self.tex_coords_per_unit*position.z, 0)
+            if self.normalize_st
+            else glm.vec3(0.5 + self.s_per_unit*position.y, 0.5 + self.t_per_unit*position.z, 0)
         )
         vertices[5] = Vertex(
             position=position, normal=glm.vec3(1, 0, 0), tex_coord=tex_coord
@@ -114,8 +114,8 @@ class Box(Mesh):
         position = glm.vec3(Lx / 2, Ly / 2, Lz / 2)
         tex_coord = (
             glm.vec3(1, 1, 0)
-            if self.normalize_tex_coords
-            else glm.vec3(0.5 + self.tex_coords_per_unit*position.y, 0.5 + self.tex_coords_per_unit*position.z, 0)
+            if self.normalize_st
+            else glm.vec3(0.5 + self.s_per_unit*position.y, 0.5 + self.t_per_unit*position.z, 0)
         )
         vertices[6] = Vertex(
             position=position, normal=glm.vec3(1, 0, 0), tex_coord=tex_coord
@@ -124,8 +124,8 @@ class Box(Mesh):
         position = glm.vec3(Lx / 2, -Ly / 2, Lz / 2)
         tex_coord = (
             glm.vec3(0, 1, 0)
-            if self.normalize_tex_coords
-            else glm.vec3(0.5 + self.tex_coords_per_unit*position.y, 0.5 + self.tex_coords_per_unit*position.z, 0)
+            if self.normalize_st
+            else glm.vec3(0.5 + self.s_per_unit*position.y, 0.5 + self.t_per_unit*position.z, 0)
         )
         vertices[7] = Vertex(
             position=position, normal=glm.vec3(1, 0, 0), tex_coord=tex_coord
@@ -135,8 +135,8 @@ class Box(Mesh):
         position = glm.vec3(-Lx / 2, -Ly / 2, -Lz / 2)
         tex_coord = (
             glm.vec3(0)
-            if self.normalize_tex_coords
-            else glm.vec3(0.5 + self.tex_coords_per_unit*position.x, 0.5 + self.tex_coords_per_unit*position.z, 0)
+            if self.normalize_st
+            else glm.vec3(0.5 + self.s_per_unit*position.x, 0.5 + self.t_per_unit*position.z, 0)
         )
         vertices[8] = Vertex(
             position=position, normal=glm.vec3(0, -1, 0), tex_coord=tex_coord
@@ -145,8 +145,8 @@ class Box(Mesh):
         position = glm.vec3(Lx / 2, -Ly / 2, -Lz / 2)
         tex_coord = (
             glm.vec3(1, 0, 0)
-            if self.normalize_tex_coords
-            else glm.vec3(0.5 + self.tex_coords_per_unit*position.x, 0.5 + self.tex_coords_per_unit*position.z, 0)
+            if self.normalize_st
+            else glm.vec3(0.5 + self.s_per_unit*position.x, 0.5 + self.t_per_unit*position.z, 0)
         )
         vertices[9] = Vertex(
             position=position, normal=glm.vec3(0, -1, 0), tex_coord=tex_coord
@@ -155,8 +155,8 @@ class Box(Mesh):
         position = glm.vec3(Lx / 2, -Ly / 2, Lz / 2)
         tex_coord = (
             glm.vec3(1, 1, 0)
-            if self.normalize_tex_coords
-            else glm.vec3(0.5 + self.tex_coords_per_unit*position.x, 0.5 + self.tex_coords_per_unit*position.z, 0)
+            if self.normalize_st
+            else glm.vec3(0.5 + self.s_per_unit*position.x, 0.5 + self.t_per_unit*position.z, 0)
         )
         vertices[10] = Vertex(
             position=position, normal=glm.vec3(0, -1, 0), tex_coord=tex_coord
@@ -165,8 +165,8 @@ class Box(Mesh):
         position = glm.vec3(-Lx / 2, -Ly / 2, Lz / 2)
         tex_coord = (
             glm.vec3(0, 1, 0)
-            if self.normalize_tex_coords
-            else glm.vec3(0.5 + self.tex_coords_per_unit*position.x, 0.5 + self.tex_coords_per_unit*position.z, 0)
+            if self.normalize_st
+            else glm.vec3(0.5 + self.s_per_unit*position.x, 0.5 + self.t_per_unit*position.z, 0)
         )
         vertices[11] = Vertex(
             position=position, normal=glm.vec3(0, -1, 0), tex_coord=tex_coord
@@ -176,8 +176,8 @@ class Box(Mesh):
         position = glm.vec3(Lx / 2, Ly / 2, -Lz / 2)
         tex_coord = (
             glm.vec3(0)
-            if self.normalize_tex_coords
-            else glm.vec3(0.5 - self.tex_coords_per_unit*position.x, 0.5 + self.tex_coords_per_unit*position.z, 0)
+            if self.normalize_st
+            else glm.vec3(0.5 - self.s_per_unit*position.x, 0.5 + self.t_per_unit*position.z, 0)
         )
         vertices[12] = Vertex(
             position=position, normal=glm.vec3(0, 1, 0), tex_coord=tex_coord
@@ -186,8 +186,8 @@ class Box(Mesh):
         position = glm.vec3(-Lx / 2, Ly / 2, -Lz / 2)
         tex_coord = (
             glm.vec3(1, 0, 0)
-            if self.normalize_tex_coords
-            else glm.vec3(0.5 - self.tex_coords_per_unit*position.x, 0.5 + self.tex_coords_per_unit*position.z, 0)
+            if self.normalize_st
+            else glm.vec3(0.5 - self.s_per_unit*position.x, 0.5 + self.t_per_unit*position.z, 0)
         )
         vertices[13] = Vertex(
             position=position, normal=glm.vec3(0, 1, 0), tex_coord=tex_coord
@@ -196,8 +196,8 @@ class Box(Mesh):
         position = glm.vec3(-Lx / 2, Ly / 2, Lz / 2)
         tex_coord = (
             glm.vec3(1, 1, 0)
-            if self.normalize_tex_coords
-            else glm.vec3(0.5 - self.tex_coords_per_unit*position.x, 0.5 + self.tex_coords_per_unit*position.z)
+            if self.normalize_st
+            else glm.vec3(0.5 - self.s_per_unit*position.x, 0.5 + self.t_per_unit*position.z)
         )
         vertices[14] = Vertex(
             position=position, normal=glm.vec3(0, 1, 0), tex_coord=tex_coord
@@ -206,8 +206,8 @@ class Box(Mesh):
         position = glm.vec3(Lx / 2, Ly / 2, Lz / 2)
         tex_coord = (
             glm.vec3(0, 1, 0)
-            if self.normalize_tex_coords
-            else glm.vec3(0.5 - self.tex_coords_per_unit*position.x, 0.5 + self.tex_coords_per_unit*position.z)
+            if self.normalize_st
+            else glm.vec3(0.5 - self.s_per_unit*position.x, 0.5 + self.t_per_unit*position.z)
         )
         vertices[15] = Vertex(
             position=position, normal=glm.vec3(0, 1, 0), tex_coord=tex_coord
@@ -217,8 +217,8 @@ class Box(Mesh):
         position = glm.vec3(-Lx / 2, Ly / 2, -Lz / 2)
         tex_coord = (
             glm.vec3(0)
-            if self.normalize_tex_coords
-            else glm.vec3(0.5 + self.tex_coords_per_unit*position.x, 0.5 - self.tex_coords_per_unit*position.y)
+            if self.normalize_st
+            else glm.vec3(0.5 + self.s_per_unit*position.x, 0.5 - self.t_per_unit*position.y)
         )
         vertices[16] = Vertex(
             position=position, normal=glm.vec3(0, 0, -1), tex_coord=tex_coord
@@ -227,8 +227,8 @@ class Box(Mesh):
         position = glm.vec3(Lx / 2, Ly / 2, -Lz / 2)
         tex_coord = (
             glm.vec3(1, 0, 0)
-            if self.normalize_tex_coords
-            else glm.vec3(0.5 + self.tex_coords_per_unit*position.x, 0.5 - self.tex_coords_per_unit*position.y)
+            if self.normalize_st
+            else glm.vec3(0.5 + self.s_per_unit*position.x, 0.5 - self.t_per_unit*position.y)
         )
         vertices[17] = Vertex(
             position=position, normal=glm.vec3(0, 0, -1), tex_coord=tex_coord
@@ -237,8 +237,8 @@ class Box(Mesh):
         position = glm.vec3(Lx / 2, -Ly / 2, -Lz / 2)
         tex_coord = (
             glm.vec3(1, 1, 0)
-            if self.normalize_tex_coords
-            else glm.vec3(0.5 + self.tex_coords_per_unit*position.x, 0.5 - self.tex_coords_per_unit*position.y)
+            if self.normalize_st
+            else glm.vec3(0.5 + self.s_per_unit*position.x, 0.5 - self.t_per_unit*position.y)
         )
         vertices[18] = Vertex(
             position=position, normal=glm.vec3(0, 0, -1), tex_coord=tex_coord
@@ -247,8 +247,8 @@ class Box(Mesh):
         position = glm.vec3(-Lx / 2, -Ly / 2, -Lz / 2)
         tex_coord = (
             glm.vec3(0, 1, 0)
-            if self.normalize_tex_coords
-            else glm.vec3(0.5 + self.tex_coords_per_unit*position.x, 0.5 - self.tex_coords_per_unit*position.y)
+            if self.normalize_st
+            else glm.vec3(0.5 + self.s_per_unit*position.x, 0.5 - self.t_per_unit*position.y)
         )
         vertices[19] = Vertex(
             position=position, normal=glm.vec3(0, 0, -1), tex_coord=tex_coord
@@ -258,8 +258,8 @@ class Box(Mesh):
         position = glm.vec3(-Lx / 2, -Ly / 2, Lz / 2)
         tex_coord = (
             glm.vec3(0)
-            if self.normalize_tex_coords
-            else glm.vec3(0.5 + self.tex_coords_per_unit*position.x, 0.5 + self.tex_coords_per_unit*position.y)
+            if self.normalize_st
+            else glm.vec3(0.5 + self.s_per_unit*position.x, 0.5 + self.t_per_unit*position.y)
         )
         vertices[20] = Vertex(
             position=position, normal=glm.vec3(0, 0, 1), tex_coord=tex_coord
@@ -268,8 +268,8 @@ class Box(Mesh):
         position = glm.vec3(Lx / 2, -Ly / 2, Lz / 2)
         tex_coord = (
             glm.vec3(1, 0, 0)
-            if self.normalize_tex_coords
-            else glm.vec3(0.5 + self.tex_coords_per_unit*position.x, 0.5 + self.tex_coords_per_unit*position.y, 0)
+            if self.normalize_st
+            else glm.vec3(0.5 + self.s_per_unit*position.x, 0.5 + self.t_per_unit*position.y, 0)
         )
         vertices[21] = Vertex(
             position=position, normal=glm.vec3(0, 0, 1), tex_coord=tex_coord
@@ -278,8 +278,8 @@ class Box(Mesh):
         position = glm.vec3(Lx / 2, Ly / 2, Lz / 2)
         tex_coord = (
             glm.vec3(1, 1, 0)
-            if self.normalize_tex_coords
-            else glm.vec3(0.5 + self.tex_coords_per_unit*position.x, 0.5 + self.tex_coords_per_unit*position.y, 0)
+            if self.normalize_st
+            else glm.vec3(0.5 + self.s_per_unit*position.x, 0.5 + self.t_per_unit*position.y, 0)
         )
         vertices[22] = Vertex(
             position=position, normal=glm.vec3(0, 0, 1), tex_coord=tex_coord
@@ -288,8 +288,8 @@ class Box(Mesh):
         position = glm.vec3(-Lx / 2, Ly / 2, Lz / 2)
         tex_coord = (
             glm.vec3(0, 1, 0)
-            if self.normalize_tex_coords
-            else glm.vec3(0.5 + self.tex_coords_per_unit*position.x, 0.5 + self.tex_coords_per_unit*position.y, 0)
+            if self.normalize_st
+            else glm.vec3(0.5 + self.s_per_unit*position.x, 0.5 + self.t_per_unit*position.y, 0)
         )
         vertices[23] = Vertex(
             position=position, normal=glm.vec3(0, 0, 1), tex_coord=tex_coord
@@ -332,7 +332,7 @@ class Box(Mesh):
         return self.__Lx
 
     @Lx.setter
-    @Mesh.param_setter()
+    @Mesh.param_setter
     def Lx(self, Lx: int):
         self.__Lx = Lx
 
@@ -341,7 +341,7 @@ class Box(Mesh):
         return self.__Ly
 
     @Ly.setter
-    @Mesh.param_setter()
+    @Mesh.param_setter
     def Ly(self, Ly: int):
         self.__Ly = Ly
 
@@ -350,6 +350,6 @@ class Box(Mesh):
         return self.__Lz
 
     @Lz.setter
-    @Mesh.param_setter()
+    @Mesh.param_setter
     def Lz(self, Lz: int):
         self.__Lz = Lz

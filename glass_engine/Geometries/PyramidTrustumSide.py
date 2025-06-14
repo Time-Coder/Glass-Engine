@@ -21,19 +21,23 @@ class PyramidTrustumSide(Mesh):
         height: float = 1,
         color: Union[glm.vec3, glm.vec4] = glm.vec4(0.396, 0.74151, 0.69102, 1),
         back_color: Union[glm.vec3, glm.vec4, None] = None,
-        normalize_tex_coord: bool = False,
+        normalize_st: bool = False,
+        st_per_unit: float = 1,
         name: str = "",
         block: bool = True,
     ):
-        Mesh.__init__(self, color=color, back_color=back_color, name=name, block=block)
+        Mesh.__init__(
+            self, color=color, back_color=back_color,
+            normalize_st=normalize_st,
+            st_per_unit=st_per_unit,
+            name=name, block=block
+        )
         self.__bottom_radius = bottom_radius
         self.__top_radius = top_radius
         self.__height = height
         self.__start_side = start_side
         self.__total_sides = total_sides
         self.__n_sides = n_sides
-        self.__normalize_tex_coord = normalize_tex_coord
-        self.start_building()
 
     def build(self):
         self.is_closed = False
@@ -48,7 +52,6 @@ class PyramidTrustumSide(Mesh):
             total_sides = self.__n_sides
         total_sides = min(self.__n_sides, total_sides)
         n_sides = self.__n_sides
-        normalize_tex_coord = self.__normalize_tex_coord
 
         i_vertex = 0
         i_index = 0
@@ -59,12 +62,12 @@ class PyramidTrustumSide(Mesh):
             height**2
             + ((bottom_radius - top_radius) * math.cos(math.pi / n_sides)) ** 2
         )
-        s1_top = 0.5 - half_top_side_width
-        s2_top = 0.5 + half_top_side_width
-        s1_bottom = 0.5 - half_bottom_side_width
-        s2_bottom = 0.5 + half_bottom_side_width
-        t = side_height
-        if normalize_tex_coord:
+        s1_top = 0.5 - self.s_per_unit * half_top_side_width
+        s2_top = 0.5 + self.s_per_unit * half_top_side_width
+        s1_bottom = 0.5 - self.s_per_unit * half_bottom_side_width
+        s2_bottom = 0.5 + self.s_per_unit * half_bottom_side_width
+        t = self.t_per_unit * side_height
+        if self.normalize_st:
             t = 1
             s1_top = 0.5 - half_top_side_width / side_height
             s2_top = 0.5 + half_top_side_width / side_height
@@ -188,12 +191,3 @@ class PyramidTrustumSide(Mesh):
     @Mesh.param_setter
     def height(self, height: float):
         self.__height = height
-
-    @property
-    def normalize_tex_coord(self):
-        return self.__normalize_tex_coord
-
-    @normalize_tex_coord.setter
-    @Mesh.param_setter
-    def normalize_tex_coord(self, flag: bool):
-        self.__normalize_tex_coord = flag
