@@ -342,7 +342,11 @@ def paintGL(self) -> None:
             if animation._wait_to_start:
                 animation._start()
     
-    if sampler2D._should_update or time.time() < self._post_process_effects.should_update_until:
+    should_update_PPEs = time.time() < self._post_process_effects.should_update_until
+    if sampler2D._should_update or should_update_PPEs:
+        if sampler2D._should_update:
+            self._before_PPE_image = None
+
         self._update()
 
 
