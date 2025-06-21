@@ -12,7 +12,7 @@ from ..helper import greater_type, type_list_distance, subscript_type
 
 from OpenGL import GL
 from tree_sitter import Language, Parser
-import tree_sitter_glsl as tsglsl
+import tree_sitter_glsl37 as tsglsl
 from typing import List, Dict, Union
 
 

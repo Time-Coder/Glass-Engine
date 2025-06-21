@@ -695,9 +695,6 @@ class Mesh(SceneNode):
 
         self._material = material
 
-        if not material._opacity_user_set:
-            material._opacity = 1
-
         if not self._back_color_user_set:
             self._back_material = material
 

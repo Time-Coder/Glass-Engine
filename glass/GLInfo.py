@@ -4,7 +4,13 @@ import numpy as np
 import glm
 import ctypes
 from .CustomLiteral import CustomLiteral
-from typing import Union, TypeAlias
+from typing import Union
+
+try:
+    from typing import TypeAlias
+except ImportError:
+    from typing_extensions import TypeAlias
+
 
 dtype_uint8 = np.array([], dtype=np.uint8).dtype
 dtype_int8 = np.array([], dtype=np.int8).dtype

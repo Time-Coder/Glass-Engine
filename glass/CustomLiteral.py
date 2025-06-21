@@ -1,9 +1,9 @@
-from typing import Any, Tuple, Type
+from typing import Any, Tuple, Type, Union
 
 
 class _CustomLiteralMeta(type):
 
-    def __getitem__(cls, args: Tuple[Any, ...] | Any) -> Type:
+    def __getitem__(cls, args: Union[Tuple[Any, ...], Any]) -> Type:
         if not isinstance(args, tuple):
             args = (args,)
         name = f"CustomLiteral[{', '.join(map(repr, args))}]"

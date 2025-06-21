@@ -44,10 +44,10 @@ setuptools.setup(
         "wget",
         "requests",
         "chardet",
-        "tree-sitter>=0.22.0",
-        "tree-sitter-glsl",
-        "freetype-py",
-        "typeguard"
+        "tree-sitter>=0.20.4",
+        "tree-sitter-glsl37",
+        "typeguard",
+        "typing_extensions"
     ],
     classifiers=[
         "Programming Language :: Python :: 3",
