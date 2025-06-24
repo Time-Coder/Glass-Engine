@@ -1,5 +1,7 @@
 from .pcpp import pcmd
 import io
+import re
+from typing import Tuple
 
 
 def is_space(char):
@@ -229,8 +231,33 @@ def check(a, b):
         or (a == "/" and b == "*")
     )
 
+def process_line_directives(code):
+    line_pattern = re.compile(r'^\s*#line\s+(\d+)\s+(?:"([^"]*)"|(\S+)).*$', re.MULTILINE)
+    lines = code.split('\n')
+    processed_lines = []
+    line_mapping = {}
+    current_file = None
+    current_original_line = 1
+    processed_line_number = 1
+    
+    for line in lines:
+        match = line_pattern.match(line)
+        if match:
+            original_line = int(match.group(1))
+            file_name = match.group(2) or match.group(3) or ""
+            current_file = file_name
+            current_original_line = original_line
+        else:
+            processed_lines.append(line)
+            if current_file is not None:
+                line_mapping[processed_line_number] = (current_file, current_original_line)
+            processed_line_number += 1
+            current_original_line += 1
+    
+    return '\n'.join(processed_lines), line_mapping
 
-def macros_expand(code: str, defines: dict = None) -> str:
+
+def macros_expand_code(code: str, defines: dict = None) -> Tuple[str, dict]:
     output = io.StringIO()
     input = io.StringIO(code)
     input.name = "<string>"
@@ -238,7 +265,7 @@ def macros_expand(code: str, defines: dict = None) -> str:
     if defines is None:
         defines = {}
 
-    cmds = ["", "", "--line-directive"]
+    cmds = ["", ""]
     for name, value in defines.items():
         arg = f"-D{name}"
         if value is not None:
@@ -246,4 +273,21 @@ def macros_expand(code: str, defines: dict = None) -> str:
         cmds.append(arg)
 
     pcmd.CmdPreprocessor(cmds, input, output)
-    return output.getvalue()
+    return process_line_directives(output.getvalue())
+
+def macros_expand_file(filename: str, defines: dict = None) -> Tuple[str, dict]:
+    output = io.StringIO()
+    input = open(filename, 'r', encoding='utf-8')
+
+    if defines is None:
+        defines = {}
+
+    cmds = ["", ""]
+    for name, value in defines.items():
+        arg = f"-D{name}"
+        if value is not None:
+            arg += f"={value}"
+        cmds.append(arg)
+
+    pcmd.CmdPreprocessor(cmds, input, output)
+    return process_line_directives(output.getvalue())

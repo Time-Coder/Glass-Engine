@@ -6,7 +6,7 @@ import copy
 import warnings
 import sys
 
-from .CodeCompressor.minifyc import macros_expand
+from .CodeCompressor.minifyc import macros_expand_file
 from .utils import (
     defines_key,
     delete,
@@ -334,7 +334,7 @@ class BaseShader(GLObject):
             self.structs_info = {}
             self.outs_info = {}
             self.work_group_size = tuple()
-            self._clean_code = macros_expand(self._code)
+            self._clean_code = macros_expand_file(self._file_name)
             self._used_code = ""
 
             self.uniforms_info = ShaderParser.find_uniforms(self._clean_code)
