@@ -11,8 +11,8 @@ out vec4 out_color;
 #include "../../include/shading_all.glsl"
 #include "read_from_gbuffer.glsl"
 
-uniform sampler2D view_pos_and_alpha_map;
-uniform sampler2D view_normal_and_emission_r_map;
+uniform sampler2D world_pos_and_alpha_map;
+uniform sampler2D world_normal_and_emission_r_map;
 uniform sampler2D ambient_and_emission_g_map;
 uniform sampler2D diffuse_or_base_color_and_emission_b_map;
 uniform sampler2D specular_and_shininess_map;
@@ -29,7 +29,7 @@ uniform Fog fog;
 void main()
 {
     PostShadingInfo shading_info = read_from_gbuffer(camera,
-        view_pos_and_alpha_map, view_normal_and_emission_r_map,
+        world_pos_and_alpha_map, world_normal_and_emission_r_map,
         ambient_and_emission_g_map, diffuse_or_base_color_and_emission_b_map,
         specular_and_shininess_map, reflection_map,
         env_center_and_mixed_value_map, mixed_uint_map, tex_coord
@@ -39,5 +39,6 @@ void main()
 #if USE_FOG
         , fog
 #endif
-        , shading_info);
+        , shading_info
+    );
 }

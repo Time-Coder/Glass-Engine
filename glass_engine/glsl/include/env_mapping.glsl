@@ -1,3 +1,6 @@
+#ifndef _ENV_MAPPING_GLSL_
+#define _ENV_MAPPING_GLSL_
+
 #include "sampling.glsl"
 #include "FresnelRefract.glsl"
 #include "../Lights/Lights_lighting.glsl"
@@ -284,3 +287,5 @@ vec4 reflect_refract_color(
     
     return env_color;
 }
+
+#endif

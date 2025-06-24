@@ -28,7 +28,6 @@ out GeometryOut
 #include "../../Lights/PointLight.glsl"
 
 uniform PointLight point_light;
-uniform float explode_distance;
 
 void main()
 {
@@ -41,7 +40,7 @@ void main()
     Camera camera = cube_camera(gl_InvocationID, point_light.abs_position, 0.1, point_light.coverage);
     for (int i = 0; i < 3; i++)
     {
-        gs_out.world_pos = gl_in[i].gl_Position.xyz + explode_distance * face_world_normal;
+        gs_out.world_pos = gl_in[i].gl_Position.xyz;
         gs_out.visible = gs_in[i].visible;
         gs_out.color = gs_in[i].color;
         gs_out.back_color = gs_in[i].back_color;

@@ -1,3 +1,6 @@
+#ifndef _DIRLIGHT_GLSL_
+#define _DIRLIGHT_GLSL_
+
 #include "../include/quat.glsl"
 
 struct DirLight
@@ -10,3 +13,5 @@ struct DirLight
     vec3 direction;
     quat abs_orientation;
 };
+
+#endif

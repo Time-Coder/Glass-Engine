@@ -1,3 +1,6 @@
+#ifndef _POINTLIGHT_GLSL_
+#define _POINTLIGHT_GLSL_
+
 struct PointLight
 {
     vec3 color;
@@ -9,3 +12,5 @@ struct PointLight
     uvec2 depth_map_handle;
     vec3 abs_position;
 };
+
+#endif

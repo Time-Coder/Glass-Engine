@@ -1,4 +1,5 @@
-#if USE_DIR_LIGHT && USE_DIR_LIGHT_SHADOW
+#ifndef _DIRLIGHT_SHADOW_MAPPING_GLSL_
+#define _DIRLIGHT_SHADOW_MAPPING_GLSL_
 
 #include "DirLight.glsl"
 #include "../include/random.glsl"

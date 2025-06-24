@@ -130,8 +130,8 @@ def update_PPEs(self):
 def _assign_values_to_PPEs(self):
     self._post_process_effects.camera = self.camera
     self._post_process_effects.depth_map = self.renderer._depth_map
-    self._post_process_effects.view_normal_map = self.renderer._view_normal_map
-    self._post_process_effects.view_pos_map = self._renderer._view_pos_map
+    self._post_process_effects.world_normal_map = self.renderer._world_normal_map
+    self._post_process_effects.world_pos_map = self._renderer._world_pos_map
 
 
 def _update(self) -> None:

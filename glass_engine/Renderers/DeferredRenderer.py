@@ -146,8 +146,8 @@ class DeferredRenderer(CommonRenderer):
                 fbo.resize(screen_size.x, screen_size.y, samples)
             else:
                 fbo = FBO(screen_size.x, screen_size.y, samples)
-                fbo.attach(0, sampler2DMS, GL.GL_RGBA32F)  # view_pos_and_alpha
-                fbo.attach(1, sampler2DMS, GL.GL_RGBA32F)  # view_normal_and_emission_r
+                fbo.attach(0, sampler2DMS, GL.GL_RGBA32F)  # world_pos_and_alpha
+                fbo.attach(1, sampler2DMS, GL.GL_RGBA32F)  # world_normal_and_emission_r
                 fbo.attach(2, sampler2DMS, GL.GL_RGBA32F)  # ambient_and_emission_g
                 fbo.attach(3, sampler2DMS, GL.GL_RGBA32F)  # base_color_and_emission_b
                 fbo.attach(4, sampler2DMS, GL.GL_RGBA32F)  # specular_and_shininess
@@ -164,8 +164,8 @@ class DeferredRenderer(CommonRenderer):
                 fbo.resize(screen_size.x, screen_size.y)
             else:
                 fbo = FBO(screen_size.x, screen_size.y)
-                fbo.attach(0, sampler2D, GL.GL_RGBA32F)  # view_pos_and_alpha
-                fbo.attach(1, sampler2D, GL.GL_RGBA32F)  # view_normal_and_emission_r
+                fbo.attach(0, sampler2D, GL.GL_RGBA32F)  # world_pos_and_alpha
+                fbo.attach(1, sampler2D, GL.GL_RGBA32F)  # world_normal_and_emission_r
                 fbo.attach(2, sampler2D, GL.GL_RGBA32F)  # ambient_and_emission_g
                 fbo.attach(3, sampler2D, GL.GL_RGBA32F)  # base_color_and_emission_b
                 fbo.attach(4, sampler2D, GL.GL_RGBA32F)  # specular_and_shininess
@@ -186,7 +186,6 @@ class DeferredRenderer(CommonRenderer):
 
         self.draw_to_gbuffer_program["material"] = mesh.material
         self.draw_to_gbuffer_program["back_material"] = mesh._back_material
-        self.draw_to_gbuffer_program["explode_distance"] = mesh.explode_distance
         self.draw_to_gbuffer_program["is_sphere"] = mesh.is_sphere
         self.draw_to_gbuffer_program["mesh_center"] = mesh.center
         mesh.draw(self.draw_to_gbuffer_program, instances)
@@ -243,8 +242,8 @@ class DeferredRenderer(CommonRenderer):
                         self.draw_points_to_gbuffer(mesh, instances)
 
         resolved = self.gbuffer.resolved
-        view_pos_and_alpha_map = resolved.color_attachment(3)
-        view_normal_and_emission_r_map = resolved.color_attachment(4)
+        world_pos_and_alpha_map = resolved.color_attachment(3)
+        world_normal_and_emission_r_map = resolved.color_attachment(4)
         ambient_and_emission_g_map = resolved.color_attachment(2)
         diffuse_or_base_color_and_emission_b_map = resolved.color_attachment(0)
         specular_and_shininess_map = resolved.color_attachment(1)
@@ -252,8 +251,8 @@ class DeferredRenderer(CommonRenderer):
         env_center_and_mixed_value_map = resolved.color_attachment(6)
         mixed_uint_map = resolved.color_attachment(7)
 
-        self._view_pos_map = view_pos_and_alpha_map
-        self._view_normal_map = view_normal_and_emission_r_map
+        self._world_pos_map = world_pos_and_alpha_map
+        self._world_normal_map = world_normal_and_emission_r_map
         self._depth_map = resolved.depth_attachment
 
         with GLConfig.LocalEnv():
@@ -262,11 +261,11 @@ class DeferredRenderer(CommonRenderer):
 
             GLConfig.clear_buffers()
             self.deferred_render_program["camera"] = self.camera
-            self.deferred_render_program["view_pos_and_alpha_map"] = (
-                view_pos_and_alpha_map
+            self.deferred_render_program["world_pos_and_alpha_map"] = (
+                world_pos_and_alpha_map
             )
-            self.deferred_render_program["view_normal_and_emission_r_map"] = (
-                view_normal_and_emission_r_map
+            self.deferred_render_program["world_normal_and_emission_r_map"] = (
+                world_normal_and_emission_r_map
             )
             self.deferred_render_program["ambient_and_emission_g_map"] = (
                 ambient_and_emission_g_map

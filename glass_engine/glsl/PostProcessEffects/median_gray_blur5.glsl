@@ -1,3 +1,6 @@
+#ifndef _MEDIAN_GRAY_BLUR5_GLSL_
+#define _MEDIAN_GRAY_BLUR5_GLSL_
+
 #define KERNEL_WIDTH 5
 
 vec4 post_process(sampler2D screen_image, vec2 tex_coord)
@@ -44,3 +47,5 @@ vec4 post_process(sampler2D screen_image, vec2 tex_coord)
         return vec4(vec3(values[half_index]), 1);
     }
 }
+
+#endif

@@ -34,8 +34,8 @@ class SSAOEffect(PostProcessEffect):
 
     def apply(self, screen_image: sampler2D) -> sampler2D:
         self._ssao_visibility.camera = self.camera
-        self._ssao_visibility.view_pos_map = self.view_pos_map
-        self._ssao_visibility.view_normal_map = self.view_normal_map
+        self._ssao_visibility.world_pos_map = self.world_pos_map
+        self._ssao_visibility.world_normal_map = self.world_normal_map
         self._ssao_visibility.depth_map = self.depth_map
         self._ssao_visibility["radius"] = self.radius
         self._ssao_visibility["samples"] = self.samples
@@ -53,8 +53,8 @@ class SSAOEffect(PostProcessEffect):
 
     def draw_to_active(self, screen_image: sampler2D):
         self._ssao_visibility.camera = self.camera
-        self._ssao_visibility.view_pos_map = self.view_pos_map
-        self._ssao_visibility.view_normal_map = self.view_normal_map
+        self._ssao_visibility.world_pos_map = self.world_pos_map
+        self._ssao_visibility.world_normal_map = self.world_normal_map
         self._ssao_visibility.depth_map = self.depth_map
         self._ssao_visibility["radius"] = self.radius
         self._ssao_visibility["samples"] = self.samples

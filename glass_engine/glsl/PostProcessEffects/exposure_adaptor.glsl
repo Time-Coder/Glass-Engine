@@ -1,3 +1,6 @@
+#ifndef _EXPOSURE_ADAPTOR_GLSL_
+#define _EXPOSURE_ADAPTOR_GLSL_
+
 #include "../include/math.glsl"
 
 uniform float fps;
@@ -55,3 +58,6 @@ vec4 post_process(sampler2D screen_image, vec2 tex_coord)
     }
     return color;
 }
+
+
+#endif

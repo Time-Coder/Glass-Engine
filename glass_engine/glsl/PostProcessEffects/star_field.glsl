@@ -1,3 +1,6 @@
+#ifndef _STAR_FIELD_GLSL_
+#define _STAR_FIELD_GLSL_
+
 #define PI acos(-1)
 
 #define H(P) fract(sin(dot(P,vec2(127.1,311.7)))*43758.545)
@@ -43,3 +46,5 @@ vec4 post_process(sampler2D screen_image, vec2 tex_coord)
 
     return frag_color;
 }
+
+#endif

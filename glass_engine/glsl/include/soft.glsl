@@ -1,3 +1,6 @@
+#ifndef _SOFT_GLSL_
+#define _SOFT_GLSL_
+
 float soft_abs(float value, float softness)
 {
     float abs_value = abs(value);
@@ -124,3 +127,5 @@ vec4 soft_floor(vec4 value, float softness)
     result.w = soft_floor(value.w, softness);
     return result;
 }
+
+#endif

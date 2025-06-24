@@ -72,8 +72,8 @@ class ForwardRenderer(CommonRenderer):
 
             resolved = self.OIT_fbo.resolved
             self._depth_map = resolved.depth_attachment
-            self._view_pos_map = resolved.color_attachment(3)
-            self._view_normal_map = resolved.color_attachment(4)
+            self._world_pos_map = resolved.color_attachment(3)
+            self._world_normal_map = resolved.color_attachment(4)
 
     def render(self):
         # profiler.enable()

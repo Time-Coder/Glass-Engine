@@ -1,3 +1,6 @@
+#ifndef _MATH_GLSL_
+#define _MATH_GLSL_
+
 const float PI = acos(-1);
 const float cos45 = 0.5*sqrt(2);
 const float sin45 = cos45;
@@ -32,3 +35,5 @@ float max4(vec4 v)
 {
     return max(max(max(v.x, v.y), v.z), v.w);
 }
+
+#endif

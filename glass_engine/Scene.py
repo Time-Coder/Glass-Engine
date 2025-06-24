@@ -150,10 +150,6 @@ class Scene:
         if self in scene_node._transform_dirty:
             if isinstance(scene_node, Mesh):
                 mesh = scene_node
-                mesh_scale = glm.determinant(new_mat)
-                mesh.material._mesh_scale = mesh_scale
-                mesh._back_material._mesh_scale = mesh_scale
-
                 if mesh not in self._all_meshes:
                     self._all_meshes[mesh] = {}
 

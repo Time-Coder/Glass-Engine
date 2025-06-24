@@ -1,3 +1,6 @@
+#ifndef _LIGHTS_LIGHTING_GLSL_
+#define _LIGHTS_LIGHTING_GLSL_
+
 #include "Lights.glsl"
 #include "../ShadingModels/lighting.glsl"
 
@@ -132,3 +135,5 @@ vec3 lighting(
 
     return out_color3;
 }
+
+#endif

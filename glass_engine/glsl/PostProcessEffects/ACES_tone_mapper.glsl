@@ -1,3 +1,6 @@
+#ifndef _ACES_TONE_MAPPER_GLSL_
+#define _ACES_TONE_MAPPER_GLSL_
+
 //=================================================================================================
 //
 //  Baking Lab
@@ -55,3 +58,6 @@ vec4 post_process(sampler2D screen_image, vec2 tex_coord)
     // result.rgb = sin(acos(-1)/2.0*result.rgb);
     return result;
 }
+
+
+#endif

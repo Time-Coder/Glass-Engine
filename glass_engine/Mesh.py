@@ -93,8 +93,6 @@ class Mesh(SceneNode):
         self._back_material_user_set = False
         self._render_hints = RenderHints(self)
 
-        self._propagation_props["explode_distance"] = 0
-
         self.__block = block
         self.__surf_type = surf_type
         self.__primitive = primitive_type
@@ -159,19 +157,6 @@ class Mesh(SceneNode):
 
     def build(self):
         pass
-
-    @checktype
-    def explode(self, distance: float):
-        self.set_propagation_prop("explode_distance", distance)
-
-    @property
-    def explode_distance(self):
-        return self.propagation_prop("explode_distance")
-
-    @explode_distance.setter
-    @checktype
-    def explode_distance(self, distance: float):
-        self.set_propagation_prop("explode_distance", distance)
 
     @staticmethod
     def _update_mesh_callback(child):

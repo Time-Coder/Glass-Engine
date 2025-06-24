@@ -20,8 +20,8 @@ layout (location = 8) in int visible;
 out VertexOut
 {
     mat4 affine_transform;
-    vec3 view_pos;
-    vec3 view_normal;
+    vec3 world_pos;
+    vec3 world_normal;
     vec3 tex_coord;
     vec4 color;
     flat int visible;
@@ -44,15 +44,12 @@ void main()
     vs_out.affine_transform = transform;
     vs_out.color = color;
     vs_out.tex_coord = tex_coord;
-    vec3 world_pos = transform_apply(transform, position);
+    vs_out.world_pos = transform_apply(transform, position);
     vec3 world_bitangent = mat3(transform) * bitangent;
-    vec3 to_camera = normalize(camera.abs_position - world_pos);
+    vec3 to_camera = normalize(camera.abs_position - vs_out.world_pos);
     vec3 world_tangent = normalize(cross(world_bitangent, to_camera));
-    vec3 world_normal = normalize(cross(world_tangent, world_bitangent));
-
-    vs_out.view_pos = world_to_view(camera, world_pos);
-    vs_out.view_normal = world_dir_to_view(camera, world_normal);
+    vs_out.world_normal = normalize(cross(world_tangent, world_bitangent));
     vs_out.visible = visible;
 
-    gl_Position = view_to_NDC(camera, vs_out.view_pos);
+    gl_Position = Camera_project(camera, vs_out.world_pos);
 }

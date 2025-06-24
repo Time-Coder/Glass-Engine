@@ -11,8 +11,8 @@ class PostProcessEffects(DictList):
         DictList.__init__(self)
         self._screen = screen
 
-        self.view_pos_map = None
-        self.view_normal_map = None
+        self.world_pos_map = None
+        self.world_normal_map = None
         self.depth_map = None
 
     @property
@@ -47,8 +47,8 @@ class PostProcessEffects(DictList):
 
             effect.depth_map = self.depth_map
             effect.camera = self._screen._camera
-            effect.view_pos_map = self.view_pos_map
-            effect.view_normal_map = self.view_normal_map
+            effect.world_pos_map = self.world_pos_map
+            effect.world_normal_map = self.world_normal_map
             screen_image = effect.apply(screen_image)
 
         return screen_image
@@ -74,14 +74,14 @@ class PostProcessEffects(DictList):
 
             effect.depth_map = self.depth_map
             effect.camera = self._screen._camera
-            effect.view_pos_map = self.view_pos_map
-            effect.view_normal_map = self.view_normal_map
+            effect.world_pos_map = self.world_pos_map
+            effect.world_normal_map = self.world_normal_map
             screen_image = effect.apply(screen_image)
 
         last_effect.depth_map = self.depth_map
         last_effect.camera = self._screen._camera
-        last_effect.view_pos_map = self.view_pos_map
-        last_effect.view_normal_map = self.view_normal_map
+        last_effect.world_pos_map = self.world_pos_map
+        last_effect.world_normal_map = self.world_normal_map
         last_effect.draw_to_active(screen_image)
 
     @property

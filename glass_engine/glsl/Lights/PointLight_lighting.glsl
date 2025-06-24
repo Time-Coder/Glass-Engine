@@ -1,3 +1,6 @@
+#ifndef _POINTLIGHT_LIGHTING_GLSL_
+#define _POINTLIGHT_LIGHTING_GLSL_
+
 #if USE_POINT_LIGHT
 
 #include "../include/Material.glsl"
@@ -104,5 +107,7 @@ vec3 get_specular_color(
 
     return material.shadow_visibility * attenuation * specular_factor * light.color;
 }
+
+#endif
 
 #endif

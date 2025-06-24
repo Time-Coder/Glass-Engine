@@ -24,8 +24,8 @@ in VertexOut
 out GeometryOut
 {
     mat4 affine_transform;
-    vec3 view_pos;
-    mat3 view_TBN;
+    vec3 world_pos;
+    mat3 world_normal;
     vec3 tex_coord;
     vec4 color;
     flat int visible;
@@ -50,10 +50,8 @@ void main()
     Camera camera = cube_camera(gl_InvocationID, view_center);
     
     gs_out.affine_transform = gs_in[0].affine_transform;
-    vec3 world_pos = gl_in[0].gl_Position.xyz;
-    vec3 world_normal = normalize(camera.abs_position - world_pos);
-    gs_out.view_pos = world_to_view(camera, world_pos);
-    gs_out.view_TBN = mat3(vec3(1,0,0), vec3(0,0,1), normalize(-gs_out.view_pos));
+    gs_out.world_pos = gl_in[0].gl_Position.xyz;
+    gs_out.world_normal = normalize(camera.abs_position - world_pos);
     gs_out.tex_coord = gs_in[0].tex_coord;
     gs_out.color = gs_in[0].color;
     gs_out.visible = gs_in[0].visible;
@@ -71,7 +69,7 @@ void main()
     }
 #endif
 
-    gl_Position = view_to_NDC(camera, gs_out.view_pos);
+    gl_Position = Camera_project(camera, gs_out.world_pos);
     EmitVertex();
     EndPrimitive();
 }

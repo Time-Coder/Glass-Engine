@@ -1,3 +1,6 @@
+#ifndef _IMAGE_READ_WRITE_GLSL_
+#define _IMAGE_READ_WRITE_GLSL_
+
 #define imageRead(value_center, image, tex_coord) \
 vec4 value_center;\
 {\
@@ -58,3 +61,5 @@ vec4 value_center;\
     imageStore(image, texel_coord4, old_value4+value4);\
     memoryBarrierImage();\
 }
+
+#endif

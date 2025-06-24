@@ -1,3 +1,6 @@
+#ifndef _LIGHTS_GLSL_
+#define _LIGHTS_GLSL_
+
 #include "DirLight.glsl"
 #include "PointLight.glsl"
 #include "SpotLight.glsl"
@@ -41,5 +44,8 @@ uniform SpotLights
     int n_spot_lights;
     SpotLight spot_lights[32];
 };
+
+#endif
+
 
 #endif

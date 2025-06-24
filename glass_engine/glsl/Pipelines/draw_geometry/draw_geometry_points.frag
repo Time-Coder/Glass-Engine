@@ -8,15 +8,15 @@
 in VertexOut
 {
     mat4 affine_transform;
-    vec3 view_pos;
-    vec3 view_normal;
+    vec3 world_pos;
+    vec3 world_normal;
     vec3 tex_coord;
     vec4 color;
     flat int visible;
 } fs_in;
 
-layout(location=3) out vec3 view_pos;
-layout(location=4) out vec3 view_normal;
+layout(location=3) out vec3 world_pos;
+layout(location=4) out vec3 world_normal;
 
 #include "../../include/InternalMaterial.glsl"
 
@@ -38,6 +38,6 @@ void main()
         discard;
     }
 
-    view_pos = fs_in.view_pos;
-    view_normal = fs_in.view_normal;
+    world_pos = fs_in.world_pos;
+    world_normal = fs_in.world_normal;
 }

@@ -23,3 +23,5 @@ assimpy/pybind11/*
 glass/CodeCompressor/tree-sitter-glsl/src/*
 test_*
 .venv*
+*.spv
+note.txt

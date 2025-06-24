@@ -1,14 +1,17 @@
+#ifndef _WRITE_TO_GBUFFER_GLSL_
+#define _WRITE_TO_GBUFFER_GLSL_
+
 #include "../../include/Material.glsl"
 
 void write_to_gbuffer(
     in InternalMaterial internal_material,
-    in vec3 view_pos, in vec3 view_normal, in vec3 env_center,
+    in vec3 world_pos, in vec3 world_normal, in vec3 env_center,
 #if USE_BINDLESS_TEXTURE && USE_DYNAMIC_ENV_MAPPING
     in uvec2 env_map_handle,
 #endif
 
     in bool is_sphere,
-    out vec4 view_pos_and_alpha, out vec4 view_normal_and_emission_r,
+    out vec4 world_pos_and_alpha, out vec4 world_normal_and_emission_r,
     out vec4 ambient_and_emission_g, out vec4 base_color_and_emission_b,
     out vec4 specular_and_shininess, out vec4 reflection,
     out vec4 env_center_and_mixed_value, out uvec4 mixed_uint)
@@ -18,10 +21,10 @@ void write_to_gbuffer(
         discard;
     }
 
-    view_pos_and_alpha.xyz = view_pos;
-    view_pos_and_alpha.a = internal_material.opacity;
-    view_normal_and_emission_r.xyz = view_normal;
-    view_normal_and_emission_r.a = internal_material.emission.r;
+    world_pos_and_alpha.xyz = world_pos;
+    world_pos_and_alpha.a = internal_material.opacity;
+    world_normal_and_emission_r.xyz = world_normal;
+    world_normal_and_emission_r.a = internal_material.emission.r;
     ambient_and_emission_g.rgb = internal_material.ambient;
 
     if (internal_material.shading_model == SHADING_MODEL_COOK_TORRANCE ||
@@ -63,3 +66,5 @@ void write_to_gbuffer(
         (uint(255 * internal_material.metallic) << 8) | 
          uint(255 * internal_material.rim_power);
 }
+
+#endif

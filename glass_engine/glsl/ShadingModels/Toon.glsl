@@ -1,3 +1,6 @@
+#ifndef _TOON_GLSL_
+#define _TOON_GLSL_
+
 #include "Phong.glsl"
 
 float Toonify(float value, uint bands, float softness)
@@ -15,3 +18,5 @@ vec3 Toon_lighting(vec3 to_light, vec3 to_camera, vec3 normal, InternalMaterial 
     vec3 rim_color = material.base_color * soft_step(rim_factor-0.2, 0.05);
     return material.shadow_visibility*(diffuse_color + specular_color) + rim_color;
 }
+
+#endif

@@ -1,3 +1,6 @@
+#ifndef _SSAO_VISIBILITY_GLSL_
+#define _SSAO_VISIBILITY_GLSL_
+
 #include "../include/random.glsl"
 #include "../include/limits.glsl"
 
@@ -21,7 +24,7 @@ vec4 post_process(sampler2D screen_image, vec2 tex_coord)
         return vec4(1);
     }
 
-    vec3 rand_vec = normalize(rand3(tex_coord, rand_seed));
+    vec3 rand_vec;
     do
     {
         rand_vec = normalize(rand3(tex_coord, rand_seed));
@@ -33,13 +36,13 @@ vec4 post_process(sampler2D screen_image, vec2 tex_coord)
     float occlulated_samples = 0;
     for(int i = 0; i < samples; i++)
     {
-        float radius = rand(tex_coord, rand_seed);
-        float phi = 0.5*PI*rand(tex_coord, rand_seed);
-        while(radius * sin(phi) < 1E-3)
+        float radius = 0.0;
+        float phi = 0.0;
+        do
         {
             radius = rand(tex_coord, rand_seed);
             phi = 0.5*PI*rand(tex_coord, rand_seed);
-        }
+        } while (radius * sin(phi) < 1E-3);
         float theta = 2*PI*rand(tex_coord, rand_seed);
 
         float x = radius*cos(phi)*cos(theta);
@@ -70,3 +73,5 @@ vec4 post_process(sampler2D screen_image, vec2 tex_coord)
     }
     return vec4(vec3(pow(1-occlulated_samples/samples, power)), 1.0);
 }
+
+#endif

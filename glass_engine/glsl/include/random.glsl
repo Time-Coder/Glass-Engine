@@ -1,3 +1,6 @@
+#ifndef _RANDOM_GLSL_
+#define _RANDOM_GLSL_
+
 #include "quat.glsl"
 
 float rand(vec2 focus_point, inout int seed)
@@ -123,3 +126,5 @@ vec4 rand4(inout int seed)
     result.w = rand(seed);
     return result;
 }
+
+#endif

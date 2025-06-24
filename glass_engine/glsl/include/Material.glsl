@@ -1,3 +1,6 @@
+#ifndef _MATERIAL_GLSL_
+#define _MATERIAL_GLSL_
+
 #define SHADING_MODEL_FLAT 1
 #define SHADING_MODEL_GOURAUD 2
 #define SHADING_MODEL_PHONG 3
@@ -58,11 +61,9 @@ struct Material
     bool env_mix_diffuse;
 	bool dynamic_env_mapping;
 	bool arm_use_a;
-	bool st_scale_with_mesh;
 	vec2 st_scale;
 	vec2 st_offset;
 	float st_rotation;
-	float _mesh_scale;
 	sampler2D ambient_map;
 	sampler2D base_color_map;
 	sampler2D specular_map;
@@ -103,3 +104,5 @@ struct InternalMaterial
     bool fog;
 	bool dynamic_env_mapping;
 };
+
+#endif

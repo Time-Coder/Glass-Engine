@@ -25,8 +25,8 @@ class CommonRenderer(Renderer):
         Renderer.__init__(self)
 
         self._depth_map = None
-        self._view_pos_map = None
-        self._view_normal_map = None
+        self._world_pos_map = None
+        self._world_normal_map = None
 
         self._all_meshes = []
         self._all_lines = []
@@ -347,9 +347,6 @@ class CommonRenderer(Renderer):
                             self.spot_light_depth_program["back_material"] = (
                                 mesh._back_material
                             )
-                            self.spot_light_depth_program["explode_distance"] = (
-                                mesh.explode_distance
-                            )
                             mesh.draw(self.spot_light_depth_program, instances)
 
                     if self._lines_cast_shadows:
@@ -414,9 +411,6 @@ class CommonRenderer(Renderer):
                     if self._meshes_cast_shadows:
                         self.point_light_depth_program["point_light"] = point_light
                         for mesh, instances in self._meshes_cast_shadows:
-                            self.point_light_depth_program["explode_distance"] = (
-                                mesh.explode_distance
-                            )
                             self.point_light_depth_program["material"] = mesh.material
                             self.point_light_depth_program["back_material"] = (
                                 mesh._back_material
@@ -511,9 +505,6 @@ class CommonRenderer(Renderer):
                         self.dir_light_depth_program["dir_light"] = dir_light
                         self.dir_light_depth_program["camera"] = self.camera
                         for mesh, instances in self._meshes_cast_shadows:
-                            self.dir_light_depth_program["explode_distance"] = (
-                                mesh.explode_distance
-                            )
                             self.dir_light_depth_program["material"] = mesh.material
                             self.dir_light_depth_program["back_material"] = (
                                 mesh._back_material
@@ -812,7 +803,6 @@ class CommonRenderer(Renderer):
             self.gen_env_map_program["fog"] = self.scene.fog
 
     def gen_env_map_draw_mesh(self, mesh, instances):
-        self.gen_env_map_program["explode_distance"] = mesh.explode_distance
         self.gen_env_map_program["material"] = mesh.material
         self.gen_env_map_program["back_material"] = mesh._back_material
         self.gen_env_map_program["is_sphere"] = mesh.is_sphere
@@ -981,7 +971,6 @@ class CommonRenderer(Renderer):
 
         self.forward_program["material"] = mesh.material
         self.forward_program["back_material"] = mesh._back_material
-        self.forward_program["explode_distance"] = mesh.explode_distance
         self.forward_program["is_sphere"] = mesh.is_sphere
         self.forward_program["mesh_center"] = mesh.center
         mesh.draw(self.forward_program, instances)
@@ -1092,19 +1081,16 @@ class CommonRenderer(Renderer):
     def draw_geometry(self, mesh, instances):
         self.draw_geometry_program["material"] = mesh.material
         self.draw_geometry_program["back_material"] = mesh._back_material
-        self.draw_geometry_program["explode_distance"] = mesh.explode_distance
         mesh.draw(self.draw_geometry_program, instances)
 
     def draw_geometry_lines(self, mesh, instances):
         self.draw_geometry_lines_program["material"] = mesh.material
         self.draw_geometry_lines_program["back_material"] = mesh._back_material
-        self.draw_geometry_lines_program["explode_distance"] = mesh.explode_distance
         mesh.draw(self.draw_geometry_lines_program, instances)
 
     def draw_geometry_points(self, mesh, instances):
         self.draw_geometry_points_program["material"] = mesh.material
         self.draw_geometry_points_program["back_material"] = mesh._back_material
-        self.draw_geometry_points_program["explode_distance"] = mesh.explode_distance
         mesh.draw(self.draw_geometry_points_program, instances)
 
     def draw_transparent(self):
@@ -1189,5 +1175,5 @@ class CommonRenderer(Renderer):
 
             resolved = used_fbo.resolved
             self._depth_map = resolved.depth_attachment
-            self._view_pos_map = resolved.color_attachment(3)
-            self._view_normal_map = resolved.color_attachment(4)
+            self._world_pos_map = resolved.color_attachment(3)
+            self._world_normal_map = resolved.color_attachment(4)

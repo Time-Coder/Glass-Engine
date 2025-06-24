@@ -1,3 +1,6 @@
+#ifndef _FOG_GLSL_
+#define _FOG_GLSL_
+
 #include "math.glsl"
 
 #if USE_FOG
@@ -39,5 +42,7 @@ vec3 fog_apply(Fog fog, vec3 color, float distance)
     }
     return color*extinction + fog.color * (1 - inscattering);
 }
+
+#endif
 
 #endif

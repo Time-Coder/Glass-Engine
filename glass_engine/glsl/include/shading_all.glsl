@@ -1,3 +1,6 @@
+#ifndef _SHADING_ALL_GLSL_
+#define _SHADING_ALL_GLSL_
+
 #include "Camera.glsl"
 #include "InternalMaterial.glsl"
 #include "parallax_mapping.glsl"
@@ -115,9 +118,9 @@ vec4 shading_all(
 #endif
     , inout ShadingInfo shading_info)
 {
-    change_geometry(material, shading_info.tex_coord, shading_info.view_TBN, shading_info.view_pos);
-    
-    if (hasnan(shading_info.view_TBN[2]) || length(shading_info.view_TBN[2]) < 1E-6)
+    change_geometry(camera, material, shading_info.tex_coord, shading_info.world_TBN, shading_info.world_pos);
+    vec3 world_normal = shading_info.world_TBN[2];
+    if (hasnan(world_normal) || length(world_normal) < 1E-6)
     {
         discard;
     }
@@ -143,8 +146,6 @@ vec4 shading_all(
         }
     }
 
-    vec3 world_pos = view_to_world(camera, shading_info.view_pos);
-    vec3 world_normal = view_dir_to_world(camera, shading_info.view_TBN[2]);
     vec3 env_center = transform_apply(shading_info.affine_transform, shading_info.mesh_center);
 
     PostShadingInfo post_shading_info;
@@ -153,7 +154,7 @@ vec4 shading_all(
     post_shading_info.env_map_handle = shading_info.env_map_handle;
 #endif
     post_shading_info.is_sphere = shading_info.is_sphere;
-    post_shading_info.world_pos = world_pos;
+    post_shading_info.world_pos = shading_info.world_pos;
     post_shading_info.world_normal = world_normal;
     post_shading_info.env_center = env_center;
 
@@ -177,3 +178,5 @@ vec4 shading_all(in Camera camera, in Background background, in Material materia
 #endif
     , shading_info);
 }
+
+#endif

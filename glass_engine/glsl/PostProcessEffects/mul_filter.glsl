@@ -1,3 +1,6 @@
+#ifndef _MUL_FILTER_GLSL_
+#define _MUL_FILTER_GLSL_
+
 uniform sampler2D filter_image;
 uniform int filter_channels;
 
@@ -13,3 +16,5 @@ vec4 post_process(sampler2D screen_image, vec2 tex_coord)
 
     return color0 * color1;
 }
+
+#endif

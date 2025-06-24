@@ -1,3 +1,6 @@
+#ifndef _LUT_GLSL_
+#define _LUT_GLSL_
+
 uniform sampler2D LUT;
 uniform float contribute;
 
@@ -42,3 +45,5 @@ vec4 post_process(sampler2D screen_image, vec2 tex_coord)
 
     return mix(color, new_color, contribute);
 }
+
+#endif

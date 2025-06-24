@@ -1,3 +1,6 @@
+#ifndef _SPOTLIGHT_LIGHTING_GLSL_
+#define _SPOTLIGHT_LIGHTING_GLSL_
+
 #if USE_SPOT_LIGHT
 
 #include "../include/Material.glsl"
@@ -106,5 +109,7 @@ vec3 get_specular_color(
 
     return material.shadow_visibility * cutoff * light.aggregate_coeff * attenuation * specular_factor * light.color;
 }
+
+#endif
 
 #endif

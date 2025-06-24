@@ -1,3 +1,6 @@
+#ifndef _DIRLIGHT_LIGHTING_GLSL_
+#define _DIRLIGHT_LIGHTING_GLSL_
+
 #if USE_DIR_LIGHT
 
 #include "../include/Material.glsl"
@@ -76,5 +79,7 @@ vec3 get_specular_color(DirLight light, InternalMaterial material, Camera CSM_ca
     return material.shadow_visibility * specular_factor * light.color;
 #endif
 }
+
+#endif
 
 #endif

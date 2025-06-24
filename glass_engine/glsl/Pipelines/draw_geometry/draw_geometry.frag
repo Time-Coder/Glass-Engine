@@ -8,16 +8,16 @@
 in GeometryOut
 {
     mat4 affine_transform;
-    vec3 view_pos;
-    mat3 view_TBN;
+    vec3 world_pos;
+    mat3 world_TBN;
     vec3 tex_coord;
     vec4 color;
     vec4 back_color;
     flat int visible;
 } fs_in;
 
-layout(location=3) out vec3 view_pos;
-layout(location=4) out vec3 view_normal;
+layout(location=3) out vec3 world_pos;
+layout(location=4) out vec3 world_normal;
 
 #include "../../include/InternalMaterial.glsl"
 #include "../../include/shading_all.glsl"
@@ -34,14 +34,14 @@ void main()
     }
 
     vec2 tex_coord = fs_in.tex_coord.st;
-    mat3 view_TBN = fs_in.view_TBN;
-    view_pos = fs_in.view_pos;
+    mat3 world_TBN = fs_in.world_TBN;
+    world_pos = fs_in.world_pos;
     InternalMaterial internal_material;
 
     if (gl_FrontFacing)
     {
-        change_geometry(material, tex_coord, view_TBN, view_pos);
-        if (hasnan(view_TBN[2]) || length(view_TBN[2]) < 1E-6)
+        change_geometry(camera, material, tex_coord, world_TBN, world_pos);
+        if (hasnan(world_TBN[2]) || length(world_TBN[2]) < 1E-6)
         {
             discard;
         }
@@ -50,8 +50,8 @@ void main()
     }
     else
     {
-        change_geometry(back_material, tex_coord, view_TBN, view_pos);
-        if (hasnan(view_TBN[2]) || length(view_TBN[2]) < 1E-6)
+        change_geometry(camera, back_material, tex_coord, world_TBN, world_pos);
+        if (hasnan(world_TBN[2]) || length(world_TBN[2]) < 1E-6)
         {
             discard;
         }
@@ -64,5 +64,5 @@ void main()
         discard;
     }
 
-    view_normal = view_TBN[2];
+    world_normal = world_TBN[2];
 }

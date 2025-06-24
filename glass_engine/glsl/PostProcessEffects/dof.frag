@@ -6,7 +6,7 @@ out vec4 frag_color;
 #include "../include/Camera.glsl"
 
 uniform sampler2D screen_image;
-uniform sampler2D view_pos_map;
+uniform sampler2D world_pos_map;
 uniform Camera camera;
 uniform bool horizontal;
 uniform float fps;
@@ -18,11 +18,15 @@ buffer CurrentFocus
 
 void main()
 {
-    vec3 view_pos = textureLod(view_pos_map, tex_coord, 0).xyz;
+    vec3 world_pos = textureLod(world_pos_map, tex_coord, 0).xyz;
+    vec3 view_pos = world_to_view(camera, world_pos);
+
     float target_focus = camera.lens.focus;
     if (camera.lens.auto_focus)
     {
-        vec3 clear_view_pos = textureLod(view_pos_map, camera.lens.focus_tex_coord, 0).xyz;
+        vec3 clear_world_pos = textureLod(world_pos_map, camera.lens.focus_tex_coord, 0).xyz;
+        vec3 clear_view_pos = world_to_view(camera, clear_world_pos);
+        
         float clear_distance = clear_view_pos.y;
         if (length(clear_view_pos) > 1E-6)
         {

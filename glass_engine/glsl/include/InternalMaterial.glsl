@@ -1,3 +1,6 @@
+#ifndef _INTERNALMATERIAL_GLSL_
+#define _INTERNALMATERIAL_GLSL_
+
 #include "Material.glsl"
 #include "sampling.glsl"
 
@@ -13,20 +16,6 @@ InternalMaterial fetch_internal_material(vec4 frag_color, Material material, vec
     internal_material.rim_power = material.rim_power;
     internal_material.fog = material.fog;
     internal_material.dynamic_env_mapping = material.dynamic_env_mapping;
-
-    // tex_coord
-    if (material.st_scale_with_mesh)
-    {
-        tex_coord *= material._mesh_scale;
-    }
-
-    tex_coord *= material.st_scale;
-    float angle_rad = material.st_rotation / 180.0 * PI;
-    tex_coord = mat2(
-        cos(angle_rad), sin(angle_rad),
-        -sin(angle_rad), cos(angle_rad)
-    ) * tex_coord;
-    tex_coord += material.st_offset;
 
     // opacity
     internal_material.opacity = material.opacity;
@@ -233,3 +222,5 @@ InternalMaterial fetch_internal_material(vec4 frag_color, Material material, vec
 
     return internal_material;
 }
+
+#endif

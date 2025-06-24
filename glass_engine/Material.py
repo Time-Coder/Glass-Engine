@@ -1,3 +1,4 @@
+from __future__ import annotations
 from glass import sampler2D
 from glass.ImageLoader import ImageLoader
 from glass.WeakSet import WeakSet
@@ -108,8 +109,6 @@ class Material(metaclass=MetaInstancesRecorder):
         self._emission_strength: float = 1
         self._opacity: float = 1
         self._vertex_color_usage: Material.VertexColorUsage = Material.VertexColorUsage.NotUse
-        self._st_scale_with_mesh:bool = False
-        self._mesh_scale:float = 1
         self._st_scale:glm.vec2 = glm.vec2(1, 1)
         self._st_offset:glm.vec2 = glm.vec2(0, 0)
         self._st_rotation:float = 0
@@ -233,15 +232,6 @@ class Material(metaclass=MetaInstancesRecorder):
     def fog(self, fog: bool):
         self._fog = fog
         GlassEngineConfig._update_recv_fog(fog)
-
-    @property
-    def st_scale_with_mesh(self)->bool:
-        return self._st_scale_with_mesh
-    
-    @st_scale_with_mesh.setter
-    @param_setter
-    def st_scale_with_mesh(self, flag:bool):
-        self._st_scale_with_mesh = flag
 
     @property
     def st_scale(self)->float:
@@ -403,7 +393,7 @@ class Material(metaclass=MetaInstancesRecorder):
 
     @shading_model.setter
     @param_setter
-    def shading_model(self, shading_model: Union[ShadingModel, None]):
+    def shading_model(self, shading_model: Union[Material.ShadingModel, None]):
         if shading_model is None:
             shading_model = Material.ShadingModel.Unlit
 

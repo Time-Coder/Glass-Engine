@@ -1,3 +1,6 @@
+#ifndef _WATER_WAVE_GLSL_
+#define _WATER_WAVE_GLSL_
+
 vec4 post_process(sampler2D screen_image, vec2 tex_coord)
 {
     vec2 uv = tex_coord * 0.8 + 0.1;
@@ -5,3 +8,5 @@ vec4 post_process(sampler2D screen_image, vec2 tex_coord)
 
     return max(texture(screen_image, uv), 0.0);
 }
+
+#endif

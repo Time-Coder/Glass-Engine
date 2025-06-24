@@ -1,3 +1,6 @@
+#ifndef _COOKTORRANCE_GLSL_
+#define _COOKTORRANCE_GLSL_
+
 #include "../include/Material.glsl"
 
 float NormalDistributionFunction(vec3 halfway_vec, vec3 normal, float roughness)
@@ -33,3 +36,5 @@ vec3 CookTorrance_lighting(vec3 to_light, vec3 to_camera, vec3 normal, InternalM
     vec3 Lo = kd * material.base_color * cos_to_light + D*G*F / (4*cos_to_camera + 0.001);
     return material.shadow_visibility * Lo;
 }
+
+#endif

@@ -1,3 +1,6 @@
+#ifndef _SLIT_STRETCH_GLSL_
+#define _SLIT_STRETCH_GLSL_
+
 float triWave(float x)
 {
     return(abs(mod(x-10.0, 20.0)-10.0)+1.0);
@@ -21,3 +24,5 @@ vec4 post_process(sampler2D screen_image, vec2 tex_coord)
 
     return vec4(R, G, B, 1.0);
 }
+
+#endif

@@ -1,3 +1,4 @@
+from __future__ import annotations
 from .SceneNode import SceneNode
 from .Mesh import Mesh
 from .Material import Material
@@ -109,9 +110,9 @@ class Model(SceneNode):
     def __init__(
         self,
         file_name: str = "",
-        flags: PostProcessSteps = PostProcessSteps.default,
-        extra_flags: PostProcessSteps = PostProcessSteps.Nothing,
-        exclude_flags: PostProcessSteps = PostProcessSteps.Nothing,
+        flags: Model.PostProcessSteps = PostProcessSteps.default,
+        extra_flags: Model.PostProcessSteps = PostProcessSteps.Nothing,
+        exclude_flags: Model.PostProcessSteps = PostProcessSteps.Nothing,
     ):
         self.__flags = (flags | extra_flags) & (~exclude_flags)
 
@@ -173,9 +174,9 @@ class Model(SceneNode):
     def load(
         self,
         file_name: str,
-        flags: PostProcessSteps = PostProcessSteps.default,
-        extra_flags: PostProcessSteps = PostProcessSteps.Nothing,
-        exclude_flags: PostProcessSteps = PostProcessSteps.Nothing,
+        flags: Model.PostProcessSteps = PostProcessSteps.default,
+        extra_flags: Model.PostProcessSteps = PostProcessSteps.Nothing,
+        exclude_flags: Model.PostProcessSteps = PostProcessSteps.Nothing,
     ):
         if not os.path.isfile(file_name):
             raise FileNotFoundError(file_name)

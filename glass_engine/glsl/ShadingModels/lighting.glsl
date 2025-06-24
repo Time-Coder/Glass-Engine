@@ -1,3 +1,6 @@
+#ifndef _LIGHTING_GLSL_
+#define _LIGHTING_GLSL_
+
 #include "Lambert.glsl"
 
 #if USE_SHADING_MODEL_FLAT
@@ -71,3 +74,5 @@ vec3 lighting(vec3 to_light, vec3 to_camera, vec3 normal, InternalMaterial mater
     default: return vec3(0);
     }
 }
+
+#endif

@@ -25,11 +25,11 @@ out VertexOut
 } gs_out;
 
 #include "../../include/Camera.glsl"
+#include "../../Lights/DirLight.glsl"
 #include "../../Lights/DirLight_shadow_mapping.glsl"
 
 uniform DirLight dir_light;
 uniform Camera camera;
-uniform float explode_distance;
 
 void main()
 {
@@ -40,7 +40,7 @@ void main()
     gl_Layer = gl_InvocationID;
     for (int i = 0; i < 3; i++)
     {
-        vec3 world_pos = gl_in[i].gl_Position.xyz + explode_distance * face_world_normal;
+        vec3 world_pos = gl_in[i].gl_Position.xyz;
         gs_out.visible = gs_in[i].visible;
         gs_out.color = gs_in[i].color;
         gs_out.back_color = gs_in[i].back_color;

@@ -1,12 +1,18 @@
+#ifndef _PARALLAX_MAPPING_GLSL_
+#define _PARALLAX_MAPPING_GLSL_
+
 #include "Material.glsl"
 #include "limits.glsl"
 #include "sampling.glsl"
+#include "Camera.glsl"
 
-void parallax_mapping(sampler2D height_map, float height_scale, mat3 view_TBN, inout vec3 view_pos, inout vec2 frag_tex_coord)
+
+void parallax_mapping(Camera camera, sampler2D height_map, float height_scale, mat3 world_TBN, inout vec3 world_pos, inout vec2 frag_tex_coord)
 {
-    vec3 view_dir = view_pos;
-    float to_camera_distance = length(view_dir);
-    view_dir = view_dir / to_camera_distance;
+    vec3 view_dir = world_pos - camera.abs_position;
+    float view_dir_length = length(view_dir);
+    view_dir = view_dir / view_dir_length;
+    mat3 view_TBN = world_TBN_to_view(camera, world_TBN);
     mat3 inv_TBN = inverse(view_TBN);
     vec3 view_dir_in_tbn = inv_TBN * view_dir;
 
@@ -15,7 +21,7 @@ void parallax_mapping(sampler2D height_map, float height_scale, mat3 view_TBN, i
     float max_d = half_dmax/cos_theta + 0.01;
     float delta_d = max(half_dmax/10, max_d/100);
     
-    float lower_d = -min(max_d, to_camera_distance);
+    float lower_d = -min(max_d, view_dir_length);
     float upper_d = lower_d;
 
     float z_line = -lower_d*cos_theta;
@@ -69,25 +75,25 @@ void parallax_mapping(sampler2D height_map, float height_scale, mat3 view_TBN, i
     }
 
     frag_tex_coord = tex_coord;
-    view_pos = view_pos + middle_d*view_dir;
+    world_pos = world_pos + middle_d*view_dir;
 }
 
-void change_geometry(Material material, inout vec2 tex_coord, inout mat3 view_TBN, inout vec3 view_pos)
+void change_geometry(Camera camera, Material material, inout vec2 tex_coord, inout mat3 world_TBN, inout vec3 world_pos)
 {
-    view_TBN[2] = normalize(view_TBN[2]);
+    world_TBN[2] = normalize(world_TBN[2]);
     if (!gl_FrontFacing)
     {
-        view_TBN[2] = -view_TBN[2];
+        world_TBN[2] = -world_TBN[2];
     }
 
-    if (hasnan(view_TBN))
+    if (hasnan(world_TBN))
     {
         return;
     }
 
     if (textureValid(material.height_map))
     {
-        parallax_mapping(material.height_map, material.height_scale, view_TBN, view_pos, tex_coord);
+        parallax_mapping(camera, material.height_map, material.height_scale, world_TBN, world_pos, tex_coord);
     }
 
     if (textureValid(material.normal_map))
@@ -103,18 +109,20 @@ void change_geometry(Material material, inout vec2 tex_coord, inout mat3 view_TB
             normal_in_tbn /= len_normal;
         }
 
-        view_TBN[0] = material.height_scale/0.05 * view_TBN[0]/dot(view_TBN[0], view_TBN[0]);
-        view_TBN[1] = material.height_scale/0.05 * view_TBN[1]/dot(view_TBN[1], view_TBN[1]);
-        view_TBN[2] = view_TBN * normal_in_tbn;
+        world_TBN[0] = material.height_scale/0.05 * world_TBN[0]/dot(world_TBN[0], world_TBN[0]);
+        world_TBN[1] = material.height_scale/0.05 * world_TBN[1]/dot(world_TBN[1], world_TBN[1]);
+        world_TBN[2] = world_TBN * normal_in_tbn;
         
-        len_normal = length(view_TBN[2]);
+        len_normal = length(world_TBN[2]);
         if (len_normal < 1E-6)
         {
-            view_TBN[2] = vec3(0);
+            world_TBN[2] = vec3(0);
         }
         else
         {
-            view_TBN[2] /= len_normal;
+            world_TBN[2] /= len_normal;
         }
     }
 }
+
+#endif

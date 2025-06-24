@@ -25,8 +25,8 @@ layout (location = 8) in int visible;
 out VertexOut
 {
     mat4 affine_transform;
-    vec3 view_pos;
-    mat3 view_TBN;
+    vec3 world_pos;
+    mat3 world_TBN;
     vec3 tex_coord;
     vec4 color;
     flat int visible;
@@ -57,14 +57,13 @@ void main()
     vs_out.color = color;
     vs_out.tex_coord = tex_coord;
 
-    vec3 world_pos = transform_apply(transform, position);
+    vs_out.world_pos = transform_apply(transform, position);
     vec3 world_bitangent = mat3(transform) * bitangent;
     vec3 to_camera = normalize(camera.abs_position - world_pos);
     vec3 world_tangent = normalize(cross(world_bitangent, to_camera));
     vec3 world_normal = normalize(cross(world_tangent, world_bitangent));
 
-    vs_out.view_pos = world_to_view(camera, world_pos);
-    vs_out.view_TBN = world_TBN_to_view(camera, mat3(world_tangent, world_bitangent, world_normal));
+    vs_out.world_TBN = mat3(world_tangent, world_bitangent, world_normal);
 
 #if USE_BINDLESS_TEXTURE && USE_DYNAMIC_ENV_MAPPING
     vs_out.env_map_handle = env_map_handle;
@@ -72,14 +71,14 @@ void main()
 
     vs_out.visible = visible;
 
-    gl_Position = view_to_NDC(camera, vs_out.view_pos);
+    gl_Position = Camera_project(camera, vs_out.world_pos);
 
 #if USE_SHADING_MODEL_FLAT || USE_SHADING_MODEL_GOURAUD
     if (material.shading_model == SHADING_MODEL_FLAT ||
         material.shading_model == SHADING_MODEL_GOURAUD)
     {
         InternalMaterial internal_material = fetch_internal_material(color, material, tex_coord.st);
-        vs_out.color = lighting(internal_material, camera, camera.abs_position, world_pos, world_normal);
+        vs_out.color = lighting(internal_material, camera, camera.abs_position, vs_out.world_pos, world_normal);
     }
 #endif
 }

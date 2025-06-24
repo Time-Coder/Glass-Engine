@@ -11,8 +11,8 @@ class PostProcessEffect(ABC):
         self._enabled = True
 
         self.depth_map = None
-        self.view_pos_map = None
-        self.view_normal_map = None
+        self.world_pos_map = None
+        self.world_normal_map = None
         self.camera = None
 
     def __bool__(self) -> bool:

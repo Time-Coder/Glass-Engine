@@ -1,3 +1,6 @@
+#ifndef _SHADINGINFO_GLSL_
+#define _SHADINGINFO_GLSL_
+
 #include "Material.glsl"
 #include "background.glsl"
 
@@ -9,8 +12,8 @@ struct ShadingInfo
 #endif
     bool is_opaque_pass;
     bool is_sphere;
-    mat3 view_TBN;
-    vec3 view_pos;
+    mat3 world_TBN;
+    vec3 world_pos;
     vec2 tex_coord;
     mat4 affine_transform;
     vec3 mesh_center;
@@ -27,3 +30,6 @@ struct PostShadingInfo
     vec3 world_normal;
     vec3 env_center;
 };
+
+
+#endif

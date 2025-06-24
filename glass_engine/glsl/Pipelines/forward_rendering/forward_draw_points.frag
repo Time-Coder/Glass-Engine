@@ -8,8 +8,8 @@
 in VertexOut
 {
     mat4 affine_transform;
-    vec3 view_pos;
-    mat3 view_TBN;
+    vec3 world_pos;
+    mat3 world_TBN;
     vec3 tex_coord;
     vec4 color;
     flat int visible;
@@ -22,8 +22,8 @@ in VertexOut
 layout(location=0) out vec4 out_color;
 layout(location=1) out vec4 accum;
 layout(location=2) out float reveal;
-layout(location=3) out vec3 view_pos;
-layout(location=4) out vec3 view_normal;
+layout(location=3) out vec3 world_pos;
+layout(location=4) out vec3 world_normal;
 
 #include "../../include/Material.glsl"
 #include "../../include/OIT.glsl"
@@ -55,8 +55,8 @@ void main()
 #endif
     shading_info.is_opaque_pass = is_opaque_pass;
     shading_info.is_sphere = false;
-    shading_info.view_TBN = fs_in.view_TBN;
-    shading_info.view_pos = fs_in.view_pos;
+    shading_info.world_TBN = fs_in.world_TBN;
+    shading_info.world_pos = fs_in.world_pos;
     shading_info.tex_coord = fs_in.tex_coord.st;
     shading_info.affine_transform = fs_in.affine_transform;
     shading_info.mesh_center = mesh_center;
@@ -69,12 +69,13 @@ void main()
 
     if (is_opaque_pass)
     {
-        view_pos = shading_info.view_pos;
-        view_normal = shading_info.view_TBN[2];
+        world_pos = shading_info.world_pos;
+        world_normal = shading_info.world_TBN[2];
     }
     else if (out_color.a < 1 - 1E-6)
     {
-        get_OIT_info(out_color, fs_in.view_pos.y, accum, reveal);
+        vec3 view_pos = world_to_view(camera, fs_in.world_pos);
+        get_OIT_info(out_color, view_pos.y, accum, reveal);
         out_color = vec4(0);
     }
 }

@@ -1,3 +1,6 @@
+#ifndef _FXAA_GLSL_
+#define _FXAA_GLSL_
+
 #include "sampling.glsl"
 
 #define FXAA_SPAN_MAX 8.0
@@ -146,3 +149,6 @@ vec4 textureFXAA(sampler2DArray screen_image, vec3 tex_coord)
 
     return ((lumaB < lumaMin || lumaB > lumaMax) ? rgbA : rgbB);
 }
+
+
+#endif

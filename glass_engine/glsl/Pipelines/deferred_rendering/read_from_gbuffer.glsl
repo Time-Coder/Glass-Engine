@@ -1,9 +1,12 @@
+#ifndef _READ_FROM_GBUFFER_GLSL_
+#define _READ_FROM_GBUFFER_GLSL_
+
 #include "../../include/ShadingInfo.glsl"
 
 PostShadingInfo read_from_gbuffer(
     in Camera camera,
-    in sampler2D view_pos_and_alpha_map,
-    in sampler2D view_normal_and_emission_r_map,
+    in sampler2D world_pos_and_alpha_map,
+    in sampler2D world_normal_and_emission_r_map,
     in sampler2D ambient_and_emission_g_map,
     in sampler2D diffuse_or_base_color_and_emission_b_map,
     in sampler2D specular_and_shininess_map,
@@ -21,8 +24,8 @@ PostShadingInfo read_from_gbuffer(
     shading_info.world_normal = vec3(0);
     shading_info.env_center = vec3(0);
 
-    vec4 view_pos_and_alpha = texture(view_pos_and_alpha_map, tex_coord);
-    vec4 view_normal_and_emission_r = texture(view_normal_and_emission_r_map, tex_coord);
+    vec4 world_pos_and_alpha = texture(world_pos_and_alpha_map, tex_coord);
+    vec4 world_normal_and_emission_r = texture(world_normal_and_emission_r_map, tex_coord);
     vec4 ambient_and_emission_g = max(texture(ambient_and_emission_g_map, tex_coord), 0.0);
     vec4 base_color_and_emission_b = max(texture(diffuse_or_base_color_and_emission_b_map, tex_coord), 0.0);
     vec4 specular_and_shininess = max(texture(specular_and_shininess_map, tex_coord), 0.0);
@@ -30,20 +33,20 @@ PostShadingInfo read_from_gbuffer(
     shading_info.material.reflection = max(texture(reflection_map, tex_coord), 0.0);
     vec4 env_center_and_mixed_value = texture(env_center_and_mixed_value_map, tex_coord);
 
-    vec3 view_pos = view_pos_and_alpha.xyz;
-    if (hasnan(view_pos) || length(view_pos) < 1E-6)
+    vec3 world_pos = world_pos_and_alpha.xyz;
+    if (hasnan(world_pos) || length(world_pos) < 1E-6)
     {
         discard;
     }
     
-    vec3 view_normal = view_normal_and_emission_r.rgb;
-    if (hasnan(view_normal) || length(view_normal) < 1E-6)
+    vec3 world_normal = world_normal_and_emission_r.rgb;
+    if (hasnan(world_normal) || length(world_normal) < 1E-6)
     {
         discard;
     }
 
-    shading_info.world_pos = view_to_world(camera, view_pos);
-    shading_info.world_normal = view_dir_to_world(camera, view_normal);
+    shading_info.world_pos = world_pos;
+    shading_info.world_normal = world_normal;
     shading_info.env_center = env_center_and_mixed_value.xyz;
 
 #if USE_DYNAMIC_ENV_MAPPING
@@ -61,8 +64,8 @@ PostShadingInfo read_from_gbuffer(
     shading_info.material.specular_bands = get_digit(Toon_bands, 10);
     shading_info.material.diffuse_softness = 0.05;
     shading_info.material.specular_softness = 0.02;
-    shading_info.material.emission = vec3(view_normal_and_emission_r.a, ambient_and_emission_g.a, base_color_and_emission_b.a);
-    shading_info.material.opacity = view_pos_and_alpha.a;
+    shading_info.material.emission = vec3(world_normal_and_emission_r.a, ambient_and_emission_g.a, base_color_and_emission_b.a);
+    shading_info.material.opacity = world_pos_and_alpha.a;
     shading_info.material.ambient = ambient_and_emission_g.rgb;
 
     if (shading_info.material.shading_model == SHADING_MODEL_COOK_TORRANCE ||
@@ -87,3 +90,5 @@ PostShadingInfo read_from_gbuffer(
     
     return shading_info;
 }
+
+#endif

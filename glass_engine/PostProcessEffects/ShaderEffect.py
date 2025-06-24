@@ -104,8 +104,8 @@ class ShaderEffect(PostProcessEffect):
             self.program["camera"] = self.camera
 
         self.program["depth_map"] = self.depth_map
-        self.program["view_pos_map"] = self.view_pos_map
-        self.program["view_normal_map"] = self.view_normal_map
+        self.program["world_pos_map"] = self.world_pos_map
+        self.program["world_normal_map"] = self.world_normal_map
         self.program["screen_image"] = screen_image
         self._dynamic = (
             self.program["iTime"].location != -1
@@ -175,7 +175,7 @@ class ShaderEffect(PostProcessEffect):
 
     def need_pos_info(self) -> bool:
         return (
-            self.program["view_pos_map"].location >= 0
-            or self.program["view_normal_map"].location >= 0
+            self.program["world_pos_map"].location >= 0
+            or self.program["world_normal_map"].location >= 0
             or self.program["depth_map"].location >= 0
         )

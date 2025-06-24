@@ -1,3 +1,6 @@
+#ifndef _FRESNELREFRACT_GLSL_
+#define _FRESNELREFRACT_GLSL_
+
 float fresnel_reflect_ratio(float n1, float n2, float cos_theta_i)
 {
     float sin_theta_i2 = 1 - cos_theta_i*cos_theta_i;
@@ -17,3 +20,5 @@ float fresnel_reflect_ratio(float n1, float n2, float cos_theta_i)
     
     return clamp(0.5*(Rs*Rs + Rp*Rp), 0, 1);
 }
+
+#endif

@@ -1,3 +1,6 @@
+#ifndef _LIMITS_GLSL_
+#define _LIMITS_GLSL_
+
 bool hasnan(float x)
 {
     return isnan(x);
@@ -145,3 +148,5 @@ DEFINE_MAT_HAS_NAN_INF(3, 4)
 DEFINE_MAT_HAS_NAN_INF(4, 2)
 DEFINE_MAT_HAS_NAN_INF(4, 3)
 DEFINE_MAT_HAS_NAN_INF(4, 4)
+
+#endif

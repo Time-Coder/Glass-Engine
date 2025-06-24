@@ -247,7 +247,7 @@ def generate_TBN(vertices, indices):
     st01 = tex_coord1_view - tex_coord0_view
     st02 = tex_coord2_view - tex_coord0_view
 
-    det = st01[:, 0] * st02[:, 1] - st02[:, 0] * st01[:, 0]
+    det = st01[:, 0] * st02[:, 1] - st02[:, 0] * st01[:, 1]
     good_det_id = abs(det) > 1e-6
     det = det.reshape(st01.shape[0], 1)
 

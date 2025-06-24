@@ -18,8 +18,9 @@ layout (location = 10) in int visible;
 out VertexOut
 {
     mat4 affine_transform;
-    mat3 view_TBN;
+    mat3 world_TBN;
     vec3 tex_coord;
+    vec3 back_tex_coord;
     vec4 color;
     vec4 back_color;
     flat int visible;
@@ -40,15 +41,12 @@ void main()
     ));
 
     vs_out.affine_transform = transform;
+    vs_out.scale = scale_of(transform);
     vs_out.color = color;
     vs_out.back_color = back_color;
-    vs_out.tex_coord = tex_coord;
     vs_out.visible = visible;
-    mat3 world_TBN = mat3(tangent, bitangent, normal);
-    world_TBN = transform_apply_to_TBN(transform, world_TBN);
-    vs_out.view_TBN = world_TBN_to_view(camera, world_TBN);
+    vs_out.world_TBN = transform_apply_to_TBN(transform, mat3(tangent, bitangent, normal));
+    transform_tex_coord(material, back_material, tex_coord, vs_out.tex_coord, vs_out.back_tex_coord);
 
-    vec3 world_pos = transform_apply(transform, position);
-    vec3 view_pos = world_to_view(camera, world_pos);
-    gl_Position = vec4(view_pos, 1);
+    gl_Position = vec4(transform_apply(transform, position), 1);
 }

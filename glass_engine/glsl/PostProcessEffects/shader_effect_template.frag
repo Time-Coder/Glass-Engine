@@ -13,31 +13,62 @@ uniform int iFrame; // shader playback frame
 uniform vec4 iDate; // (year, month, day, time in seconds)
 
 uniform sampler2D screen_image;
-uniform sampler2D view_pos_map;
-uniform sampler2D view_normal_map;
+uniform sampler2D world_pos_map;
+uniform sampler2D world_normal_map;
 uniform sampler2D depth_map;
 uniform Camera camera;
 
-vec3 view_pos_of(vec2 tex_coord)
-{
-    if (textureValid(view_pos_map))
-    {
-        return textureLod(view_pos_map, tex_coord, 0).rgb;
-    }
-    
-    return screen_to_view(camera, vec3(tex_coord, textureLod(depth_map, tex_coord, 0).r));
-}
-
 vec3 world_pos_of(vec2 tex_coord)
 {
-    return view_to_world(camera, view_pos_of(tex_coord));
+    if (textureValid(world_pos_map))
+    {
+        return textureLod(world_pos_map, tex_coord, 0).rgb;
+    }
+    float depth = textureLod(depth_map, tex_coord, 0).r;
+    vec3 screen_pos = vec3(tex_coord, depth);
+    return screen_to_world(camera, screen_pos);
+}
+
+vec3 view_pos_of(vec2 tex_coord)
+{
+    if (textureValid(world_pos_map))
+    {
+        vec3 world_pos = textureLod(world_pos_map, tex_coord, 0).rgb;
+        return world_to_view(camera, world_pos);
+    }
+    float depth = textureLod(depth_map, tex_coord, 0).r;
+    vec3 screen_pos = vec3(tex_coord, depth);
+    return screen_to_view(camera, screen_pos);
+}
+
+vec3 world_normal_of(vec2 tex_coord)
+{
+    if (textureValid(world_normal_map))
+    {
+        return textureLod(world_normal_map, tex_coord, 0).rgb;
+    }
+
+    vec3 world_pos = world_pos_of(tex_coord);
+    vec3 dir1 = dFdx(world_pos);
+    vec3 dir2 = dFdy(world_pos);
+    vec3 normal = cross(dir1, dir2);
+    float len_normal = length(normal);
+    if (len_normal < 1E-6)
+    {
+        return vec3(0, 0, 0);
+    }
+    else
+    {
+        return (normal / len_normal);
+    }
 }
 
 vec3 view_normal_of(vec2 tex_coord)
 {
-    if (textureValid(view_normal_map))
+    if (textureValid(world_normal_map))
     {
-        return textureLod(view_normal_map, tex_coord, 0).rgb;
+        vec3 world_normal = textureLod(world_normal_map, tex_coord, 0).rgb;
+        return world_dir_to_view(camera, world_normal);
     }
 
     vec3 view_pos = view_pos_of(tex_coord);
@@ -53,12 +84,6 @@ vec3 view_normal_of(vec2 tex_coord)
     {
         return (normal / len_normal);
     }
-}
-
-vec3 world_normal_of(vec2 tex_coord)
-{
-    vec3 view_normal = view_normal_of(tex_coord);
-    return view_dir_to_world(camera, view_normal);
 }
 
 vec2 view_pos_to_tex_coord(vec3 view_pos)

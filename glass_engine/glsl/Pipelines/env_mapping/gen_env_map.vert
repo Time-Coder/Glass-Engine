@@ -25,6 +25,7 @@ out VertexOut
     mat4 affine_transform;
     mat3 world_TBN;
     vec3 tex_coord;
+    vec3 back_tex_coord;
     vec4 color;
     vec4 back_color;
 
@@ -46,19 +47,17 @@ void main()
         vec4(0, 0, 0, 1)
     ));
     
-    vec3 world_pos = transform_apply(transform, position);
-    gl_Position = vec4(world_pos, 1);
-    
     vs_out.affine_transform = transform;
     vs_out.color = color;
     vs_out.back_color = back_color;
-    vs_out.tex_coord = tex_coord;
-    mat3 TBN = mat3(tangent, bitangent, normal);
-    vs_out.world_TBN = transform_apply_to_TBN(transform, TBN);
+    vs_out.world_TBN = transform_apply(transform, mat3(tangent, bitangent, normal));
 
 #if USE_BINDLESS_TEXTURE && USE_DYNAMIC_ENV_MAPPING
     vs_out.env_map_handle = env_map_handle;
 #endif
 
+    transform_tex_coord(material, back_material, tex_coord, vs_out.tex_coord, vs_out.back_tex_coord);
     vs_out.visible = visible;
+
+    gl_Position = vec4(transform_apply(transform, position), 1);
 }
