@@ -1,7 +1,7 @@
 #ifndef _MATH_GLSL_
 #define _MATH_GLSL_
 
-const float PI = acos(-1);
+const float M_PI = acos(-1);
 const float cos45 = 0.5*sqrt(2);
 const float sin45 = cos45;
 

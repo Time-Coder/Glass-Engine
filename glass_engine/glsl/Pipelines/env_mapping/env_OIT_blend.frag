@@ -14,8 +14,8 @@ uniform samplerCube reveal_map;
 
 void main()
 {
-    float theta = PI*(1.5 - 2*tex_coord.x);
-    float phi = PI*(tex_coord.y-0.5);
+    float theta = M_PI*(1.5 - 2*tex_coord.x);
+    float phi = M_PI*(tex_coord.y-0.5);
 
     vec3 cube_tex_coord;
     cube_tex_coord.x = cos(phi)*cos(theta);

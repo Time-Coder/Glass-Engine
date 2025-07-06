@@ -25,7 +25,7 @@ out GeometryOut
 {
     mat4 affine_transform;
     vec3 world_pos;
-    mat3 world_normal;
+    vec3 world_normal;
     vec3 tex_coord;
     vec4 color;
     flat int visible;
@@ -51,7 +51,7 @@ void main()
     
     gs_out.affine_transform = gs_in[0].affine_transform;
     gs_out.world_pos = gl_in[0].gl_Position.xyz;
-    gs_out.world_normal = normalize(camera.abs_position - world_pos);
+    gs_out.world_normal = normalize(camera.abs_position - gs_out.world_pos);
     gs_out.tex_coord = gs_in[0].tex_coord;
     gs_out.color = gs_in[0].color;
     gs_out.visible = gs_in[0].visible;
@@ -65,7 +65,7 @@ void main()
         material.shading_model == SHADING_MODEL_GOURAUD)
     {
         InternalMaterial internal_material = fetch_internal_material(gs_in[0].color, material, gs_in[0].tex_coord.st);
-        gs_out.color = vec4(lighting(internal_material, CSM_camera, camera.abs_position, world_pos, world_normal), 1.0);
+        gs_out.color = vec4(lighting(internal_material, CSM_camera, camera.abs_position, gs_out.world_pos, gs_out.world_normal), 1.0);
     }
 #endif
 

@@ -61,6 +61,7 @@ struct Material
     bool env_mix_diffuse;
 	bool dynamic_env_mapping;
 	bool arm_use_a;
+	vec2 st_pivot;
 	vec2 st_scale;
 	vec2 st_offset;
 	float st_rotation;

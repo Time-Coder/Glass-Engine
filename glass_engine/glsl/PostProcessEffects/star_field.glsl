@@ -1,7 +1,7 @@
 #ifndef _STAR_FIELD_GLSL_
 #define _STAR_FIELD_GLSL_
 
-#define PI acos(-1)
+#define M_PI acos(-1)
 
 #define H(P) fract(sin(dot(P,vec2(127.1,311.7)))*43758.545)
 #define pR(a) mat2(cos(a),sin(a),-sin(a),cos(a))
@@ -30,7 +30,7 @@ vec4 post_process(sampler2D screen_image, vec2 tex_coord)
 
     for (float k = 0.0; k < 400.0; k++) {
         float r = H(vec2(k)) * 2.0 - 1.0;
-        vec3 flarePos = vec3(H(vec2(k) * r) * 20.0 - 10.0, r * 8.0, (mod(sin(k / 200.0 * PI * 4.0) * 15.0 - t * 13.0 * k * 0.007, 25.0)));
+        vec3 flarePos = vec3(H(vec2(k) * r) * 20.0 - 10.0, r * 8.0, (mod(sin(k / 200.0 * M_PI * 4.0) * 15.0 - t * 13.0 * k * 0.007, 25.0)));
         float v = max(abs(dot(normalize(flarePos), rd)), 0.0);
 
         flareIntensivity += pow(v, 30000.0) * 4.0;

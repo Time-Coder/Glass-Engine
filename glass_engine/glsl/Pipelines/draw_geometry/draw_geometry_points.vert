@@ -44,7 +44,7 @@ void main()
     vs_out.color = color;
     vs_out.tex_coord = tex_coord;
     vs_out.world_pos = transform_apply(transform, position);
-    vs_out.world_normal = normalize(camera.abs_position - world_pos);
+    vs_out.world_normal = normalize(camera.abs_position - vs_out.world_pos);
     vs_out.visible = visible;
 
     gl_Position = Camera_project(camera, vs_out.world_pos);

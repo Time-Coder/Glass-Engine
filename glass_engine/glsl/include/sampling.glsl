@@ -124,8 +124,8 @@ vec4 textureSphere(sampler2D image, ivec2 texture_size, vec3 sphecial_tex_coord,
     }
     sphecial_tex_coord /= len;
     vec2 tex_coord;
-    tex_coord.x = 0.5*(atan(sphecial_tex_coord.x, sphecial_tex_coord.y)/PI + 1);
-    tex_coord.y = asin(sphecial_tex_coord.z) / PI + 0.5;
+    tex_coord.x = 0.5*(atan(sphecial_tex_coord.x, sphecial_tex_coord.y)/M_PI + 1);
+    tex_coord.y = asin(sphecial_tex_coord.z) / M_PI + 0.5;
 
     float cos_phi = length(sphecial_tex_coord.xy);
     float lod_factor = 1 - 0.99*pow(1-cos_phi, 20);

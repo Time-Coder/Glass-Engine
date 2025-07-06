@@ -2,9 +2,9 @@ import os
 
 from OpenGL import GL
 import re
-import copy
 import warnings
 import sys
+from typing import Dict, Tuple
 
 from .CodeCompressor.minifyc import macros_expand_file
 from .utils import (
@@ -52,12 +52,11 @@ class BaseShader(GLObject):
 
     def __init__(self, program):
         GLObject.__init__(self)
-        self._program: int = program
+        self._program = program
         self._code: str = ""
         self._clean_code: str = ""
         self._used_code:str = ""
         self._comments_set: set = set()
-        self._line_message_map: dict = {}
         self._file_name: str = ""
         self._preprocessed_but_not_compiled: bool = False
         self._should_repreprocess: bool = True
@@ -73,7 +72,8 @@ class BaseShader(GLObject):
         self.work_group_size: tuple = tuple()
         self.related_files: list = []
 
-        self._include_paths: list = [""]
+        self._line_map: Dict[int, Tuple[str, int]] = {}
+        self._include_paths: list = []
         self._defines: dict = {}
 
         self._code_compressor: CodeCompressor = CodeCompressor(self.__class__._type)
@@ -128,7 +128,7 @@ class BaseShader(GLObject):
                 self._code_compressor.parse(self._clean_code)
                 self._used_code = self._code_compressor.compress()
             else:
-                self._used_code = self._code
+                self._used_code = self._clean_code
 
         version_pattern1 = r"#\s*version \d\d\d core"
         version_pattern2 = r"#\s*version \d\d\d"
@@ -212,7 +212,6 @@ class BaseShader(GLObject):
         meta_info["code"] = self._code
         meta_info["clean_code"] = self._clean_code
         meta_info["used_code"] = self._used_code
-        meta_info["line_message_map"] = self._line_message_map
         meta_info["attributes_info"] = self.attributes_info
         meta_info["geometry_in"] = self.geometry_in
         meta_info["uniforms_info"] = self.uniforms_info
@@ -258,7 +257,6 @@ class BaseShader(GLObject):
         try:
             self._code = meta_info["code"]
             self._clean_code = meta_info["clean_code"]
-            self._line_message_map = meta_info["line_message_map"]
             self._used_code = meta_info["used_code"]
             self.attributes_info = meta_info["attributes_info"]
             self.geometry_in = meta_info["geometry_in"]
@@ -296,13 +294,8 @@ class BaseShader(GLObject):
         self._code = cat(abs_name)
         self.related_files = [abs_name]
 
-        self.add_include_path(".")
         self._define_shader_type()
-        include_path = os.path.dirname(abs_name)
-        if not os.path.isabs(file_name):
-            include_path = relative_path(include_path)
-        self.add_include_path(include_path)
-        self.related_files.extend(self._replace_includes())
+        self._macros_expand()
 
     def compile(self, file_name: str):
         if self.is_compiled and not self._preprocessed_but_not_compiled:
@@ -323,8 +316,6 @@ class BaseShader(GLObject):
             f"{GlassConfig.cache_folder}/{base_name}_{md5_value}.meta"
         )
 
-        self._collect_info(file_name)
-
         if self._test_should_repreprocess():
             self.attributes_info = {}
             self.geometry_in = ""
@@ -334,8 +325,9 @@ class BaseShader(GLObject):
             self.structs_info = {}
             self.outs_info = {}
             self.work_group_size = tuple()
-            self._clean_code = macros_expand_file(self._file_name)
             self._used_code = ""
+
+            self._collect_info(file_name)
 
             self.uniforms_info = ShaderParser.find_uniforms(self._clean_code)
             self.uniform_blocks_info = ShaderParser.find_uniform_blocks(
@@ -406,241 +398,23 @@ class BaseShader(GLObject):
         defines.update(self._defines)
         return defines
 
-    def _find_comments(self):
-        self._comments_set.clear()
-        pos_start = 0
-        pos_end = 0
-        should_break = False
-        len_code = len(self._code)
-        while True:
-            pos_start = self._code.find("/*", pos_end)
-            if pos_start == -1:
-                break
-
-            pos_end = self._code.find("*/", pos_start + 2)
-            if pos_end == -1:
-                pos_end = len_code - 2
-                should_break = True
-            pos_end += 2
-
-            self._comments_set.update(set(range(pos_start, pos_end)))
-            if should_break:
-                break
-
-        pos_start = 0
-        pos_end = 0
-        should_break = False
-        while True:
-            pos_start = self._code.find("//", pos_end)
-            if pos_start == -1:
-                break
-
-            pos_end = self._code.find("\n", pos_start + 2)
-
-            if pos_end == -1:
-                pos_end = len_code
-                should_break = True
-
-            self._comments_set.update(set(range(pos_start, pos_end)))
-            if should_break:
-                break
-
-    def _replace_includes(self):
-        defines_str = ""
-        for name, value in self.defines.items():
-            if value is None:
-                defines_str += f"#define {name}\n"
-            else:
-                defines_str += f"#define {name} {value}\n"
-        lines_of_defines_str = ShaderParser.lines(defines_str)
-
-        len_version = len("#version")
-        self._find_comments()
-        pos_version = 0
-        while True:
-            pos_version = self._code.find("#version", pos_version)
-            if pos_version == -1:
-                if defines_str:
-                    self._code = defines_str + self._code
-                    self._find_comments()
-                break
-            elif pos_version in self._comments_set:
-                pos_version += len_version
-                continue
-            else:
-                pos_endl = self._code.find("\n", pos_version)
-                if defines_str:
-                    if pos_endl == -1:
-                        self._code = self._code + "\n" + defines_str
-                    else:
-                        self._code = (
-                            self._code[: pos_endl + 1]
-                            + defines_str
-                            + self._code[pos_endl + 1 :]
-                        )
-                    self._find_comments()
-                break
-        line_num_version = ShaderParser.line_of(self._code, pos_version)
-
-        pos_include_start = 0
-        pos_filename_start = 0
-        pos_include_end = 0
-        pos_filename_end = 0
-        n_lines = ShaderParser.lines(self._code)
-        self._line_message_map[0] = self._file_name + ": {message_type}: "
-        for i in range(1, n_lines + 1):
-            if i <= line_num_version:
-                self._line_message_map[i] = (
-                    self._file_name + ":" + str(i) + ": {message_type}: "
-                )
-            elif i < line_num_version + lines_of_defines_str:
-                self._line_message_map[i] = (
-                    self._file_name + ":" + str(line_num_version) + ": {message_type}: "
-                )
-            else:
-                self._line_message_map[i] = (
-                    self._file_name
-                    + ":"
-                    + str(i - lines_of_defines_str + 1)
-                    + ": {message_type}: "
-                )
-
-        included_files = set()
-        should_find_comments = False
-        len_include = len("#include")
-        while True:
-            if should_find_comments:
-                self._find_comments()
-
-            pos_include_start = 0
-            while True:
-                pos_include_start = self._code.find("#include", pos_include_start)
-                if pos_include_start == -1:
-                    return included_files
-
-                if pos_include_start in self._comments_set:
-                    pos_include_start += len_include
-                else:
-                    break
-
-            pos_filename_start = pos_include_start + len_include
-            pos_filename_start = ShaderParser.skip_space(self._code, pos_filename_start)
-
-            start_char = self._code[pos_filename_start]
-            if start_char == "<":
-                end_char = ">"
-            elif start_char == '"':
-                end_char = '"'
-            else:
-                end_char = "\n"
-
-            if end_char != "\n":
-                pos_filename_start += 1
-                pos_filename_start = ShaderParser.skip_space(
-                    self._code, pos_filename_start
-                )
-
-            pos_filename_end = self._code.find(end_char, pos_filename_start)
-            if pos_filename_end == -1:
-                line_num = ShaderParser.line_of(self._code, pos_filename_start)
-                raise CompileError(
-                    "\n"
-                    + self._line_message_map[line_num].format(message_type="error")
-                    + "#include format wrong"
-                )
-
-            if end_char != "\n":
-                pos_include_end = pos_filename_end + 1
-            else:
-                pos_include_end = pos_filename_end
-
-            pos_filename_end -= 1
-            pos_filename_end = ShaderParser.skip_space_reverse(
-                self._code, pos_filename_end
-            )
-            include_filename = self._code[pos_filename_start : pos_filename_end + 1]
-            found = False
-
-            if end_char == "\n":
-                include_filename = self.defines[include_filename][1:-1]
-
-            for include_path in self.include_paths:
-                if include_path and not os.path.isdir(include_path):
-                    continue
-
-                full_name = include_filename
-                if include_path:
-                    full_name = include_path + "/" + include_filename
-
-                if not os.path.isfile(full_name):
-                    continue
-
-                rel_name = relative_path(full_name)
-                abs_name = os.path.abspath(full_name).replace("\\", "/")
-                used_name = rel_name if len(rel_name) < len(abs_name) else abs_name
-
-                include_content = ""
-                if abs_name not in included_files:
-                    include_content = cat(abs_name)
-                    included_files.add(abs_name)
-                else:
-                    include_content = " " * (pos_include_end - pos_include_start)
-
-                self._code = (
-                    self._code[:pos_include_start]
-                    + include_content
-                    + self._code[pos_include_end:]
-                )
-                if include_content:
-                    include_line_num = ShaderParser.line_of(
-                        self._code, pos_include_start
-                    )
-                    include_lines = ShaderParser.lines(include_content)
-                    include_line_end = include_line_num + include_lines
-                    n_lines = ShaderParser.lines(self._code)
-
-                    old_line_message_map = copy.deepcopy(self._line_message_map)
-                    for i in range(include_line_end, n_lines + 1):
-                        self._line_message_map[i] = old_line_message_map[
-                            i - include_lines + 1
-                        ]
-
-                    for i in range(include_line_num, include_line_end):
-                        self._line_message_map[i] = (
-                            used_name
-                            + ":"
-                            + str(i - include_line_num + 1)
-                            + ": {message_type}: "
-                        )
-
-                    self.add_include_path(os.path.dirname(full_name))
-                    should_find_comments = True
-                else:
-                    should_find_comments = False
-
-                found = True
-                break
-
-            if not found:
-                line_num = ShaderParser.line_of(self._code, pos_filename_start)
-                raise CompileError(
-                    "\n"
-                    + self._line_message_map[line_num].format(message_type="error")
-                    + f'File "{include_filename}" not exists.'
-                )
-
-        return included_files
+    def _macros_expand(self):
+        self._clean_code, self._line_map, self.related_files = macros_expand_file(self._file_name, self._include_paths, self.defines)
 
     def _format_error_warning(self, message):
+
         def _replace_message(match):
             message_type = match.group("message_type").lower()
             line_number = int(match.group("line_number"))
-            return self._line_message_map[line_number].format(message_type=message_type)
+            file_name = self._line_map[line_number][0]
+            new_line_number = self._line_map[line_number][1]
+            return file_name + ":" + str(new_line_number) + ": " + message_type + ": "
 
         message = BaseShader.__message_prefix1.sub(_replace_message, message)
         message = BaseShader.__message_prefix2.sub(_replace_message, message)
         message = BaseShader.__message_prefix3.sub(_replace_message, message)
         message = message.replace("syntax error syntax error", "syntax error")
+        message = message.replace("'' : ", "")
         message = message.strip(" \t\n\r")
 
         warning_messages = []

@@ -45,8 +45,6 @@ vec4 world_to_lightNDC(DirLight light, Camera CSM_camera, int level, vec3 world_
 
 float _get_PCF_value(DirLight light, Camera CSM_camera, int level, vec3 frag_pos, vec3 frag_normal, float PCF_width, out int total_count, inout int rand_seed)
 {
-    sampler2DArray depth_map = sampler2DArray(light.depth_map_handle);
-
     float depth_length = 0;
     vec4 light_NDC = world_to_lightNDC(light, CSM_camera, level, frag_pos, depth_length);
     float self_depth = (light_NDC.z / light_NDC.w + 1) / 2;
@@ -79,7 +77,7 @@ float _get_PCF_value(DirLight light, Camera CSM_camera, int level, vec3 frag_pos
             continue;
         }
 
-        float sample_depth = max(texture(depth_map, vec3(s, t, level)).r, 0.0);
+        float sample_depth = max(texture(sampler2DArray(light.depth_map_handle), vec3(s, t, level)).r, 0.0);
         not_occ_count += (sample_depth > self_depth ? 1 : 0);
         total_count += 1;
     }

@@ -1,5 +1,5 @@
 from ..SceneNode import SceneNode
-from ..callback_vec import callback_vec3
+from glass import callback_vec3
 
 from glass.utils import checktype
 from glass import GLConfig

@@ -27,8 +27,7 @@ vec3 fetch_env_color(
 #if USE_DYNAMIC_ENV_MAPPING
     if (dynamic_env_mapping && (env_map_handle.x > 0 || env_map_handle.y > 0))
     {
-        sampler2D env_map = sampler2D(env_map_handle);
-        env_color = max(textureSphere(env_map, ENV_MAP_SIZE, out_dir, bias), 0.0);
+        env_color = max(textureSphere(sampler2D(env_map_handle), ENV_MAP_SIZE, out_dir, bias), 0.0);
     }
 #endif
 

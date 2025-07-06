@@ -47,7 +47,9 @@ class AttrList(SameTypeList):
     @dtype.setter
     def dtype(self, dtype: GLInfo.attr_types):
         str_dtype = str(dtype)
-        if str_dtype == "callback_vec3":
+        if str_dtype == "callback_vec2":
+            dtype = glm.vec2
+        elif str_dtype == "callback_vec3":
             dtype = glm.vec3
         elif str_dtype == "callback_vec4":
             dtype = glm.vec4

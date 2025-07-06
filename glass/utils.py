@@ -508,7 +508,6 @@ __comment_index_dict = {}
 
 
 def get_invalid_index(content):
-    global __str_index_dict
     if content in __str_index_dict:
         return __str_index_dict[content], __comment_index_dict[content]
 

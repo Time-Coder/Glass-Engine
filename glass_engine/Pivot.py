@@ -3,7 +3,7 @@ import math
 import numpy as np
 from typing import Union
 
-from .callback_vec import callback_quat, callback_vec3
+from glass import callback_quat, callback_vec3
 
 
 class Pivot:

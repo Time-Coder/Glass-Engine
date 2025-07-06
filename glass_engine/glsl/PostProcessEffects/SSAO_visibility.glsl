@@ -41,9 +41,9 @@ vec4 post_process(sampler2D screen_image, vec2 tex_coord)
         do
         {
             radius = rand(tex_coord, rand_seed);
-            phi = 0.5*PI*rand(tex_coord, rand_seed);
+            phi = 0.5*M_PI*rand(tex_coord, rand_seed);
         } while (radius * sin(phi) < 1E-3);
-        float theta = 2*PI*rand(tex_coord, rand_seed);
+        float theta = 2*M_PI*rand(tex_coord, rand_seed);
 
         float x = radius*cos(phi)*cos(theta);
         float y = radius*cos(phi)*sin(theta);

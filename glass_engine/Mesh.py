@@ -2,9 +2,8 @@ from __future__ import annotations
 from .SceneNode import SceneNode
 from .Material import Material
 from .algorithm import generate_auto_TBN, generate_smooth_TBN
-from .callback_vec import callback_vec4
 
-from glass import ShaderProgram, Instances, Vertices, Indices, GLInfo, RenderHints
+from glass import ShaderProgram, Instances, Vertices, Indices, GLInfo, RenderHints, callback_vec4
 from glass.utils import checktype
 from glass.AttrList import AttrList
 

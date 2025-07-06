@@ -1,5 +1,30 @@
 import glm
+from .GLInfo import GLInfo
 
+
+class callback_vec2(glm.vec2):
+
+    def __init__(self, x: float = 0.0, y: float = 0.0, callback=None):
+        glm.vec2.__init__(self, x, y)
+        self.__dict__["_callback"] = callback
+
+    def __deepcopy__(self, memo):
+        return self.flat
+
+    def __copy__(self):
+        return self.flat
+
+    @property
+    def flat(self):
+        return glm.vec2(self.x, self.y)
+
+    def __setattr__(self, name: str, value):
+        super().__setattr__(name, value)
+        if name in GLInfo.vec2_swizzle and self._callback is not None:
+            self._callback()
+
+    def __rmul__(self, other):
+        return other * self.flat
 
 class callback_vec3(glm.vec3):
 
@@ -19,7 +44,7 @@ class callback_vec3(glm.vec3):
 
     def __setattr__(self, name: str, value):
         super().__setattr__(name, value)
-        if name in "xyzrgbstp" and self._callback is not None:
+        if name in GLInfo.vec3_swizzle and self._callback is not None:
             self._callback()
 
     def __rmul__(self, other):
@@ -51,7 +76,7 @@ class callback_vec4(glm.vec4):
 
     def __setattr__(self, name: str, value):
         super().__setattr__(name, value)
-        if name in "xyzwrgbastpq" and self._callback is not None:
+        if name in GLInfo.vec4_swizzle and self._callback is not None:
             self._callback()
 
     def __rmul__(self, other):

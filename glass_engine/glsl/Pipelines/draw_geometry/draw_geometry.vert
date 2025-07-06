@@ -27,9 +27,13 @@ out VertexOut
 } vs_out;
 
 #include "../../include/transform.glsl"
+#include "../../include/tex_coord.glsl"
 #include "../../include/Camera.glsl"
+#include "../../include/Material.glsl"
 
 uniform Camera camera;
+uniform Material material;
+uniform Material back_material;
 
 void main()
 {
@@ -41,7 +45,6 @@ void main()
     ));
 
     vs_out.affine_transform = transform;
-    vs_out.scale = scale_of(transform);
     vs_out.color = color;
     vs_out.back_color = back_color;
     vs_out.visible = visible;

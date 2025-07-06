@@ -32,7 +32,7 @@ layout(location=7) out uvec4 mixed_uint;
 #include "../../include/transform.glsl"
 #include "write_to_gbuffer.glsl"
 
-uniform Camera camera
+uniform Camera camera;
 uniform Material material;
 uniform vec3 mesh_center;
 

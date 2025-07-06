@@ -8,7 +8,7 @@ from glass.DictList import DictList
 from glass.WeakSet import WeakSet
 from glass.WeakDict import WeakDict
 from glass.MetaInstancesRecorder import MetaInstancesRecorder
-from .callback_vec import callback_quat, callback_vec3
+from glass import callback_quat, callback_vec3
 from .Pivot import Pivot
 
 

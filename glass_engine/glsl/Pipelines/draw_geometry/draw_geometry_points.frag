@@ -19,6 +19,8 @@ layout(location=3) out vec3 world_pos;
 layout(location=4) out vec3 world_normal;
 
 #include "../../include/InternalMaterial.glsl"
+#include "../../include/Material.glsl"
+#include "../../include/Camera.glsl"
 
 uniform Material material;
 uniform Camera camera;

@@ -43,3 +43,4 @@ from .ImageLoader import ImageLoader
 
 # from .TextLoader import TextLoader, Font
 from .CustomLiteral import CustomLiteral
+from .callback_vec import callback_vec2, callback_vec3, callback_vec4, callback_quat

@@ -207,7 +207,7 @@ BoundingSphere Frustum_bounding_sphere(Camera camera, int i)
 	bounding_sphere.center = vec3(0, z1, 0);
 	float h = z1 - z0;
 	float theta = atan(h/(R1-R0));
-	if (theta > PI/4)
+	if (theta > M_PI/4)
 	{
 		bounding_sphere.radius = sqrt(h*h / 4 + (R1*R1 + R0*R0)/2 + pow(R1*R1 - R0*R0, 2)/(4*h*h));
 		bounding_sphere.center.y = z0 + 0.5*(h + (R1*R1 - R0*R0)/h);

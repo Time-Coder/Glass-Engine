@@ -59,7 +59,7 @@ void main()
 
     vs_out.world_pos = transform_apply(transform, position);
     vec3 world_bitangent = mat3(transform) * bitangent;
-    vec3 to_camera = normalize(camera.abs_position - world_pos);
+    vec3 to_camera = normalize(camera.abs_position - vs_out.world_pos);
     vec3 world_tangent = normalize(cross(world_bitangent, to_camera));
     vec3 world_normal = normalize(cross(world_tangent, world_bitangent));
 
@@ -78,7 +78,7 @@ void main()
         material.shading_model == SHADING_MODEL_GOURAUD)
     {
         InternalMaterial internal_material = fetch_internal_material(color, material, tex_coord.st);
-        vs_out.color = lighting(internal_material, camera, camera.abs_position, vs_out.world_pos, world_normal);
+        vs_out.color.rgb = lighting(internal_material, camera, camera.abs_position, vs_out.world_pos, world_normal);
     }
 #endif
 }

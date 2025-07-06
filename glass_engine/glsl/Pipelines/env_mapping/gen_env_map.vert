@@ -37,6 +37,11 @@ out VertexOut
 } vs_out;
 
 #include "../../include/transform.glsl"
+#include "../../include/tex_coord.glsl"
+#include "../../include/Material.glsl"
+
+uniform Material material;
+uniform Material back_material;
 
 void main()
 {
@@ -50,7 +55,7 @@ void main()
     vs_out.affine_transform = transform;
     vs_out.color = color;
     vs_out.back_color = back_color;
-    vs_out.world_TBN = transform_apply(transform, mat3(tangent, bitangent, normal));
+    vs_out.world_TBN = transform_apply_to_TBN(transform, mat3(tangent, bitangent, normal));
 
 #if USE_BINDLESS_TEXTURE && USE_DYNAMIC_ENV_MAPPING
     vs_out.env_map_handle = env_map_handle;

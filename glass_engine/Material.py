@@ -3,7 +3,7 @@ from glass import sampler2D
 from glass.ImageLoader import ImageLoader
 from glass.WeakSet import WeakSet
 from glass.MetaInstancesRecorder import MetaInstancesRecorder
-from .callback_vec import callback_vec3, callback_vec4
+from glass import callback_vec2, callback_vec3, callback_vec4
 from .GlassEngineConfig import GlassEngineConfig
 from glass.utils import checktype
 
@@ -109,8 +109,9 @@ class Material(metaclass=MetaInstancesRecorder):
         self._emission_strength: float = 1
         self._opacity: float = 1
         self._vertex_color_usage: Material.VertexColorUsage = Material.VertexColorUsage.NotUse
-        self._st_scale:glm.vec2 = glm.vec2(1, 1)
-        self._st_offset:glm.vec2 = glm.vec2(0, 0)
+        self._st_pivot:callback_vec2 = callback_vec2(0.5, 0.5, self._st_transform_change_callback)
+        self._st_scale:callback_vec2 = callback_vec2(1, 1, self._st_transform_change_callback)
+        self._st_offset:callback_vec2 = callback_vec2(0, 0, self._st_transform_change_callback)
         self._st_rotation:float = 0
         self._height_scale: float = 0.05
         self._metallic: float = 0.5
@@ -204,6 +205,18 @@ class Material(metaclass=MetaInstancesRecorder):
     def name(self, name: str):
         self._name = name
 
+    def _st_transform_change_callback(self):
+        if not self._should_callback:
+            return
+
+        old_should_callback = self._should_callback
+        self._should_callback = False
+
+        self._update_all_env_maps()
+        self.update_screens()
+
+        self._should_callback = old_should_callback
+
     def _color_change_callback(self):
         if not self._should_callback:
             return
@@ -234,22 +247,43 @@ class Material(metaclass=MetaInstancesRecorder):
         GlassEngineConfig._update_recv_fog(fog)
 
     @property
-    def st_scale(self)->float:
+    def st_pivot(self)->callback_vec2:
+        return self._st_pivot
+    
+    @st_pivot.setter
+    def st_pivot(self, pivot:glm.vec2):
+        old_should_callback = self._should_callback
+        self._should_callback = False
+        self._st_pivot.s = pivot.s
+        self._should_callback = old_should_callback
+        self._st_pivot.t = pivot.t
+
+    @property
+    def st_scale(self)->callback_vec2:
         return self._st_scale
     
     @st_scale.setter
-    @param_setter
-    def st_scale(self, scale:float):
-        self._st_scale = scale
+    def st_scale(self, scale: Union[glm.vec2, float]):
+        if isinstance(scale, (float,int)):
+            scale = glm.vec2(scale)
+        
+        old_should_callback = self._should_callback
+        self._should_callback = False
+        self._st_scale.s = scale.s
+        self._should_callback = old_should_callback
+        self._st_scale.t = scale.t
 
     @property
-    def st_offset(self)->glm.vec2:
+    def st_offset(self)->callback_vec2:
         return self._st_offset
     
     @st_offset.setter
-    @param_setter
     def st_offset(self, offset:glm.vec2):
-        self._st_offset = offset
+        old_should_callback = self._should_callback
+        self._should_callback = False
+        self._st_offset.s = offset.s
+        self._should_callback = old_should_callback
+        self._st_offset.t = offset.t
 
     @property
     def st_rotation(self)->float:

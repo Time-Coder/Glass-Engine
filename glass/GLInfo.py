@@ -5,12 +5,22 @@ import glm
 import ctypes
 from .CustomLiteral import CustomLiteral
 from typing import Union
+import itertools
 
 try:
     from typing import TypeAlias
 except ImportError:
     from typing_extensions import TypeAlias
 
+
+def generate_swizzle(characters, min_length=1, max_length=4):
+    results = []
+    
+    for length in range(min_length, max_length + 1):
+        for combo in itertools.product(characters, repeat=length):
+            results.append(''.join(combo))
+    
+    return results
 
 dtype_uint8 = np.array([], dtype=np.uint8).dtype
 dtype_int8 = np.array([], dtype=np.int8).dtype
@@ -26,6 +36,10 @@ dtype_float64 = np.array([], dtype=np.float64).dtype
 
 
 class GLInfo:
+
+    vec2_swizzle = generate_swizzle("xyrgst", 1, 2)
+    vec3_swizzle = generate_swizzle("xyzrgbstr", 1, 3)
+    vec4_swizzle = generate_swizzle("xyzwrgbastrq", 1, 3)
 
     primary_types = {
         int,

@@ -25,3 +25,4 @@ test_*
 .venv*
 *.spv
 note.txt
+glass_engine/glsl/temp

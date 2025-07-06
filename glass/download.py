@@ -87,7 +87,7 @@ def is_China_ip(ip_address)->bool:
         response = requests.get(f"https://ipinfo.io/{ip_address}/json/")
         data = response.json()
         return data['country'] == 'CN'
-    except Exception as e:
+    except:
         return True
 
 

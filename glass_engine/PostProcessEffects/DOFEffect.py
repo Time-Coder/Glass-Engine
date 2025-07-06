@@ -2,10 +2,8 @@ from .PostProcessEffect import PostProcessEffect
 from ..Frame import Frame
 
 from glass import FBO, ShaderProgram, sampler2D, GLConfig, Block
-from glass.utils import checktype
 
 from OpenGL import GL
-import time
 import os
 
 
