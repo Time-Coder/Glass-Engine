@@ -4,9 +4,7 @@ from OpenGL import GL
 import re
 import warnings
 import sys
-from typing import Dict, Tuple
 
-from .CodeCompressor.minifyc import macros_expand_file
 from .utils import (
     defines_key,
     delete,
@@ -25,7 +23,7 @@ from .GLConfig import GLConfig
 from .GLObject import GLObject
 from .ShaderParser import ShaderParser
 from .GPUProgram import CompileError, CompileWarning
-from .CodeCompressor import CodeCompressor
+from .ShaderParser import ShaderParser
 
 
 class BaseShader(GLObject):
@@ -53,30 +51,15 @@ class BaseShader(GLObject):
     def __init__(self, program):
         GLObject.__init__(self)
         self._program = program
-        self._code: str = ""
-        self._clean_code: str = ""
-        self._used_code:str = ""
-        self._comments_set: set = set()
+        self._used_code: str = ""
         self._file_name: str = ""
         self._preprocessed_but_not_compiled: bool = False
         self._should_repreprocess: bool = True
         self._max_modify_time: int = 0
 
-        self.attributes_info: dict = {}
-        self.geometry_in: str = ""
-        self.uniforms_info: dict = {}
-        self.uniform_blocks_info: dict = {}
-        self.shader_storage_blocks_info: dict = {}
-        self.structs_info: dict = {}
-        self.outs_info: dict = {}
-        self.work_group_size: tuple = tuple()
-        self.related_files: list = []
-
-        self._line_map: Dict[int, Tuple[str, int]] = {}
         self._include_paths: list = []
         self._defines: dict = {}
-
-        self._code_compressor: CodeCompressor = CodeCompressor(self.__class__._type)
+        self._shader_parser: ShaderParser = ShaderParser(self.__class__._type)
 
     @delete
     def clear(self):
@@ -99,20 +82,12 @@ class BaseShader(GLObject):
         return cls._type
 
     @property
-    def is_compiled(self):
-        return bool(self._code)
+    def is_compiled(self)->bool:
+        return not self._shader_parser.is_empty
 
     @property
-    def file_name(self):
+    def file_name(self)->str:
         return self._file_name
-
-    @property
-    def code(self):
-        return self._code
-
-    @property
-    def clean_code(self):
-        return self._clean_code
 
     def _apply_compile(self):
         if not self._preprocessed_but_not_compiled:
@@ -125,8 +100,7 @@ class BaseShader(GLObject):
 
         if not self._used_code:
             if not GlassConfig.debug:
-                self._code_compressor.parse(self._clean_code)
-                self._used_code = self._code_compressor.compress()
+                self._used_code = self._shader_parser.compress()
             else:
                 self._used_code = self._clean_code
 
@@ -207,21 +181,7 @@ class BaseShader(GLObject):
         if success != GL.GL_TRUE:
             raise CompileError(message)
 
-        meta_info = {}
-        meta_info["related_files"] = self.related_files
-        meta_info["code"] = self._code
-        meta_info["clean_code"] = self._clean_code
-        meta_info["used_code"] = self._used_code
-        meta_info["attributes_info"] = self.attributes_info
-        meta_info["geometry_in"] = self.geometry_in
-        meta_info["uniforms_info"] = self.uniforms_info
-        meta_info["uniform_blocks_info"] = self.uniform_blocks_info
-        meta_info["shader_storage_blocks_info"] = self.shader_storage_blocks_info
-        meta_info["structs_info"] = self.structs_info
-        meta_info["outs_info"] = self.outs_info
-        meta_info["work_group_size"] = self.work_group_size
-        save_var(meta_info, self._meta_file_name)
-
+        save_var(self._shader_parser, self._shader_parser_file_name)
         self._preprocessed_but_not_compiled = False
 
         if GlassConfig.print:
@@ -232,17 +192,16 @@ class BaseShader(GLObject):
             self._should_repreprocess = True
             return True
 
-        meta_mtime = modify_time(self._meta_file_name)
+        meta_mtime = modify_time(self._shader_parser_file_name)
         self._max_modify_time = 0
 
         if meta_mtime == 0:
             self._should_repreprocess = True
             return True
 
-        meta_info = load_var(self._meta_file_name)
-        related_files = meta_info["related_files"]
+        self._shader_parser = load_var(self._shader_parser_file_name)
         should_recompile = False
-        for file_name in related_files:
+        for file_name in self._shader_parser.related_files:
             mtime = modify_time(file_name)
             if mtime == 0 or mtime > meta_mtime:
                 should_recompile = True
@@ -251,23 +210,6 @@ class BaseShader(GLObject):
                 self._max_modify_time = mtime
 
         if should_recompile:
-            self._should_repreprocess = True
-            return True
-
-        try:
-            self._code = meta_info["code"]
-            self._clean_code = meta_info["clean_code"]
-            self._used_code = meta_info["used_code"]
-            self.attributes_info = meta_info["attributes_info"]
-            self.geometry_in = meta_info["geometry_in"]
-            self.uniforms_info = meta_info["uniforms_info"]
-            self.uniform_blocks_info = meta_info["uniform_blocks_info"]
-            self.shader_storage_blocks_info = meta_info["shader_storage_blocks_info"]
-            self.structs_info = meta_info["structs_info"]
-            self.outs_info = meta_info["outs_info"]
-            self.work_group_size = meta_info["work_group_size"]
-            self.related_files = related_files
-        except:
             self._should_repreprocess = True
             return True
 
@@ -292,10 +234,7 @@ class BaseShader(GLObject):
     def _collect_info(self, file_name):
         abs_name = os.path.abspath(file_name).replace("\\", "/")
         self._code = cat(abs_name)
-        self.related_files = [abs_name]
-
-        self._define_shader_type()
-        self._macros_expand()
+        self._parse_code()
 
     def compile(self, file_name: str):
         if self.is_compiled and not self._preprocessed_but_not_compiled:
@@ -312,45 +251,12 @@ class BaseShader(GLObject):
         base_name = os.path.basename(abs_name)
 
         md5_value = md5s(f"{abs_name}{defines_key(self.defines)}")
-        self._meta_file_name = (
-            f"{GlassConfig.cache_folder}/{base_name}_{md5_value}.meta"
+        self._shader_parser_file_name = (
+            f"{GlassConfig.cache_folder}/{base_name}_{md5_value}.parser"
         )
 
         if self._test_should_repreprocess():
-            self.attributes_info = {}
-            self.geometry_in = ""
-            self.uniforms_info = {}
-            self.uniform_blocks_info = {}
-            self.shader_storage_blocks_info = {}
-            self.structs_info = {}
-            self.outs_info = {}
-            self.work_group_size = tuple()
-            self._used_code = ""
-
             self._collect_info(file_name)
-
-            self.uniforms_info = ShaderParser.find_uniforms(self._clean_code)
-            self.uniform_blocks_info = ShaderParser.find_uniform_blocks(
-                self._clean_code
-            )
-            self.shader_storage_blocks_info = ShaderParser.find_shader_storage_blocks(
-                self._clean_code
-            )
-            self.structs_info = ShaderParser.find_structs(self._clean_code)
-
-            if self._type == GL.GL_VERTEX_SHADER:
-                self.attributes_info = ShaderParser.find_attributes(self._clean_code)
-
-            if self._type == GL.GL_GEOMETRY_SHADER:
-                self.geometry_in = ShaderParser.find_geometry_in(self._clean_code)
-
-            if self._type == GL.GL_FRAGMENT_SHADER:
-                self.outs_info = ShaderParser.find_outs(self._clean_code)
-
-            if self._type == GL.GL_COMPUTE_SHADER:
-                self.work_group_size = ShaderParser.find_work_group_size(
-                    self._clean_code
-                )
 
         self._preprocessed_but_not_compiled = True
 
@@ -398,8 +304,9 @@ class BaseShader(GLObject):
         defines.update(self._defines)
         return defines
 
-    def _macros_expand(self):
-        self._clean_code, self._line_map, self.related_files = macros_expand_file(self._file_name, self._include_paths, self.defines)
+    def _parse_code(self):
+        self._define_shader_type()
+        self._shader_parser.parse(self._file_name, self._include_paths, self.defines)
 
     def _format_error_warning(self, message):
 

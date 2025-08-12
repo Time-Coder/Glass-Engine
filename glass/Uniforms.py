@@ -5,7 +5,7 @@ import copy
 from enum import Enum
 from typing import Union
 
-from .utils import checktype, get_subscript_chain, uint64_to_uvec2
+from .utils import checktype, uint64_to_uvec2
 from .CustomLiteral import CustomLiteral
 from .sampler2D import sampler2D
 from .image2D import image2D
@@ -21,193 +21,18 @@ from .samplerCube import samplerCube
 from .sampler2DArray import sampler2DArray
 from .ACBO import ACBO
 from .GlassConfig import GlassConfig
-from .utils import subscript
+from .UniformVar import UniformVar
+from .ShaderParser import ShaderParser
 
 
-class Uniform:
-
-    _bound_vars = {}
-    # {
-    #     "<id_normal_var>":
-    #     {
-    #         "<atom_name>":
-    #         {
-    #             "suffix": "<suffix>"
-    #             "uniforms": set()
-    #         }
-    #     }
-    # }
+class Uniforms:
 
     _set_atom_map = {}
 
-    class Variable:
-        _all_attrs = {
-            "__init__",
-            "__getitem__",
-            "__setitem__",
-            "__getattr__",
-            "__setattr__",
-            "_uniform",
-            "_name",
-            "_bound_var",
-            "bind",
-            "unbind",
-            "location",
-        }
-
-        def __init__(self, uniform, name):
-            self._uniform = uniform
-            self._name = name
-            self._bound_var = None
-
-        @property
-        def uniform(self):
-            return self._uniform
-
-        def __del__(self):
-            self.unbind()
-
-        def __hash__(self):
-            return id(self)
-
-        def __eq__(self, other):
-            return id(self) == id(other)
-
-        @property
-        def location(self):
-            program = self.uniform.program
-            if "location" not in program._uniform_map[self._name]:
-                program.use()
-                location = GL.glGetUniformLocation(program._id, self._name)
-                program._uniform_map[self._name]["location"] = location
-                return location
-            else:
-                return program._uniform_map[self._name]["location"]
-
-        def bind(self, var):
-            if var is self._bound_var:
-                return
-
-            if var is None:
-                self.unbind()
-                return
-
-            if isinstance(var, (bool, int, float)):
-                raise ValueError("cannot bind to " + var.__class__.__name__ + " value")
-
-            self.unbind()
-
-            id_var = id(var)
-            if id_var not in Uniform._bound_vars:
-                Uniform._bound_vars[id_var] = {}
-
-            len_name = len(self._name)
-            for atom in self.uniform.program._uniform_map[self._name]["atoms"]:
-                atom_name = atom["name"]
-                atom_suffix = atom["name"][len_name:]
-                subscript_chain = get_subscript_chain(atom_suffix)
-                subscript(var, subscript_chain)
-                if atom_name not in Uniform._bound_vars[id_var]:
-                    Uniform._bound_vars[id_var][atom_name] = {}
-
-                atom_info = Uniform._bound_vars[id_var][atom_name]
-                atom_info["suffix"] = atom_suffix
-                atom_info["subscript_chain"] = subscript_chain
-                if "uniforms" not in atom_info:
-                    atom_info["uniforms"] = set()
-                atom_info["uniforms"].add(self._uniform)
-
-            self._bound_var = var
-
-        def unbind(self):
-            if self._bound_var is None:
-                return
-
-            id_var = id(self._bound_var)
-            if id_var in Uniform._bound_vars:
-                var_info = Uniform._bound_vars[id_var]
-                should_remove_atoms = []
-                for atom_name, info in var_info.items():
-                    if self._uniform in info["uniforms"]:
-                        info["uniforms"].remove(self._uniform)
-                    if not info["uniforms"]:
-                        should_remove_atoms.append(atom_name)
-                for atom_name in should_remove_atoms:
-                    del var_info[atom_name]
-                if not var_info:
-                    del Uniform._bound_vars[id_var]
-
-            self._bound_var = None
-
-        def __contains__(self, name: Union[str, int]):
-            full_name = self._name
-            if isinstance(name, str):
-                full_name += "." + name
-            elif isinstance(name, int):
-                full_name += "[" + str(name) + "]"
-
-            return full_name in self.uniform.program._uniform_map
-
-        def __getitem__(self, name: Union[str, int]):
-            full_name = self._name
-            if isinstance(name, str):
-                full_name += "." + name
-            elif isinstance(name, int):
-                full_name += "[" + str(name) + "]"
-
-            uniform = self.uniform
-            program = uniform.program
-            if GlassConfig.debug and full_name not in program._uniform_map:
-                error_message = (
-                    "uniform variable '"
-                    + full_name
-                    + "' is not defined in following files:\n"
-                )
-                error_message += "\n".join(program.related_files)
-                raise NameError(error_message)
-
-            if full_name not in uniform._uniform_var_map:
-                uniform._uniform_var_map[full_name] = Uniform.Variable(
-                    self._uniform, full_name
-                )
-
-            return uniform._uniform_var_map[full_name]
-
-        @checktype
-        def __setitem__(self, name: Union[str, int], value):
-            full_name = self._name
-            if isinstance(name, str):
-                full_name += "." + name
-            elif isinstance(name, int):
-                full_name += "[" + str(name) + "]"
-
-            uniform = self.uniform
-            program = uniform.program
-            if GlassConfig.debug and full_name not in program._uniform_map:
-                error_message = (
-                    "uniform variable '"
-                    + full_name
-                    + "' is not defined in following files:\n"
-                )
-                error_message += "\n".join(program.related_files)
-                raise NameError(error_message)
-
-            uniform[full_name] = value
-
-        def __getattr__(self, name: str):
-            if name in Uniform.Variable._all_attrs:
-                return super().__getattribute__(name)
-
-            return self.__getitem__(name)
-
-        def __setattr__(self, name: str, value):
-            if name in Uniform.Variable._all_attrs:
-                return super().__setattr__(name, value)
-
-            self.__setitem__(name, value)
-
     def __init__(self, shader_program):
         self._program = shader_program
+        self.info = {}
+
         self._atoms_to_update = {}
         self._uniform_var_map = {}
         self._atom_value_map = {}
@@ -220,7 +45,7 @@ class Uniform:
 
     def __getitem__(self, name: str):
         program = self.program
-        if GlassConfig.debug and name not in program._uniform_map:
+        if GlassConfig.debug and name not in self.info:
             error_message = (
                 f"uniform variable '{name}' is not defined in following files:\n"
             )
@@ -228,26 +53,26 @@ class Uniform:
             raise NameError(error_message)
 
         if name not in self._uniform_var_map:
-            self._uniform_var_map[name] = Uniform.Variable(self, name)
+            self._uniform_var_map[name] = UniformVar(self, name)
 
         return self._uniform_var_map[name]
 
     def __setitem__(self, name: str, value):
         program = self.program
-        if GlassConfig.debug and name not in program._uniform_map:
+        if GlassConfig.debug and name not in self.info:
             error_message = (
                 f"uniform variable '{name}' is not defined in following files:\n"
             )
             error_message += "\n".join(program.related_files)
             raise NameError(error_message)
 
-        for atom in program._uniform_map[name]["atoms"]:
-            atom_value = subscript(value, atom["subscript_chain"])
-            self._set_atom(atom["name"], atom_value)
+        for atom in self.info[name].atoms:
+            atom_value = ShaderParser.access(value, atom.access_chain)
+            self._set_atom(atom.name, atom_value)
 
     @checktype
     def __contains__(self, name: str):
-        return name in self.program._uniform_map
+        return name in self.info
 
     @staticmethod
     def _copy(value):
@@ -267,7 +92,7 @@ class Uniform:
             program = self.program
             program.use()
 
-            uniform_info = program._uniform_map[name]
+            uniform_info = self.info[name]
             uniform_type = uniform_info["type"]
             if uniform_type != "atomic_uint":
                 location = -1
@@ -283,13 +108,13 @@ class Uniform:
                 self._current_atom_name = name
                 func = getattr(self, "_set_" + uniform_type)
                 func(location, value)
-                self._atom_value_map[name] = Uniform._copy(value)
+                self._atom_value_map[name] = Uniforms._copy(value)
             else:
                 binding_point = uniform_info["binding_point"]
                 offset = uniform_info["offset"]
                 ACBO.set(binding=binding_point, offset=offset, value=value)
         else:
-            self._atoms_to_update[name] = Uniform._copy(value)
+            self._atoms_to_update[name] = Uniforms._copy(value)
 
     def _set_bool(self, location: int, value):
         if not isinstance(value, int):
@@ -635,12 +460,8 @@ class Uniform:
 
         access = GL.GL_READ_WRITE
         program = self.program
-        memory_qualifiers = program._uniform_map[self._current_atom_name][
-            "memory_qualifiers"
-        ]
-        internal_format = program._uniform_map[self._current_atom_name][
-            "internal_format"
-        ]
+        memory_qualifiers = self.info[self._current_atom_name].memory_qualifiers
+        internal_format = self.info[self._current_atom_name].internal_format
         if value is not None:
             if GlassConfig.debug and internal_format != value.internal_format:
                 raise ValueError(

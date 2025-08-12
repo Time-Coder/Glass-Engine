@@ -1,5 +1,5 @@
 from .ShaderEffect import ShaderEffect
-from glass import sampler2D, Block
+from glass import sampler2D, BlockHostClass
 
 import time
 import os
@@ -7,9 +7,9 @@ import os
 
 class ExposureAdaptor(ShaderEffect):
 
-    class CurrentLuma(Block.HostClass):
+    class CurrentLuma(BlockHostClass):
         def __init__(self):
-            Block.HostClass.__init__(self)
+            BlockHostClass.__init__(self)
             self._current_luma = 0
 
         @property
@@ -17,7 +17,7 @@ class ExposureAdaptor(ShaderEffect):
             return self._current_luma
 
         @current_luma.setter
-        @Block.HostClass.not_const
+        @BlockHostClass.not_const
         def current_luma(self, luma: float):
             self._current_luma = luma
 

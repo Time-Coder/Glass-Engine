@@ -3,7 +3,7 @@ from ..algorithm import fzero
 
 from glass.utils import checktype
 from glass.DictList import DictList
-from glass import Block
+from glass import BlockHostClass
 
 import glm
 import math
@@ -111,20 +111,20 @@ class FlatPointLight(FlatLight):
         FlatLight.update(self, point_light)
 
 
-class PointLights(Block.HostClass):
+class PointLights(BlockHostClass):
 
     def __init__(self):
-        Block.HostClass.__init__(self)
+        BlockHostClass.__init__(self)
         self.point_lights = DictList()
 
     def __getitem__(self, path_str: str):
         return self.point_lights[path_str]
 
-    @Block.HostClass.not_const
+    @BlockHostClass.not_const
     def __setitem__(self, path_str: str, point_light: FlatPointLight):
         self.point_lights[path_str] = point_light
 
-    @Block.HostClass.not_const
+    @BlockHostClass.not_const
     def __delitem__(self, path_str: str):
         del self.point_lights[path_str]
 

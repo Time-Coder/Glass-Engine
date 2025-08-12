@@ -7,7 +7,7 @@ import copy
 import ctypes
 
 from .VAO import VAO
-from .Uniform import Uniform
+from .Uniforms import Uniforms
 from .GPUProgram import GPUProgram, LinkError, LinkWarning
 from .Shaders import (
     VertexShader,
@@ -22,7 +22,6 @@ from .Instances import Instances
 from .utils import (
     defines_key,
     checktype,
-    subscript,
     md5s,
     modify_time,
     save_var,
@@ -34,6 +33,7 @@ from .GLConfig import GLConfig
 from .GlassConfig import GlassConfig
 from .TextureUnits import TextureUnits
 from .ImageUnits import ImageUnits
+from .ShaderParser import ShaderParser
 
 
 class ShaderProgram(GPUProgram):
@@ -145,9 +145,9 @@ class ShaderProgram(GPUProgram):
     def reload(self):
         is_recompiled = False
         self._attributes_info.clear()
-        self._uniforms_info.clear()
-        self._uniform_blocks_info.clear()
-        self._shader_storage_blocks_info.clear()
+        self._uniforms.clear()
+        self._uniform_block.clear()
+        self._buffer.clear()
         self._structs_info.clear()
         self._outs_info.clear()
 
@@ -174,13 +174,13 @@ class ShaderProgram(GPUProgram):
         if not is_recompiled:
             return
 
-        self._uniform._atoms_to_update.clear()
-        self._uniform._atom_value_map.clear()
-        self._uniform._texture_value_map.clear()
+        self._uniforms._atoms_to_update.clear()
+        self._uniforms._atom_value_map.clear()
+        self._uniforms._texture_value_map.clear()
         self.collect_info()
         self._link()
 
-        for uniform_var in self._uniform._uniform_var_map.values():
+        for uniform_var in self._uniforms._uniform_var_map.values():
             bound_var = uniform_var._bound_var
             if bound_var is None:
                 continue
@@ -232,24 +232,20 @@ class ShaderProgram(GPUProgram):
         elif shader_type == GL.GL_GEOMETRY_SHADER:
             self.geometry_shader.compile(file_name)
             shader = self.geometry_shader
-            if shader.geometry_in in GLInfo.primitive_type_map:
+            if shader._shader_parser.geometry_in in GLInfo.primitive_type_map:
                 self._acceptable_primitives = GLInfo.primitive_type_map[
-                    shader.geometry_in
+                    shader._shader_parser.geometry_in
                 ]
         elif shader_type == GL.GL_FRAGMENT_SHADER:
             self.fragment_shader.compile(file_name)
             shader = self.fragment_shader
 
-        self._attributes_info.update(shader.attributes_info)
-        ShaderProgram.__update_dict(self._uniforms_info, shader.uniforms_info)
-        ShaderProgram.__update_dict(
-            self._uniform_blocks_info, shader.uniform_blocks_info
-        )
-        ShaderProgram.__update_dict(
-            self._shader_storage_blocks_info, shader.shader_storage_blocks_info
-        )
-        self._structs_info.update(shader.structs_info)
-        self._outs_info.update(shader.outs_info)
+        self._attributes_info.update(shader._shader_parser.attributes)
+        self._uniforms.info.update(shader._shader_parser.uniforms)
+        self._uniform_blocks.info.update(shader._shader_parser.uniform_blocks)
+        self._shader_storage_blocks.info.update(shader._shader_parser.shader_storage_blocks)
+        self._structs_info.update(shader._shader_parser.structs)
+        self._outs_info.update(shader._shader_parser.outs)
 
         self._is_collected = False
         self._is_linked = False
@@ -346,15 +342,12 @@ class ShaderProgram(GPUProgram):
         meta_info = {}
         meta_info["attributes_info"] = self._attributes_info
         meta_info["acceptable_primitives"] = self._acceptable_primitives
-        meta_info["uniforms_info"] = self._uniforms_info
-        meta_info["uniform_blocks_info"] = self._uniform_blocks_info
-        meta_info["shader_storage_blocks_info"] = self._shader_storage_blocks_info
+        meta_info["uniforms_info"] = self._uniforms.info
+        meta_info["uniform_blocks_info"] = self._uniform_blocks.info
+        meta_info["shader_storage_blocks_info"] = self._shader_storage_blocks.info
         meta_info["structs_info"] = self._structs_info
         meta_info["outs_info"] = self._outs_info
         meta_info["sampler_map"] = self._sampler_map
-        meta_info["uniform_map"] = self._uniform_map
-        meta_info["uniform_block_map"] = self._uniform_block_map
-        meta_info["shader_storage_block_map"] = self._shader_storage_block_map
         meta_info["include_paths"] = self._include_paths
         save_var(meta_info, self._meta_file_name)
 
@@ -482,43 +475,36 @@ class ShaderProgram(GPUProgram):
             raise RuntimeError("should compile fragment shader before link")
 
         if self._test_should_recollect() or GlassConfig.recompile:
-            self._resolve_uniforms()
-            self._resolve_uniform_blocks()
-            self._resolve_shader_storage_blocks()
-
             keys = list(self._attributes_info.keys())
             for key in keys:
-                if "location" in self._attributes_info[key]:
+                if self._attributes_info[key].location != -1:
                     continue
 
                 location = GL.glGetAttribLocation(
-                    self._id, self._attributes_info[key]["name"]
+                    self._id, self._attributes_info[key].name
                 )
-                self._attributes_info[key]["location"] = location
+                self._attributes_info[key].location = location
                 self._attributes_info[location] = self._attributes_info[key]
         else:
             meta_info = load_var(self._meta_file_name)
             self._attributes_info = meta_info["attributes_info"]
             self._acceptable_primitives = meta_info["acceptable_primitives"]
-            self._uniforms_info = meta_info["uniforms_info"]
-            self._uniform_blocks_info = meta_info["uniform_blocks_info"]
-            self._shader_storage_blocks_info = meta_info["shader_storage_blocks_info"]
+            self._uniforms.info = meta_info["uniforms_info"]
+            self._uniform_blocks.info = meta_info["uniform_blocks_info"]
+            self._shader_storage_blocks.info = meta_info["shader_storage_blocks_info"]
             self._structs_info = meta_info["structs_info"]
             self._outs_info = meta_info["outs_info"]
             self._sampler_map = meta_info["sampler_map"]
-            self._uniform_map = meta_info["uniform_map"]
-            self._uniform_block_map = meta_info["uniform_block_map"]
-            self._shader_storage_block_map = meta_info["shader_storage_block_map"]
             self._include_paths = meta_info["include_paths"]
 
-        self._is_collected = True
-        self._is_linked = False
+        self._is_collected:bool = True
+        self._is_linked:bool = False
 
-    def __check_vertices(self, vertices, start_index, total):
-        len_vertices = len(vertices)
+    def __check_vertices(self, vertices:Vertices, start_index:int, total:int)->int:
+        len_vertices:int = len(vertices)
         if not GlassConfig.debug:
             if vertices is not None and total is None:
-                total = len_vertices - start_index
+                total:int = len_vertices - start_index
             return total
 
         if vertices is not None and vertices:
@@ -564,22 +550,22 @@ class ShaderProgram(GPUProgram):
         return total
 
     def __update_uniforms(self):
-        for uniform_var in self._uniform._uniform_var_map.values():
+        for uniform_var in self._uniforms._uniform_var_map.values():
             var = uniform_var._bound_var
             if var is None:
                 continue
 
-            for atom_name, atom_info in Uniform._bound_vars[id(var)].items():
-                atom_value = subscript(var, atom_info["subscript_chain"])
-                self._uniform._set_atom(atom_name, atom_value)
+            for atom_name, atom_info in Uniforms._bound_vars[id(var)].items():
+                atom_value = ShaderParser.access(var, atom_info["subscript_chain"])
+                self._uniforms._set_atom(atom_name, atom_value)
 
-        for atom_name, atom_value in self._uniform._atoms_to_update.items():
+        for atom_name, atom_value in self._uniforms._atoms_to_update.items():
             try:
-                self._uniform._set_atom(atom_name, atom_value)
+                self._uniforms._set_atom(atom_name, atom_value)
             except:
                 pass
 
-        self._uniform._atoms_to_update.clear()
+        self._uniforms._atoms_to_update.clear()
 
     def __update_samplers(self):
         self.use()
@@ -702,30 +688,32 @@ class ShaderProgram(GPUProgram):
             return
 
         not_set_uniforms = []
-        for name, uniform_info in self._uniform_map.items():
+        for name, uniform_info in self._uniforms.info.items():
             if (
-                not uniform_info["atoms"]
-                and "location" not in uniform_info
-                and name not in self._uniform._atom_value_map
+                not uniform_info.atoms
+                and uniform_info.location == -2
+                and name not in self._uniforms._atom_value_map
             ):
                 location = GL.glGetUniformLocation(self._id, name)
-                uniform_info["location"] = location
+                uniform_info.location = location
                 if location != -1:
                     not_set_uniforms.append(name)
 
-        if not_set_uniforms:
-            warning_message = "in shader program:\n  "
-            warning_message += "\n  ".join(self.related_files)
-            warning_message += "\n"
-            if len(not_set_uniforms) == 1:
-                warning_message += (
-                    f"uniform variable '{not_set_uniforms[0]}' is not set but used"
-                )
-            else:
-                warning_message += "following uniform variables are not set but used:\n"
-                warning_message += "\n".join(not_set_uniforms)
+        if not not_set_uniforms:
+            return
+        
+        warning_message = "in shader program:\n  "
+        warning_message += "\n  ".join(self.related_files)
+        warning_message += "\n"
+        if len(not_set_uniforms) == 1:
+            warning_message += (
+                f"uniform variable '{not_set_uniforms[0]}' is not set but used"
+            )
+        else:
+            warning_message += "following uniform variables are not set but used:\n"
+            warning_message += "\n".join(not_set_uniforms)
 
-            warnings.warn(warning_message, category=RuntimeWarning)
+        warnings.warn(warning_message, category=RuntimeWarning)
 
     def __preprocess_before_draw(
         self,

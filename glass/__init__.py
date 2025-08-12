@@ -29,10 +29,11 @@ from .AttrList import AttrList
 from .ShaderProgram import ShaderProgram
 from .ComputeProgram import ComputeProgram
 
-from .ShaderStorageBlock import ShaderStorageBlock
-from .UniformBlock import UniformBlock
-from .Block import Block
-from .Uniform import Uniform
+from .ShaderStorageBlocks import ShaderStorageBlocks
+from .UniformBlocks import UniformBlocks
+from .Blocks import Blocks
+from .Uniforms import Uniforms
+from .BlockHostClass import BlockHostClass
 
 from .GLConfig import GLConfig
 from .GlassConfig import GlassConfig

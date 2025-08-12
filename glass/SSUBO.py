@@ -8,8 +8,9 @@ from typing import Union
 from .GLConfig import GLConfig
 from .GLInfo import GLInfo
 from .BO import BO
-from .utils import checktype, capacity_of, subscript
+from .utils import checktype, capacity_of
 from .helper import sizeof, type_from_str
+from .ShaderParser import ShaderParser
 
 
 class BindingPointsPool:
@@ -121,13 +122,13 @@ class SSUBO(BO):
             self.malloc(max_size)
 
         for atom_name, atom_info in self._atom_info_map.items():
-            atom_type = atom_info["type"]
-            atom_offset = atom_info["offset"]
-            atom_subscript_chain = atom_info["subscript_chain"]
+            atom_type = atom_info.type
+            atom_offset = atom_info.offset
+            atom_access_chain = atom_info.access_chain
             set_func = SSUBO._set_atom_func(atom_type)
             if "[{0}]" not in atom_name:
                 try:
-                    value = subscript(self._bound_var, atom_subscript_chain)
+                    value = ShaderParser.access(self._bound_var, atom_access_chain)
                 except IndexError:
                     continue
 
@@ -136,7 +137,7 @@ class SSUBO(BO):
                 stride = atom_info["stride"]
                 for i in range(self._len_array):
                     try:
-                        value = subscript(self._bound_var, atom_subscript_chain, i)
+                        value = ShaderParser.access(self._bound_var, atom_access_chain, i)
                     except IndexError:
                         continue
 
@@ -220,16 +221,16 @@ class SSUBO(BO):
         max_size = 0
         self._len_array = None
         for atom_name, atom_info in self._atom_info_map.items():
-            current_type = type_from_str(atom_info["type"])
+            current_type = type_from_str(atom_info.type)
             current_size = atom_info["offset"] + sizeof(current_type)
             if "[{0}]" in atom_name:
                 if self._len_array is None:
                     # pos_array_end = atom_name.find("[{0}]")
                     # variable_length_array = eval("self._bound_var." + atom_name[:pos_array_end])
 
-                    subscript_chain = atom_info["subscript_chain"]
+                    subscript_chain = atom_info.access_chain
                     pos_array_end = subscript_chain.index(("getitem", "{0}"))
-                    variable_length_array = subscript(
+                    variable_length_array = ShaderParser.access(
                         self._bound_var, subscript_chain[:pos_array_end]
                     )
 
@@ -253,7 +254,7 @@ class SSUBO(BO):
 
             subscript_chain = end_info["subscript_chain"]
             pos_array_end = subscript_chain.index(("getitem", "{0}"))
-            variable_length_array = subscript(
+            variable_length_array = ShaderParser.access(
                 self._bound_var, subscript_chain[:pos_array_end]
             )
             len_array = len(variable_length_array)

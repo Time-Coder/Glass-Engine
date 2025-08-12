@@ -2,15 +2,15 @@ from OpenGL import GL
 import numpy as np
 import re
 from ctypes import c_int, pointer
+from typing import Dict
 
 from .GLObject import GLObject
-from .GLInfo import GLInfo
-from .GlassConfig import GlassConfig
-from .Uniform import Uniform
-from .UniformBlock import UniformBlock
-from .ShaderStorageBlock import ShaderStorageBlock
-from .ShaderParser import ShaderParser
+from .Uniforms import Uniforms
+from .UniformBlocks import UniformBlocks
+from .ShaderStorageBlocks import ShaderStorageBlocks
+from .ShaderParser import ShaderParser, Var, Attribute, Struct
 from .utils import LP_LP_c_char, delete, checktype
+
 
 _target_type_map = {
     "sampler2D": GL.GL_TEXTURE_2D,
@@ -73,26 +73,19 @@ class GPUProgram(GLObject):
     def __init__(self):
         GLObject.__init__(self)
 
-        self._attributes_info = {}
+        self._attributes_info:Dict[str, Attribute] = {}
         self._acceptable_primitives = []
-        self._uniforms_info = {}
-        self._uniform_blocks_info = {}
-        self._shader_storage_blocks_info = {}
-        self._structs_info = {}
-        self._outs_info = {}
-
+        self._structs_info:Dict[str, Struct] = {}
+        self._outs_info:Dict[str, Var] = {}
         self._sampler_map = {}
-        self._uniform_map = {}
-        self._uniform_block_map = {}
-        self._shader_storage_block_map = {}
 
-        self._uniform = Uniform(self)
-        self._uniform_block = UniformBlock(self)
-        self._shader_storage_block = ShaderStorageBlock(self)
+        self._uniforms:Uniforms = Uniforms(self)
+        self._uniform_blocks:UniformBlocks = UniformBlocks(self)
+        self._shader_storage_blocks:ShaderStorageBlocks = ShaderStorageBlocks(self)
 
-        self._is_collected = False
-        self._is_linked = False
-        self._uniform_not_set_warning = True
+        self._is_collected:bool = False
+        self._is_linked:bool = False
+        self._uniform_not_set_warning:bool = True
 
     def __hash__(self):
         return id(self)
@@ -114,12 +107,12 @@ class GPUProgram(GLObject):
 
     def __getitem__(self, name: str):
         self.collect_info()
-        if name in self._uniform_map:
-            return self._uniform[name]
-        elif name in self._shader_storage_block_map:
-            return self._shader_storage_block[name]
-        elif name in self._uniform_block_map:
-            return self._uniform_block[name]
+        if name in self._uniforms.info:
+            return self._uniforms[name]
+        elif name in self._shader_storage_blocks.info:
+            return self._shader_storage_blocks[name]
+        elif name in self._uniform_blocks.info:
+            return self._uniform_blocks[name]
         else:
             error_message = f"'{name}' is not defined in following files:\n"
             error_message += "\n".join(self.related_files)
@@ -127,12 +120,12 @@ class GPUProgram(GLObject):
 
     def __setitem__(self, name: str, value):
         self.collect_info()
-        if name in self._uniform_map:
-            self._uniform[name] = value
-        elif name in self._shader_storage_block_map:
-            self._shader_storage_block[name] = value
-        elif name in self._uniform_block_map:
-            self._uniform_block[name] = value
+        if name in self._uniforms.info:
+            self._uniforms[name] = value
+        elif name in self._shader_storage_blocks.info:
+            self._shader_storage_blocks[name] = value
+        elif name in self._uniform_blocks.info:
+            self._uniform_blocks[name] = value
         else:
             error_message = f"'{name}' is not defined in following files:\n"
             error_message += "\n".join(self.related_files)
@@ -141,9 +134,9 @@ class GPUProgram(GLObject):
     def __contains__(self, name: str):
         self.collect_info()
         return (
-            name in self._uniform_map
-            or name in self.buffer._blocks_info
-            or name in self.uniform_block._blocks_info
+            name in self._uniforms_info
+            or name in self._uniform_blocks_info
+            or name in self._shader_storage_blocks_info
         )
 
     @property
@@ -168,12 +161,12 @@ class GPUProgram(GLObject):
 
     def download(self, var):
         id_var = id(var)
-        if id_var not in ShaderStorageBlock._bound_vars:
+        if id_var not in ShaderStorageBlocks._bound_vars:
             raise ValueError(f"{var} is not bound with any shader storage blocks")
 
         for block_var in self._shader_storage_block._block_var_map.values():
             if block_var._bound_var is var:
-                for ssbo in ShaderStorageBlock._bound_vars[id_var].values():
+                for ssbo in ShaderStorageBlocks._bound_vars[id_var].values():
                     if block_var in ssbo._bound_block_vars:
                         ssbo.download()
 
@@ -290,115 +283,10 @@ class GPUProgram(GLObject):
 
         return error_messages, warning_messages
 
-    def _resolve_one_uniform(self, var, uniform_map):
-        var_type = var["type"]
-        var_name = var["name"]
-        var_subscript_chain = var["subscript_chain"]
-        if "members" not in var:
-            var["members"] = []
-        if "self_name" not in var:
-            var["self_name"] = var_name
-
-        if var_type in GLInfo.atom_type_names:
-            var_atoms = [var]
-            var["atoms"] = var_atoms
-            uniform_map[var_name] = var
-            return var_atoms
-
-        if "[" in var_type:
-            pos_start = var_type.find("[")
-            pos_end = var_type.find("]", pos_start)
-            base_type = var_type[:pos_start]
-            atom_type = base_type + var_type[pos_end + 1 :]
-
-            var_atoms = []
-            if pos_end - pos_start > 1:
-                num = int(var_type[pos_start + 1 : pos_end])
-                for i in range(num):
-                    atom_info = {
-                        "name": var_name + "[" + str(i) + "]",
-                        "self_name": "[" + str(i) + "]",
-                        "type": atom_type,
-                        "subscript_chain": [*var_subscript_chain, ("getitem", i)],
-                    }
-                    var_atoms.extend(
-                        self._resolve_one_uniform(atom_info, self._uniform_map)
-                    )
-                    var["members"].append(atom_info)
-            else:
-                atom_info = {
-                    "name": var_name + "[{0}]",
-                    "self_name": "[{0}]",
-                    "type": atom_type,
-                    "subscript_chain": [*var_subscript_chain, ("getitem", "{0}")],
-                }
-                var_atoms.extend(
-                    self._resolve_one_uniform(atom_info, self._uniform_map)
-                )
-                var["members"].append(atom_info)
-            var["atoms"] = var_atoms
-            uniform_map[var_name] = var
-
-            return var_atoms
-
-        if GlassConfig.debug and var_type not in self._structs_info:
-            raise TypeError("type " + var_type + " is not defined in shader program")
-
-        var_atoms = []
-        for member in self._structs_info[var_type]["members"].values():
-            member_name = member["name"]
-            uniform_info = {
-                "name": var_name + "." + member_name,
-                "self_name": member_name,
-                "type": member["type"],
-                "subscript_chain": [*var_subscript_chain, ("getattr", member_name)],
-            }
-            var_atoms.extend(self._resolve_one_uniform(uniform_info, self._uniform_map))
-            var["members"].append(uniform_info)
-        var["atoms"] = var_atoms
-        uniform_map[var_name] = var
-
-        return var_atoms
-
-    def _resolve_uniforms(self):
-        for uniform_info in self._uniforms_info.values():
-            self._resolve_one_uniform(uniform_info, self._uniform_map)
-
-        for uniform in self._uniform_map.values():
-            for atom in uniform["atoms"]:
-                atom_type = atom["type"]
-                atom_name = atom["name"]
-                if "sampler" in atom_type or "image" in atom_type:
-                    self._sampler_map[atom_name] = {
-                        "location": -1,
-                        "sampler": None,
-                        "target_type": _target_type_map[atom_type],
-                    }
-
-    def _resolve_one_uniform_block(self, block_info):
-        uniform_block = {}
-        block_name = block_info["name"]
-        uniform_block["name"] = block_name
-        uniform_block["atoms"] = []
-
-        for member in block_info["members"].values():
-            member_name = member["name"]
-            uniform_info = {
-                "name": member_name,
-                "type": member["type"],
-                "subscript_chain": [("getattr", member_name)],
-            }
-            uniform_block["atoms"].extend(
-                self._resolve_one_uniform(uniform_info, self._uniform_block_map)
-            )
-
-        self._uniform_block_map[block_name] = uniform_block
-        return uniform_block["atoms"]
-
     def _apply_uniform_blocks(self):
         backup_block_index = 0
         for block_name, block_info in self._uniform_blocks_info.items():
-            atoms = self._uniform_block_map[block_name]["atoms"]
+            atoms = self._uniform_blocks_info[block_name].atoms
             len_atoms = len(atoms)
             len_var_name = len(block_info["var_name"])
 
@@ -467,44 +355,10 @@ class GPUProgram(GLObject):
 
             backup_block_index += 1
 
-    def _resolve_uniform_blocks(self):
-        for block_info in self._uniform_blocks_info.values():
-            self._resolve_one_uniform_block(block_info)
-
-        blocks_with_var_name = {}
-
-        for block_name, block_info in self._uniform_blocks_info.items():
-            var_name = block_info["var_name"]
-            if var_name:
-                blocks_with_var_name[var_name] = block_name
-
-        # self._apply_uniform_blocks()
-
-    def _resolve_one_shader_storage_block(self, block_info):
-        shader_storage_block = {}
-        block_name = block_info["name"]
-
-        shader_storage_block["name"] = block_name
-        shader_storage_block["atoms"] = []
-
-        for member in block_info["members"].values():
-            member_name = member["name"]
-            uniform_info = {
-                "name": member_name,
-                "type": member["type"],
-                "subscript_chain": [("getattr", member_name)],
-            }
-            shader_storage_block["atoms"].extend(
-                self._resolve_one_uniform(uniform_info, self._shader_storage_block_map)
-            )
-
-        self._shader_storage_block_map[block_name] = shader_storage_block
-        return shader_storage_block["atoms"]
-
     def _apply_shader_storage_blocks(self):
         backup_block_index = 0
         for block_name, block_info in self._shader_storage_blocks_info.items():
-            atoms = self._shader_storage_block_map[block_name]["atoms"]
+            atoms = self._shader_storage_blocks_info[block_name].atoms
 
             try:
                 block_index = GL.glGetProgramResourceIndex(
@@ -563,13 +417,3 @@ class GPUProgram(GLObject):
                 atom["stride"] = int(atom_stride)
 
             backup_block_index += 1
-
-    def _resolve_shader_storage_blocks(self):
-        for block_info in self._shader_storage_blocks_info.values():
-            self._resolve_one_shader_storage_block(block_info)
-
-        blocks_with_var_name = {}
-        for block_name, block_info in self._shader_storage_blocks_info.items():
-            var_name = block_info["var_name"]
-            if var_name:
-                blocks_with_var_name[var_name] = block_name

@@ -1,7 +1,7 @@
 from OpenGL import GL
 
 from .SSUBO import SSUBO
-from .utils import subscript_set, subscript
+from .ShaderParser import ShaderParser
 
 
 class SSBO(SSUBO):
@@ -64,25 +64,25 @@ class SSBO(SSUBO):
     def download(self):
         len_array = None
         for atom_name, atom_info in self._atom_info_map.items():
-            atom_type = atom_info["type"]
+            atom_type = atom_info.type
             get_func = SSUBO._get_atom_func(atom_type)
-            atom_offset = atom_info["offset"]
-            subscript_chain = atom_info["subscript_chain"]
+            atom_offset = atom_info.offset
+            access_chain = atom_info.access_chain
             if "[{0}]" not in atom_name:
                 value = get_func(self, atom_offset)
-                subscript_set(self._bound_var, subscript_chain, value)
+                ShaderParser.access_set(self._bound_var, access_chain, value)
             else:
                 if len_array is None:
                     # pos_array_end = atom_name.find("[{0}]")
                     # len_array = len(eval("self._bound_var." + atom_name[:pos_array_end]))
 
-                    pos_array_end = subscript_chain.index(("getitem", "{0}"))
-                    variable_length_array = subscript(
-                        self._bound_var, subscript_chain[:pos_array_end]
+                    pos_array_end = access_chain.index(("getitem", "{0}"))
+                    variable_length_array = ShaderParser.access(
+                        self._bound_var, access_chain[:pos_array_end]
                     )
                     len_array = len(variable_length_array)
 
                 stride = atom_info["stride"]
                 for i in range(len_array):
                     value = get_func(self, atom_offset + i * stride)
-                    subscript_set(self._bound_var, subscript_chain, value, i)
+                    ShaderParser.access_set(self._bound_var, access_chain, value, i)

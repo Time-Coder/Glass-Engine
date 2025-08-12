@@ -1,4 +1,4 @@
-from typing import Union, List, Dict
+from typing import Union, List, Dict, Tuple, Optional
 
 import tree_sitter
 
@@ -6,28 +6,42 @@ from ..helper import type_from_str, sizeof
 
 
 class SimpleVar:
-    def __init__(self, name: str = "", type: str = ""):
+
+    def __init__(self, name: str = "", type: str = "", access_chain: Optional[List[Tuple[str, Union[str,int]]]] = None):
         self.name: str = name
         self.type: str = type
+
+        if access_chain is None:
+            access_chain = []
+
+        self.access_chain: List[Tuple[str, Union[str,int]]] = access_chain
 
     def __repr__(self):
         return f"SimpleVar(name='{self.name}', type='{self.type}')"
 
 
 class Var:
+
     def __init__(
         self,
         name: str = "",
         type: str = "",
-        location: int = -1,
-        layout_args: Union[List[str], None] = None,
-        layout_kwargs: Union[Dict[str, str], None] = None,
+        access_chain: Optional[List[Tuple[str, Union[str,int]]]] = None,
+        location: int = -2,
+        layout_args: Optional[List[str]] = None,
+        layout_kwargs: Optional[Dict[str, str]] = None,
         qualifier: str = "",
         start_index: int = -1,
         end_index: int = -1,
     ):
         self.name: str = name
         self.type: str = type
+
+        if access_chain is None:
+            access_chain = []
+
+        self.access_chain: List[Tuple[str, Union[str,int]]] = access_chain
+
         self.location: int = location
         self.layout_args: List[str] = [] if layout_args is None else layout_args
         self.layout_kwargs: Dict[str, str] = (
@@ -75,6 +89,7 @@ class Attribute:
 
 
 class Struct:
+
     def __init__(
         self, name: str = "", members=None, start_index: int = -1, end_index: int = -1
     ):
@@ -117,6 +132,7 @@ class Struct:
 
 
 class FuncCall:
+
     def __init__(
         self,
         name: str = "",
@@ -162,6 +178,7 @@ class FuncCall:
 
 
 class Func:
+    
     def __init__(
         self,
         return_type: str = "void",

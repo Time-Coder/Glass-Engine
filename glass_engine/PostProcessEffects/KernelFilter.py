@@ -8,7 +8,7 @@ from glass import (
     sampler2DArray,
     samplerCube,
     GLConfig,
-    Block,
+    BlockHostClass,
 )
 
 import numpy as np
@@ -19,9 +19,10 @@ from typing import Union
 
 class KernelFilter(PostProcessEffect):
 
-    class Kernel(Block.HostClass):
+    class Kernel(BlockHostClass):
+        
         def __init__(self, kernel: np.ndarray):
-            Block.HostClass.__init__(self)
+            BlockHostClass.__init__(self)
 
             self._rows = kernel.shape[0]
             self._cols = kernel.shape[1]
@@ -45,7 +46,7 @@ class KernelFilter(PostProcessEffect):
             return self._kernel
 
         @kernel.setter
-        @Block.HostClass.not_const
+        @BlockHostClass.not_const
         def kernel(self, kernel: np.ndarray):
             self.rows = kernel.shape[0]
             self.cols = kernel.shape[1]
