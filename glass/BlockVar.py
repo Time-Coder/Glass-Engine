@@ -9,7 +9,7 @@ class BlockVar:
         self._bound_var: object = None
         self._binding_point: int = 0
 
-        atom_info_list = blocks._block_map[self._name].atoms
+        atom_info_list = blocks.info[self._name].atoms
         if not atom_info_list:
             return
 
@@ -20,7 +20,7 @@ class BlockVar:
             atom_name = atom_info.name
             self._atom_info_map[atom_name] = atom_info
             structure_key_list.append(
-                "(" + atom_info["type"] + ", " + atom_name + ")"
+                "(" + atom_info.type + ", " + atom_name + ")"
             )
         self._structure_key: str = ", ".join(structure_key_list)
 

@@ -475,6 +475,7 @@ class ShaderProgram(GPUProgram):
             raise RuntimeError("should compile fragment shader before link")
 
         if self._test_should_recollect() or GlassConfig.recompile:
+            self._resolve_uniforms()
             keys = list(self._attributes_info.keys())
             for key in keys:
                 if self._attributes_info[key].location != -1:
@@ -765,10 +766,10 @@ class ShaderProgram(GPUProgram):
         self.__update_uniforms()
         self.__update_samplers()
         self.__check_not_set_uniforms()
-        if self._uniform_block.auto_upload:
-            self._uniform_block.upload()
-        if self._shader_storage_block.auto_upload:
-            self._shader_storage_block.upload()
+        if self._uniform_blocks.auto_upload:
+            self._uniform_blocks.upload()
+        if self._shader_storage_blocks.auto_upload:
+            self._shader_storage_blocks.upload()
 
         if vertices is not None:
             vertices._apply(self, instances)

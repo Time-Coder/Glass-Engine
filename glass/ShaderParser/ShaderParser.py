@@ -81,8 +81,6 @@ class ShaderParser:
             "uniforms": self.uniforms,
             "uniform_blocks": self.uniform_blocks,
             "shader_storage_blocks": self.shader_storage_blocks,
-            "functions": self.functions,
-            "function_groups": self.function_groups,
             "geometry_in": self.geometry_in,
             "accum_location": self.accum_location,
             "shader_type": self.shader_type,
@@ -113,8 +111,8 @@ class ShaderParser:
         self.uniforms = data["uniforms"]
         self.uniform_blocks = data["uniform_blocks"]
         self.shader_storage_blocks = data["shader_storage_blocks"]
-        self.functions = data["functions"]
-        self.function_groups = data["function_groups"]
+        self.functions.clear()
+        self.function_groups.clear()
         self.geometry_in = data["geometry_in"]
         self.accum_location = data["accum_location"]
         self.shader_type = data["shader_type"]

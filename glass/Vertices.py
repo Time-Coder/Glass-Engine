@@ -193,12 +193,12 @@ class Vertices:
             if key not in program._attributes_info:
                 continue
 
-            location = program._attributes_info[key]["location"]
+            location = program._attributes_info[key].location
             if location in vao and not attr_list.is_new_vbo:
                 continue
 
             feed_type = attr_list.dtype
-            need_type = program._attributes_info[key]["python_type"]
+            need_type = program._attributes_info[key].python_type
             if feed_type != need_type:
                 if (
                     feed_type in GLInfo.primary_types

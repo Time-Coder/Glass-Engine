@@ -22,7 +22,7 @@ from .sampler2DArray import sampler2DArray
 from .ACBO import ACBO
 from .GlassConfig import GlassConfig
 from .UniformVar import UniformVar
-from .ShaderParser import ShaderParser
+from .ShaderParser import ShaderParser, SimpleVar
 
 
 class Uniforms:
@@ -68,7 +68,7 @@ class Uniforms:
 
         for atom in self.info[name].atoms:
             atom_value = ShaderParser.access(value, atom.access_chain)
-            self._set_atom(atom.name, atom_value)
+            self._set_atom(atom, atom_value)
 
     @checktype
     def __contains__(self, name: str):
@@ -82,7 +82,8 @@ class Uniforms:
         else:
             return copy.copy(value)
 
-    def _set_atom(self, name: str, value):
+    def _set_atom(self, atom_info: SimpleVar, value):
+        name:str = atom_info.name
         if name in self._atom_value_map and self._atom_value_map[name] == value:
             if isinstance(value, FBOAttachment):
                 value.bind()
@@ -92,26 +93,25 @@ class Uniforms:
             program = self.program
             program.use()
 
-            uniform_info = self.info[name]
-            uniform_type = uniform_info["type"]
-            if uniform_type != "atomic_uint":
+            atom_type = atom_info.type
+            if atom_type != "atomic_uint":
                 location = -1
-                if "location" not in uniform_info:
+                if atom_info.location == -2:
                     location = GL.glGetUniformLocation(program._id, name)
-                    uniform_info["location"] = location
+                    atom_info.location = location
                 else:
-                    location = uniform_info["location"]
+                    location = atom_info.location
 
                 if location == -1:
                     return
 
                 self._current_atom_name = name
-                func = getattr(self, "_set_" + uniform_type)
+                func = getattr(self, "_set_" + atom_type)
                 func(location, value)
                 self._atom_value_map[name] = Uniforms._copy(value)
             else:
-                binding_point = uniform_info["binding_point"]
-                offset = uniform_info["offset"]
+                binding_point = atom_info.binding_point
+                offset = atom_info.offset
                 ACBO.set(binding=binding_point, offset=offset, value=value)
         else:
             self._atoms_to_update[name] = Uniforms._copy(value)

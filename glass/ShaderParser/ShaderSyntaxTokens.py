@@ -10,6 +10,8 @@ class SimpleVar:
     def __init__(self, name: str = "", type: str = "", access_chain: Optional[List[Tuple[str, Union[str,int]]]] = None):
         self.name: str = name
         self.type: str = type
+        self.location: int = -2
+        self.binding_point: int = -2
 
         if access_chain is None:
             access_chain = []
@@ -64,6 +66,7 @@ class Var:
 
 
 class Attribute:
+    
     def __init__(self, var=None, name: str = "", type: str = "", location: int = -1):
         if var is None:
             self.name: str = name
@@ -136,8 +139,8 @@ class FuncCall:
     def __init__(
         self,
         name: str = "",
-        args=None,
-        call_expression: Union[tree_sitter.Node, None] = None,
+        args: Optional[List[tree_sitter.Node]] = None,
+        call_expression: Optional[tree_sitter.Node] = None,
     ):
         if call_expression is None:
             self.name: str = name

@@ -134,30 +134,30 @@ class GPUProgram(GLObject):
     def __contains__(self, name: str):
         self.collect_info()
         return (
-            name in self._uniforms_info
-            or name in self._uniform_blocks_info
-            or name in self._shader_storage_blocks_info
+            name in self._uniforms.info
+            or name in self._uniform_blocks.info
+            or name in self._shader_storage_blocks.info
         )
 
     @property
     def uniforms_info(self):
         self.collect_info()
-        return self._uniforms_info
+        return self._uniforms.info
 
     @property
     def uniform(self):
         self.collect_info()
-        return self._uniform
+        return self._uniforms
 
     @property
     def uniform_block(self):
         self.collect_info()
-        return self._uniform_block
+        return self._uniform_blocks
 
     @property
     def buffer(self):
         self.collect_info()
-        return self._shader_storage_block
+        return self._shader_storage_blocks
 
     def download(self, var):
         id_var = id(var)
@@ -283,17 +283,29 @@ class GPUProgram(GLObject):
 
         return error_messages, warning_messages
 
+    def _resolve_uniforms(self):
+        for uniform in self._uniforms.info.values():
+            for atom in uniform.atoms:
+                atom_type = atom.type
+                atom_name = atom.name
+                if "sampler" in atom_type or "image" in atom_type:
+                    self._sampler_map[atom_name] = {
+                        "location": -1,
+                        "sampler": None,
+                        "target_type": _target_type_map[atom_type],
+                    }
+
     def _apply_uniform_blocks(self):
         backup_block_index = 0
-        for block_name, block_info in self._uniform_blocks_info.items():
-            atoms = self._uniform_blocks_info[block_name].atoms
+        for block_name, block_info in self._uniform_blocks.info.items():
+            atoms = self._uniform_blocks.info[block_name].atoms
             len_atoms = len(atoms)
-            len_var_name = len(block_info["var_name"])
+            has_var_name = (block_info.name != block_info.type)
 
             atom_names = []
             for atom in atoms:
                 atom_name = atom["name"]
-                if len_var_name > 0:
+                if has_var_name:
                     atom_name = block_name + "." + atom_name
 
                 atom_names.append(atom_name)
@@ -339,26 +351,26 @@ class GPUProgram(GLObject):
                 array_strides,
             )
 
-            block_members = block_info["members"]
+            block_members = block_info.members
             for atom, array_stride, atom_offset in zip(
                 atoms, array_strides, atom_offsets
             ):
-                atom_name = atom["name"]
+                atom_name = atom.name
                 member_name = ShaderParser.array_basename(atom_name)
                 stride = int(array_stride)
-                member_type = block_members[member_name]["type"]
+                member_type = block_members[member_name].type
                 offset = atom_offset + stride * ShaderParser.index_offset(
                     member_type, atom_name
                 )
-                atom["offset"] = int(offset)
-                atom["stride"] = stride
+                atom.offset = int(offset)
+                atom.stride = stride
 
             backup_block_index += 1
 
     def _apply_shader_storage_blocks(self):
         backup_block_index = 0
-        for block_name, block_info in self._shader_storage_blocks_info.items():
-            atoms = self._shader_storage_blocks_info[block_name].atoms
+        for block_name, block_info in self._shader_storage_blocks.info.items():
+            atoms = self._shader_storage_blocks.info[block_name].atoms
 
             try:
                 block_index = GL.glGetProgramResourceIndex(
@@ -367,28 +379,28 @@ class GPUProgram(GLObject):
             except GL.error.GLError:
                 block_index = backup_block_index
 
-            if block_index == 4294967295:
+            if block_index == GL.GL_INVALID_INDEX:
                 raise ValueError(f"failed to get {block_name} index")
 
-            block_info["index"] = block_index
-            len_var_name = len(block_info["var_name"])
+            block_info.index = block_index
+            has_var_name = (block_info.name != block_info.type)
 
             props = np.array(
                 [GL.GL_OFFSET, GL.GL_ARRAY_STRIDE, GL.GL_TOP_LEVEL_ARRAY_STRIDE]
             )
             length = c_int()
-            block_members = block_info["members"]
+            block_members = block_info.members
             for atom in atoms:
                 atom_offset_stride = np.array([0, 0, 0], dtype=np.int32)
-                atom_name = re.sub(r"\[\d+\]", "[0]", atom["name"].format(0))
+                atom_name = re.sub(r"\[\d+\]", "[0]", atom.name.format(0))
                 used_atom_name = atom_name
-                if len_var_name > 0:
+                if has_var_name:
                     used_atom_name = block_name + "." + atom_name
 
                 atom_index = GL.glGetProgramResourceIndex(
                     self._id, GL.GL_BUFFER_VARIABLE, used_atom_name
                 )
-                if atom_index == 4294967295:  # -1
+                if atom_index == GL.GL_INVALID_INDEX:
                     raise ValueError(f"failed to get {used_atom_name} index")
 
                 GL.glGetProgramResourceiv(
@@ -407,13 +419,13 @@ class GPUProgram(GLObject):
                 atom_offset = atom_offset_stride[0] + atom_offset_stride[
                     1
                 ] * ShaderParser.index_offset(
-                    block_members[member_name]["type"], atom_name
+                    block_members[member_name].type, atom_name
                 )
                 atom_stride = min(atom_offset_stride[1], atom_offset_stride[2])
                 if atom_stride == 0:
                     atom_stride = max(atom_offset_stride[1], atom_offset_stride[2])
 
-                atom["offset"] = int(atom_offset)
-                atom["stride"] = int(atom_stride)
+                atom.offset = int(atom_offset)
+                atom.stride = int(atom_stride)
 
             backup_block_index += 1
