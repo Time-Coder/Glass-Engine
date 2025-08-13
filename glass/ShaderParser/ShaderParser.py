@@ -1,25 +1,23 @@
 import sys
 import re
+import os
 import tree_sitter
+import tree_sitter_glsl37 as tsglsl
 import copy
+import pickle
 from itertools import product
+from OpenGL import GL
+from typing import List, Dict, Union, Tuple, Set, Optional
 
 from ..GLInfo import GLInfo
 from .ShaderSyntaxTokens import Var, Attribute, Func, FuncCall, Struct, SimpleVar
 from .ShaderBuiltins import ShaderBuiltins
 from .minifyc import minifyc, macros_expand_file
 
-from ..helper import greater_type, type_list_distance, subscript_type
-
-from OpenGL import GL
-from tree_sitter import Language, Parser
-import tree_sitter_glsl37 as tsglsl
-from typing import List, Dict, Union, Tuple, Set, Optional
-
 
 class ShaderParser:
 
-    __glsl_raw_parser:Parser = None
+    __glsl_raw_parser:tree_sitter.Parser = None
 
     def __init__(self, shader_type):
         self.file_name:str = ""
@@ -67,13 +65,68 @@ class ShaderParser:
         self.accum_location["out"] = 0
         self._is_empty = True
 
+    def save(self, file_name:str):
+        data = {
+            "file_name": self.file_name,
+            "clean_code": self.clean_code,
+            "compressed_code": self.compressed_code,
+            "line_map": self.line_map,
+            "related_files": self.related_files,
+            "ins": self.ins,
+            "outs": self.outs,
+            "attributes": self.attributes,
+            "hidden_vars": self.hidden_vars,
+            "global_vars": self.global_vars,
+            "structs": self.structs,
+            "uniforms": self.uniforms,
+            "uniform_blocks": self.uniform_blocks,
+            "shader_storage_blocks": self.shader_storage_blocks,
+            "functions": self.functions,
+            "function_groups": self.function_groups,
+            "geometry_in": self.geometry_in,
+            "accum_location": self.accum_location,
+            "shader_type": self.shader_type,
+            "_is_empty": self._is_empty
+        }
+
+        folder_name = os.path.dirname(os.path.abspath(file_name))
+        if not os.path.isdir(folder_name):
+            os.makedirs(folder_name)
+
+        with open(file_name, "wb") as file:
+            pickle.dump(data, file)
+
+    def load(self, file_name:str):
+        file = open(file_name, "rb")
+        data = pickle.load(file)
+        self.file_name = data["file_name"]
+        self.clean_code = data["clean_code"]
+        self.compressed_code = data["compressed_code"]
+        self.line_map = data["line_map"]
+        self.related_files = data["related_files"]
+        self.ins = data["ins"]
+        self.outs = data["outs"]
+        self.attributes = data["attributes"]
+        self.hidden_vars = data["hidden_vars"]
+        self.global_vars = data["global_vars"]
+        self.structs = data["structs"]
+        self.uniforms = data["uniforms"]
+        self.uniform_blocks = data["uniform_blocks"]
+        self.shader_storage_blocks = data["shader_storage_blocks"]
+        self.functions = data["functions"]
+        self.function_groups = data["function_groups"]
+        self.geometry_in = data["geometry_in"]
+        self.accum_location = data["accum_location"]
+        self.shader_type = data["shader_type"]
+        self._is_empty = data["_is_empty"] 
+
     @staticmethod
     def __glsl_parser():
         if ShaderParser.__glsl_raw_parser is not None:
             return ShaderParser.__glsl_raw_parser
 
-        GLSL_LANGUAGE = Language(tsglsl.language())
-        ShaderParser.__glsl_raw_parser = Parser(GLSL_LANGUAGE)
+        GLSL_LANGUAGE = tree_sitter.Language(tsglsl.language())
+        ShaderParser.__glsl_raw_parser = tree_sitter.Parser(GLSL_LANGUAGE)
         return ShaderParser.__glsl_raw_parser
 
     @staticmethod
@@ -714,7 +767,7 @@ class ShaderParser:
             if candidate_func.argc != len(arg_types):
                 continue
 
-            current_distance = type_list_distance(arg_types, candidate_func.arg_types)
+            current_distance = ShaderParser.__type_list_distance(arg_types, candidate_func.arg_types)
             if isinstance(current_distance, int):
                 if current_distance == 0:
                     min_distance = 0
@@ -922,7 +975,7 @@ class ShaderParser:
             operant2 = expression.children[offset + 2]
             operant2_type = self.__analyse_type(operant2, func)
 
-            return greater_type(operant1_type, operant2_type)
+            return ShaderParser.__greater_type(operant1_type, operant2_type)
         elif expression.type in ["parenthesized_expression", "unary_expression"]:
             content = expression.children[1]
             if content.type == "ERROR":
@@ -931,7 +984,7 @@ class ShaderParser:
         elif expression.type == "subscript_expression":
             prefix_expression = expression.children[0]
             prefix_type = self.__analyse_type(prefix_expression, func)
-            result = subscript_type(prefix_type)
+            result = ShaderParser.__subtype(prefix_type)
             return result
         elif expression.type == "conditional_expression":
             operant1 = expression.children[2]
@@ -939,7 +992,7 @@ class ShaderParser:
             operant2 = expression.children[4]
             operant2_type = self.__analyse_type(operant2, func)
 
-            return greater_type(operant1_type, operant2_type)
+            return ShaderParser.__greater_type(operant1_type, operant2_type)
         elif expression.type in ["false", "true"]:
             return "bool"
 
@@ -1063,6 +1116,162 @@ class ShaderParser:
                 i -= 1
             else:
                 return True
+
+    @staticmethod
+    def __type_distance(type1: str, type2: str):
+        if type1 == type2:
+            return 0
+
+        if type1 == "" or type2 == "":
+            return "unknown"
+
+        def type_index(type_, types):
+            for i, target_type in enumerate(types):
+                if isinstance(target_type, tuple):
+                    if type_ in target_type:
+                        return i
+                else:
+                    if type_ == target_type:
+                        return i
+            return -1
+
+        all_types = [
+            GLInfo.basic_types,
+            GLInfo.gvec2_types,
+            GLInfo.gvec3_types,
+            GLInfo.gvec4_types,
+            GLInfo.gmat2x2_types,
+            GLInfo.gmat3x2_types,
+            GLInfo.gmat3x3_types,
+            GLInfo.gmat3x4_types,
+            GLInfo.gmat4x2_types,
+            GLInfo.gmat4x3_types,
+            GLInfo.gmat4x4_types,
+        ]
+
+        for target_types in all_types:
+            type1_index = type_index(type1, target_types)
+            type2_index = type_index(type2, target_types)
+            if type1_index != -1 and type2_index != -1:
+                return abs(type1_index - type2_index)
+
+        return "inf"
+
+    @staticmethod
+    def __type_list_distance(type_list1, type_list2):
+        for type1, type2 in zip(type_list1, type_list2):
+            current_distance = ShaderParser.__type_distance(type1, type2)
+            if current_distance == "inf":
+                return "inf"
+
+        full_distance = 0
+        for type1, type2 in zip(type_list1, type_list2):
+            current_distance = ShaderParser.__type_distance(type1, type2)
+            if current_distance == "unknown":
+                return "unknown"
+            full_distance += current_distance
+
+        return full_distance
+
+    @staticmethod
+    def __nitems(element_type):
+        str_element_type = str(element_type)
+        if "vec2" in str_element_type:
+            return 2
+        elif "vec3" in str_element_type:
+            return 3
+        elif "vec4" in str_element_type or "mat2x2" in str_element_type:
+            return 4
+        elif "mat2x3" in str_element_type or "mat3x2" in str_element_type:
+            return 6
+        elif "mat3x3" in str_element_type:
+            return 9
+        elif "mat2x4" in str_element_type or "mat4x2" in str_element_type:
+            return 8
+        elif "mat3x4" in str_element_type or "mat4x3" in str_element_type:
+            return 12
+        elif "mat4x4" in str_element_type:
+            return 16
+        else:
+            return 1
+
+    @staticmethod
+    def __greater_type(type1: str, type2: str):
+        if type1 == "":
+            return type2
+
+        if type2 == "":
+            return type1
+
+        if type1 == type2:
+            return type1
+
+        type1_struct = GLInfo.atom_type_map[type1][2]
+        type1_dtype = GLInfo.atom_type_map[type1][1]
+        type1_index = GLInfo.basic_types.index(type1_dtype)
+        type1_nitems = ShaderParser.__nitems(type1)
+
+        type2_struct = GLInfo.atom_type_map[type2][2]
+        type2_dtype = GLInfo.atom_type_map[type2][1]
+        type2_index = GLInfo.basic_types.index(type2_dtype)
+        type2_nitems = ShaderParser.__nitems(type2)
+
+        result_dtype = type1_dtype if type1_index >= type2_index else type2_dtype
+        result_struct = type1_struct if type1_nitems >= type2_nitems else type2_struct
+        if not result_struct:
+            return result_dtype
+
+        if result_dtype == "bool":
+            return "b" + result_struct
+        elif result_dtype == "int":
+            return "i" + result_struct
+        elif result_dtype == "uint":
+            return "u" + result_struct
+        elif result_dtype == "float":
+            return result_struct
+        elif result_dtype == "double":
+            return "d" + result_struct
+
+    @staticmethod
+    def __subtype(type_str: str):
+        pos_bracket = type_str.rfind("[")
+        if pos_bracket != -1:
+            return type_str[:pos_bracket]
+
+        if type_str in ["bvec2", "bvec3", "bvec4"]:
+            return "bool"
+
+        if type_str in ["ivec2", "ivec3", "ivec4"]:
+            return "int"
+
+        if type_str in ["uvec2", "uvec3", "uvec4"]:
+            return "uint"
+
+        if type_str in ["vec2", "vec3", "vec4"]:
+            return "float"
+
+        if type_str in ["dvec2", "dvec3", "dvec4"]:
+            return "double"
+
+        if type_str in ["mat2", "mat2x2", "mat2x3", "mat2x4"]:
+            return "vec2"
+
+        if type_str in ["mat3", "mat3x2", "mat3x3", "mat3x4"]:
+            return "vec3"
+
+        if type_str in ["mat4", "mat4x2", "mat4x3", "mat4x4"]:
+            return "vec4"
+
+        if type_str in ["dmat2", "dmat2x2", "dmat2x3", "dmat2x4"]:
+            return "dvec2"
+
+        if type_str in ["dmat3", "dmat3x2", "dmat3x3", "dmat3x4"]:
+            return "dvec3"
+
+        if type_str in ["dmat4", "dmat4x2", "dmat4x3", "dmat4x4"]:
+            return "dvec4"
+
+        return ""
 
     @staticmethod
     def index_offset(total_index_str, current_index_str):
