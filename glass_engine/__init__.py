@@ -17,3 +17,4 @@ import glm
 
 from OpenGL import GL
 from glass import GlassConfig
+from .GlassEngineConfig import GlassEngineConfig

@@ -146,8 +146,8 @@ class ShaderProgram(GPUProgram):
         is_recompiled = False
         self._attributes_info.clear()
         self._uniforms.clear()
-        self._uniform_block.clear()
-        self._buffer.clear()
+        self._uniform_blocks.clear()
+        self._shader_storage_blocks.clear()
         self._structs_info.clear()
         self._outs_info.clear()
 
@@ -188,7 +188,7 @@ class ShaderProgram(GPUProgram):
             uniform_var.unbind()
             uniform_var.bind(bound_var)
 
-        for uniform_block_var in self._uniform_block._block_var_map.values():
+        for uniform_block_var in self._uniform_blocks._block_var_map.values():
             bound_var = uniform_block_var._bound_var
             if bound_var is None:
                 continue
@@ -198,7 +198,7 @@ class ShaderProgram(GPUProgram):
 
         for (
             shader_storage_block_var
-        ) in self._shader_storage_block._block_var_map.values():
+        ) in self._shader_storage_blocks._block_var_map.values():
             bound_var = shader_storage_block_var._bound_var
             if bound_var is None:
                 continue

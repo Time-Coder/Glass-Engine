@@ -302,47 +302,61 @@ class GPUProgram(GLObject):
             len_atoms = len(atoms)
             has_var_name = (block_info.name != block_info.type)
 
-            atom_names = []
+            used_atom_names = []
+            long_atom_names = []
+            short_atom_names = []
             for atom in atoms:
-                atom_name = atom["name"]
-                if has_var_name:
-                    atom_name = block_name + "." + atom_name
+                atom_name = atom.name
+                short_atom_name = atom_name
+                long_atom_name = atom_name
 
-                atom_names.append(atom_name)
+                if short_atom_name.startswith(block_name + "."):
+                    short_atom_name = short_atom_name[len(block_name + "."):]
+
+                if not long_atom_name.startswith(block_name + "."):
+                    long_atom_name = block_name + "." + atom_name
+
+                used_atom_name = atom_name
+                if has_var_name:
+                    used_atom_name = long_atom_name
+                else:
+                    used_atom_name = short_atom_name
+
+                used_atom_names.append(used_atom_name)
 
             try:
                 block_index = GL.glGetUniformBlockIndex(self._id, block_name)
             except GL.error.GLError:
                 block_index = backup_block_index
 
-            if block_index == 4294967295:  # -1
+            if block_index == GL.GL_INVALID_INDEX:
                 raise ValueError(f"failed to get uniform block {block_name}'s index")
 
-            block_size = np.array([0], dtype=int)
+            block_size = [0]
             GL.glGetActiveUniformBlockiv(
                 self._id, block_index, GL.GL_UNIFORM_BLOCK_DATA_SIZE, block_size
             )
             block_size = block_size[0]
-            block_info["size"] = block_size
-            block_info["index"] = block_index
+            block_info.size = block_size
+            block_info.index = block_index
 
-            atom_indices = np.array([0] * len_atoms, dtype=np.uint)
+            atom_indices = [0] * len_atoms
             GL.glGetUniformIndices(
-                self._id, len_atoms, LP_LP_c_char(atom_names), atom_indices
+                self._id, len_atoms, LP_LP_c_char(used_atom_names), atom_indices
             )
 
-            for atom_name, atom_index in zip(atom_names, atom_indices):
-                if atom_index == 4294967295:  # -1
+            for atom_name, atom_index in zip(long_atom_names, atom_indices):
+                if atom_index == GL.GL_INVALID_INDEX:
                     raise ValueError(
                         f"failed to get uniform block variable {atom_name}'s index"
                     )
 
-            atom_offsets = np.array([0] * len_atoms, dtype=int)
+            atom_offsets = [0] * len_atoms
             GL.glGetActiveUniformsiv(
                 self._id, len_atoms, atom_indices, GL.GL_UNIFORM_OFFSET, atom_offsets
             )
 
-            array_strides = np.array([0] * len_atoms, dtype=int)
+            array_strides = [0] * len_atoms
             GL.glGetActiveUniformsiv(
                 self._id,
                 len_atoms,
@@ -351,16 +365,15 @@ class GPUProgram(GLObject):
                 array_strides,
             )
 
-            block_members = block_info.members
-            for atom, array_stride, atom_offset in zip(
-                atoms, array_strides, atom_offsets
+            block_members = self._structs_info[block_info.type].members
+            for atom, short_atom_name, array_stride, atom_offset in zip(
+                atoms, short_atom_names, array_strides, atom_offsets
             ):
-                atom_name = atom.name
-                member_name = ShaderParser.array_basename(atom_name)
+                member_name = ShaderParser.array_basename(short_atom_name)
                 stride = int(array_stride)
                 member_type = block_members[member_name].type
                 offset = atom_offset + stride * ShaderParser.index_offset(
-                    member_type, atom_name
+                    member_type, short_atom_name
                 )
                 atom.offset = int(offset)
                 atom.stride = stride
@@ -389,13 +402,25 @@ class GPUProgram(GLObject):
                 [GL.GL_OFFSET, GL.GL_ARRAY_STRIDE, GL.GL_TOP_LEVEL_ARRAY_STRIDE]
             )
             length = c_int()
-            block_members = block_info.members
+            block_members = self._structs_info[block_info.type].members
             for atom in atoms:
                 atom_offset_stride = np.array([0, 0, 0], dtype=np.int32)
                 atom_name = re.sub(r"\[\d+\]", "[0]", atom.name.format(0))
+
+                short_atom_name = atom_name
+                long_atom_name = atom_name
+
+                if short_atom_name.startswith(block_name + "."):
+                    short_atom_name = short_atom_name[len(block_name + "."):]
+
+                if not long_atom_name.startswith(block_name + "."):
+                    long_atom_name = block_name + "." + atom_name
+
                 used_atom_name = atom_name
                 if has_var_name:
-                    used_atom_name = block_name + "." + atom_name
+                    used_atom_name = long_atom_name
+                else:
+                    used_atom_name = short_atom_name
 
                 atom_index = GL.glGetProgramResourceIndex(
                     self._id, GL.GL_BUFFER_VARIABLE, used_atom_name
@@ -415,11 +440,11 @@ class GPUProgram(GLObject):
                 )
                 atom_offset_stride = [int(x) for x in atom_offset_stride]
 
-                member_name = ShaderParser.array_basename(atom_name)
+                member_name = ShaderParser.array_basename(short_atom_name)
                 atom_offset = atom_offset_stride[0] + atom_offset_stride[
                     1
                 ] * ShaderParser.index_offset(
-                    block_members[member_name].type, atom_name
+                    block_members[member_name].type, short_atom_name
                 )
                 atom_stride = min(atom_offset_stride[1], atom_offset_stride[2])
                 if atom_stride == 0:

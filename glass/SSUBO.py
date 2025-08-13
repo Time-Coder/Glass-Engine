@@ -222,7 +222,7 @@ class SSUBO(BO):
         self._len_array = None
         for atom_name, atom_info in self._atom_info_map.items():
             current_type = type_from_str(atom_info.type)
-            current_size = atom_info["offset"] + sizeof(current_type)
+            current_size = atom_info.offset + sizeof(current_type)
             if "[{0}]" in atom_name:
                 if self._len_array is None:
                     # pos_array_end = atom_name.find("[{0}]")
@@ -235,7 +235,7 @@ class SSUBO(BO):
                     )
 
                     self._len_array = len(variable_length_array)
-                stride = atom_info["stride"]
+                stride = atom_info.stride
                 current_size += capacity_of(self._len_array) * stride
 
             if current_size > max_size:
@@ -244,22 +244,22 @@ class SSUBO(BO):
         return max_size
 
     def _name_to_range(self, start_name: str, end_name: str):
-        start_offset = self._atom_info_map[start_name]["offset"]
+        start_offset = self._atom_info_map[start_name].offset
         end_info = self._atom_info_map[end_name]
-        end_type = type_from_str(end_info["type"])
-        nbytes = end_info["offset"] + sizeof(end_type) - start_offset
+        end_type = type_from_str(end_info.type)
+        nbytes = end_info.offset + sizeof(end_type) - start_offset
         if "[{0}]" in end_name:
             # pos_array_end = end_name.find("[{0}]")
             # len_array = len(eval("self._bound_var." + end_name[:pos_array_end]))
 
-            subscript_chain = end_info["subscript_chain"]
-            pos_array_end = subscript_chain.index(("getitem", "{0}"))
+            access_chain = end_info.access_chain
+            pos_array_end = access_chain.index(("getitem", "{0}"))
             variable_length_array = ShaderParser.access(
-                self._bound_var, subscript_chain[:pos_array_end]
+                self._bound_var, access_chain[:pos_array_end]
             )
             len_array = len(variable_length_array)
 
-            nbytes += len_array * end_info["stride"]
+            nbytes += len_array * end_info.stride
 
         return start_offset, nbytes
 
