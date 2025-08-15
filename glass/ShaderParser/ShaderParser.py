@@ -244,7 +244,7 @@ class ShaderParser:
                     if is_attribute:
                         length = eval(var_name.children[2].text.decode("utf-8"))
                         for i in range(length):
-                            attribute = Attribute(
+                            attribute: Attribute = Attribute(
                                 name=pure_name + f"[{i}]",
                                 type=var.type,
                                 location=self.accum_location[qualifier],
@@ -461,12 +461,18 @@ class ShaderParser:
 
                 if child.type in ["identifier", "array_declarator"]:
                     identifier = child
-                    var = Var(name=identifier.text.decode("utf-8"), type=type_identifier.text.decode("utf-8"))
+                    var = Var(
+                        name=identifier.text.decode("utf-8"),
+                        type=type_identifier.text.decode("utf-8")
+                    )
                     func.local_vars.append(var)
 
                 if child.type == "init_declarator":
                     identifier = child.children[0]
-                    var = Var(name=identifier.text.decode("utf-8"), type=type_identifier.text.decode("utf-8"))
+                    var = Var(
+                        name=identifier.text.decode("utf-8"),
+                        type=type_identifier.text.decode("utf-8")
+                    )
                     func.local_vars.append(var)
 
         for child in node.children:
@@ -622,7 +628,9 @@ class ShaderParser:
             SimpleVar(
                 name=current_var.name,
                 type=current_var.type,
-                access_chain=copy.copy(current_var.access_chain)
+                access_chain=copy.copy(current_var.access_chain),
+                location=current_var.location,
+                binding_point=current_var.binding_point
             )
         ]
         while rear_stack:
@@ -1043,77 +1051,20 @@ class ShaderParser:
         return self.compressed_code
 
     @staticmethod
-    def array_basename(name: str):
-        pos_bracket = name.find("[")
+    def array_basename(name: str)->str:
+        pos_bracket = name.rfind("[")
         if pos_bracket == -1:
             return name
         else:
             return name[:pos_bracket].strip(" \t")
-
+        
     @staticmethod
-    def __has_valid(content):
-        its = list(re.finditer(r"\S", content))
-        return bool(its)
-
-    @staticmethod
-    def __extract_array_indices(var_name: str):
-        if "[" not in var_name:
-            return []
-
-        indices = []
-        len_var_name = len(var_name)
-        pos_start = len_var_name
-        while True:
-            pos_end = var_name.rfind("]", 0, pos_start)
-            if pos_end == -1:
-                break
-
-            str_mid = var_name[pos_end + 1 : pos_start]
-            if (
-                pos_end >= 0
-                and pos_end < len_var_name
-                and pos_start >= 0
-                and pos_start < len_var_name
-                and ShaderParser.__has_valid(str_mid)
-            ):
-                break
-
-            pos_start = var_name.rfind("[", 0, pos_end)
-            if pos_start == -1:
-                break
-
-            index = "{0}"
-            if pos_end - pos_start > 1:
-                index = int(var_name[pos_start + 1 : pos_end].strip(" \t"))
-
-            indices.insert(0, index)
-
-        return indices
-
-    @staticmethod
-    def __next_index(current_index, indices):
-        if not current_index:
-            for index in indices:
-                if isinstance(index, int):
-                    current_index.append(0)
-                else:
-                    current_index.append("{0}")
-            return True
-
-        i = len(current_index) - 1
-        while True:
-            if i < 0:
-                return False
-            while i >= 0 and isinstance(indices[i], str):
-                i -= 1
-            if i < 0:
-                return False
-            current_index[i] += 1
-            if current_index[i] >= indices[i]:
-                current_index[i] = 0
-                i -= 1
-            else:
-                return True
+    def array_index(name: str)->int:
+        pos_bracket = name.rfind("[")
+        if pos_bracket == -1:
+            return 0
+        else:
+            return int(name[pos_bracket+1:-1].strip(" \t"))
 
     @staticmethod
     def __type_distance(type1: str, type2: str):
@@ -1270,28 +1221,6 @@ class ShaderParser:
             return "dvec4"
 
         return ""
-
-    @staticmethod
-    def index_offset(total_index_str, current_index_str):
-        total_index = ShaderParser.__extract_array_indices(total_index_str)
-        stop_index = ShaderParser.__extract_array_indices(current_index_str)
-        len_total_index = len(total_index)
-        if len(stop_index) != len_total_index:
-            raise ValueError("array should have same dimension")
-
-        if not total_index:
-            return 0
-
-        current_index = [0] * len_total_index
-        current_index[-1] = -1
-
-        offset = 0
-        while ShaderParser.__next_index(current_index, total_index):
-            if current_index == stop_index:
-                break
-            offset += 1
-
-        return offset
     
     @staticmethod
     def access(var, subscript_chain:List[Tuple[str, Union[str,int]]], feed_index: int = None):

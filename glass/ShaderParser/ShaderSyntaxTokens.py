@@ -7,11 +7,14 @@ from ..helper import type_from_str, sizeof
 
 class SimpleVar:
 
-    def __init__(self, name: str = "", type: str = "", access_chain: Optional[List[Tuple[str, Union[str,int]]]] = None):
+    def __init__(self, name: str = "", type: str = "", location:int = -2, binding_point:int = -2, access_chain: Optional[List[Tuple[str, Union[str,int]]]] = None):
         self.name: str = name
         self.type: str = type
-        self.location: int = -2
-        self.binding_point: int = -2
+        self.location: int = location
+        self.binding_point: int = binding_point
+        self.index: int = -2
+        self.offset: int = -2
+        self.stride: int = -2
 
         if access_chain is None:
             access_chain = []
@@ -29,7 +32,6 @@ class Var:
         name: str = "",
         type: str = "",
         access_chain: Optional[List[Tuple[str, Union[str,int]]]] = None,
-        location: int = -2,
         layout_args: Optional[List[str]] = None,
         layout_kwargs: Optional[Dict[str, str]] = None,
         qualifier: str = "",
@@ -38,13 +40,16 @@ class Var:
     ):
         self.name: str = name
         self.type: str = type
+        self.size: int = -2
+        self.index: int = -2
+        self._location: int = -2
+        self._binding_point: int = -2
 
         if access_chain is None:
             access_chain = []
 
         self.access_chain: List[Tuple[str, Union[str,int]]] = access_chain
 
-        self.location: int = location
         self.layout_args: List[str] = [] if layout_args is None else layout_args
         self.layout_kwargs: Dict[str, str] = (
             {} if layout_kwargs is None else layout_kwargs
@@ -60,22 +65,46 @@ class Var:
         if pos_bracket != -1:
             self.type += name[pos_bracket:]
             self.name = name[:pos_bracket]
+            if self.access_chain:
+                self.access_chain[-1] = ("getattr", self.name)
 
     def __repr__(self):
         return f"Var(name='{self.name}', type='{self.type}')"
+    
+    @property
+    def location(self)->int:
+        if "location" in self.layout_kwargs:
+            return int(self.layout_kwargs["location"])
+        else:
+            return self._location
+        
+    @location.setter
+    def location(self, location:int):
+        self._location = location
+
+    @property
+    def binding_point(self)->int:
+        if "binding" in self.layout_kwargs:
+            return int(self.layout_kwargs["binding"])
+        else:
+            return self._binding_point
+        
+    @binding_point.setter
+    def binding_point(self, binding_point:int):
+        self._binding_point = binding_point
 
 
 class Attribute:
     
-    def __init__(self, var=None, name: str = "", type: str = "", location: int = -1):
+    def __init__(self, var:Optional[Var]=None, name: str = "", type: str = "", location: int = -1):
         if var is None:
             self.name: str = name
             self.location: int = location
-            self.type = type
+            self.type: str = type
         else:
             self.name: str = var.name
             self.location: int = var.location
-            self.type = var.type
+            self.type: str = var.type
 
     @property
     def type(self):

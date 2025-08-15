@@ -98,18 +98,18 @@ class BlockVar:
         if self._binding_point == binding_point:
             return
 
-        block = self.blocks
-        cls_name = block.__class__.__name__
+        blocks = self.blocks
+        cls_name = blocks.__class__.__name__
         if cls_name == "UniformBlocks":
             GL.glUniformBlockBinding(
-                block.program.id,
-                block._blocks_info[self._name].index,
+                blocks.program.id,
+                blocks.info[self._name].index,
                 binding_point,
             )
         elif cls_name == "ShaderStorageBlocks":
             GL.glShaderStorageBlockBinding(
-                block.program.id,
-                block._blocks_info[self._name].index,
+                blocks.program.id,
+                blocks.info[self._name].index,
                 binding_point,
             )
 

@@ -134,7 +134,7 @@ class SSUBO(BO):
 
                 set_func(self, atom_offset, value)
             else:
-                stride = atom_info["stride"]
+                stride = atom_info.stride
                 for i in range(self._len_array):
                     try:
                         value = ShaderParser.access(self._bound_var, atom_access_chain, i)
