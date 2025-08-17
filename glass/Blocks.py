@@ -15,6 +15,10 @@ class Blocks:
         self._block_var_map = {}
         self._auto_upload = True
 
+    def clear(self):
+        self.info.clear()
+        self._block_var_map.clear()
+
     @property
     def program(self):
         return self._program

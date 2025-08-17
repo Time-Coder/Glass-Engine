@@ -396,6 +396,12 @@ class GLInfo:
         if name.startswith("GL_") and isinstance(value, constant.IntConstant)
     }
 
+    access_modes: TypeAlias = CustomLiteral[
+        GL.GL_READ_ONLY,
+        GL.GL_WRITE_ONLY,
+        GL.GL_READ_WRITE
+    ]
+
     internal_formats: TypeAlias = CustomLiteral[
         GL.GL_RED,
         GL.GL_R8,

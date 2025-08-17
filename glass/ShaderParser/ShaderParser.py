@@ -1,23 +1,16 @@
-import sys
 import re
-import os
-import tree_sitter
-import tree_sitter_glsl37 as tsglsl
-import copy
-import pickle
 from itertools import product
 from OpenGL import GL
 from typing import List, Dict, Union, Tuple, Set, Optional
 
 from ..GLInfo import GLInfo
-from .ShaderSyntaxTokens import Var, Attribute, Func, FuncCall, Struct, SimpleVar
+from .ShaderSyntaxTokens import Var, Attribute, Func, FuncCall, Struct
 from .ShaderBuiltins import ShaderBuiltins
+from .ShaderSyntaxTree import ShaderSyntaxTree
 from .minifyc import minifyc, macros_expand_file
 
 
 class ShaderParser:
-
-    __glsl_raw_parser:tree_sitter.Parser = None
 
     def __init__(self, shader_type):
         self.file_name:str = ""
@@ -37,6 +30,7 @@ class ShaderParser:
         self.functions: Dict[str, Func] = {}
         self.function_groups: Dict[str, List[Func]] = {}
         self.geometry_in: str = ""
+        self.syntax_tree: ShaderSyntaxTree = ShaderSyntaxTree()
 
         self.accum_location = {"in": 0, "out": 0}
         self.shader_type = shader_type
@@ -60,75 +54,14 @@ class ShaderParser:
         self.functions.clear()
         self.function_groups.clear()
         self.geometry_in: str = ""
+        self.syntax_tree.clear()
 
         self.accum_location["in"] = 0
         self.accum_location["out"] = 0
         self._is_empty = True
 
-    def save(self, file_name:str):
-        data = {
-            "file_name": self.file_name,
-            "clean_code": self.clean_code,
-            "compressed_code": self.compressed_code,
-            "line_map": self.line_map,
-            "related_files": self.related_files,
-            "ins": self.ins,
-            "outs": self.outs,
-            "attributes": self.attributes,
-            "hidden_vars": self.hidden_vars,
-            "global_vars": self.global_vars,
-            "structs": self.structs,
-            "uniforms": self.uniforms,
-            "uniform_blocks": self.uniform_blocks,
-            "shader_storage_blocks": self.shader_storage_blocks,
-            "geometry_in": self.geometry_in,
-            "accum_location": self.accum_location,
-            "shader_type": self.shader_type,
-            "_is_empty": self._is_empty
-        }
-
-        folder_name = os.path.dirname(os.path.abspath(file_name))
-        if not os.path.isdir(folder_name):
-            os.makedirs(folder_name)
-
-        with open(file_name, "wb") as file:
-            pickle.dump(data, file)
-
-    def load(self, file_name:str):
-        file = open(file_name, "rb")
-        data = pickle.load(file)
-        self.file_name = data["file_name"]
-        self.clean_code = data["clean_code"]
-        self.compressed_code = data["compressed_code"]
-        self.line_map = data["line_map"]
-        self.related_files = data["related_files"]
-        self.ins = data["ins"]
-        self.outs = data["outs"]
-        self.attributes = data["attributes"]
-        self.hidden_vars = data["hidden_vars"]
-        self.global_vars = data["global_vars"]
-        self.structs = data["structs"]
-        self.uniforms = data["uniforms"]
-        self.uniform_blocks = data["uniform_blocks"]
-        self.shader_storage_blocks = data["shader_storage_blocks"]
-        self.functions.clear()
-        self.function_groups.clear()
-        self.geometry_in = data["geometry_in"]
-        self.accum_location = data["accum_location"]
-        self.shader_type = data["shader_type"]
-        self._is_empty = data["_is_empty"] 
-
     @staticmethod
-    def __glsl_parser():
-        if ShaderParser.__glsl_raw_parser is not None:
-            return ShaderParser.__glsl_raw_parser
-
-        GLSL_LANGUAGE = tree_sitter.Language(tsglsl.language())
-        ShaderParser.__glsl_raw_parser = tree_sitter.Parser(GLSL_LANGUAGE)
-        return ShaderParser.__glsl_raw_parser
-
-    @staticmethod
-    def __parse_field_declaration_list(field_declaration_list: tree_sitter.Node) -> Dict[str, Var]:
+    def __parse_field_declaration_list(field_declaration_list: ShaderSyntaxTree.Node) -> Dict[str, Var]:
         members: Dict[str, Var] = {}
         for field_declaration in field_declaration_list.children:
             if field_declaration.type != "field_declaration":
@@ -147,12 +80,13 @@ class ShaderParser:
                 type_identifier = field_declaration.children[1]
                 qualifier = field_declaration.children[0].type
 
-            type_ = type_identifier.text.decode("utf-8")
+            type_ = type_identifier.text
             for var_name in var_names:
                 var: Var = Var(
-                    name=var_name.text.decode("utf-8"),
+                    name=var_name.text,
                     type=type_,
-                    access_chain=[("getattr", var_name.text.decode("utf-8"))],
+                    is_declare=True,
+                    access_chain=[("getattr", var_name.text)],
                     qualifier=qualifier
                 )
 
@@ -160,7 +94,7 @@ class ShaderParser:
 
         return members
 
-    def __parse_layout(self, layout_qualifiers: tree_sitter.Node):
+    def __parse_layout(self, layout_qualifiers: ShaderSyntaxTree.Node):
         layout_args: List[str] = []
         layout_kwargs: Dict[str, str] = {}
         for qualifier in layout_qualifiers.children:
@@ -168,13 +102,13 @@ class ShaderParser:
                 continue
 
             if qualifier.child_count == 3:
-                layout_kwargs[qualifier.children[0].text.decode("utf-8")] = qualifier.children[2].text.decode("utf-8")
+                layout_kwargs[qualifier.children[0].text] = qualifier.children[2].text
             else:
-                layout_args.append(qualifier.text.decode("utf-8"))
+                layout_args.append(qualifier.text)
 
         return layout_args, layout_kwargs
 
-    def __parse_single_value_declaration(self, declaration: tree_sitter.Node):
+    def __parse_single_value_declaration(self, declaration: ShaderSyntaxTree.Node):
         var_names = []
         for var_name in declaration.children:
             if var_name.type in ["identifier", "array_declarator"]:
@@ -222,8 +156,9 @@ class ShaderParser:
 
             for var_name in var_names:
                 var: Var = Var(
-                    name=var_name.text.decode("utf-8"),
-                    type=type_identifier.text.decode("utf-8"),
+                    name=var_name.text,
+                    type=type_identifier.text,
+                    is_declare=True,
                     layout_args=layout_args,
                     layout_kwargs=layout_kwargs,
                     qualifier=qualifier,
@@ -240,9 +175,9 @@ class ShaderParser:
                     if qualifier in ["in", "out"]:
                         self.accum_location[qualifier] += 1
                 elif var_name.type == "array_declarator":
-                    pure_name = var_name.children[0].text.decode("utf-8")
+                    pure_name = var_name.children[0].text
                     if is_attribute:
-                        length = eval(var_name.children[2].text.decode("utf-8"))
+                        length = eval(var_name.children[2].text)
                         for i in range(length):
                             attribute: Attribute = Attribute(
                                 name=pure_name + f"[{i}]",
@@ -264,10 +199,10 @@ class ShaderParser:
                     self.uniforms[var.name] = var
 
         else:
-            type_ = type_identifier.text.decode("utf-8")
+            type_ = type_identifier.text
             for var_name in var_names:
-                name = var_name.text.decode("utf-8")
-                var = Var(name=name, type=type_)
+                name = var_name.text
+                var = Var(name=name, type=type_, is_declare=True)
                 if qualifier == "uniform":
                     self.uniforms[var.name] = var
                 else:
@@ -275,7 +210,7 @@ class ShaderParser:
                     var.end_index = declaration.end_byte
                     self.global_vars[var.name] = var
 
-    def __parse_block_declaration(self, declaration: tree_sitter.Node):
+    def __parse_block_declaration(self, declaration: ShaderSyntaxTree.Node):
         block_name = None
         field_declaration_list = None
         var_names = []
@@ -311,7 +246,7 @@ class ShaderParser:
         elif declaration.children[0].type in ["in", "out", "uniform", "buffer", "struct"]:
             qualifier = declaration.children[0].type
 
-        type_ = block_name.text.decode("utf-8")
+        type_ = block_name.text
         struct = Struct(
             name=type_,
             members=ShaderParser.__parse_field_declaration_list(
@@ -321,10 +256,11 @@ class ShaderParser:
         self.structs[type_] = struct
 
         for var_name in var_names:
-            name = var_name.text.decode("utf-8")
+            name = var_name.text
             var = Var(
                 name=name,
                 type=type_,
+                is_declare=True,
                 layout_args=layout_args,
                 layout_kwargs=layout_kwargs,
                 qualifier=qualifier,
@@ -347,6 +283,7 @@ class ShaderParser:
             var = Var(
                 name=type_,
                 type=type_,
+                is_declare=True,
                 layout_args=layout_args,
                 layout_kwargs=layout_kwargs,
                 qualifier=qualifier,
@@ -392,10 +329,10 @@ class ShaderParser:
 
         return False
 
-    def __parse_struct(self, struct_specifier: tree_sitter.Node):
+    def __parse_struct(self, struct_specifier: ShaderSyntaxTree.Node):
         type_identifier = struct_specifier.children[1]
         field_declaration_list = struct_specifier.children[2]
-        struct_name = type_identifier.text.decode("utf-8")
+        struct_name = type_identifier.text
         struct = Struct(
             name=struct_name,
             members=ShaderParser.__parse_field_declaration_list(
@@ -448,7 +385,7 @@ class ShaderParser:
         
         return re.sub(regx, replacement, self.clean_code, flags=re.M)
 
-    def __find_func_calls_and_local_vars(self, node: tree_sitter.Node, func: Func):
+    def __find_func_calls_and_local_vars(self, node: ShaderSyntaxTree.Node, func: Func):
         if node.type == "call_expression":
             func_call = FuncCall(call_expression=node)
             func.func_calls[func_call.signature] = func_call
@@ -462,23 +399,25 @@ class ShaderParser:
                 if child.type in ["identifier", "array_declarator"]:
                     identifier = child
                     var = Var(
-                        name=identifier.text.decode("utf-8"),
-                        type=type_identifier.text.decode("utf-8")
+                        name=identifier.text,
+                        type=type_identifier.text,
+                        is_declare=True,
                     )
                     func.local_vars.append(var)
 
                 if child.type == "init_declarator":
                     identifier = child.children[0]
                     var = Var(
-                        name=identifier.text.decode("utf-8"),
-                        type=type_identifier.text.decode("utf-8")
+                        name=identifier.text,
+                        type=type_identifier.text,
+                        is_declare=True
                     )
                     func.local_vars.append(var)
 
         for child in node.children:
             self.__find_func_calls_and_local_vars(child, func)
 
-    def __parse_function(self, function_definition: tree_sitter.Node):
+    def __parse_function(self, function_definition: ShaderSyntaxTree.Node):
         type_identifier = function_definition.children[0]
         function_declarator = function_definition.children[1]
         statement_list = function_definition.children[2]
@@ -487,8 +426,8 @@ class ShaderParser:
         parameter_list = function_declarator.children[1]
 
         func = Func(
-            return_type=type_identifier.text.decode("utf-8"),
-            name=identifier.text.decode("utf-8"),
+            return_type=type_identifier.text,
+            name=identifier.text,
             start_index=function_definition.start_byte,
             end_index=function_definition.end_byte,
         )
@@ -509,8 +448,9 @@ class ShaderParser:
             
             if type_identifier is not None and identifier is not None:
                 arg = Var(
-                    name=identifier.text.decode("utf-8"),
-                    type=type_identifier.text.decode("utf-8"),
+                    name=identifier.text,
+                    type=type_identifier.text,
+                    is_declare=True
                 )
                 func.args.append(arg)
 
@@ -548,9 +488,8 @@ class ShaderParser:
             self.__parse_geometry_in()
         clean_code = self.__replace_only_in_out()
 
-        parser = ShaderParser.__glsl_parser()
-        tree = parser.parse(bytes(clean_code, sys.getdefaultencoding()))
-        root_node = tree.root_node
+        self.syntax_tree.parse(clean_code)
+        root_node = self.syntax_tree.root
 
         for child in root_node.children:
             if child.type == "declaration":
@@ -590,7 +529,7 @@ class ShaderParser:
         empty_dims = []
         
         for i, dim_content in enumerate(dim_matches):
-            if dim_content.strip() == "":
+            if dim_content.strip() in ["", "{0}"]:
                 empty_dims.append(i)
                 index_ranges.append([None])
             else:
@@ -621,81 +560,58 @@ class ShaderParser:
         parent: Optional[Union[Struct, Func]] = None,
         mark_as_used: bool = False,
     ):
-        if current_var.atoms:
+        if current_var.is_resolved:
+            return
+        
+        if current_var.type in GLInfo.atom_type_names:
+            current_var.atoms.append(current_var.simple_var)
+            current_var.is_resolved = True
             return
 
-        rear_stack = [
-            SimpleVar(
-                name=current_var.name,
-                type=current_var.type,
-                access_chain=copy.copy(current_var.access_chain),
-                location=current_var.location,
-                binding_point=current_var.binding_point
+        pos_bracket = current_var.type.find("[")
+        if pos_bracket != -1:
+            pure_type = current_var.type[:pos_bracket]
+            suffix = current_var.type[pos_bracket:]
+            elements = ShaderParser.__resolve_array(suffix)
+            for element in elements:
+                child_var:Var = Var(
+                    name=current_var.name + element[0],
+                    type=pure_type,
+                    is_declare=False,
+                    access_chain=current_var.access_chain + element[1]
+                )
+                current_var.children[child_var.name] = child_var
+                self.__resolve_var(child_var)
+
+            current_var.collect_descendants()
+            current_var.is_resolved = True
+            return
+
+        if current_var.type in self.structs:
+            used_struct = self.structs[current_var.type]
+        elif current_var.type in ShaderBuiltins.structs:
+            used_struct = ShaderBuiltins.structs[current_var.type]
+        else:
+            raise TypeError(f"type '{current_var.type}' is not defined in current shader")
+
+        if parent is not None:
+            parent.used_structs.append(used_struct)
+
+        if mark_as_used:
+            used_struct.is_used = True
+        
+        for member in used_struct.members.values():
+            child_var = Var(
+                name=current_var.name + "." + member.name,
+                type=member.type,
+                is_declare=False,
+                access_chain=current_var.access_chain + [("getattr", member.name)]
             )
-        ]
-        while rear_stack:
-            var = rear_stack.pop()
-            current_var.resolved.append(var)
-            if var.type in GLInfo.atom_type_names:
-                current_var.atoms.append(var)
-                continue
+            current_var.children[child_var.name] = child_var
+            self.__resolve_var(child_var)
 
-            pos_bracket = var.type.find("[")
-            if pos_bracket != -1:
-                pure_type = var.type[:pos_bracket]
-                suffix = var.type[pos_bracket:]
-                elements = ShaderParser.__resolve_array(suffix)
-                for element in elements:
-                    rear_stack.append(
-                        SimpleVar(
-                            name=var.name + element[0],
-                            type=pure_type,
-                            access_chain=var.access_chain + element[1]
-                        )
-                    )
-
-                continue
-
-            if var.type in self.structs:
-                used_struct = self.structs[var.type]
-            elif var.type in ShaderBuiltins.structs:
-                used_struct = ShaderBuiltins.structs[var.type]
-            else:
-                raise TypeError(f"type '{var.type}' is not defined in current shader")
-
-            if parent is not None:
-                parent.used_structs.append(used_struct)
-
-            if mark_as_used:
-                used_struct.is_used = True
-
-            if used_struct.is_resolved:
-                for atom in used_struct.atoms:
-                    current_var.atoms.append(
-                        SimpleVar(
-                            name=var.name + "." + atom.name,
-                            type=atom.type,
-                            access_chain=var.access_chain + atom.access_chain
-                        )
-                    )
-
-                for atom in used_struct.resolved:
-                    current_var.resolved.append(
-                        SimpleVar(
-                            name=var.name + "." + atom.name,
-                            type=atom.type,
-                            access_chain=var.access_chain + atom.access_chain
-                        )
-                    )
-            else:
-                for member in used_struct.members.values():
-                    rear_stack.append(
-                        SimpleVar(
-                            name=var.name + "." + member.name,
-                            type=member.type,
-                            access_chain=var.access_chain + [("getattr", member.name)]
-                        )
-                    )
+        current_var.collect_descendants()
+        current_var.is_resolved = True
 
     def __resolve_structs(self):
         for struct in self.structs.values():
@@ -841,18 +757,18 @@ class ShaderParser:
 
         return ""
 
-    def __analyse_type(self, expression: tree_sitter.Node, func: Func) -> str:
+    def __analyse_type(self, expression: ShaderSyntaxTree.Node, func: Func) -> str:
         if expression.type == "number_literal":
-            text = expression.text.decode("utf-8")
+            text = expression.text
             if (
                 expression.next_sibling is not None
                 and expression.next_sibling.type == "ERROR"
             ):
-                text += expression.next_sibling.text.decode("utf-8")
+                text += expression.next_sibling.text
             number = eval(text)
             return "float" if isinstance(number, float) else "int"
         elif expression.type == "identifier":
-            text = expression.text.decode("utf-8")
+            text = expression.text
             for var in func.local_vars:
                 if var.name == text:
                     return var.type
@@ -898,7 +814,7 @@ class ShaderParser:
         elif expression.type == "field_expression":
             prefix_expression = expression.children[0]
             suffix_expression = expression.children[2]
-            suffix_text = suffix_expression.text.decode("utf-8")
+            suffix_text = suffix_expression.text
             prefix_type = self.__analyse_type(prefix_expression, func)
 
             if not prefix_type:
@@ -949,7 +865,7 @@ class ShaderParser:
 
             return ""
         elif expression.type == "call_expression":
-            func_call_name = expression.children[0].text.decode("utf-8")
+            func_call_name = expression.children[0].text
             if (
                 func_call_name in GLInfo.atom_type_names
                 or func_call_name in self.structs

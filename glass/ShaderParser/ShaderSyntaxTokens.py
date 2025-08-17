@@ -1,8 +1,12 @@
 from typing import Union, List, Dict, Tuple, Optional
 
 import tree_sitter
+import copy
 
 from ..helper import type_from_str, sizeof
+from ..GLInfo import GLInfo
+from OpenGL import GL
+from .ShaderSyntaxTree import ShaderSyntaxTree
 
 
 class SimpleVar:
@@ -31,6 +35,7 @@ class Var:
         self,
         name: str = "",
         type: str = "",
+        is_declare: bool = True,
         access_chain: Optional[List[Tuple[str, Union[str,int]]]] = None,
         layout_args: Optional[List[str]] = None,
         layout_kwargs: Optional[Dict[str, str]] = None,
@@ -44,6 +49,8 @@ class Var:
         self.index: int = -2
         self._location: int = -2
         self._binding_point: int = -2
+        self.is_resolved:bool = False
+        self._is_descendants_collected:bool = False
 
         if access_chain is None:
             access_chain = []
@@ -56,17 +63,36 @@ class Var:
         )
         self.qualifier: str = qualifier
         self.atoms: List[SimpleVar] = []
-        self.resolved: List[SimpleVar] = []
+        self.descendants: Dict[str, Var] = {}
+        self.children: Dict[str, Var] = {}
         self.start_index: int = start_index
         self.end_index: int = end_index
         self.is_used: bool = False
+        self.access_mode: GLInfo.access_modes = GL.GL_READ_WRITE
+        self.internal_format: GLInfo.internal_formats = None
+        for arg in self.layout_args:
+            if arg == "readonly":
+                self.access_mode = GL.GL_READ_ONLY
+            elif arg == "writeonly":
+                self.access_mode = GL.GL_WRITE_ONLY
+            if arg in GLInfo.memory_modifiers_to_internal_types_map:
+                self.internal_format = GLInfo.memory_modifiers_to_internal_types_map[arg]
 
-        pos_bracket = name.find("[")
-        if pos_bracket != -1:
-            self.type += name[pos_bracket:]
-            self.name = name[:pos_bracket]
-            if self.access_chain:
-                self.access_chain[-1] = ("getattr", self.name)
+        if is_declare:
+            pos_bracket = name.find("[")
+            if pos_bracket != -1:
+                self.type += name[pos_bracket:]
+                self.name = name[:pos_bracket]
+                if self.access_chain:
+                    self.access_chain[-1] = ("getattr", self.name)
+
+        self.simple_var:SimpleVar = SimpleVar(
+            name=self.name,
+            type=self.type,
+            access_chain=copy.copy(self.access_chain),
+            location=self.location,
+            binding_point=self.binding_point
+        )
 
     def __repr__(self):
         return f"Var(name='{self.name}', type='{self.type}')"
@@ -80,7 +106,7 @@ class Var:
         
     @location.setter
     def location(self, location:int):
-        self._location = location
+        self._location:int = location
 
     @property
     def binding_point(self)->int:
@@ -90,8 +116,27 @@ class Var:
             return self._binding_point
         
     @binding_point.setter
-    def binding_point(self, binding_point:int):
-        self._binding_point = binding_point
+    def binding_point(self, binding_point:int)->None:
+        self._binding_point:int = binding_point
+
+    def collect_descendants(self)->None:
+        if self._is_descendants_collected:
+            return
+        
+        for child_name, child in self.children.items():
+            self.descendants[child_name] = child
+            if child.type in GLInfo.atom_type_names:
+                self.atoms.append(child.simple_var)
+                child.atoms.append(child.simple_var)
+
+            child.collect_descendants()
+            for descendant_name, descendant in child.descendants.items():
+                self.descendants[descendant_name] = descendant
+                if descendant.type in GLInfo.atom_type_names:
+                    self.atoms.append(descendant.simple_var)
+                    descendant.atoms.append(descendant.simple_var)
+
+        self._is_descendants_collected:bool = True
 
 
 class Attribute:
@@ -137,17 +182,17 @@ class Struct:
         for member in self.members.values():
             yield from member.atoms
 
-    def _get_resolved(self):
+    def _get_descendants(self):
         for member in self.members.values():
-            yield from member.resolved
+            yield from member.descendants
 
     @property
-    def atoms(self):
+    def atoms(self)->List[SimpleVar]:
         return self._get_atoms()
 
     @property
-    def resolved(self):
-        return self._get_resolved()
+    def descendants(self)->Dict[str, Var]:
+        return self._get_descendants()
 
     @property
     def is_used(self):
@@ -168,17 +213,17 @@ class FuncCall:
     def __init__(
         self,
         name: str = "",
-        args: Optional[List[tree_sitter.Node]] = None,
-        call_expression: Optional[tree_sitter.Node] = None,
+        args: Optional[List[ShaderSyntaxTree.Node]] = None,
+        call_expression: Optional[ShaderSyntaxTree.Node] = None,
     ):
         if call_expression is None:
             self.name: str = name
-            self.args: List[tree_sitter.Node] = [] if args is None else args
+            self.args: List[ShaderSyntaxTree.Node] = [] if args is None else args
         else:
             identifier = call_expression.children[0]
             argument_list = call_expression.children[1]
-            self.name: str = identifier.text.decode("utf-8")
-            self.args: List[tree_sitter.Node] = []
+            self.name: str = identifier.text
+            self.args: List[ShaderSyntaxTree.Node] = []
             for arg in argument_list.children:
                 if arg.type not in [",", "ERROR", "(", ")"]:
                     self.args.append(arg)
@@ -188,22 +233,22 @@ class FuncCall:
         return (
             self.name
             + "("
-            + ", ".join([arg.text.decode("utf-8") for arg in self.args])
+            + ", ".join([arg.text for arg in self.args])
             + ")"
         )
 
     @staticmethod
-    def get_signature(call_expression: tree_sitter.Node):
+    def get_signature(call_expression: ShaderSyntaxTree.Node):
         identifier = call_expression.children[0]
         argument_list = call_expression.children[1]
 
-        name = identifier.text.decode("utf-8")
+        name = identifier.text
         args = []
         for arg in argument_list.children:
             if arg.type not in [",", "ERROR", "(", ")"]:
                 args.append(arg)
 
-        return name + "(" + ", ".join([arg.text.decode("utf-8") for arg in args]) + ")"
+        return name + "(" + ", ".join([arg.text for arg in args]) + ")"
 
     def __repr__(self):
         return f"FuncCall(name='{self.name}')"

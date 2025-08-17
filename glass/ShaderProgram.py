@@ -241,7 +241,7 @@ class ShaderProgram(GPUProgram):
             shader = self.fragment_shader
 
         self._attributes_info.update(shader._shader_parser.attributes)
-        self._uniforms.info.update(shader._shader_parser.uniforms)
+        self._uniforms.update_info(shader._shader_parser.uniforms)
         self._uniform_blocks.info.update(shader._shader_parser.uniform_blocks)
         self._shader_storage_blocks.info.update(shader._shader_parser.shader_storage_blocks)
         self._structs_info.update(shader._shader_parser.structs)

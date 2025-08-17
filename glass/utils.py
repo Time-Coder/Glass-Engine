@@ -103,6 +103,10 @@ def delete(method):
     return wrapper
 
 
+def setmethod(obj, method_name, new_method):
+    setattr(obj, method_name, types.MethodType(new_method, obj))
+
+
 def extname(filename):
     return os.path.splitext(filename)[1][1:].lower()
 

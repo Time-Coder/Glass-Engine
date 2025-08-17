@@ -3,7 +3,7 @@ import OpenGL.GL.ARB.gpu_shader_int64 as gsi64
 import glm
 import copy
 from enum import Enum
-from typing import Union
+from typing import Union, Dict
 
 from .utils import checktype, uint64_to_uvec2
 from .CustomLiteral import CustomLiteral
@@ -22,7 +22,7 @@ from .sampler2DArray import sampler2DArray
 from .ACBO import ACBO
 from .GlassConfig import GlassConfig
 from .UniformVar import UniformVar
-from .ShaderParser import ShaderParser, SimpleVar
+from .ShaderParser import ShaderParser, SimpleVar, Var
 
 
 class Uniforms:
@@ -31,21 +31,38 @@ class Uniforms:
 
     def __init__(self, shader_program):
         self._program = shader_program
-        self.info = {}
+        self.info:Dict[str, Var] = {}
+        self.descendants:Dict[str, Var] = {}
 
         self._atoms_to_update = {}
-        self._uniform_var_map = {}
+        self._uniform_var_map:Dict[str, UniformVar] = {}
         self._atom_value_map = {}
         self._texture_value_map = {}
-        self._current_atom_name = ""
+        self._current_atom_name:str = ""
 
     @property
     def program(self):
         return self._program
+    
+    def update_info(self, info:Dict[str, Var])->None:
+        for var in info.values():
+            self.descendants[var.name] = var
+            self.descendants.update(var.descendants)
+
+        self.info.update(info)
+
+    def clear(self):
+        self.info.clear()
+        self.descendants.clear()
+        self._atoms_to_update.clear()
+        self._uniform_var_map.clear()
+        self._atom_value_map.clear()
+        self._texture_value_map.clear()
+        self._current_atom_name:str = ""
 
     def __getitem__(self, name: str):
         program = self.program
-        if GlassConfig.debug and name not in self.info:
+        if GlassConfig.debug and name not in self.descendants:
             error_message = (
                 f"uniform variable '{name}' is not defined in following files:\n"
             )
@@ -53,26 +70,26 @@ class Uniforms:
             raise NameError(error_message)
 
         if name not in self._uniform_var_map:
-            self._uniform_var_map[name] = UniformVar(self, name)
+            self._uniform_var_map[name] = UniformVar(self, self.descendants[name])
 
         return self._uniform_var_map[name]
 
     def __setitem__(self, name: str, value):
         program = self.program
-        if GlassConfig.debug and name not in self.info:
+        if GlassConfig.debug and name not in self.descendants:
             error_message = (
                 f"uniform variable '{name}' is not defined in following files:\n"
             )
             error_message += "\n".join(program.related_files)
             raise NameError(error_message)
 
-        for atom in self.info[name].atoms:
+        for atom in self.descendants[name].atoms:
             atom_value = ShaderParser.access(value, atom.access_chain)
             self._set_atom(atom, atom_value)
 
     @checktype
     def __contains__(self, name: str):
-        return name in self.info
+        return name in self.descendants
 
     @staticmethod
     def _copy(value):
@@ -453,31 +470,24 @@ class Uniforms:
         value: Union[image2D, iimage2D, uimage2D, str],
         image_type: CustomLiteral[image2D, iimage2D, uimage2D] = image2D,
     ):
+        internal_format = self.descendants[self._current_atom_name].internal_format
         if isinstance(value, str):
             value = image_type.load(
-                value, internal_format=self._current_internal_format
+                value, internal_format=internal_format
             )
 
-        access = GL.GL_READ_WRITE
         program = self.program
-        memory_qualifiers = self.info[self._current_atom_name].memory_qualifiers
-        internal_format = self.info[self._current_atom_name].internal_format
+        access_mode = self.descendants[self._current_atom_name].access_mode
         if value is not None:
-            if GlassConfig.debug and internal_format != value.internal_format:
+            if GlassConfig.debug and internal_format is not None and internal_format != value.internal_format:
                 raise ValueError(
                     f"uniform image2D {self._current_atom_name} need format {internal_format}, {value.internal_format} were given"
                 )
 
-            access = GL.GL_READ_WRITE
-            if "readonly" in memory_qualifiers:
-                access = GL.GL_READ_ONLY
-            elif "writeonly" in memory_qualifiers:
-                access = GL.GL_WRITE_ONLY
-
             value.bind()
 
         program._sampler_map[self._current_atom_name]["location"] = location
-        program._sampler_map[self._current_atom_name]["access"] = access
+        program._sampler_map[self._current_atom_name]["access"] = access_mode
         program._sampler_map[self._current_atom_name]["sampler"] = value
 
     @checktype

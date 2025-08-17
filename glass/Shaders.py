@@ -102,7 +102,7 @@ class BaseShader(GLObject):
             if not GlassConfig.debug:
                 self._used_code = self._shader_parser.compress()
             else:
-                self._used_code = self._clean_code
+                self._used_code = self._shader_parser.clean_code
 
         version_pattern1 = r"#\s*version \d\d\d core"
         version_pattern2 = r"#\s*version \d\d\d"
@@ -181,7 +181,7 @@ class BaseShader(GLObject):
         if success != GL.GL_TRUE:
             raise CompileError(message)
 
-        self._shader_parser.save(self._shader_parser_file_name)
+        save_var(self._shader_parser, self._shader_parser_file_name)
         self._preprocessed_but_not_compiled = False
 
         if GlassConfig.print:
@@ -199,7 +199,7 @@ class BaseShader(GLObject):
             self._should_repreprocess = True
             return True
 
-        self._shader_parser.load(self._shader_parser_file_name)
+        self._shader_parser = load_var(self._shader_parser_file_name)
         should_recompile = False
         for file_name in self._shader_parser.related_files:
             mtime = modify_time(file_name)
