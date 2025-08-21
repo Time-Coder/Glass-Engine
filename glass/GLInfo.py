@@ -39,7 +39,7 @@ class GLInfo:
 
     vec2_swizzle = generate_swizzle("xyrgst", 1, 2)
     vec3_swizzle = generate_swizzle("xyzrgbstr", 1, 3)
-    vec4_swizzle = generate_swizzle("xyzwrgbastrq", 1, 3)
+    vec4_swizzle = generate_swizzle("xyzwrgbastrq", 1, 4)
 
     primary_types = {
         int,
