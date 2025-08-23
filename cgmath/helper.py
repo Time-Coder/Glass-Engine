@@ -1,0 +1,93 @@
+import itertools
+from typing import List, Set, Dict
+from types import ModuleType
+import importlib
+import os
+
+
+_module_map:Dict[str, ModuleType] = {}
+
+def from_import(module_name:str, attr_name:str)->type:
+    if module_name not in _module_map:
+        module = None
+        if module_name.startswith("."):
+            module = importlib.import_module(module_name, package=__package__)
+        else:
+            module = importlib.import_module(module_name)
+        _module_map[module_name] = module
+    
+    return getattr(_module_map[module_name], attr_name)
+
+def generate_getter_swizzles(char_sets:List[str])->Set[str]:
+    result:Set[str] = set()
+    
+    for char_set in char_sets:
+        for length in range(1, 4 + 1):
+            for combo in itertools.product(char_set, repeat=length):
+                swizzle = ''.join(combo)
+                result.add(swizzle)
+    
+    return result
+
+def generate_setter_swizzles(char_sets:List[str])->Set[str]:
+    result:Set[str] = set()
+    
+    for char_set in char_sets:
+        for length in range(1, len(char_set) + 1):
+            for combo in itertools.permutations(char_set, length):
+                swizzle = ''.join(combo)
+                result.add(swizzle)
+    
+    return result
+
+def generate_swizzle_defines(type_name:str, dtype_name:str, char_sets:List[str])->str:
+    result:str = ""
+    vec_basename = type_name[:-1]
+    getter_swizzles:Set[str] = generate_getter_swizzles(char_sets)
+    setter_swizzles:Set[str] = generate_setter_swizzles(char_sets)
+    for swizzle in getter_swizzles:
+        return_type_name:str = dtype_name
+        input_type_name:str = "Union[bool, int, float]"
+
+        n_swizzle = len(swizzle)
+        if n_swizzle > 1:
+            return_type_name:str = vec_basename + str(n_swizzle)
+            input_type_name:str = f"Union[bool, int, float, genVec{n_swizzle}]"
+
+        result += f"""
+    @property
+    def {swizzle}(self)->{return_type_name}: ...
+"""
+        
+        if swizzle in setter_swizzles:
+            result += f"""
+    @{swizzle}.setter
+    def {swizzle}(self, value:{input_type_name})->None: ...
+"""
+            
+    return result
+
+if __name__ == "__main__":
+    self_folder = os.path.dirname(os.path.abspath(__file__))
+    vec_infos = [
+        ('bvec2', 'bool', ['xy', 'rg', 'st']),
+        ('bvec3', 'bool', ['xyz', 'rgb', 'stp']),
+        ('bvec4', 'bool', ['xyzw', 'rgba', 'stpq']),
+        ('ivec2', 'int', ['xy', 'rg', 'st']),
+        ('ivec3', 'int', ['xyz', 'rgb', 'stp']),
+        ('ivec4', 'int', ['xyzw', 'rgba', 'stpq']),
+        ('uvec2', 'int', ['xy', 'rg', 'st']),
+        ('uvec3', 'int', ['xyz', 'rgb', 'stp']),
+        ('uvec4', 'int', ['xyzw', 'rgba', 'stpq']),
+        ('vec2', 'float', ['xy', 'rg', 'st']),
+        ('vec3', 'float', ['xyz', 'rgb', 'stp']),
+        ('vec4', 'float', ['xyzw', 'rgba', 'stpq']),
+        ('dvec2', 'float', ['xy', 'rg', 'st']),
+        ('dvec3', 'float', ['xyz', 'rgb', 'stp']),
+        ('dvec4', 'float', ['xyzw', 'rgba', 'stpq'])
+    ]
+
+    for vec_inf in vec_infos:
+        with open(f"{self_folder}/{vec_inf[0]}.pyi", "w") as file:
+            swizzle_defines:str = generate_swizzle_defines(*vec_inf)
+            file.write(swizzle_defines)

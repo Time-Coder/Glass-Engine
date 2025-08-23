@@ -1,5 +1,9 @@
-from .vec4 import vec4
+from .genVec4 import genVec4
+
+import ctypes
 
 
-class dvec4(vec4):
-    pass
+class dvec4(genVec4):
+    
+    dtype:type = ctypes.c_double
+    prefix:str = "d"

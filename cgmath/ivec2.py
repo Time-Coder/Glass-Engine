@@ -1,2 +1,9 @@
-class ivec2:
-    pass
+from .genVec2 import genVec2
+
+import ctypes
+
+
+class ivec2(genVec2):
+    
+    dtype:type = ctypes.c_int32
+    prefix:str = "i"
