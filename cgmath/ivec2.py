@@ -6,4 +6,3 @@ import ctypes
 class ivec2(genVec2):
     
     dtype:type = ctypes.c_int32
-    prefix:str = "i"

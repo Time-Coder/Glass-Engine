@@ -6,4 +6,3 @@ import ctypes
 class dvec4(genVec4):
     
     dtype:type = ctypes.c_double
-    prefix:str = "d"

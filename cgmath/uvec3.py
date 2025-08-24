@@ -6,4 +6,3 @@ import ctypes
 class uvec3(genVec3):
     
     dtype:type = ctypes.c_uint32
-    prefix:str = "u"

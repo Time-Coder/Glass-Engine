@@ -6,4 +6,3 @@ import ctypes
 class bvec2(genVec2):
     
     dtype:type = ctypes.c_bool
-    prefix:str = "b"

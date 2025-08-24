@@ -6,4 +6,3 @@ import ctypes
 class vec4(genVec4):
     
     dtype:type = ctypes.c_float
-    prefix:str = ""

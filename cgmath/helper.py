@@ -19,24 +19,24 @@ def from_import(module_name:str, attr_name:str)->type:
     return getattr(_module_map[module_name], attr_name)
 
 def generate_getter_swizzles(char_sets:List[str])->Set[str]:
-    result:Set[str] = set()
+    result:List[str] = []
     
     for char_set in char_sets:
         for length in range(1, 4 + 1):
             for combo in itertools.product(char_set, repeat=length):
                 swizzle = ''.join(combo)
-                result.add(swizzle)
+                result.append(swizzle)
     
     return result
 
 def generate_setter_swizzles(char_sets:List[str])->Set[str]:
-    result:Set[str] = set()
+    result:List[str] = []
     
     for char_set in char_sets:
         for length in range(1, len(char_set) + 1):
             for combo in itertools.permutations(char_set, length):
                 swizzle = ''.join(combo)
-                result.add(swizzle)
+                result.append(swizzle)
     
     return result
 
@@ -87,7 +87,16 @@ if __name__ == "__main__":
         ('dvec4', 'float', ['xyzw', 'rgba', 'stpq'])
     ]
 
+    pyi_in_contents:Dict[str, str] = {}
+
     for vec_inf in vec_infos:
-        with open(f"{self_folder}/{vec_inf[0]}.pyi", "w") as file:
+        basename:str = vec_inf[0][:-1]
+        num:str = vec_inf[0][-1]
+        in_file_name:str = f"{self_folder}/genVec{num}.pyi.in"
+        if in_file_name not in pyi_in_contents:
+            pyi_in_contents[in_file_name] = open(in_file_name).read()
+
+        with open(f"{self_folder}/{vec_inf[0]}.pyi", "w") as out_file:
             swizzle_defines:str = generate_swizzle_defines(*vec_inf)
-            file.write(swizzle_defines)
+            pyi_in_content = pyi_in_contents[in_file_name].format(basename=basename)
+            out_file.write(pyi_in_content + swizzle_defines)
