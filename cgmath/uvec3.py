@@ -5,4 +5,6 @@ import ctypes
 
 class uvec3(genVec3):
     
-    dtype:type = ctypes.c_uint32
+    @property
+    def dtype(self)->type:
+        return ctypes.c_uint

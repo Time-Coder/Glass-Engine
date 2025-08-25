@@ -8,7 +8,6 @@ from .genVec import genVec
 class genVec2(genVec):
 
     namespaces:List[str] = ['xy', 'rg', 'st']
-    size:int = 2
 
     def __init__(self, x:Optional[Union[float, bool, int, genVec]]=None, y:Optional[float]=None):
         genVec.__init__(self)
@@ -30,3 +29,6 @@ class genVec2(genVec):
         
         self._data[0] = self.dtype(x)
         self._data[1] = self.dtype(y)
+
+    def __len__(self)->int:
+        return 2

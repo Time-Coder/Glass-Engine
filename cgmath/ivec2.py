@@ -5,4 +5,6 @@ import ctypes
 
 class ivec2(genVec2):
     
-    dtype:type = ctypes.c_int32
+    @property
+    def dtype(self)->type:
+        return ctypes.c_int

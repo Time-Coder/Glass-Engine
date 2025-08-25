@@ -5,7 +5,6 @@ from .genVec import genVec
 class genVec4(genVec):
 
     namespaces:List[str] = ['xyzw', 'rgba', 'stpq']
-    size:int = 4
 
     def __init__(self, x:Optional[Union[float, bool, int, genVec]]=None, y:Optional[Union[float, bool, int, genVec]]=None, z:Optional[float]=None, w:Optional[float]=None):
         genVec.__init__(self)
@@ -75,3 +74,6 @@ class genVec4(genVec):
         self._data[1] = self.dtype(y)
         self._data[2] = self.dtype(z)
         self._data[3] = self.dtype(w)
+
+    def __len__(self)->int:
+        return 4

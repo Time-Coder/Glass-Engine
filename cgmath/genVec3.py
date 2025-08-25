@@ -6,7 +6,6 @@ import ctypes
 class genVec3(genVec):
 
     namespaces:List[str] = ['xyz', 'rgb', 'stp']
-    size:int = 3
 
     def __init__(self, x:Optional[Union[float, bool, int, genVec]]=None, y:Optional[float]=None, z:Optional[float]=None):
         genVec.__init__(self)
@@ -45,3 +44,6 @@ class genVec3(genVec):
         self._data[0] = self.dtype(x)
         self._data[1] = self.dtype(y)
         self._data[2] = self.dtype(z)
+
+    def __len__(self)->int:
+        return 3

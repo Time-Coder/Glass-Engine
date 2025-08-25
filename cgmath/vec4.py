@@ -5,4 +5,6 @@ import ctypes
 
 class vec4(genVec4):
     
-    dtype:type = ctypes.c_float
+    @property
+    def dtype(self)->type:
+        return ctypes.c_float

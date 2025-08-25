@@ -1,25 +1,12 @@
 from __future__ import annotations
 
+from abc import ABC, abstractmethod
 from typing import Set, List, Dict, Tuple, Union, Any
 import ctypes
 from .helper import generate_getter_swizzles, generate_setter_swizzles, from_import
 
 
-class genVecIterator:
-
-    def __init__(self, vec:genVec):
-        self.__current:int = 0
-        self.__vec:genVec = vec
-
-    def __next__(self):
-        if self.__current < self.__vec.size:
-            value = self.__vec._data[self.__current]
-            self.__current += 1
-            return value
-        else:
-            raise StopIteration
-
-class genVec:
+class genVec(ABC):
 
     _attr_index_map:Dict[str, int] = {
         'x': 0,
@@ -60,12 +47,19 @@ class genVec:
         float: ''
     }
 
-    namespaces:List[str] = []
-    dtype:type = ctypes.c_float
-    size:int = 0
+    __namespaces:List[str] = ['xyzw', 'rgba', 'stpq']
 
     def __init__(self):
-        self._data = (self.dtype * self.size)()
+        self._data = (self.dtype * len(self))()
+
+    @property
+    @abstractmethod
+    def dtype(self)->type:
+        pass
+    
+    @abstractmethod
+    def __len__(self)->int:
+        pass
 
     def __getattr__(self, name:str):
         if name not in self._getter_swizzles():
@@ -75,11 +69,11 @@ class genVec:
             return self._data[self._attr_index_map[name]]
         
         if len(name) == 2:
-            _vec2 = self.__vec_type(self.dtype, 2)
+            _vec2 = self._vec_type(self.dtype, 2)
             return _vec2(self._data[self._attr_index_map[name[0]]], self._data[self._attr_index_map[name[1]]])
         
         if len(name) == 3:
-            _vec3 = self.__vec_type(self.dtype, 3)
+            _vec3 = self._vec_type(self.dtype, 3)
             return _vec3(
                 self._data[self._attr_index_map[name[0]]],
                 self._data[self._attr_index_map[name[1]]],
@@ -87,7 +81,7 @@ class genVec:
             )
         
         if len(name) == 4:
-            _vec4 = self.__vec_type(self.dtype, 4)
+            _vec4 = self._vec_type(self.dtype, 4)
             return _vec4(
                 self._data[self._attr_index_map[name[0]]],
                 self._data[self._attr_index_map[name[1]]],
@@ -117,7 +111,7 @@ class genVec:
             return
         
         if len(name) == 2:
-            if isinstance(value, genVec) and value.size == 2:
+            if isinstance(value, genVec) and len(value) == 2:
                 self._data[self._attr_index_map[name[0]]] = self.dtype(value[0])
                 self._data[self._attr_index_map[name[1]]] = self.dtype(value[1])
             elif isinstance(value, (bool, float, int)):
@@ -129,7 +123,7 @@ class genVec:
             return
         
         if len(name) == 3:
-            if isinstance(value, genVec) and value.size == 3:
+            if isinstance(value, genVec) and len(value) == 3:
                 self._data[self._attr_index_map[name[0]]] = self.dtype(value[0])
                 self._data[self._attr_index_map[name[1]]] = self.dtype(value[1])
                 self._data[self._attr_index_map[name[2]]] = self.dtype(value[2])
@@ -143,7 +137,7 @@ class genVec:
             return
         
         if len(name) == 4:
-            if isinstance(value, genVec) and value.size == 3:
+            if isinstance(value, genVec) and len(value) == 3:
                 self._data[self._attr_index_map[name[0]]] = self.dtype(value[0])
                 self._data[self._attr_index_map[name[1]]] = self.dtype(value[1])
                 self._data[self._attr_index_map[name[2]]] = self.dtype(value[2])
@@ -166,14 +160,14 @@ class genVec:
             if len(result) == 1:
                 return result[0]
             else:
-                result_type = self.__vec_type(self.dtype, len(result))
+                result_type = self._vec_type(self.dtype, len(result))
                 return result_type(*result)
         else:
             return result
     
     def __setitem__(self, index:Union[int,slice], value:Union[float,int,bool,genVec])->None:
         if isinstance(index, slice):
-            start, stop, step = index.indices(self.size)
+            start, stop, step = index.indices(len(self))
             if isinstance(value, (float,int,bool)):
                 for i in range(start, stop, step):
                     self._data[i] = value
@@ -186,29 +180,31 @@ class genVec:
     def value_ptr(self):
         return self._data
         
-    @classmethod
-    def _getter_swizzles(cls):
-        if not cls._all_getter_swizzles:
-            cls._all_getter_swizzles = set(generate_getter_swizzles(cls.namespaces))
+    def _getter_swizzles(self):
+        if not self.__class__._all_getter_swizzles:
+            n:int = len(self)
+            namespaces:List[str] = [namespace[:n] for namespace in genVec.__namespaces]
+            self._all_getter_swizzles = set(generate_getter_swizzles(namespaces))
 
-        return cls._all_getter_swizzles
+        return self._all_getter_swizzles
     
-    @classmethod
-    def _setter_swizzles(cls):
-        if not cls._all_setter_swizzles:
-            cls._all_setter_swizzles = set(generate_setter_swizzles(cls.namespaces))
+    def _setter_swizzles(self):
+        if not self._all_setter_swizzles:
+            n:int = len(self)
+            namespaces:List[str] = [namespace[:n] for namespace in genVec.__namespaces]
+            self._all_setter_swizzles = set(generate_setter_swizzles(namespaces))
 
-        return cls._all_setter_swizzles
+        return self._all_setter_swizzles
     
     @staticmethod
     def _total_swizzles():
         if not genVec.__total_swizzles:
-            genVec.__total_swizzles = set(generate_getter_swizzles(['xyzw', 'rgba', 'stpq']))
+            genVec.__total_swizzles = set(generate_getter_swizzles(genVec.__namespaces))
 
         return genVec.__total_swizzles
     
     @staticmethod
-    def __vec_type(dtype:type, size:int)->type:
+    def _vec_type(dtype:type, size:int)->type:
         key:Tuple[type, int] = (dtype, size)
         if key not in genVec.__vec_type_map:
             result_name:str = f"{genVec.__dtype_prefix_map[dtype]}vec{size}"
@@ -221,7 +217,7 @@ class genVec:
         if isinstance(vec, (float,int,bool)):
             return (vec < 0)
         elif isinstance(vec, genVec):
-            for i in range(vec.size):
+            for i in range(len(vec)):
                 if vec._data[i] < 0:
                     return True
                 
@@ -229,22 +225,15 @@ class genVec:
         else:
             raise TypeError(type(vec))
 
-    def __iter__(self)->genVecIterator:
-        return genVecIterator(self)
-
-    def __len__(self)->int:
-        return self.size
+    def __iter__(self):
+        return iter(self._data)
     
     def __contains__(self, value:Any)->bool:
-        for i in range(self.size):
-            if self._data[i] == value:
-                return True
-            
-        return False
+        return (value in self._data)
 
     def __repr__(self)->str:
         value_strs = []
-        for i in range(self.size):
+        for i in range(len(self)):
             value_strs.append(str(self._data[i]))
 
         return f"{self.__class__.__name__}({', '.join(value_strs)})"
@@ -264,7 +253,7 @@ class genVec:
         other_dtype:type = None
         if isinstance(other, (float, bool, int)):
             other_dtype = type(other)
-        elif isinstance(other, genVec) and self.size == other.size:
+        elif isinstance(other, genVec) and len(self) == len(other):
             other_dtype = other.dtype
         else:
             if not reverse:
@@ -277,20 +266,20 @@ class genVec:
         else:
             result_dtype:type = self.__operator_dtype(other_dtype, operator, self.dtype, second_has_negative)
 
-        result_type:type = self.__vec_type(result_dtype, self.size)
+        result_type:type = self._vec_type(result_dtype, len(self))
         return result_type
 
     def __neg__(self)->genVec:
         result_type = self.__class__
         if self.dtype == ctypes.c_uint:
-            result_type = self.__vec_type(ctypes.c_int, self.size)
+            result_type = self._vec_type(ctypes.c_int, len(self))
 
         result = result_type()
         if self.dtype == ctypes.c_bool:
-            for i in range(result.size):
+            for i in range(len(result)):
                 result._data[i] = (not self._data[i])
         else:
-            for i in range(result.size):
+            for i in range(len(result)):
                 result._data[i] = -self._data[i]
 
         return result
@@ -300,11 +289,11 @@ class genVec:
         result = result_type()
 
         if isinstance(other, (float, bool, int)):
-            for i in range(result.size):
+            for i in range(len(result)):
                 result._data[i] = self._data[i] + other
 
-        elif isinstance(other, genVec) and self.size == other.size:
-            for i in range(result.size):
+        elif isinstance(other, genVec) and len(self) == len(other):
+            for i in range(len(result)):
                 result._data[i] = self._data[i] + other._data[i]
 
         return result
@@ -314,7 +303,7 @@ class genVec:
         result = result_type()
 
         if isinstance(other, (float, bool, int)):
-            for i in range(result.size):
+            for i in range(len(result)):
                 result._data[i] = self._data[i] + other
 
         else:
@@ -324,26 +313,28 @@ class genVec:
     
     def __iadd__(self, other:Union[float, bool, int, genVec]):
         if isinstance(other, (float, bool, int)):
-            for i in range(self.size):
+            for i in range(len(self)):
                 self._data[i] += other
 
-        elif isinstance(other, genVec) and self.size == other.size:
-            for i in range(self.size):
+        elif isinstance(other, genVec) and len(self) == len(other):
+            for i in range(len(self)):
                 self._data[i] += other._data[i]
 
         else:
             raise TypeError(f"unsupported operand type(s) for +=: '{self.__class__.__name__}' and '{other.__class__.__name__}'")
         
+        return self
+
     def __sub__(self, other:Union[float, bool, int, genVec])->genVec:
         result_type = self.__operator_type("-", other, reverse=False)
         result = result_type()
 
         if isinstance(other, (float, bool, int)):
-            for i in range(result.size):
+            for i in range(len(result)):
                 result._data[i] = self._data[i] - other
 
-        elif isinstance(other, genVec) and self.size == other.size:
-            for i in range(result.size):
+        elif isinstance(other, genVec) and len(self) == len(other):
+            for i in range(len(result)):
                 result._data[i] = self._data[i] - other._data[i]
 
         return result
@@ -353,7 +344,7 @@ class genVec:
         result = result_type()
 
         if isinstance(other, (float, bool, int)):
-            for i in range(result.size):
+            for i in range(len(result)):
                 result._data[i] = other - self._data[i]
 
         else:
@@ -363,26 +354,28 @@ class genVec:
     
     def __isub__(self, other:Union[float, bool, int, genVec]):
         if isinstance(other, (float, bool, int)):
-            for i in range(self.size):
+            for i in range(len(self)):
                 self._data[i] -= other
 
-        elif isinstance(other, genVec) and self.size == other.size:
-            for i in range(self.size):
+        elif isinstance(other, genVec) and len(self) == len(other):
+            for i in range(len(self)):
                 self._data[i] -= other._data[i]
 
         else:
             raise TypeError(f"unsupported operand type(s) for -=: '{self.__class__.__name__}' and '{other.__class__.__name__}'")
         
+        return self
+
     def __mul__(self, other:Union[float, bool, int, genVec])->genVec:
         result_type = self.__operator_type("*", other, reverse=False)
         result = result_type()
 
         if isinstance(other, (float, bool, int)):
-            for i in range(result.size):
+            for i in range(len(result)):
                 result._data[i] = self._data[i] * other
 
-        elif isinstance(other, genVec) and self.size == other.size:
-            for i in range(result.size):
+        elif isinstance(other, genVec) and len(self) == len(other):
+            for i in range(len(result)):
                 result._data[i] = self._data[i] * other._data[i]
 
         return result
@@ -392,7 +385,7 @@ class genVec:
         result = result_type()
 
         if isinstance(other, (float, bool, int)):
-            for i in range(result.size):
+            for i in range(len(result)):
                 result._data[i] = other * self._data[i]
 
         else:
@@ -402,26 +395,28 @@ class genVec:
     
     def __imul__(self, other:Union[float, bool, int, genVec]):
         if isinstance(other, (float, bool, int)):
-            for i in range(self.size):
+            for i in range(len(self)):
                 self._data[i] *= other
 
-        elif isinstance(other, genVec) and self.size == other.size:
-            for i in range(self.size):
+        elif isinstance(other, genVec) and len(self) == len(other):
+            for i in range(len(self)):
                 self._data[i] *= other._data[i]
 
         else:
             raise TypeError(f"unsupported operand type(s) for *=: '{self.__class__.__name__}' and '{other.__class__.__name__}'")
         
+        return self
+
     def __truediv__(self, other:Union[float, bool, int, genVec])->genVec:
         result_type = self.__operator_type("/", other, reverse=False)
         result = result_type()
 
         if isinstance(other, (float, bool, int)):
-            for i in range(result.size):
+            for i in range(len(result)):
                 result._data[i] = self._data[i] / other
 
-        elif isinstance(other, genVec) and self.size == other.size:
-            for i in range(result.size):
+        elif isinstance(other, genVec) and len(self) == len(other):
+            for i in range(len(result)):
                 result._data[i] = self._data[i] / other._data[i]
 
         return result
@@ -431,7 +426,7 @@ class genVec:
         result = result_type()
 
         if isinstance(other, (float, bool, int)):
-            for i in range(result.size):
+            for i in range(len(result)):
                 result._data[i] = other / self._data[i]
 
         else:
@@ -441,26 +436,28 @@ class genVec:
     
     def __itruediv__(self, other:Union[float, bool, int, genVec]):
         if isinstance(other, (float, bool, int)):
-            for i in range(self.size):
+            for i in range(len(self)):
                 self._data[i] /= other
 
-        elif isinstance(other, genVec) and self.size == other.size:
-            for i in range(self.size):
+        elif isinstance(other, genVec) and len(self) == len(other):
+            for i in range(len(self)):
                 self._data[i] /= other._data[i]
 
         else:
             raise TypeError(f"unsupported operand type(s) for /=: '{self.__class__.__name__}' and '{other.__class__.__name__}'")
         
+        return self
+
     def __floordiv__(self, other:Union[float, bool, int, genVec])->genVec:
         result_type = self.__operator_type("//", other, reverse=False)
         result = result_type()
 
         if isinstance(other, (float, bool, int)):
-            for i in range(result.size):
+            for i in range(len(result)):
                 result._data[i] = self._data[i] // other
 
-        elif isinstance(other, genVec) and self.size == other.size:
-            for i in range(result.size):
+        elif isinstance(other, genVec) and len(self) == len(other):
+            for i in range(len(result)):
                 result._data[i] = self._data[i] // other._data[i]
 
         return result
@@ -470,7 +467,7 @@ class genVec:
         result = result_type()
 
         if isinstance(other, (float, bool, int)):
-            for i in range(result.size):
+            for i in range(len(result)):
                 result._data[i] = other // self._data[i]
 
         else:
@@ -480,26 +477,28 @@ class genVec:
     
     def __ifloordiv__(self, other:Union[float, bool, int, genVec]):
         if isinstance(other, (float, bool, int)):
-            for i in range(self.size):
+            for i in range(len(self)):
                 self._data[i] //= other
 
-        elif isinstance(other, genVec) and self.size == other.size:
-            for i in range(self.size):
+        elif isinstance(other, genVec) and len(self) == len(other):
+            for i in range(len(self)):
                 self._data[i] //= other._data[i]
 
         else:
             raise TypeError(f"unsupported operand type(s) for //=: '{self.__class__.__name__}' and '{other.__class__.__name__}'")
         
+        return self
+
     def __mod__(self, other:Union[float, bool, int, genVec])->genVec:
         result_type = self.__operator_type("%", other, reverse=False)
         result = result_type()
 
         if isinstance(other, (float, bool, int)):
-            for i in range(result.size):
+            for i in range(len(result)):
                 result._data[i] = self._data[i] % other
 
-        elif isinstance(other, genVec) and self.size == other.size:
-            for i in range(result.size):
+        elif isinstance(other, genVec) and len(self) == len(other):
+            for i in range(len(result)):
                 result._data[i] = self._data[i] % other._data[i]
 
         return result
@@ -509,7 +508,7 @@ class genVec:
         result = result_type()
 
         if isinstance(other, (float, bool, int)):
-            for i in range(result.size):
+            for i in range(len(result)):
                 result._data[i] = other % self._data[i]
 
         else:
@@ -519,26 +518,28 @@ class genVec:
     
     def __imod__(self, other:Union[float, bool, int, genVec]):
         if isinstance(other, (float, bool, int)):
-            for i in range(self.size):
+            for i in range(len(self)):
                 self._data[i] %= other
 
-        elif isinstance(other, genVec) and self.size == other.size:
-            for i in range(self.size):
+        elif isinstance(other, genVec) and len(self) == len(other):
+            for i in range(len(self)):
                 self._data[i] %= other._data[i]
 
         else:
             raise TypeError(f"unsupported operand type(s) for %=: '{self.__class__.__name__}' and '{other.__class__.__name__}'")
         
+        return self
+
     def __pow__(self, other:Union[float, bool, int, genVec])->genVec:
         result_type = self.__operator_type("**", other, reverse=False, second_has_negative=self.__vec_has_negative(other))
         result = result_type()
 
         if isinstance(other, (float, bool, int)):
-            for i in range(result.size):
+            for i in range(len(result)):
                 result._data[i] = self._data[i] ** other
 
-        elif isinstance(other, genVec) and self.size == other.size:
-            for i in range(result.size):
+        elif isinstance(other, genVec) and len(self) == len(other):
+            for i in range(len(result)):
                 result._data[i] = self._data[i] ** other._data[i]
 
         return result
@@ -548,7 +549,7 @@ class genVec:
         result = result_type()
 
         if isinstance(other, (float, bool, int)):
-            for i in range(result.size):
+            for i in range(len(result)):
                 result._data[i] = other ** self._data[i]
         else:
             raise TypeError(f"unsupported operand type(s) for **: '{other.__class__.__name__}' and '{self.__class__.__name__}'")
@@ -557,26 +558,28 @@ class genVec:
     
     def __ipow__(self, other:Union[float, bool, int, genVec]):
         if isinstance(other, (float, bool, int)):
-            for i in range(self.size):
+            for i in range(len(self)):
                 self._data[i] **= other
 
-        elif isinstance(other, genVec) and self.size == other.size:
-            for i in range(self.size):
+        elif isinstance(other, genVec) and len(self) == len(other):
+            for i in range(len(self)):
                 self._data[i] **= other._data[i]
 
         else:
             raise TypeError(f"unsupported operand type(s) for **=: '{self.__class__.__name__}' and '{other.__class__.__name__}'")
         
+        return self
+
     def __eq__(self, other:Union[float, bool, int, genVec])->genVec:
-        bvec = self.__vec_type(ctypes.c_bool, self.size)
+        bvec = self._vec_type(ctypes.c_bool, len(self))
         result = bvec()
 
         if isinstance(other, (float, bool, int)):
-            for i in range(result.size):
+            for i in range(len(result)):
                 result._data[i] = (self._data[i] == other)
 
-        elif isinstance(other, genVec) and self.size == other.size:
-            for i in range(self.size):
+        elif isinstance(other, genVec) and len(self) == len(other):
+            for i in range(len(self)):
                 result._data[i] = (self._data[i] == other._data[i])
 
         else:
@@ -585,11 +588,11 @@ class genVec:
         return result
     
     def __req__(self, other:Union[float, bool, int, genVec])->genVec:
-        bvec = self.__vec_type(ctypes.c_bool, self.size)
+        bvec = self._vec_type(ctypes.c_bool, len(self))
         result = bvec()
 
         if isinstance(other, (float, bool, int)):
-            for i in range(result.size):
+            for i in range(len(result)):
                 result._data[i] = (other == self._data[i])
 
         else:
@@ -598,15 +601,15 @@ class genVec:
         return result
     
     def __ne__(self, other:Union[float, bool, int, genVec])->genVec:
-        bvec = self.__vec_type(ctypes.c_bool, self.size)
+        bvec = self._vec_type(ctypes.c_bool, len(self))
         result = bvec()
 
         if isinstance(other, (float, bool, int)):
-            for i in range(result.size):
+            for i in range(len(result)):
                 result._data[i] = (self._data[i] != other)
 
-        elif isinstance(other, genVec) and self.size == other.size:
-            for i in range(self.size):
+        elif isinstance(other, genVec) and len(self) == len(other):
+            for i in range(len(self)):
                 result._data[i] = (self._data[i] != other._data[i])
 
         else:
@@ -615,11 +618,11 @@ class genVec:
         return result
     
     def __rne__(self, other:Union[float, bool, int, genVec])->genVec:
-        bvec = self.__vec_type(ctypes.c_bool, self.size)
+        bvec = self._vec_type(ctypes.c_bool, len(self))
         result = bvec()
 
         if isinstance(other, (float, bool, int)):
-            for i in range(result.size):
+            for i in range(len(result)):
                 result._data[i] = (other != self._data[i])
 
         else:
@@ -628,15 +631,15 @@ class genVec:
         return result
     
     def __gt__(self, other:Union[float, bool, int, genVec])->genVec:
-        bvec = self.__vec_type(ctypes.c_bool, self.size)
+        bvec = self._vec_type(ctypes.c_bool, len(self))
         result = bvec()
 
         if isinstance(other, (float, bool, int)):
-            for i in range(result.size):
+            for i in range(len(result)):
                 result._data[i] = (self._data[i] > other)
 
-        elif isinstance(other, genVec) and self.size == other.size:
-            for i in range(self.size):
+        elif isinstance(other, genVec) and len(self) == len(other):
+            for i in range(len(self)):
                 result._data[i] = (self._data[i] > other._data[i])
 
         else:
@@ -645,11 +648,11 @@ class genVec:
         return result
     
     def __rgt__(self, other:Union[float, bool, int, genVec])->genVec:
-        bvec = self.__vec_type(ctypes.c_bool, self.size)
+        bvec = self._vec_type(ctypes.c_bool, len(self))
         result = bvec()
 
         if isinstance(other, (float, bool, int)):
-            for i in range(result.size):
+            for i in range(len(result)):
                 result._data[i] = (other > self._data[i])
 
         else:
@@ -658,15 +661,15 @@ class genVec:
         return result
     
     def __lt__(self, other:Union[float, bool, int, genVec])->genVec:
-        bvec = self.__vec_type(ctypes.c_bool, self.size)
+        bvec = self._vec_type(ctypes.c_bool, len(self))
         result = bvec()
 
         if isinstance(other, (float, bool, int)):
-            for i in range(result.size):
+            for i in range(len(result)):
                 result._data[i] = (self._data[i] < other)
 
-        elif isinstance(other, genVec) and self.size == other.size:
-            for i in range(self.size):
+        elif isinstance(other, genVec) and len(self) == len(other):
+            for i in range(len(self)):
                 result._data[i] = (self._data[i] < other._data[i])
 
         else:
@@ -675,11 +678,11 @@ class genVec:
         return result
     
     def __rlt__(self, other:Union[float, bool, int, genVec])->genVec:
-        bvec = self.__vec_type(ctypes.c_bool, self.size)
+        bvec = self._vec_type(ctypes.c_bool, len(self))
         result = bvec()
 
         if isinstance(other, (float, bool, int)):
-            for i in range(result.size):
+            for i in range(len(result)):
                 result._data[i] = (other < self._data[i])
 
         else:
@@ -688,15 +691,15 @@ class genVec:
         return result
     
     def __ge__(self, other:Union[float, bool, int, genVec])->genVec:
-        bvec = self.__vec_type(ctypes.c_bool, self.size)
+        bvec = self._vec_type(ctypes.c_bool, len(self))
         result = bvec()
 
         if isinstance(other, (float, bool, int)):
-            for i in range(result.size):
+            for i in range(len(result)):
                 result._data[i] = (self._data[i] >= other)
 
-        elif isinstance(other, genVec) and self.size == other.size:
-            for i in range(self.size):
+        elif isinstance(other, genVec) and len(self) == len(other):
+            for i in range(len(self)):
                 result._data[i] = (self._data[i] >= other._data[i])
 
         else:
@@ -705,11 +708,11 @@ class genVec:
         return result
     
     def __rge__(self, other:Union[float, bool, int, genVec])->genVec:
-        bvec = self.__vec_type(ctypes.c_bool, self.size)
+        bvec = self._vec_type(ctypes.c_bool, len(self))
         result = bvec()
 
         if isinstance(other, (float, bool, int)):
-            for i in range(result.size):
+            for i in range(len(result)):
                 result._data[i] = (other >= self._data[i])
 
         else:
@@ -718,15 +721,15 @@ class genVec:
         return result
     
     def __le__(self, other:Union[float, bool, int, genVec])->genVec:
-        bvec = self.__vec_type(ctypes.c_bool, self.size)
+        bvec = self._vec_type(ctypes.c_bool, len(self))
         result = bvec()
 
         if isinstance(other, (float, bool, int)):
-            for i in range(result.size):
+            for i in range(len(result)):
                 result._data[i] = (self._data[i] <= other)
 
-        elif isinstance(other, genVec) and self.size == other.size:
-            for i in range(self.size):
+        elif isinstance(other, genVec) and len(self) == len(other):
+            for i in range(len(self)):
                 result._data[i] = (self._data[i] <= other._data[i])
 
         else:
@@ -735,11 +738,11 @@ class genVec:
         return result
     
     def __rle__(self, other:Union[float, bool, int, genVec])->genVec:
-        bvec = self.__vec_type(ctypes.c_bool, self.size)
+        bvec = self._vec_type(ctypes.c_bool, len(self))
         result = bvec()
 
         if isinstance(other, (float, bool, int)):
-            for i in range(result.size):
+            for i in range(len(result)):
                 result._data[i] = (other <= self._data[i])
 
         else:

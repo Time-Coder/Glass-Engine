@@ -5,4 +5,6 @@ import ctypes
 
 class dvec3(genVec3):
     
-    dtype:type = ctypes.c_double
+    @property
+    def dtype(self)->type:
+        return ctypes.c_double

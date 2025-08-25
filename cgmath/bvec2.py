@@ -5,4 +5,6 @@ import ctypes
 
 class bvec2(genVec2):
     
-    dtype:type = ctypes.c_bool
+    @property
+    def dtype(self)->type:
+        return ctypes.c_bool
