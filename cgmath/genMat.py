@@ -50,8 +50,9 @@ class genMat(ABC):
     
     def __getitem__(self, index:Union[int,Tuple[int]])->Union[int,bool,float,genVec]:
         if isinstance(index, int):
-            result_type = genVec._vec_type(self.dtype, self.rows)
-            return result_type(*self._data[self.rows*index : self.rows*(index + 1)])
+            result_type = genVec.vec_type(self.dtype, self.rows)
+            result = result_type(*self._data[self.rows*index : self.rows*(index + 1)])
+            return result
         elif isinstance(index, tuple):
             return self._data[index[0]*self.rows + index[1]]
     
