@@ -1,10 +1,8 @@
 from __future__ import annotations
 
-from abc import ABC, abstractmethod
-from typing import Set, List, Dict, Tuple, Union, Any
-import ctypes
-
+from typing import Tuple, Union, Any
 from .genVec import genVec
+from .genType import genType
 
 
 class genMatIterator:
@@ -21,37 +19,25 @@ class genMatIterator:
         self.__current_index += 1
         return result
 
-class genMat(ABC):
+class genMat(genType):
 
     def __init__(self):
-        self._data = (self.dtype * (self.rows * self.cols))()
+        genType.__init__(self)
 
     @property
-    @abstractmethod
-    def dtype(self)->type:
-        pass
+    def rows(self)->int:
+        return self.shape[1]
     
     @property
-    @abstractmethod
-    def rows(self)->int:
-        pass
-
-    @property
-    @abstractmethod
     def cols(self)->int:
-        pass
-
-    @property
-    def shape(self)->Tuple[int]:
-        return (self.rows, self.cols)
-
-    def value_ptr(self):
-        return self._data
+        return self.shape[0]
     
     def __getitem__(self, index:Union[int,Tuple[int]])->Union[int,bool,float,genVec]:
         if isinstance(index, int):
             result_type = genVec.vec_type(self.dtype, self.rows)
-            result = result_type(*self._data[self.rows*index : self.rows*(index + 1)])
+            result:genVec = result_type(*self._data[self.rows * index : self.rows * (index + 1)])
+            result._mat_start_index = self.rows * index
+            result._related_mat = self
             return result
         elif isinstance(index, tuple):
             return self._data[index[0]*self.rows + index[1]]
@@ -76,9 +62,53 @@ class genMat(ABC):
                 
         return False
 
-    def __repr__(self)->str:
-        value_strs = []
-        for i in range(len(self)):
-            value_strs.append(str(self[i]))
+    def _op(self, operator:str, other:Union[float, bool, int, genType])->genType:
+        if operator == "**" or (operator in ["/", "//", "%"] and isinstance(other, genType)):
+            raise TypeError(f"unsupported operand type(s) for {operator}: '{self.__class__.__name__}' and '{other.__class__.__name__}'")
+        
+        if operator == "*" and isinstance(other, genType):
+            if self.shape[1] != other.shape[0]:
+                raise TypeError(f"unsupported operand type(s) for {operator}: '{self.__class__.__name__}' and '{other.__class__.__name__}'")
+            
+            result_dtype = self._operator_dtype(self.dtype, operator, other.dtype)
+            result_shape = (self.rows, other.cols if isinstance(other, genMat) else 1)
+            result_type = self.gen_type(result_dtype, result_shape)
+            result = result_type()
+            if isinstance(result, genMat):
+                for i in range(result.rows):
+                    for j in range(result.cols):
+                        value = 0
+                        for k in range(self.cols):
+                            value += self[k, i] * other[j, k]
 
-        return f"{self.__class__.__name__}({', '.join(value_strs)})"
+                        result[j, i] = value
+            elif isinstance(result, genVec):
+                for i in range(len(result)):
+                    value = 0
+                    for k in range(self.cols):
+                        value += self[k, i] * other[k]
+
+                    result._data[i] = value
+
+            return result
+
+        genType._op(operator, other)
+
+    def _iop(self, operator:str, other:Union[float, bool, int, genType])->genType:
+        if operator == "**" or (operator in ["/", "//", "%"] and isinstance(other, genType)):
+            raise TypeError(f"unsupported operand type(s) for {operator}=: '{self.__class__.__name__}' and '{other.__class__.__name__}'")
+
+        if operator == "*":
+            if isinstance(other, genVec):
+                raise TypeError(f"unsupported operand type(s) for {operator}=: '{self.__class__.__name__}' and '{other.__class__.__name__}'")
+            
+            if isinstance(other, genMat):
+                if self.cols != other.rows or other.rows != other.cols:
+                    raise TypeError(f"unsupported operand type(s) for {operator}=: '{self.__class__.__name__}' and '{other.__class__.__name__}'")
+
+                result:genMat = self * other
+                self._data[:] = result._data[:]
+                self._update_data()
+                return self
+            
+        genType._iop(operator, other)
