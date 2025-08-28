@@ -48,7 +48,7 @@ class genType(ABC):
         self._on_changed:Optional[Callable[[genType], None]] = None
 
     def __repr__(self)->str:
-        return f"{self.__class__.__name__}({', '.join(str(value) for value in self)})"
+        return f"{self.__class__.__name__}({', '.join([str(value) for value in self])})"
 
     @property
     @abstractmethod

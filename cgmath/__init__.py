@@ -17,3 +17,53 @@ from .vec4 import vec4
 from .dvec2 import dvec2
 from .dvec3 import dvec3
 from .dvec4 import dvec4
+
+from .bmat2x2 import bmat2x2, bmat2
+from .bmat2x3 import bmat2x3
+from .bmat2x4 import bmat2x4
+from .bmat3x2 import bmat3x2
+from .bmat3x3 import bmat3x3, bmat3
+from .bmat3x4 import bmat3x4
+from .bmat4x2 import bmat4x2
+from .bmat4x3 import bmat4x3
+from .bmat4x4 import bmat4x4, bmat4
+
+from .imat2x2 import imat2x2, imat2
+from .imat2x3 import imat2x3
+from .imat2x4 import imat2x4
+from .imat3x2 import imat3x2
+from .imat3x3 import imat3x3, imat3
+from .imat3x4 import imat3x4
+from .imat4x2 import imat4x2
+from .imat4x3 import imat4x3
+from .imat4x4 import imat4x4, imat4
+
+from .umat2x2 import umat2x2, umat2
+from .umat2x3 import umat2x3
+from .umat2x4 import umat2x4
+from .umat3x2 import umat3x2
+from .umat3x3 import umat3x3, umat3
+from .umat3x4 import umat3x4
+from .umat4x2 import umat4x2
+from .umat4x3 import umat4x3
+from .umat4x4 import umat4x4, umat4
+
+from .mat2x2 import mat2x2, mat2
+from .mat2x3 import mat2x3
+from .mat2x4 import mat2x4
+from .mat3x2 import mat3x2
+from .mat3x3 import mat3x3, mat3
+from .mat3x4 import mat3x4
+from .mat4x2 import mat4x2
+from .mat4x3 import mat4x3
+from .mat4x4 import mat4x4, mat4
+
+from .dmat2x2 import dmat2x2, dmat2
+from .dmat2x3 import dmat2x3
+from .dmat2x4 import dmat2x4
+from .dmat3x2 import dmat3x2
+from .dmat3x3 import dmat3x3, dmat3
+from .dmat3x4 import dmat3x4
+from .dmat4x2 import dmat4x2
+from .dmat4x3 import dmat4x3
+from .dmat4x4 import dmat4x4, dmat4

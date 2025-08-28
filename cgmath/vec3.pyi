@@ -7,23 +7,7 @@ from .vec4 import vec4
 
 
 class vec3(genVec3):
-    
-    def __init__(self): ...
 
-    @override
-    def __init__(self, x:Union[bool,int,float]): ...
-
-    @override
-    def __init__(self, vec:genVec3): ...
-
-    @override
-    def __init__(self, x:Union[bool,int,float], y:Union[bool,int,float], z:Union[bool,int,float]): ...
-
-    @override
-    def __init__(self, x:Union[bool,int,float], vec:genVec2): ...
-
-    @override
-    def __init__(self, vec:genVec2, z:Union[bool,int,float]): ...
     @property
     def x(self)->float: ...
 

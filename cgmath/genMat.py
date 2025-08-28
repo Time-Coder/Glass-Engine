@@ -21,8 +21,59 @@ class genMatIterator:
 
 class genMat(genType):
 
-    def __init__(self):
+    def __init__(self, *args):
         genType.__init__(self)
+        n:int = min(self.rows, self.cols)
+        for i in range(n):
+            self[i, i] = 1
+
+        i: int = 0
+        n_data: int = len(self._data)
+        n_args: int = len(args)
+
+        if n_args == 0:
+            return
+        
+        if n_args == 1:
+            arg = args[0]
+            if isinstance(arg, (float,int,bool)):
+                for i in range(n):
+                    self[i, i] = arg
+                return
+            
+            if isinstance(arg, genMat):
+                for i in range(self.rows):
+                    for j in range(self.cols):
+                        self[j, i] = arg[j, i]
+                return
+        
+        for i_arg, arg in enumerate(args):
+            if isinstance(arg, (float,int,bool)):
+                self._data[i] = arg
+
+                i += 1
+                if i == n_data:
+                    if n_args != 1 and i_arg != n_args - 1:
+                        raise ValueError(f"invalid arguments for {self.__class__.__name__}()")
+                    
+                    return
+
+            elif isinstance(arg, genVec):
+                sub_n_arg: int = len(arg._data)
+                for sub_i_arg, value in enumerate(arg._data):
+                    self._data[i] = value
+
+                    i += 1
+                    if i == n_data:
+                        if n_args != 1 and (i_arg != n_args - 1 or sub_i_arg != sub_n_arg - 1):
+                            raise ValueError(f"invalid arguments for {self.__class__.__name__}()")
+                        
+                        return
+            
+            else:
+                raise TypeError(f"invalid argument type(s) for {self.__class__.__name__}()")
+            
+        raise ValueError(f"invalid arguments for {self.__class__.__name__}()")
 
     @property
     def rows(self)->int:

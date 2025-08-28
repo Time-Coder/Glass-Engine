@@ -6,17 +6,6 @@ from .uvec4 import uvec4
 
 
 class uvec2(genVec2):
-    
-    def __init__(self): ...
-
-    @override
-    def __init__(self, x:Union[bool,int,float]): ...
-
-    @override
-    def __init__(self, vec:genVec2): ...
-
-    @override
-    def __init__(self, x:Union[bool,int,float], y:Union[bool,int,float]): ...
 
     @property
     def x(self)->int: ...
