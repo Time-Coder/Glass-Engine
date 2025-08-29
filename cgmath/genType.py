@@ -110,7 +110,7 @@ class genType(ABC):
         other_dtype:type = None
         if isinstance(other, (float, bool, int)):
             other_dtype = type(other)
-        elif isinstance(other, genType) and len(self) == len(other):
+        elif isinstance(other, genType) and self.shape == other.shape:
             other_dtype = other.dtype
         else:
             if not reverse:
@@ -123,7 +123,7 @@ class genType(ABC):
         else:
             result_dtype:type = self._operator_dtype(other_dtype, operator, self.dtype, second_has_negative)
 
-        result_type:type = self.gen_type(result_dtype, len(self))
+        result_type:type = self.gen_type(result_dtype, self.shape)
         return result_type
 
     def __neg__(self)->genType:
@@ -146,7 +146,7 @@ class genType(ABC):
         result:genType = result_type()
         other_is_homo:bool = (isinstance(other, genType) and self.shape == other.shape)
         operator_func:Callable[[Any,Any], Any] = self.__operator_funcs[operator]
-        for i in range(len(result)):
+        for i in range(len(result._data)):
             result._data[i] = operator_func(self._data[i], other._data[i] if other_is_homo else other)
 
         return result
@@ -159,18 +159,18 @@ class genType(ABC):
         result_type = self._operator_type(operator, other, reverse=True, second_has_negative=second_has_negative)
         result:genType = result_type()
         operator_func:Callable[[Any,Any], Any] = self.__operator_funcs[operator]
-        for i in range(len(result)):
+        for i in range(len(result._data)):
             result._data[i] = operator_func(other, self._data[i])
 
         return result
     
     def _iop(self, operator:str, other:Union[float, bool, int, genType])->genType:
-        other_is_homo:bool = (isinstance(other, genType) and len(self) == len(other))
+        other_is_homo:bool = (isinstance(other, genType) and self.shape == other.shape)
         if not other_is_homo and not isinstance(other, (float, bool, int)):
             raise TypeError(f"unsupported operand type(s) for {operator}=: '{self.__class__.__name__}' and '{other.__class__.__name__}'")
         
         operator_func:Callable[[Any,Any], Any] = self.__operator_funcs[operator]
-        for i in range(len(self)):
+        for i in range(len(self._data)):
             self._data[i] = operator_func(self._data[i], other._data[i] if other_is_homo else other)
 
         self._update_data()
@@ -196,7 +196,7 @@ class genType(ABC):
         result:genType = btype()
 
         operator_func:Callable[[Any,Any], Any] = self.__operator_funcs[operator]
-        for i in range(len(result)):
+        for i in range(len(result._data)):
             result._data[i] = operator_func(other, self._data[i])
         
         return result
