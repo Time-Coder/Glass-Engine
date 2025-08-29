@@ -12,7 +12,7 @@ from .Background import Background
 from glass.utils import quat_to_mat4, scale_to_mat4, translate_to_mat4
 from glass import Instances
 
-import glm
+import cgmath as cgm
 import time
 
 
@@ -120,8 +120,8 @@ class Scene:
     def __trav(
         self,
         scene_node: SceneNode,
-        current_quat: glm.quat,
-        current_mat: glm.mat4,
+        current_quat: cgm.quat,
+        current_mat: cgm.mat4,
         current_path: str,
     ):
 
@@ -142,7 +142,7 @@ class Scene:
             new_mat = (
                 new_mat
                 * scale_to_mat4(1 / scene_node.pivot.scale)
-                * quat_to_mat4(glm.conjugate(scene_node.pivot.orientation))
+                * quat_to_mat4(cgm.conjugate(scene_node.pivot.orientation))
                 * translate_to_mat4(-scene_node.pivot.position)
             )
         new_path = current_path + "/" + scene_node.name
@@ -156,13 +156,13 @@ class Scene:
                 if new_path not in self._all_meshes[mesh]:
                     self._all_meshes[mesh][new_path] = AffineTransform()
 
-                self._all_meshes[mesh][new_path]["affine_transform_row0"] = glm.vec4(
+                self._all_meshes[mesh][new_path]["affine_transform_row0"] = cgm.vec4(
                     new_mat[0][0], new_mat[1][0], new_mat[2][0], new_mat[3][0]
                 )
-                self._all_meshes[mesh][new_path]["affine_transform_row1"] = glm.vec4(
+                self._all_meshes[mesh][new_path]["affine_transform_row1"] = cgm.vec4(
                     new_mat[0][1], new_mat[1][1], new_mat[2][1], new_mat[3][1]
                 )
-                self._all_meshes[mesh][new_path]["affine_transform_row2"] = glm.vec4(
+                self._all_meshes[mesh][new_path]["affine_transform_row2"] = cgm.vec4(
                     new_mat[0][2], new_mat[1][2], new_mat[2][2], new_mat[3][2]
                 )
                 self.__anything_changed = True
@@ -176,7 +176,7 @@ class Scene:
                     spot_light.update(scene_node)
 
                 spot_light.abs_position = new_mat[3].xyz
-                spot_light.direction = new_quat * glm.vec3(0, 1, 0)
+                spot_light.direction = new_quat * cgm.vec3(0, 1, 0)
                 self._spot_lights.dirty = True
 
                 self.__anything_changed = True
@@ -204,7 +204,7 @@ class Scene:
                     dir_light = self._dir_lights[new_path]
                     dir_light.update(scene_node)
 
-                dir_light.direction = new_quat * glm.vec3(0, 1, 0)
+                dir_light.direction = new_quat * cgm.vec3(0, 1, 0)
                 dir_light.abs_orientation = new_quat
                 self._dir_lights.dirty = True
 
@@ -226,7 +226,7 @@ class Scene:
         ):
             return
 
-        self.__trav(self._root, glm.quat(), glm.mat4(), "")
+        self.__trav(self._root, cgm.quat(), cgm.mat4(), "")
         if self.__anything_changed:
             self.__update_env_maps()
             self.__update_depth_maps()

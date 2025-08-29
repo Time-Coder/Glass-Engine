@@ -15,7 +15,7 @@ from glass import (
 )
 
 from OpenGL import GL
-import glm
+import cgmath as cgm
 import os
 
 
@@ -465,20 +465,20 @@ class CommonRenderer(Renderer):
                 continue
 
             original_center = mesh.center
-            original_corner = glm.vec3()
+            original_corner = cgm.vec3()
             original_corner.x = original_center.x + (mesh.x_max - mesh.x_min) / 2
             original_corner.y = original_center.y + (mesh.y_max - mesh.y_min) / 2
             original_corner.z = original_center.z + (mesh.z_max - mesh.z_min) / 2
             for instance in instances:
                 center = instance.apply(original_center)
                 corner = instance.apply(original_corner)
-                radius = glm.length(corner - center)
+                radius = cgm.length(corner - center)
 
                 for dir_light in self.scene.dir_lights:
                     if not dir_light.generate_shadows:
                         continue
 
-                    current_offset = radius + glm.dot(center, -dir_light.direction)
+                    current_offset = radius + cgm.dot(center, -dir_light.direction)
                     if current_offset > dir_light.max_back_offset:
                         dir_light.max_back_offset = current_offset
 
@@ -491,10 +491,10 @@ class CommonRenderer(Renderer):
                 dir_light.depth_fbo.attach(GL.GL_DEPTH_ATTACHMENT, sampler2DArray)
                 dir_light.depth_fbo.depth_attachment.wrap_s = GL.GL_CLAMP_TO_BORDER
                 dir_light.depth_fbo.depth_attachment.wrap_t = GL.GL_CLAMP_TO_BORDER
-                dir_light.depth_fbo.depth_attachment.border_color = glm.vec4(1, 1, 1, 1)
+                dir_light.depth_fbo.depth_attachment.border_color = cgm.vec4(1, 1, 1, 1)
 
             with GLConfig.LocalEnv():
-                GLConfig.clear_color = glm.vec4(1, 1, 1, 1)
+                GLConfig.clear_color = cgm.vec4(1, 1, 1, 1)
                 GLConfig.depth_test = True
                 GLConfig.blend = False
                 GLConfig.cull_face = None
@@ -792,7 +792,7 @@ class CommonRenderer(Renderer):
         instance.user_data[key] += 1
 
     def prepare_gen_env_map_draw_mesh(
-        self, view_center: glm.vec3, is_opaque_pass: bool
+        self, view_center: cgm.vec3, is_opaque_pass: bool
     ):
         camera = self.camera
         self.gen_env_map_program["CSM_camera"] = camera
@@ -810,7 +810,7 @@ class CommonRenderer(Renderer):
         mesh.draw(self.gen_env_map_program, instances)
 
     def prepare_gen_env_map_draw_lines(
-        self, view_center: glm.vec3, is_opaque_pass: bool
+        self, view_center: cgm.vec3, is_opaque_pass: bool
     ):
         camera = self.camera
         self.gen_env_map_lines_program["CSM_camera"] = camera
@@ -826,7 +826,7 @@ class CommonRenderer(Renderer):
         mesh.draw(self.gen_env_map_lines_program, instances)
 
     def prepare_gen_env_map_draw_points(
-        self, view_center: glm.vec3, is_opaque_pass: bool
+        self, view_center: cgm.vec3, is_opaque_pass: bool
     ):
         camera = self.camera
         self.gen_env_map_points_program["CSM_camera"] = camera
@@ -906,8 +906,8 @@ class CommonRenderer(Renderer):
                     GLConfig.blend_dest_rgbi[2] = GL.GL_ONE
 
                     with env_map_fbo:
-                        GLConfig.clear_buffer(1, glm.vec4(0))
-                        GLConfig.clear_buffer(2, glm.vec4(0))
+                        GLConfig.clear_buffer(1, cgm.vec4(0))
+                        GLConfig.clear_buffer(2, cgm.vec4(0))
 
                         if self._transparent_meshes:
                             self.prepare_gen_env_map_draw_mesh(view_center, False)
@@ -1111,8 +1111,8 @@ class CommonRenderer(Renderer):
             GLConfig.blend_dest_rgbi[2] = GL.GL_ONE
 
             with self.OIT_fbo:
-                GLConfig.clear_buffer(1, glm.vec4(0))
-                GLConfig.clear_buffer(2, glm.vec4(0))
+                GLConfig.clear_buffer(1, cgm.vec4(0))
+                GLConfig.clear_buffer(2, cgm.vec4(0))
 
                 if self._transparent_meshes:
                     self.prepare_forward_draw_mesh(False)

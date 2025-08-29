@@ -4,7 +4,7 @@ from ..algorithm import cos_angle_of
 from glass import Vertex
 
 import math
-import glm
+import cgmath as cgm
 import numpy as np
 from typing import Union
 
@@ -13,13 +13,13 @@ class Rotator(Mesh):
     def __init__(
         self,
         section: Union[list, tuple, np.ndarray],
-        axis_start: glm.vec3 = glm.vec3(0),
-        axis_stop: glm.vec3 = glm.vec3(0, 0, 1),
+        axis_start: cgm.vec3 = cgm.vec3(0),
+        axis_stop: cgm.vec3 = cgm.vec3(0, 0, 1),
         n_divide: int = 100,
         start_angle: float = 0,
         span_angle: float = 360,
-        color: Union[glm.vec3, glm.vec4] = glm.vec4(0.396, 0.74151, 0.69102, 1),
-        back_color: Union[glm.vec3, glm.vec4, None] = None,
+        color: Union[cgm.vec3, cgm.vec4] = cgm.vec4(0.396, 0.74151, 0.69102, 1),
+        back_color: Union[cgm.vec3, cgm.vec4, None] = None,
         surf_type: Mesh.SurfType = Mesh.SurfType.Auto,
         normalize_st: bool = False,
         st_per_unit: float = 1,
@@ -56,52 +56,52 @@ class Rotator(Mesh):
         # 计算原点到轴的垂足 H
         A = axis_start
         B = axis_stop
-        C = glm.vec3(0)
+        C = cgm.vec3(0)
         AC = C - A
         AB = B - A
-        AB = glm.normalize(AB)
-        H = A + glm.dot(AC, AB) * AB
+        AB = cgm.normalize(AB)
+        H = A + cgm.dot(AC, AB) * AB
 
         # 计算 section 长度 L，section 距轴的最长距离 D
         L, D = 0, 0
-        len_AB = glm.length(AB)
+        len_AB = cgm.length(AB)
         len_section = len(section)
         for i in range(len_section):
             if i > 0:
-                L += glm.length(section[i] - section[i - 1])
+                L += cgm.length(section[i] - section[i - 1])
 
-            d = glm.length(glm.cross(AB, section[i] - A)) / len_AB
+            d = cgm.length(cgm.cross(AB, section[i] - A)) / len_AB
             if d > D:
                 D = d
 
         for i in range(n_divide):
             theta = start_angle + span_angle * i / (n_divide - 1)
             half_theta = theta / 2
-            quat = glm.quat(math.cos(half_theta), math.sin(half_theta) * AB)
+            quat = cgm.quat(math.cos(half_theta), math.sin(half_theta) * AB)
 
             l = 0
             for j in range(len_section):
                 pos = quat * (section[j] - H) + H
                 vertex = Vertex()
                 vertex.position = pos
-                vertex.normal = glm.vec3(0)
+                vertex.normal = cgm.vec3(0)
 
                 if j > 0:
-                    l += glm.length(section[j] - section[j - 1])
+                    l += cgm.length(section[j] - section[j - 1])
 
                 if not self.normalize_st:
-                    vertex.tex_coord = glm.vec3(
+                    vertex.tex_coord = cgm.vec3(
                         self.s_per_unit * D * theta,
                         1 - self.t_per_unit * l, 0
                     )
                 else:
-                    vertex.tex_coord = glm.vec3(D / L * theta, 1 - l / L, 0)
+                    vertex.tex_coord = cgm.vec3(D / L * theta, 1 - l / L, 0)
 
                 vertices[i_vertex] = vertex
                 i_vertex += 1
 
                 if i > 0 and j > 0:
-                    triangle = glm.uvec3(0, 0, 0)
+                    triangle = cgm.uvec3(0, 0, 0)
                     triangle[0] = i_vertex - 1
                     triangle[1] = i_vertex - 2
                     triangle[2] = i_vertex - 2 - len_section
@@ -113,7 +113,7 @@ class Rotator(Mesh):
                         vertices[triangle[2]],
                     )
 
-                    triangle = glm.uvec3(0, 0, 0)
+                    triangle = cgm.uvec3(0, 0, 0)
                     triangle[0] = i_vertex - 1
                     triangle[1] = i_vertex - 2 - len_section
                     triangle[2] = i_vertex - 1 - len_section
@@ -163,7 +163,7 @@ class Rotator(Mesh):
 
     @axis_start.setter
     @Mesh.param_setter
-    def axis_start(self, axis_start: glm.vec3):
+    def axis_start(self, axis_start: cgm.vec3):
         self.__axis_start = axis_start
 
     @property
@@ -172,7 +172,7 @@ class Rotator(Mesh):
 
     @axis_stop.setter
     @Mesh.param_setter
-    def axis_stop(self, axis_stop: glm.vec3):
+    def axis_stop(self, axis_stop: cgm.vec3):
         self.__axis_stop = axis_stop
 
     @property

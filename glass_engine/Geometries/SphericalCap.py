@@ -3,7 +3,7 @@ from ..Mesh import Mesh
 from glass.utils import checktype
 from glass import Vertex
 
-import glm
+import cgmath as cgm
 import math
 from typing import Union
 
@@ -15,8 +15,8 @@ class SphericalCap(Mesh):
         self,
         base_radius: float = 1,
         height: float = 0.5,
-        color: Union[glm.vec3, glm.vec4] = glm.vec4(0.396, 0.74151, 0.69102, 1),
-        back_color: Union[glm.vec3, glm.vec4, None] = None,
+        color: Union[cgm.vec3, cgm.vec4] = cgm.vec4(0.396, 0.74151, 0.69102, 1),
+        back_color: Union[cgm.vec3, cgm.vec4, None] = None,
         n_lon_divide: int = 100,
         start_lon: float = 0,
         span_lon: float = 360,
@@ -56,9 +56,9 @@ class SphericalCap(Mesh):
         i_index = 0
 
         vertex_bottom_center = Vertex()
-        vertex_bottom_center.position = glm.vec3(0)
-        vertex_bottom_center.normal = glm.vec3(0, 0, -1)
-        vertex_bottom_center.tex_coord = glm.vec3(0.5, 0.5, 0)
+        vertex_bottom_center.position = cgm.vec3(0)
+        vertex_bottom_center.normal = cgm.vec3(0, 0, -1)
+        vertex_bottom_center.tex_coord = cgm.vec3(0.5, 0.5, 0)
         vertices[i_vertex] = vertex_bottom_center
         i_vertex += 1
 
@@ -76,32 +76,32 @@ class SphericalCap(Mesh):
 
                 vertex_top = Vertex()
                 vertex_top.tangent = (
-                    2 * math.pi * radius * cos_phi * glm.vec3(-sin_theta, cos_theta, 0)
+                    2 * math.pi * radius * cos_phi * cgm.vec3(-sin_theta, cos_theta, 0)
                 )
                 vertex_top.bitangent = (
                     math.pi
                     * radius
-                    * glm.vec3(-sin_phi * cos_theta, -sin_phi * sin_theta, cos_phi)
+                    * cgm.vec3(-sin_phi * cos_theta, -sin_phi * sin_theta, cos_phi)
                 )
-                vertex_top.normal = glm.vec3(
+                vertex_top.normal = cgm.vec3(
                     cos_phi * cos_theta, cos_phi * sin_theta, sin_phi
                 )
                 vertex_top.position = radius * vertex_top.normal
                 vertex_top.position.z -= h_delta
-                vertex_top.tex_coord = glm.vec3(s, t, 0)
+                vertex_top.tex_coord = cgm.vec3(s, t, 0)
 
                 vertices[i_vertex] = vertex_top
                 i_vertex += 1
 
                 if i > 0 and j > 0:
-                    triangle = glm.uvec3(0, 0, 0)
+                    triangle = cgm.uvec3(0, 0, 0)
                     triangle[0] = i_vertex - 1
                     triangle[1] = i_vertex - 1 - n_lat_divide - 1
                     triangle[2] = i_vertex - 1 - n_lat_divide - 1 - 1
                     indices[i_index] = triangle
                     i_index += 1
 
-                    triangle = glm.uvec3(0, 0, 0)
+                    triangle = cgm.uvec3(0, 0, 0)
                     triangle[0] = i_vertex - 1
                     triangle[1] = i_vertex - 1 - n_lat_divide - 1 - 1
                     triangle[2] = i_vertex - 1 - 1
@@ -111,18 +111,18 @@ class SphericalCap(Mesh):
                     yield
 
             vertex_bottom = Vertex()
-            vertex_bottom.position = glm.vec3(
+            vertex_bottom.position = cgm.vec3(
                 base_radius * cos_theta, base_radius * sin_theta, 0
             )
-            vertex_bottom.normal = glm.vec3(0, 0, -1)
+            vertex_bottom.normal = cgm.vec3(0, 0, -1)
             s = 0.5 + base_radius * cos_theta
             t = 0.5 + base_radius * sin_theta
-            vertex_bottom.tex_coord = glm.vec3(s, t, 0)
+            vertex_bottom.tex_coord = cgm.vec3(s, t, 0)
             vertices[i_vertex] = vertex_bottom
             i_vertex += 1
 
             if i > 0:
-                triangle = glm.uvec3(0, 0, 0)
+                triangle = cgm.uvec3(0, 0, 0)
                 triangle[0] = i_vertex - 1
                 triangle[1] = i_vertex - 1 - n_lat_divide - 1
                 triangle[2] = 0

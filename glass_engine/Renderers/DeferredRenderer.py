@@ -13,7 +13,7 @@ from glass import (
 )
 
 from OpenGL import GL
-import glm
+import cgmath as cgm
 import os
 
 
@@ -221,7 +221,7 @@ class DeferredRenderer(CommonRenderer):
             return
 
         with GLConfig.LocalEnv():
-            GLConfig.clear_color = glm.vec4(0)
+            GLConfig.clear_color = cgm.vec4(0)
 
             with self.gbuffer:
                 GLConfig.clear_buffers()

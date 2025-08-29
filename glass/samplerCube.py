@@ -2,7 +2,7 @@ import os
 
 os.environ["OPENCV_IO_ENABLE_OPENEXR"] = "1"
 import cv2
-import glm
+import cgmath as cgm
 import numpy as np
 from OpenGL import GL
 import OpenGL.GL.ARB.bindless_texture as bt
@@ -222,7 +222,7 @@ class samplerCube(FBOAttachment):
         self._filter_min = GL.GL_LINEAR
         self._filter_mag = GL.GL_LINEAR
         self._filter_mipmap = GL.GL_LINEAR
-        self._border_color = glm.vec4(0, 0, 0, 1)
+        self._border_color = cgm.vec4(0, 0, 0, 1)
 
         self._wrap_s_changed = True
         self._wrap_t_changed = True
@@ -314,7 +314,7 @@ class samplerCube(FBOAttachment):
             GL.glTexParameterfv(
                 GL.GL_TEXTURE_CUBE_MAP,
                 GL.GL_TEXTURE_BORDER_COLOR,
-                glm.value_ptr(self._border_color),
+                cgm.value_ptr(self._border_color),
             )
             self._border_color_changed = False
 
@@ -460,9 +460,9 @@ class samplerCube(FBOAttachment):
 
     @border_color.setter
     @FBOAttachment.param_setter
-    def border_color(self, color: Union[glm.vec3, glm.vec4]):
-        if isinstance(color, glm.vec3):
-            color = glm.vec4(color, 1)
+    def border_color(self, color: Union[cgm.vec3, cgm.vec4]):
+        if isinstance(color, cgm.vec3):
+            color = cgm.vec4(color, 1)
 
         self._border_color = color
         self._border_color_changed = True

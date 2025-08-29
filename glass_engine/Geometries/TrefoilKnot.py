@@ -2,7 +2,7 @@ from ..Mesh import Mesh
 
 from glass import Vertex
 
-import glm
+import cgmath as cgm
 import math
 from typing import Union
 
@@ -13,8 +13,8 @@ class TrefoilKnot(Mesh):
         self,
         tube_radius: float = 0.2,
         knot_radius: float = 1,
-        color: Union[glm.vec3, glm.vec4] = glm.vec4(0.396, 0.74151, 0.69102, 1),
-        back_color: Union[glm.vec3, glm.vec4, None] = None,
+        color: Union[cgm.vec3, cgm.vec4] = cgm.vec4(0.396, 0.74151, 0.69102, 1),
+        back_color: Union[cgm.vec3, cgm.vec4, None] = None,
         vertical: bool = False,
         normalize_st=False,
         st_per_unit: float = 1,
@@ -77,10 +77,10 @@ class TrefoilKnot(Mesh):
             x0 = sin_theta + 2 * sin_2theta
             y0 = cos_theta - 2 * cos_2theta
             z0 = -sin_3theta
-            normalized_center = glm.vec3(x0, y0, z0)
+            normalized_center = cgm.vec3(x0, y0, z0)
 
             if i > 0:
-                L += glm.length(normalized_center - last_normalized_center)
+                L += cgm.length(normalized_center - last_normalized_center)
 
             last_normalized_center = normalized_center
 
@@ -96,11 +96,11 @@ class TrefoilKnot(Mesh):
             ddy = -cos_theta + 8 * cos_2theta
             ddz = 9 * sin_3theta
 
-            alpha = glm.normalize(glm.vec3(dx, dy, dz))
-            gamma = glm.normalize(
-                glm.cross(glm.vec3(dx, dy, dz), glm.vec3(ddx, ddy, ddz))
+            alpha = cgm.normalize(cgm.vec3(dx, dy, dz))
+            gamma = cgm.normalize(
+                cgm.cross(cgm.vec3(dx, dy, dz), cgm.vec3(ddx, ddy, ddz))
             )
-            beta = glm.cross(gamma, alpha)
+            beta = cgm.cross(gamma, alpha)
 
             for j in range(n_lat_divide):
                 phi = start_lat + span_lat * j / (n_lat_divide - 1)
@@ -116,15 +116,15 @@ class TrefoilKnot(Mesh):
                     s = s / r / (2 * math.pi)
 
                 vertex = Vertex()
-                vertex.position = glm.vec3(x, y, z)
+                vertex.position = cgm.vec3(x, y, z)
                 vertex.normal = normal
-                vertex.tex_coord = glm.vec3(s, t, 0)
+                vertex.tex_coord = cgm.vec3(s, t, 0)
 
                 if vertical:
-                    vertex.position = glm.vec3(
+                    vertex.position = cgm.vec3(
                         vertex.position.x, -vertex.position.z, vertex.position.y
                     )
-                    vertex.normal = glm.vec3(
+                    vertex.normal = cgm.vec3(
                         vertex.normal.x, -vertex.normal.z, vertex.normal.y
                     )
 
@@ -132,7 +132,7 @@ class TrefoilKnot(Mesh):
                 i_vertex += 1
 
                 if i > 0 and j > 0:
-                    triangle = glm.uvec3(0, 0, 0)
+                    triangle = cgm.uvec3(0, 0, 0)
                     triangle[0] = i_vertex - 1
                     triangle[1] = i_vertex - 1 - 1 - n_lat_divide
                     triangle[2] = i_vertex - 1 - 1
@@ -144,7 +144,7 @@ class TrefoilKnot(Mesh):
                         vertices[triangle[2]],
                     )
 
-                    triangle = glm.uvec3(0, 0, 0)
+                    triangle = cgm.uvec3(0, 0, 0)
                     triangle[0] = i_vertex - 1
                     triangle[1] = i_vertex - 1 - n_lat_divide
                     triangle[2] = i_vertex - 1 - 1 - n_lat_divide

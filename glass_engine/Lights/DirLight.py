@@ -2,7 +2,7 @@ from .Light import Light, FlatLight
 from glass.DictList import DictList
 from glass import BlockHostClass
 
-import glm
+import cgmath as cgm
 from typing import Union
 
 
@@ -13,8 +13,8 @@ class DirLight(Light):
 class FlatDirLight(FlatLight):
 
     def __init__(self, dir_light: DirLight):
-        self.direction = glm.vec3(0, 1, 0)
-        self.abs_orientation = glm.quat(1, 0, 0, 0)
+        self.direction = cgm.vec3(0, 1, 0)
+        self.abs_orientation = cgm.quat(1, 0, 0, 0)
         self.max_back_offset = 0
         FlatLight.__init__(self, dir_light)
 

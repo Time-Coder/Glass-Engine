@@ -5,7 +5,7 @@ from .GlassEngineConfig import GlassEngineConfig
 from glass.utils import checktype
 from glass import Vertex, samplerCube, ShaderProgram
 
-import glm
+import cgmath as cgm
 from OpenGL import GL
 import os
 
@@ -63,64 +63,64 @@ class SkyBox(Mesh):
         indices = self._indices
 
         # 左面
-        vertices[0] = Vertex(position=glm.vec3(-1, 1, -1))
-        vertices[1] = Vertex(position=glm.vec3(-1, -1, -1))
-        vertices[2] = Vertex(position=glm.vec3(-1, -1, 1))
-        vertices[3] = Vertex(position=glm.vec3(-1, 1, 1))
+        vertices[0] = Vertex(position=cgm.vec3(-1, 1, -1))
+        vertices[1] = Vertex(position=cgm.vec3(-1, -1, -1))
+        vertices[2] = Vertex(position=cgm.vec3(-1, -1, 1))
+        vertices[3] = Vertex(position=cgm.vec3(-1, 1, 1))
 
         # 右面
-        vertices[4] = Vertex(position=glm.vec3(1, -1, -1))
-        vertices[5] = Vertex(position=glm.vec3(1, 1, -1))
-        vertices[6] = Vertex(position=glm.vec3(1, 1, 1))
-        vertices[7] = Vertex(position=glm.vec3(1, -1, 1))
+        vertices[4] = Vertex(position=cgm.vec3(1, -1, -1))
+        vertices[5] = Vertex(position=cgm.vec3(1, 1, -1))
+        vertices[6] = Vertex(position=cgm.vec3(1, 1, 1))
+        vertices[7] = Vertex(position=cgm.vec3(1, -1, 1))
 
         # 后面
-        vertices[8] = Vertex(position=glm.vec3(-1, -1, -1))
-        vertices[9] = Vertex(position=glm.vec3(1, -1, -1))
-        vertices[10] = Vertex(position=glm.vec3(1, -1, 1))
-        vertices[11] = Vertex(position=glm.vec3(-1, -1, 1))
+        vertices[8] = Vertex(position=cgm.vec3(-1, -1, -1))
+        vertices[9] = Vertex(position=cgm.vec3(1, -1, -1))
+        vertices[10] = Vertex(position=cgm.vec3(1, -1, 1))
+        vertices[11] = Vertex(position=cgm.vec3(-1, -1, 1))
 
         # 前面
-        vertices[12] = Vertex(position=glm.vec3(1, 1, -1))
-        vertices[13] = Vertex(position=glm.vec3(-1, 1, -1))
-        vertices[14] = Vertex(position=glm.vec3(-1, 1, 1))
-        vertices[15] = Vertex(position=glm.vec3(1, 1, 1))
+        vertices[12] = Vertex(position=cgm.vec3(1, 1, -1))
+        vertices[13] = Vertex(position=cgm.vec3(-1, 1, -1))
+        vertices[14] = Vertex(position=cgm.vec3(-1, 1, 1))
+        vertices[15] = Vertex(position=cgm.vec3(1, 1, 1))
 
         # 下面
-        vertices[16] = Vertex(position=glm.vec3(-1, 1, -1))
-        vertices[17] = Vertex(position=glm.vec3(1, 1, -1))
-        vertices[18] = Vertex(position=glm.vec3(1, -1, -1))
-        vertices[19] = Vertex(position=glm.vec3(-1, -1, -1))
+        vertices[16] = Vertex(position=cgm.vec3(-1, 1, -1))
+        vertices[17] = Vertex(position=cgm.vec3(1, 1, -1))
+        vertices[18] = Vertex(position=cgm.vec3(1, -1, -1))
+        vertices[19] = Vertex(position=cgm.vec3(-1, -1, -1))
 
         # 上面
-        vertices[20] = Vertex(position=glm.vec3(-1, -1, 1))
-        vertices[21] = Vertex(position=glm.vec3(1, -1, 1))
-        vertices[22] = Vertex(position=glm.vec3(1, 1, 1))
-        vertices[23] = Vertex(position=glm.vec3(-1, 1, 1))
+        vertices[20] = Vertex(position=cgm.vec3(-1, -1, 1))
+        vertices[21] = Vertex(position=cgm.vec3(1, -1, 1))
+        vertices[22] = Vertex(position=cgm.vec3(1, 1, 1))
+        vertices[23] = Vertex(position=cgm.vec3(-1, 1, 1))
 
         # 左面
-        indices[0] = glm.uvec3(0, 1, 2)
-        indices[1] = glm.uvec3(0, 2, 3)
+        indices[0] = cgm.uvec3(0, 1, 2)
+        indices[1] = cgm.uvec3(0, 2, 3)
 
         # 右面
-        indices[2] = 4 + glm.uvec3(0, 1, 2)
-        indices[3] = 4 + glm.uvec3(0, 2, 3)
+        indices[2] = 4 + cgm.uvec3(0, 1, 2)
+        indices[3] = 4 + cgm.uvec3(0, 2, 3)
 
         # 后面
-        indices[4] = 8 + glm.uvec3(0, 1, 2)
-        indices[5] = 8 + glm.uvec3(0, 2, 3)
+        indices[4] = 8 + cgm.uvec3(0, 1, 2)
+        indices[5] = 8 + cgm.uvec3(0, 2, 3)
 
         # 前面
-        indices[6] = 12 + glm.uvec3(0, 1, 2)
-        indices[7] = 12 + glm.uvec3(0, 2, 3)
+        indices[6] = 12 + cgm.uvec3(0, 1, 2)
+        indices[7] = 12 + cgm.uvec3(0, 2, 3)
 
         # 下面
-        indices[8] = 16 + glm.uvec3(0, 1, 2)
-        indices[9] = 16 + glm.uvec3(0, 2, 3)
+        indices[8] = 16 + cgm.uvec3(0, 1, 2)
+        indices[9] = 16 + cgm.uvec3(0, 2, 3)
 
         # 上面
-        indices[10] = 20 + glm.uvec3(0, 1, 2)
-        indices[11] = 20 + glm.uvec3(0, 2, 3)
+        indices[10] = 20 + cgm.uvec3(0, 1, 2)
+        indices[11] = 20 + cgm.uvec3(0, 2, 3)
 
     @property
     def program(self):

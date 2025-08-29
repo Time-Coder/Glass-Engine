@@ -6,7 +6,7 @@ from .Surf import Surf
 from glass.utils import checktype
 
 import numpy as np
-import glm
+import cgmath as cgm
 from typing import Union, Optional
 
 
@@ -22,8 +22,8 @@ class FSurf(Mesh):
         dep_var="Z",
         color_map: Optional[ColorMap] = None,
         back_color_map: Optional[ColorMap] = None,
-        color: Union[glm.vec3, glm.vec4, None] = None,
-        back_color: Union[glm.vec3, glm.vec4, None] = None,
+        color: Union[cgm.vec3, cgm.vec4, None] = None,
+        back_color: Union[cgm.vec3, cgm.vec4, None] = None,
         surf_type: Mesh.SurfType = Mesh.SurfType.Smooth,
         name: str = "",
     ):

@@ -14,7 +14,7 @@ from glass.utils import checktype
 from glass.helper import get_channels
 
 from OpenGL import GL
-import glm
+import cgmath as cgm
 import os
 from typing import Union, Tuple
 
@@ -45,8 +45,8 @@ class GaussBlur(PostProcessEffect):
     ):
         PostProcessEffect.__init__(self)
 
-        self.__kernel_shape = glm.uvec2()
-        self.__sigma = glm.vec2()
+        self.__kernel_shape = cgm.uvec2()
+        self.__sigma = cgm.vec2()
         self.__channels = get_channels(internal_format)
         self.__internal_format = internal_format
 

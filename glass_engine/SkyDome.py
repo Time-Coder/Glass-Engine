@@ -5,7 +5,7 @@ from .GlassEngineConfig import GlassEngineConfig
 from glass.utils import checktype
 from glass import Vertex, sampler2D, ShaderProgram
 
-import glm
+import cgmath as cgm
 import math
 import numpy as np
 from OpenGL import GL
@@ -56,23 +56,23 @@ class SkyDome(Mesh):
 
                 vertex = Vertex()
 
-                vertex.position = glm.vec3(
+                vertex.position = cgm.vec3(
                     cos_phi * cos_theta, cos_phi * sin_theta, sin_phi
                 )
-                vertex.tex_coord = glm.vec2(s, t)
+                vertex.tex_coord = cgm.vec2(s, t)
 
                 vertices[i_vertex] = vertex
                 i_vertex += 1
 
                 if i > 0 and j > 0:
-                    triangle = glm.uvec3(0, 0, 0)
+                    triangle = cgm.uvec3(0, 0, 0)
                     triangle[0] = i_vertex - 1
                     triangle[1] = i_vertex - 1 - n_lat_divide
                     triangle[2] = i_vertex - 1 - n_lat_divide - 1
                     indices[i_index] = triangle
                     i_index += 1
 
-                    triangle = glm.uvec3(0, 0, 0)
+                    triangle = cgm.uvec3(0, 0, 0)
                     triangle[0] = i_vertex - 1
                     triangle[1] = i_vertex - 1 - n_lat_divide - 1
                     triangle[2] = i_vertex - 1 - 1

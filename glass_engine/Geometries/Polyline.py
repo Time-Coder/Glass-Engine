@@ -3,7 +3,7 @@ from ..Mesh import Mesh
 from glass import Vertex
 from glass.utils import checktype
 
-import glm
+import cgmath as cgm
 from OpenGL import GL
 from typing import Union
 
@@ -13,7 +13,7 @@ class Polyline(Mesh):
     def __init__(
         self,
         points: list = [],
-        color: Union[glm.vec3, glm.vec4] = glm.vec4(0.396, 0.74151, 0.69102, 1),
+        color: Union[cgm.vec3, cgm.vec4] = cgm.vec4(0.396, 0.74151, 0.69102, 1),
         line_width: int = 2,
         loop: bool = False,
         name: str = "",
@@ -38,16 +38,16 @@ class Polyline(Mesh):
         len_points = len(points)
         for i in range(len_points):
             if i > 0:
-                length += glm.length(points[i] - points[i - 1])
+                length += cgm.length(points[i] - points[i - 1])
             bitangent = None
             if i < len_points - 1:
-                bitangent = glm.normalize(points[i + 1] - points[i])
+                bitangent = cgm.normalize(points[i + 1] - points[i])
             else:
-                bitangent = glm.normalize(points[i] - points[i - 1])
+                bitangent = cgm.normalize(points[i] - points[i - 1])
             vertices[i] = Vertex(
                 position=points[i],
                 bitangent=bitangent,
-                tex_coord=glm.vec3(length, 0, 0),
+                tex_coord=cgm.vec3(length, 0, 0),
             )
 
         del vertices[len_points:]

@@ -1,6 +1,6 @@
 from enum import Flag, IntEnum
 
-import glm
+import cgmath as cgm
 
 
 class Manipulator:
@@ -515,25 +515,25 @@ class Manipulator:
         pass
 
     def on_mouse_pressed(
-        self, button: MouseButton, screen_pos: glm.vec2, global_pos: glm.vec2
+        self, button: MouseButton, screen_pos: cgm.vec2, global_pos: cgm.vec2
     ) -> None:
         pass
 
     def on_mouse_released(
-        self, button: MouseButton, screen_pos: glm.vec2, global_pos: glm.vec2
+        self, button: MouseButton, screen_pos: cgm.vec2, global_pos: cgm.vec2
     ) -> None:
         pass
 
     def on_mouse_double_clicked(
-        self, button: MouseButton, screen_pos: glm.vec2, global_pos: glm.vec2
+        self, button: MouseButton, screen_pos: cgm.vec2, global_pos: cgm.vec2
     ) -> None:
         pass
 
-    def on_mouse_moved(self, screen_pos: glm.vec2, global_pos: glm.vec2) -> None:
+    def on_mouse_moved(self, screen_pos: cgm.vec2, global_pos: cgm.vec2) -> None:
         pass
 
     def on_wheel_scrolled(
-        self, angle: glm.vec2, screen_pos: glm.vec2, global_pos: glm.vec2
+        self, angle: cgm.vec2, screen_pos: cgm.vec2, global_pos: cgm.vec2
     ) -> None:
         pass
 

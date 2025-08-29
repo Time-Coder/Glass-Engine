@@ -5,7 +5,7 @@ from ..Mesh import Mesh
 from glass.utils import checktype
 from glass import Vertex
 
-import glm
+import cgmath as cgm
 import math
 import copy
 from typing import Union
@@ -20,8 +20,8 @@ class Icosphere(Mesh):
     def __init__(
         self,
         radius: float = 1,
-        color: Union[glm.vec3, glm.vec4] = glm.vec4(0.396, 0.74151, 0.69102, 1),
-        back_color: Union[glm.vec3, glm.vec4, None] = None,
+        color: Union[cgm.vec3, cgm.vec4] = cgm.vec4(0.396, 0.74151, 0.69102, 1),
+        back_color: Union[cgm.vec3, cgm.vec4, None] = None,
         n_levels: int = 4,
         name: str = "",
         block=True,
@@ -40,13 +40,13 @@ class Icosphere(Mesh):
         half_theta = math.atan(2) / 4
         cos_half_theta = math.cos(half_theta)
         sin_half_theta = math.sin(half_theta)
-        q = glm.quat(cos_half_theta, 0, sin_half_theta, 0)
+        q = cgm.quat(cos_half_theta, 0, sin_half_theta, 0)
         for base_pos in Icosahedron.base_positions:
             pos = q * base_pos
-            if glm.length(pos - glm.vec3(0, 0, 1)) < 1e-6:
-                pos = glm.vec3(0, 0, 1)
-            elif glm.length(pos - glm.vec3(0, 0, -1)) < 1e-6:
-                pos = glm.vec3(0, 0, -1)
+            if cgm.length(pos - cgm.vec3(0, 0, 1)) < 1e-6:
+                pos = cgm.vec3(0, 0, 1)
+            elif cgm.length(pos - cgm.vec3(0, 0, -1)) < 1e-6:
+                pos = cgm.vec3(0, 0, -1)
             Icosphere.__base_vertices.append(Icosphere.__create_vertex(pos))
 
         for index in Icosphere.__base_indices:
@@ -56,7 +56,7 @@ class Icosphere(Mesh):
 
             v1 = vertex1.position - vertex0.position
             v2 = vertex2.position - vertex0.position
-            normal = glm.cross(v1, v2)
+            normal = cgm.cross(v1, v2)
 
             for i in range(3):
                 vertex = Icosphere.__base_vertices[index[i]]
@@ -94,9 +94,9 @@ class Icosphere(Mesh):
                 vertex1 = vertices[index[1]]
                 vertex2 = vertices[index[2]]
 
-                new_pos0 = glm.normalize(vertex1.position + vertex2.position)
-                new_pos1 = glm.normalize(vertex0.position + vertex2.position)
-                new_pos2 = glm.normalize(vertex0.position + vertex1.position)
+                new_pos0 = cgm.normalize(vertex1.position + vertex2.position)
+                new_pos1 = cgm.normalize(vertex0.position + vertex2.position)
+                new_pos2 = cgm.normalize(vertex0.position + vertex1.position)
 
                 new_vertex0 = Icosphere.__create_vertex(new_pos0, radius=radius)
                 new_vertex1 = Icosphere.__create_vertex(new_pos1, radius=radius)
@@ -112,16 +112,16 @@ class Icosphere(Mesh):
                 vertices[i_vertex] = new_vertex2
                 i_vertex += 1
 
-                indices[i_index] = glm.uvec3(index[0], start_index + 2, start_index + 1)
+                indices[i_index] = cgm.uvec3(index[0], start_index + 2, start_index + 1)
                 i_index += 1
 
-                indices[i_index] = glm.uvec3(index[1], start_index, start_index + 2)
+                indices[i_index] = cgm.uvec3(index[1], start_index, start_index + 2)
                 i_index += 1
 
-                indices[i_index] = glm.uvec3(index[2], start_index + 1, start_index)
+                indices[i_index] = cgm.uvec3(index[2], start_index + 1, start_index)
                 i_index += 1
 
-                indices[i_index] = glm.uvec3(
+                indices[i_index] = cgm.uvec3(
                     start_index, start_index + 1, start_index + 2
                 )
                 i_index += 1
@@ -168,8 +168,8 @@ class Icosphere(Mesh):
         dem = math.sqrt(position.x * position.x + position.y * position.y)
         if dem == 0:
             s = 0
-            tangent = glm.vec3(0, 2 * math.pi, 0)
-            bitangent = glm.vec3(-math.pi, 0, 0)
+            tangent = cgm.vec3(0, 2 * math.pi, 0)
+            bitangent = cgm.vec3(-math.pi, 0, 0)
             if normal is not None:
                 theta = math.atan2(normal.y, normal.x)
                 phi = math.pi / 2 if normal.z > 0 else -math.pi / 2
@@ -178,13 +178,13 @@ class Icosphere(Mesh):
                 sin_phi = math.sin(phi)
                 cos_phi = math.cos(phi)
                 s = theta / (2 * math.pi) + 0.5
-                tangent = 2 * math.pi * cos_phi * glm.vec3(-sin_theta, cos_theta, 0)
-                bitangent = math.pi * glm.vec3(
+                tangent = 2 * math.pi * cos_phi * cgm.vec3(-sin_theta, cos_theta, 0)
+                bitangent = math.pi * cgm.vec3(
                     -sin_phi * cos_theta, -sin_phi * sin_theta, cos_phi
                 )
             t = int((position.z + 1) / 2)
 
-            return glm.vec3(s, t, 0), tangent, bitangent
+            return cgm.vec3(s, t, 0), tangent, bitangent
 
         theta = math.atan2(position.y, position.x)
         phi = math.atan(position.z / dem)
@@ -196,9 +196,9 @@ class Icosphere(Mesh):
         s = theta / (2 * math.pi) + 0.5
         t = phi / math.pi + 0.5
 
-        tex_coord = glm.vec3(s, t, 0)
-        tangent = 2 * math.pi * cos_phi * glm.vec3(-sin_theta, cos_theta, 0)
-        bitangent = math.pi * glm.vec3(
+        tex_coord = cgm.vec3(s, t, 0)
+        tangent = 2 * math.pi * cos_phi * cgm.vec3(-sin_theta, cos_theta, 0)
+        bitangent = math.pi * cgm.vec3(
             -sin_phi * cos_theta, -sin_phi * sin_theta, cos_phi
         )
         return tex_coord, tangent, bitangent

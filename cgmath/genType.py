@@ -3,8 +3,15 @@ from __future__ import annotations
 from abc import ABC, abstractmethod
 from typing import List, Dict, Tuple, Union, Any, Optional, Callable
 import ctypes
-from .helper import from_import
+from .helper import from_import, is_number
 import math
+from enum import Enum
+
+
+class MathForm(Enum):
+    Vec = 0
+    Mat = 1
+    Quat = 2
 
 
 class genType(ABC):
@@ -26,8 +33,15 @@ class genType(ABC):
         int: 'i',
         float: ''
     }
+    __dtype_python_type_map:Dict[type, type] = {
+        ctypes.c_bool: bool,
+        ctypes.c_int: int,
+        ctypes.c_uint: int,
+        ctypes.c_float: float,
+        ctypes.c_double: float,
+    }
 
-    __operator_funcs:Dict[str, Callable[[Any,Any], Any]] = {
+    _operator_funcs:Dict[str, Callable[[Any,Any], Any]] = {
         "+": lambda x, y: x + y,
         "-": lambda x, y: x - y,
         "*": lambda x, y: x * y,
@@ -51,6 +65,22 @@ class genType(ABC):
         return f"{self.__class__.__name__}({', '.join([str(value) for value in self])})"
 
     @property
+    def on_changed(self)->Optional[Callable[[genType], None]]:
+        return self._on_changed
+    
+    @on_changed.setter
+    def on_changed(self, on_changed:Optional[Callable[[genType], None]]):
+        if not callable(on_changed):
+            raise TypeError('on_changed should be a function')
+
+        self._on_changed = on_changed
+
+    @property
+    @abstractmethod
+    def math_form(self)->MathForm:
+        pass
+
+    @property
     @abstractmethod
     def dtype(self)->type:
         pass
@@ -65,7 +95,7 @@ class genType(ABC):
         key:Tuple[type, int] = (dtype, shape)
         if key not in genType.__gen_type_map:
             if math.prod(shape) == 1:
-                genType.__gen_type_map[key] = dtype
+                genType.__gen_type_map[key] = genType.__dtype_python_type_map[dtype]
             else:
                 if len(shape) == 1:
                     result_name:str = f"{genType.__dtype_prefix_map[dtype]}vec{shape[0]}"
@@ -84,7 +114,7 @@ class genType(ABC):
 
     @staticmethod
     def __has_negative(value:Union[float,bool,int,genType]):
-        if isinstance(value, (float,int,bool)):
+        if is_number(value):
             return (value < 0)
         elif isinstance(value, genType):
             for i in range(len(value._data)):
@@ -108,7 +138,7 @@ class genType(ABC):
 
     def _operator_type(self, operator:str, other:Union[float, bool, int, genType], reverse:bool, second_has_negative:bool=False)->type:
         other_dtype:type = None
-        if isinstance(other, (float, bool, int)):
+        if is_number(other):
             other_dtype = type(other)
         elif isinstance(other, genType) and self.shape == other.shape:
             other_dtype = other.dtype
@@ -137,6 +167,13 @@ class genType(ABC):
 
         return result
 
+    def _is_homo(self, other:Any)->bool:
+        return (
+            isinstance(other, genType) and
+            self.math_form == other.math_form and
+            self.shape == other.shape
+        )
+
     def _op(self, operator:str, other:Union[float, bool, int, genType])->genType:
         second_has_negative:bool = False
         if operator == "**":
@@ -144,8 +181,8 @@ class genType(ABC):
 
         result_type = self._operator_type(operator, other, reverse=False, second_has_negative=second_has_negative)
         result:genType = result_type()
-        other_is_homo:bool = (isinstance(other, genType) and self.shape == other.shape)
-        operator_func:Callable[[Any,Any], Any] = self.__operator_funcs[operator]
+        other_is_homo:bool = self._is_homo(other)
+        operator_func:Callable[[Any,Any], Any] = self._operator_funcs[operator]
         for i in range(len(result._data)):
             result._data[i] = operator_func(self._data[i], other._data[i] if other_is_homo else other)
 
@@ -158,18 +195,18 @@ class genType(ABC):
 
         result_type = self._operator_type(operator, other, reverse=True, second_has_negative=second_has_negative)
         result:genType = result_type()
-        operator_func:Callable[[Any,Any], Any] = self.__operator_funcs[operator]
+        operator_func:Callable[[Any,Any], Any] = self._operator_funcs[operator]
         for i in range(len(result._data)):
             result._data[i] = operator_func(other, self._data[i])
 
         return result
     
     def _iop(self, operator:str, other:Union[float, bool, int, genType])->genType:
-        other_is_homo:bool = (isinstance(other, genType) and self.shape == other.shape)
-        if not other_is_homo and not isinstance(other, (float, bool, int)):
+        other_is_homo:bool = self._is_homo(other)
+        if not other_is_homo and not is_number(other):
             raise TypeError(f"unsupported operand type(s) for {operator}=: '{self.__class__.__name__}' and '{other.__class__.__name__}'")
         
-        operator_func:Callable[[Any,Any], Any] = self.__operator_funcs[operator]
+        operator_func:Callable[[Any,Any], Any] = self._operator_funcs[operator]
         for i in range(len(self._data)):
             self._data[i] = operator_func(self._data[i], other._data[i] if other_is_homo else other)
 
@@ -181,11 +218,11 @@ class genType(ABC):
         btype = self.gen_type(ctypes.c_bool, self.shape)
         result:genType = btype()
 
-        other_is_homo:bool = (isinstance(other, genType) and self.shape == other.shape)
-        if not other_is_homo and not isinstance(other, (float, bool, int)):
+        other_is_homo:bool = self._is_homo(other)
+        if not other_is_homo and not is_number(other):
             raise TypeError(f"unsupported operand type(s) for {operator}: '{self.__class__.__name__}' and '{other.__class__.__name__}'")
         
-        operator_func:Callable[[Any,Any], Any] = self.__operator_funcs[operator]
+        operator_func:Callable[[Any,Any], Any] = self._operator_funcs[operator]
         for i in range(len(self._data)):
             result._data[i] = operator_func(self._data[i], other._data[i] if other_is_homo else other)
         
@@ -195,7 +232,7 @@ class genType(ABC):
         btype = self.gen_type(ctypes.c_bool, self.shape)
         result:genType = btype()
 
-        operator_func:Callable[[Any,Any], Any] = self.__operator_funcs[operator]
+        operator_func:Callable[[Any,Any], Any] = self._operator_funcs[operator]
         for i in range(len(result._data)):
             result._data[i] = operator_func(other, self._data[i])
         

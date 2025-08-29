@@ -10,20 +10,20 @@ except ModuleNotFoundError:
 
 from PyQt6.QtOpenGLWidgets import QOpenGLWidget
 
-import glm
+import cgmath as cgm
 
 
 @init_QtScreen
 class PyQt6Screen(QOpenGLWidget):
-    mouse_pressed = PyQt6.QtCore.pyqtSignal(Manipulator.MouseButton, glm.vec2, glm.vec2)
+    mouse_pressed = PyQt6.QtCore.pyqtSignal(Manipulator.MouseButton, cgm.vec2, cgm.vec2)
     mouse_released = PyQt6.QtCore.pyqtSignal(
-        Manipulator.MouseButton, glm.vec2, glm.vec2
+        Manipulator.MouseButton, cgm.vec2, cgm.vec2
     )
     mouse_double_clicked = PyQt6.QtCore.pyqtSignal(
-        Manipulator.MouseButton, glm.vec2, glm.vec2
+        Manipulator.MouseButton, cgm.vec2, cgm.vec2
     )
-    mouse_moved = PyQt6.QtCore.pyqtSignal(glm.vec2, glm.vec2)
-    wheel_scrolled = PyQt6.QtCore.pyqtSignal(glm.vec2, glm.vec2, glm.vec2)
+    mouse_moved = PyQt6.QtCore.pyqtSignal(cgm.vec2, cgm.vec2)
+    wheel_scrolled = PyQt6.QtCore.pyqtSignal(cgm.vec2, cgm.vec2, cgm.vec2)
     key_pressed = PyQt6.QtCore.pyqtSignal(Manipulator.Key)
     key_released = PyQt6.QtCore.pyqtSignal(Manipulator.Key)
     key_repeated = PyQt6.QtCore.pyqtSignal(set)

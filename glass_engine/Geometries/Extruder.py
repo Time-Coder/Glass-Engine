@@ -9,7 +9,7 @@ from ..algorithm import (
 
 from glass import Vertex
 
-import glm
+import cgmath as cgm
 import math
 from enum import Enum
 import copy
@@ -28,8 +28,8 @@ class Extruder(Mesh):
         section,
         path,
         join_style: JoinStyle = JoinStyle.MiterJoin,
-        color: Union[glm.vec3, glm.vec4] = glm.vec4(0.396, 0.74151, 0.69102, 1),
-        back_color: Union[glm.vec3, glm.vec4, None] = None,
+        color: Union[cgm.vec3, cgm.vec4] = cgm.vec4(0.396, 0.74151, 0.69102, 1),
+        back_color: Union[cgm.vec3, cgm.vec4, None] = None,
         n_corner_divide: int = 100,
         surf_type: Mesh.SurfType = Mesh.SurfType.Auto,
         normalize_st: bool = False,
@@ -56,7 +56,7 @@ class Extruder(Mesh):
 
         len_path = len(path)
         while i < len_path:
-            while glm.length(path[i] - path[i - 1]) < 1e-6:
+            while cgm.length(path[i] - path[i - 1]) < 1e-6:
                 del path[i]
                 len_path -= 1
 
@@ -89,8 +89,8 @@ class Extruder(Mesh):
         delta_yaw = dest_yaw - current_yaw
         delta_pitch = dest_pitch - current_pitch
 
-        quat1 = glm.quat(math.cos(delta_yaw / 2), 0, 0, math.sin(delta_yaw / 2))
-        quat2 = glm.quat(math.cos(delta_pitch / 2), math.sin(delta_pitch / 2), 0, 0)
+        quat1 = cgm.quat(math.cos(delta_yaw / 2), 0, 0, math.sin(delta_yaw / 2))
+        quat2 = cgm.quat(math.cos(delta_pitch / 2), math.sin(delta_pitch / 2), 0, 0)
         quat = quat1 * quat2
 
         section_offset = []
@@ -98,10 +98,10 @@ class Extruder(Mesh):
         accumulate_length = [0]
         for j in range(len(section)):
             current_section.append(quat * (section[j] - centroid) + path[0])
-            section_offset.append(glm.dot(section[j] - centroid, normal))
+            section_offset.append(cgm.dot(section[j] - centroid, normal))
             if j > 0:
                 accumulate_length.append(
-                    accumulate_length[-1] + glm.length(section[j] - section[j - 1])
+                    accumulate_length[-1] + cgm.length(section[j] - section[j - 1])
                 )
 
         if self.__join_style == Extruder.JoinStyle.MiterJoin:
@@ -138,27 +138,27 @@ class Extruder(Mesh):
         for i in range(len_path):
             should_add_corner = True
             if i == 0:
-                d1 = glm.normalize(path[i + 1] - path[i])
+                d1 = cgm.normalize(path[i + 1] - path[i])
                 should_add_corner = False
             else:
                 d1 = path[i] - path[i - 1]
-                len_d1 = glm.length(d1)
+                len_d1 = cgm.length(d1)
                 d1 = d1 / len_d1
 
                 L += len_d1
                 if i < len_path - 1:
-                    d2 = glm.normalize(path[i + 1] - path[i])
-                    cos_theta = glm.dot(d1, d2)
+                    d2 = cgm.normalize(path[i + 1] - path[i])
+                    cos_theta = cgm.dot(d1, d2)
                     if cos_theta > 0.9:
                         should_add_corner = False
 
-                    half_way = glm.normalize(-d1 + d2)
+                    half_way = cgm.normalize(-d1 + d2)
                     plane_normal = None
-                    if glm.length(-d1 + d2) < 1e-6:
-                        plane_normal = glm.normalize(d1 + d2)
+                    if cgm.length(-d1 + d2) < 1e-6:
+                        plane_normal = cgm.normalize(d1 + d2)
                     else:
-                        up = glm.normalize(glm.cross(d1, d2))
-                        plane_normal = glm.normalize(glm.cross(half_way, up))
+                        up = cgm.normalize(cgm.cross(d1, d2))
+                        plane_normal = cgm.normalize(cgm.cross(half_way, up))
 
                     section_on_bisection = []
                     for j in range(len_section):
@@ -179,10 +179,10 @@ class Extruder(Mesh):
                             )
                             point_on_bisection = section_on_bisection[j]
 
-                            bisection_point_projection = glm.dot(
+                            bisection_point_projection = cgm.dot(
                                 (point_on_bisection - path[i]), d1
                             )
-                            pendicular_point_projection = glm.dot(
+                            pendicular_point_projection = cgm.dot(
                                 (point_on_pendicular - path[i]), d1
                             )
 
@@ -198,7 +198,7 @@ class Extruder(Mesh):
                                     point_on_pendicular, path[i], plane_normal
                                 )
                                 next_section.append(next_point)
-                                current_distance = glm.length(
+                                current_distance = cgm.length(
                                     next_point - current_section[j]
                                 )
                                 span_distances.append(current_distance)
@@ -208,7 +208,7 @@ class Extruder(Mesh):
                             if j > 0:
                                 center_length.append(
                                     center_length[-1]
-                                    + glm.length(current_center - last_center)
+                                    + cgm.length(current_center - last_center)
                                 )
 
                             last_center = current_center
@@ -225,19 +225,19 @@ class Extruder(Mesh):
 
             for j in range(len_section):
                 t = accumulate_length[j]
-                s = L + glm.dot(current_section[j] - path[i], d1)
+                s = L + cgm.dot(current_section[j] - path[i], d1)
                 if normalize_tex_coord:
                     s /= accumulate_length[-1]
                     t /= accumulate_length[-1]
 
                 vertex = Vertex()
                 vertex.position = current_section[j]
-                vertex.tex_coord = glm.vec3(s, t, 0)
+                vertex.tex_coord = cgm.vec3(s, t, 0)
                 vertices[i_vertex] = vertex
                 i_vertex += 1
 
                 if j > 0 and i > 0:
-                    triangle = glm.uvec3(0, 0, 0)
+                    triangle = cgm.uvec3(0, 0, 0)
                     triangle[0] = i_vertex - 1
                     triangle[1] = i_vertex - 2 - len_section
                     triangle[2] = i_vertex - 2
@@ -249,7 +249,7 @@ class Extruder(Mesh):
                         vertices[triangle[2]],
                     )
 
-                    triangle = glm.uvec3(0, 0, 0)
+                    triangle = cgm.uvec3(0, 0, 0)
                     triangle[0] = i_vertex - 1
                     triangle[1] = i_vertex - 1 - len_section
                     triangle[2] = i_vertex - 2 - len_section
@@ -273,7 +273,7 @@ class Extruder(Mesh):
 
                     vertex = Vertex()
                     vertex.position = current_section[j]
-                    vertex.tex_coord = glm.vec3(s, t, 0)
+                    vertex.tex_coord = cgm.vec3(s, t, 0)
                     vertices[i_vertex] = vertex
                     i_vertex += 1
 
@@ -286,12 +286,12 @@ class Extruder(Mesh):
 
                     vertex = Vertex()
                     vertex.position = next_section[j]
-                    vertex.tex_coord = glm.vec3(s, t, 0)
+                    vertex.tex_coord = cgm.vec3(s, t, 0)
                     vertices[i_vertex] = vertex
                     i_vertex += 1
 
                     if j > 0 and i > 0:
-                        triangle = glm.uvec3(0, 0, 0)
+                        triangle = cgm.uvec3(0, 0, 0)
                         triangle[0] = i_vertex - 1
                         triangle[1] = i_vertex - 2 - len_section
                         triangle[2] = i_vertex - 2
@@ -303,7 +303,7 @@ class Extruder(Mesh):
                             vertices[triangle[2]],
                         )
 
-                        triangle = glm.uvec3(0, 0, 0)
+                        triangle = cgm.uvec3(0, 0, 0)
                         triangle[0] = i_vertex - 1
                         triangle[1] = i_vertex - 1 - len_section
                         triangle[2] = i_vertex - 2 - len_section
@@ -318,7 +318,7 @@ class Extruder(Mesh):
                         yield
 
                 for j in range(len_section):
-                    s = L + glm.dot(next_section[j] - path[i], d2)
+                    s = L + cgm.dot(next_section[j] - path[i], d2)
                     t = accumulate_length[j]
                     if normalize_tex_coord:
                         s /= accumulate_length[-1]
@@ -326,7 +326,7 @@ class Extruder(Mesh):
 
                     vertex = Vertex()
                     vertex.position = next_section[j]
-                    vertex.tex_coord = glm.vec3(s, t, 0)
+                    vertex.tex_coord = cgm.vec3(s, t, 0)
                     vertices[i_vertex] = vertex
                     i_vertex += 1
 
@@ -358,11 +358,11 @@ class Extruder(Mesh):
         for i in range(len_path):
             should_add_corner = True
             if i == 0:
-                d1 = glm.normalize(path[i + 1] - path[i])
+                d1 = cgm.normalize(path[i + 1] - path[i])
                 should_add_corner = False
             else:
                 d1 = path[i] - path[i - 1]
-                len_d1 = glm.length(d1)
+                len_d1 = cgm.length(d1)
                 d1 = d1 / len_d1
 
                 if last_should_add_corner:
@@ -370,20 +370,20 @@ class Extruder(Mesh):
 
                 L += len_d1
                 if i < len_path - 1:
-                    d2 = glm.normalize(path[i + 1] - path[i])
-                    cos_theta = glm.dot(d1, d2)
+                    d2 = cgm.normalize(path[i + 1] - path[i])
+                    cos_theta = cgm.dot(d1, d2)
                     if cos_theta > 0.9:
                         should_add_corner = False
                     else:
                         theta = math.acos(cos_theta)
 
-                    half_way = glm.normalize(-d1 + d2)
+                    half_way = cgm.normalize(-d1 + d2)
                     plane_normal = None
-                    if glm.length(-d1 + d2) < 1e-6:
-                        plane_normal = glm.normalize(d1 + d2)
+                    if cgm.length(-d1 + d2) < 1e-6:
+                        plane_normal = cgm.normalize(d1 + d2)
                     else:
-                        up = glm.normalize(glm.cross(d1, d2))
-                        plane_normal = glm.normalize(glm.cross(half_way, up))
+                        up = cgm.normalize(cgm.cross(d1, d2))
+                        plane_normal = cgm.normalize(cgm.cross(half_way, up))
 
                     backup_section = []
                     for j in range(len_section):
@@ -398,11 +398,11 @@ class Extruder(Mesh):
                         first_hit_point = None
                         for j in range(len_section):
                             current_point = backup_section[j]
-                            current_length = glm.dot(current_point - path[i], d1)
+                            current_length = cgm.dot(current_point - path[i], d1)
                             if current_length < min_length:
                                 min_length = current_length
                                 first_hit_point = current_point
-                        distance_first_hit_to_corner = glm.length(
+                        distance_first_hit_to_corner = cgm.length(
                             first_hit_point - path[i]
                         )
 
@@ -430,12 +430,12 @@ class Extruder(Mesh):
                 max_k = min(n_corner_divide, int(theta / 0.05))
                 for k in range(max_k):
                     current_theta = theta * k / (max_k - 1)
-                    quat = glm.quat(
+                    quat = cgm.quat(
                         math.cos(current_theta / 2), math.sin(current_theta / 2) * up
                     )
 
                     H = (
-                        first_hit_point - glm.dot(first_hit_point, up) * up
+                        first_hit_point - cgm.dot(first_hit_point, up) * up
                     )  # 原点到轴的垂足
 
                     for j in range(len_section):
@@ -450,13 +450,13 @@ class Extruder(Mesh):
 
                         vertex = Vertex()
                         vertex.position = pos
-                        vertex.tex_coord = glm.vec3(s, t, 0)
+                        vertex.tex_coord = cgm.vec3(s, t, 0)
 
                         vertices[i_vertex] = vertex
                         i_vertex += 1
 
                         if i > 0 and j > 0:
-                            triangle = glm.uvec3(0, 0, 0)
+                            triangle = cgm.uvec3(0, 0, 0)
                             triangle[0] = i_vertex - 1
                             triangle[1] = i_vertex - 2 - len_section
                             triangle[2] = i_vertex - 2
@@ -468,7 +468,7 @@ class Extruder(Mesh):
                                 vertices[triangle[2]],
                             )
 
-                            triangle = glm.uvec3(0, 0, 0)
+                            triangle = cgm.uvec3(0, 0, 0)
                             triangle[0] = i_vertex - 1
                             triangle[1] = i_vertex - 1 - len_section
                             triangle[2] = i_vertex - 2 - len_section
@@ -487,19 +487,19 @@ class Extruder(Mesh):
             else:
                 for j in range(len_section):
                     t = accumulate_length[j]
-                    s = L + glm.dot(current_section[j] - path[i], d1)
+                    s = L + cgm.dot(current_section[j] - path[i], d1)
                     if normalize_tex_coord:
                         t /= accumulate_length[-1]
                         s /= accumulate_length[-1]
 
                     vertex = Vertex()
                     vertex.position = current_section[j]
-                    vertex.tex_coord = glm.vec3(s, t, 0)
+                    vertex.tex_coord = cgm.vec3(s, t, 0)
                     vertices[i_vertex] = vertex
                     i_vertex += 1
 
                     if i > 0 and j > 0:
-                        triangle = glm.uvec3(0, 0, 0)
+                        triangle = cgm.uvec3(0, 0, 0)
                         triangle[0] = i_vertex - 1
                         triangle[1] = i_vertex - 2 - len_section
                         triangle[2] = i_vertex - 2
@@ -511,7 +511,7 @@ class Extruder(Mesh):
                             vertices[triangle[2]],
                         )
 
-                        triangle = glm.uvec3(0, 0, 0)
+                        triangle = cgm.uvec3(0, 0, 0)
                         triangle[0] = i_vertex - 1
                         triangle[1] = i_vertex - 1 - len_section
                         triangle[2] = i_vertex - 2 - len_section
@@ -546,25 +546,25 @@ class Extruder(Mesh):
         for i in range(len_path):
             should_add_corner = True
             if i == 0:
-                d1 = glm.normalize(path[i + 1] - path[i])
+                d1 = cgm.normalize(path[i + 1] - path[i])
                 should_add_corner = False
             else:
                 d1 = path[i] - path[i - 1]
-                len_d1 = glm.length(d1)
+                len_d1 = cgm.length(d1)
                 L += len_d1
                 d1 /= len_d1
 
                 if i < len_path - 1:
-                    d2 = glm.normalize(path[i + 1] - path[i])
-                    half_way = glm.normalize(-d1 + d2)
-                    up = glm.normalize(glm.cross(d1, d2))
-                    cos_theta = glm.dot(d1, d2)
+                    d2 = cgm.normalize(path[i + 1] - path[i])
+                    half_way = cgm.normalize(-d1 + d2)
+                    up = cgm.normalize(cgm.cross(d1, d2))
+                    cos_theta = cgm.dot(d1, d2)
 
                     plane_normal = d1
                     if cos_theta > 0.9:
                         should_add_corner = False
                     else:
-                        plane_normal = glm.normalize(glm.cross(half_way, up))
+                        plane_normal = cgm.normalize(cgm.cross(half_way, up))
 
                     for j in range(len_section):
                         current_section[j] = line_intersect_plane(
@@ -580,7 +580,7 @@ class Extruder(Mesh):
 
             for j in range(len_section):
                 t = self.t_per_unit * accumulate_length[j]
-                s = self.s_per_unit * (L + glm.dot(current_section[j] - path[i], d1))
+                s = self.s_per_unit * (L + cgm.dot(current_section[j] - path[i], d1))
 
                 if self.normalize_st:
                     t /= accumulate_length[-1]
@@ -588,12 +588,12 @@ class Extruder(Mesh):
 
                 vertex = Vertex()
                 vertex.position = current_section[j]
-                vertex.tex_coord = glm.vec3(s, t, 0)
+                vertex.tex_coord = cgm.vec3(s, t, 0)
                 vertices[i_vertex] = vertex
                 i_vertex += 1
 
                 if i > 0 and j > 0:
-                    triangle = glm.uvec3(0, 0, 0)
+                    triangle = cgm.uvec3(0, 0, 0)
                     triangle[0] = i_vertex - 1
                     triangle[1] = i_vertex - 2 - len_section
                     triangle[2] = i_vertex - 2
@@ -605,7 +605,7 @@ class Extruder(Mesh):
                         vertices[triangle[2]],
                     )
 
-                    triangle = glm.uvec3(0, 0, 0)
+                    triangle = cgm.uvec3(0, 0, 0)
                     triangle[0] = i_vertex - 1
                     triangle[1] = i_vertex - 1 - len_section
                     triangle[2] = i_vertex - 2 - len_section
@@ -622,14 +622,14 @@ class Extruder(Mesh):
             if should_add_corner:
                 for j in range(len_section):
                     t = self.t_per_unit * accumulate_length[j]
-                    s = self.s_per_unit * (L - glm.dot(current_section[j] - path[i], d1))
+                    s = self.s_per_unit * (L - cgm.dot(current_section[j] - path[i], d1))
                     if self.normalize_st:
                         t /= accumulate_length[-1]
                         s /= accumulate_length[-1]
 
                     vertex = Vertex()
                     vertex.position = current_section[j]
-                    vertex.tex_coord = glm.vec3(s, t, 0)
+                    vertex.tex_coord = cgm.vec3(s, t, 0)
                     vertices[i_vertex] = vertex
                     i_vertex += 1
 

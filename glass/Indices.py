@@ -1,4 +1,4 @@
-import glm
+import cgmath as cgm
 from OpenGL import GL
 import numpy as np
 from typing import Union
@@ -19,9 +19,9 @@ class Indices(SameTypeList):
         draw_type: GLInfo.draw_types = GL.GL_STATIC_DRAW,
         dtype=None,
     ):
-        SameTypeList.__init__(self, _list, glm.uvec3)
+        SameTypeList.__init__(self, _list, cgm.uvec3)
 
-        self.stride = sizeof(glm.uvec3)
+        self.stride = sizeof(cgm.uvec3)
         self._ebo = EBO()
         self._draw_type = draw_type
 
@@ -30,7 +30,7 @@ class Indices(SameTypeList):
         self._temp_ebo = EBO()
 
     def _check_type(self, triangle):
-        if not isinstance(triangle, glm.uvec3):
+        if not isinstance(triangle, cgm.uvec3):
             raise TypeError("indices should be in type uvec3")
 
     @property

@@ -2,7 +2,7 @@ from ..Mesh import Mesh
 
 from glass import Vertex
 
-import glm
+import cgmath as cgm
 import math
 from typing import Union
 
@@ -18,8 +18,8 @@ class Torus(Mesh):
         n_lat_divide: int = 100,
         start_lat: float = 0,
         span_lat: float = 360,
-        color: Union[glm.vec3, glm.vec4] = glm.vec4(0.396, 0.74151, 0.69102, 1),
-        back_color: Union[glm.vec3, glm.vec4, None] = None,
+        color: Union[cgm.vec3, cgm.vec4] = cgm.vec4(0.396, 0.74151, 0.69102, 1),
+        back_color: Union[cgm.vec3, cgm.vec4, None] = None,
         vertical: bool = False,
         normalize_st:bool=False,
         st_per_unit:float=1,
@@ -68,7 +68,7 @@ class Torus(Mesh):
             cos_theta = math.cos(theta)
             sin_theta = math.sin(theta)
 
-            tube_center = R * glm.vec3(cos_theta, sin_theta, 0)
+            tube_center = R * cgm.vec3(cos_theta, sin_theta, 0)
             s = R / r * theta / (2 * math.pi)
             if not self.normalize_st:
                 s = self.s_per_unit * 2 * math.pi * R * theta / (2 * math.pi)
@@ -83,17 +83,17 @@ class Torus(Mesh):
                     t = self.t_per_unit * tube_perimeter * phi / (2 * math.pi)
 
                 vertex = Vertex()
-                vertex.normal = glm.vec3(
+                vertex.normal = cgm.vec3(
                     cos_phi * cos_theta, cos_phi * sin_theta, sin_phi
                 )
                 vertex.position = tube_center + r * vertex.normal
-                vertex.tex_coord = glm.vec3(s, t, 0)
+                vertex.tex_coord = cgm.vec3(s, t, 0)
 
                 if vertical:
-                    vertex.position = glm.vec3(
+                    vertex.position = cgm.vec3(
                         vertex.position.x, -vertex.position.z, vertex.position.y
                     )
-                    vertex.normal = glm.vec3(
+                    vertex.normal = cgm.vec3(
                         vertex.normal.x, -vertex.normal.z, vertex.normal.y
                     )
 
@@ -101,7 +101,7 @@ class Torus(Mesh):
                 i_vertex += 1
 
                 if i > 0 and j > 0:
-                    triangle = glm.uvec3(0, 0, 0)
+                    triangle = cgm.uvec3(0, 0, 0)
                     triangle[0] = i_vertex - 1
                     triangle[1] = i_vertex - 1 - n_lat_divide
                     triangle[2] = i_vertex - 1 - n_lat_divide - 1
@@ -113,7 +113,7 @@ class Torus(Mesh):
                         vertices[triangle[2]],
                     )
 
-                    triangle = glm.uvec3(0, 0, 0)
+                    triangle = cgm.uvec3(0, 0, 0)
                     triangle[0] = i_vertex - 1
                     triangle[1] = i_vertex - 1 - n_lat_divide - 1
                     triangle[2] = i_vertex - 1 - 1

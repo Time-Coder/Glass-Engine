@@ -30,7 +30,7 @@ from glass import (
 from glass.utils import extname
 
 import time
-import glm
+import cgmath as cgm
 import sys
 from OpenGL import GL
 import OpenGL.GL.ARB.bindless_texture as bt
@@ -62,7 +62,7 @@ def __init__(self, camera, parent=None) -> None:
     self._pressed_keys = set()
     self._last_frame_time = 0
     self._is_cursor_hiden = False
-    self._hide_cursor_global_pos = glm.vec2(0)
+    self._hide_cursor_global_pos = cgm.vec2(0)
     self._last_cursor_global_pos = cls.qt.QtCore.QPoint(0, 0)
     self._fps = 0
     self._smooth_fps = 0
@@ -273,7 +273,7 @@ def _draw_to_before_PPE(self) -> None:
     with self._before_PPE_fbo:
         scene = self.camera.scene
         clear_color = scene.fog.apply(
-            scene.background.color, glm.vec3(0), glm.vec3(0, self.camera.far, 0)
+            scene.background.color, cgm.vec3(0), cgm.vec3(0, self.camera.far, 0)
         )
         with GLConfig.LocalEnv():
             GLConfig.clear_color = clear_color
@@ -325,7 +325,7 @@ def paintGL(self) -> None:
         self._post_process_effects.draw_to_active(self._before_PPE_image)
     else:
         clear_color = scene.fog.apply(
-            scene.background.color, glm.vec3(0), glm.vec3(0, self.camera.far, 0)
+            scene.background.color, cgm.vec3(0), cgm.vec3(0, self.camera.far, 0)
         )
         with GLConfig.LocalEnv():
             GLConfig.clear_color = clear_color
@@ -386,13 +386,13 @@ def _mouse_parameters(self, mouse_event) -> tuple:
         screen_pos = mouse_event.pos()
         global_pos = self.mapToGlobal(screen_pos)
 
-    screen_pos = glm.vec2(screen_pos.x(), screen_pos.y())
-    global_pos = glm.vec2(global_pos.x(), global_pos.y())
+    screen_pos = cgm.vec2(screen_pos.x(), screen_pos.y())
+    global_pos = cgm.vec2(global_pos.x(), global_pos.y())
     return button, screen_pos, global_pos
 
 
 def _wheel_parameters(self, wheel_event) -> tuple:
-    angle = glm.vec2(wheel_event.angleDelta().x(), wheel_event.angleDelta().y())
+    angle = cgm.vec2(wheel_event.angleDelta().x(), wheel_event.angleDelta().y())
 
     try:
         screen_pos = wheel_event.position()
@@ -401,8 +401,8 @@ def _wheel_parameters(self, wheel_event) -> tuple:
         screen_pos = wheel_event.pos()
         global_pos = self.mapToGlobal(screen_pos)
 
-    screen_pos = glm.vec2(screen_pos.x(), screen_pos.y())
-    global_pos = glm.vec2(global_pos.x(), global_pos.y())
+    screen_pos = cgm.vec2(screen_pos.x(), screen_pos.y())
+    global_pos = cgm.vec2(global_pos.x(), global_pos.y())
     return angle, screen_pos, global_pos
 
 
@@ -439,7 +439,7 @@ def mouseDoubleClickEvent(self, mouse_event) -> None:
     self.mouse_double_clicked.emit(button, screen_pos, global_pos)
 
 
-def _mouseMoveEvent(self, screen_pos: glm.vec2, global_pos: glm.vec2) -> bool:
+def _mouseMoveEvent(self, screen_pos: cgm.vec2, global_pos: cgm.vec2) -> bool:
     self.makeCurrent()
 
     if self.manipulator is not None:
@@ -516,7 +516,7 @@ def hide_cursor(self) -> None:
 
     self._is_cursor_hiden = True
     cursor_pos = self.__class__.qt.QtGui.QCursor.pos()
-    self._hide_cursor_global_pos = glm.vec2(cursor_pos.x(), cursor_pos.y())
+    self._hide_cursor_global_pos = cgm.vec2(cursor_pos.x(), cursor_pos.y())
     self.setCursor(self.__class__.qt.QtCore.Qt.CursorShape.BlankCursor)
     return self._hide_cursor_global_pos
 
@@ -638,8 +638,8 @@ def timerEvent(self, timer_event) -> None:
                     )
                 )
 
-            screen_pos = glm.vec2(screen_pos.x(), screen_pos.y())
-            global_pos = glm.vec2(cursor_global_posF.x(), cursor_global_posF.y())
+            screen_pos = cgm.vec2(screen_pos.x(), screen_pos.y())
+            global_pos = cgm.vec2(cursor_global_posF.x(), cursor_global_posF.y())
             self._mouseMoveEvent(screen_pos, global_pos)
 
 
@@ -648,7 +648,7 @@ def capture(self, save_path: str = None, viewport: tuple = None) -> np.ndarray:
     with self._before_PPE_fbo:
         scene = self.camera.scene
         clear_color = scene.fog.apply(
-            scene.background.color, glm.vec3(0), glm.vec3(0, self.camera.far, 0)
+            scene.background.color, cgm.vec3(0), cgm.vec3(0, self.camera.far, 0)
         )
         with GLConfig.LocalEnv():
             GLConfig.clear_color = clear_color

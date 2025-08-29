@@ -3,7 +3,7 @@ from ..Mesh import Mesh
 from glass.utils import checktype
 from glass import Vertex
 
-import glm
+import cgmath as cgm
 import math
 from typing import Union
 
@@ -19,8 +19,8 @@ class ConeTrustum(Mesh):
         start_angle: float = 0,
         span_angle: float = 360,
         n_divide: int = 100,
-        color: Union[glm.vec3, glm.vec4] = glm.vec4(0.396, 0.74151, 0.69102, 1),
-        back_color: Union[glm.vec3, glm.vec4, None] = None,
+        color: Union[cgm.vec3, cgm.vec4] = cgm.vec4(0.396, 0.74151, 0.69102, 1),
+        back_color: Union[cgm.vec3, cgm.vec4, None] = None,
         normalize_st:bool=False,
         st_per_unit:float=1,
         name: str = "",
@@ -58,18 +58,18 @@ class ConeTrustum(Mesh):
 
         # 圆台顶面中心点
         vertex_top_center = Vertex()
-        vertex_top_center.position = glm.vec3(0, 0, height)
-        vertex_top_center.normal = glm.vec3(0, 0, 1)
-        vertex_top_center.tex_coord = glm.vec3(0.5, 0.5, 0)
+        vertex_top_center.position = cgm.vec3(0, 0, height)
+        vertex_top_center.normal = cgm.vec3(0, 0, 1)
+        vertex_top_center.tex_coord = cgm.vec3(0.5, 0.5, 0)
 
         vertices[i_vertex] = vertex_top_center
         i_vertex += 1
 
         # 圆台底面中心点
         vertex_bottom_center = Vertex()
-        vertex_bottom_center.position = glm.vec3(0)
-        vertex_bottom_center.normal = glm.vec3(0, 0, -1)
-        vertex_bottom_center.tex_coord = glm.vec3(0.5, 0.5, 0)
+        vertex_bottom_center.position = cgm.vec3(0)
+        vertex_bottom_center.normal = cgm.vec3(0, 0, -1)
+        vertex_bottom_center.tex_coord = cgm.vec3(0.5, 0.5, 0)
 
         vertices[i_vertex] = vertex_bottom_center
         i_vertex += 1
@@ -96,17 +96,17 @@ class ConeTrustum(Mesh):
             cos_theta = math.cos(theta)
             sin_theta = math.sin(theta)
 
-            top = glm.vec3(top_radius * cos_theta, top_radius * sin_theta, height)
-            bottom = glm.vec3(bottom_radius * cos_theta, bottom_radius * sin_theta, 0)
+            top = cgm.vec3(top_radius * cos_theta, top_radius * sin_theta, height)
+            bottom = cgm.vec3(bottom_radius * cos_theta, bottom_radius * sin_theta, 0)
 
-            to_right = glm.vec3(-sin_theta, cos_theta, 0)
+            to_right = cgm.vec3(-sin_theta, cos_theta, 0)
             to_top = top - bottom
-            normal = glm.normalize(glm.cross(to_right, to_top))
+            normal = cgm.normalize(cgm.cross(to_right, to_top))
 
             vertex_top_top = Vertex()
             vertex_top_top.position = top
-            vertex_top_top.normal = glm.vec3(0, 0, 1)
-            vertex_top_top.tex_coord = glm.vec3(
+            vertex_top_top.normal = cgm.vec3(0, 0, 1)
+            vertex_top_top.tex_coord = cgm.vec3(
                 0.5 + self.s_per_unit * tex_coord_top_radius * cos_theta,
                 0.5 + self.t_per_unit * tex_coord_top_radius * sin_theta,
                 0,
@@ -115,7 +115,7 @@ class ConeTrustum(Mesh):
             vertex_top_side = Vertex()
             vertex_top_side.position = top
             vertex_top_side.normal = normal
-            vertex_top_side.tex_coord = glm.vec3(
+            vertex_top_side.tex_coord = cgm.vec3(
                 0.5 + self.s_per_unit * tex_coord_top_side_radius * cos_theta,
                 0.5 + self.t_per_unit * tex_coord_top_side_radius * sin_theta,
                 0,
@@ -124,7 +124,7 @@ class ConeTrustum(Mesh):
             vertex_bottom_side = Vertex()
             vertex_bottom_side.position = bottom
             vertex_bottom_side.normal = normal
-            vertex_bottom_side.tex_coord = glm.vec3(
+            vertex_bottom_side.tex_coord = cgm.vec3(
                 0.5 + self.s_per_unit * tex_coord_bottom_side_radius * cos_theta,
                 0.5 + self.t_per_unit * tex_coord_bottom_side_radius * sin_theta,
                 0,
@@ -132,8 +132,8 @@ class ConeTrustum(Mesh):
 
             vertex_bottom_bottom = Vertex()
             vertex_bottom_bottom.position = bottom
-            vertex_bottom_bottom.normal = glm.vec3(0, 0, -1)
-            vertex_bottom_bottom.tex_coord = glm.vec3(
+            vertex_bottom_bottom.normal = cgm.vec3(0, 0, -1)
+            vertex_bottom_bottom.tex_coord = cgm.vec3(
                 0.5 + self.s_per_unit * tex_coord_bottom_radius * cos_theta,
                 0.5 + self.t_per_unit * tex_coord_bottom_radius * sin_theta,
                 0,
@@ -153,7 +153,7 @@ class ConeTrustum(Mesh):
 
             if j > 0:
                 # 圆台顶面
-                triangle = glm.uvec3(0, 0, 0)
+                triangle = cgm.uvec3(0, 0, 0)
                 triangle[0] = 2 + 4 * j
                 triangle[1] = 0
                 triangle[2] = 2 + 4 * j - 4
@@ -164,7 +164,7 @@ class ConeTrustum(Mesh):
                 )
 
                 # 圆台侧面 1
-                triangle = glm.uvec3(0, 0, 0)
+                triangle = cgm.uvec3(0, 0, 0)
                 triangle[0] = 2 + 4 * j + 2
                 triangle[1] = 2 + 4 * j + 1
                 triangle[2] = 2 + 4 * j - 3
@@ -175,7 +175,7 @@ class ConeTrustum(Mesh):
                 )
 
                 # 圆台侧面 2
-                triangle = glm.uvec3(0, 0, 0)
+                triangle = cgm.uvec3(0, 0, 0)
                 triangle[0] = 2 + 4 * j + 2
                 triangle[1] = 2 + 4 * j - 3
                 triangle[2] = 2 + 4 * j - 2
@@ -186,7 +186,7 @@ class ConeTrustum(Mesh):
                 )
 
                 # 圆台底面
-                triangle = glm.uvec3(0, 0, 0)
+                triangle = cgm.uvec3(0, 0, 0)
                 triangle[0] = 2 + 4 * j + 3
                 triangle[1] = 2 + 4 * j - 1
                 triangle[2] = 1

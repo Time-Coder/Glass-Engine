@@ -2,7 +2,7 @@ from __future__ import annotations
 import OpenGL
 from OpenGL import GL
 from OpenGL.platform import PLATFORM
-import glm
+import cgmath as cgm
 import numpy as np
 import inspect
 from typing import Union, Tuple, Optional, Set
@@ -495,11 +495,11 @@ class _MetaGLConfig(type):
     def clear_color(cls):
         color_array = np.array([0.0] * 4, dtype=np.float32)
         GL.glGetFloatv(GL.GL_COLOR_CLEAR_VALUE, color_array)
-        return glm.vec4(color_array[0], color_array[1], color_array[2], color_array[3])
+        return cgm.vec4(color_array[0], color_array[1], color_array[2], color_array[3])
 
     @clear_color.setter
     @record_old_value
-    def clear_color(cls, color: Union[Tuple[float], glm.vec3, glm.vec4, float]):
+    def clear_color(cls, color: Union[Tuple[float], cgm.vec3, cgm.vec4, float]):
         if isinstance(color, float):
             GL.glClearColor(color, color, color, color)
         elif len(color) == 3:
@@ -566,10 +566,10 @@ class _MetaGLConfig(type):
         _MetaGLConfig.__buffered_viewport[current_context] = viewport
 
     @property
-    def screen_size(cls) -> glm.ivec2:
+    def screen_size(cls) -> cgm.ivec2:
         current_context = cls.buffered_current_context
         if current_context not in _MetaGLConfig.__screen_size:
-            _MetaGLConfig.__screen_size[current_context] = glm.ivec2()
+            _MetaGLConfig.__screen_size[current_context] = cgm.ivec2()
 
         viewport = cls.viewport
         _MetaGLConfig.__screen_size[current_context].x = viewport[2]
@@ -821,7 +821,7 @@ class GLConfig(metaclass=_MetaGLConfig):
         GL.glClear(bits)
 
     @staticmethod
-    def clear_buffer(target, color: Union[Tuple[float], float, glm.vec3, glm.vec4]):
+    def clear_buffer(target, color: Union[Tuple[float], float, cgm.vec3, cgm.vec4]):
         np_color = np.array([0] * 4)
         if isinstance(color, float):
             np_color[0] = color

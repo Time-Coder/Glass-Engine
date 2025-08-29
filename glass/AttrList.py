@@ -6,7 +6,6 @@ from .Increment import Increment
 
 from OpenGL import GL
 import numpy as np
-import glm
 from typing import Union
 
 
@@ -46,16 +45,6 @@ class AttrList(SameTypeList):
 
     @dtype.setter
     def dtype(self, dtype: GLInfo.attr_types):
-        str_dtype = str(dtype)
-        if str_dtype == "callback_vec2":
-            dtype = glm.vec2
-        elif str_dtype == "callback_vec3":
-            dtype = glm.vec3
-        elif str_dtype == "callback_vec4":
-            dtype = glm.vec4
-        elif str_dtype == "callback_quat":
-            dtype = glm.quat
-
         if self._dtype == dtype:
             return
 

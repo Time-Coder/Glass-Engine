@@ -2,7 +2,7 @@ import platform
 import os
 import freetype
 import numpy as np
-import glm
+import cgmath as cgm
 import cv2
 
 from .sampler2D import sampler2D
@@ -222,7 +222,7 @@ class TextLoader:
         content: str,
         font_family: str = None,
         point_size: int = 48,
-        color: glm.vec4 = glm.vec4(1, 1, 1, 1),
+        color: cgm.vec4 = cgm.vec4(1, 1, 1, 1),
     ):
         if font_family is None:
             if platform.system() == "Windows":
@@ -230,8 +230,8 @@ class TextLoader:
             else:
                 font_family = "DejaVu Sans Mono"
 
-        if isinstance(color, glm.vec3):
-            color = glm.vec4(color, 1)
+        if isinstance(color, cgm.vec3):
+            color = cgm.vec4(color, 1)
 
         key = (content, font_family, point_size, color)
         if key in TextLoader._image_map:
@@ -255,7 +255,7 @@ class TextLoader:
         content: str,
         font_family: str = None,
         point_size: int = 48,
-        color: glm.vec4 = glm.vec4(1, 1, 1, 1),
+        color: cgm.vec4 = cgm.vec4(1, 1, 1, 1),
     ):
         if font_family is None:
             if platform.system() == "Windows":
@@ -263,8 +263,8 @@ class TextLoader:
             else:
                 font_family = "DejaVu Sans Mono"
 
-        if isinstance(color, glm.vec3):
-            color = glm.vec4(color, 1)
+        if isinstance(color, cgm.vec3):
+            color = cgm.vec4(color, 1)
 
         key = (content, font_family, point_size, color)
         if key in TextLoader._sampler_map:

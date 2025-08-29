@@ -1,4 +1,4 @@
-import glm
+import cgmath as cgm
 import numpy as np
 import struct
 from OpenGL import GL
@@ -340,44 +340,44 @@ class SSUBO(BO):
 
         self.bufferSubData(offset, 8, np.array([value], dtype=np.float64))
 
-    def _set_bvec2(self, offset: int, value: glm.bvec2):
-        if not isinstance(value, glm.bvec2):
-            value = glm.bvec2(value)
+    def _set_bvec2(self, offset: int, value: cgm.bvec2):
+        if not isinstance(value, cgm.bvec2):
+            value = cgm.bvec2(value)
 
         self.bufferSubData(offset, sizeof(value), np.array(value, dtype=np.int32))
 
-    def _set_bvec3(self, offset: int, value: glm.bvec3):
-        if not isinstance(value, glm.bvec3):
-            value = glm.bvec3(value)
+    def _set_bvec3(self, offset: int, value: cgm.bvec3):
+        if not isinstance(value, cgm.bvec3):
+            value = cgm.bvec3(value)
 
         self.bufferSubData(offset, sizeof(value), np.array(value, dtype=np.int32))
 
-    def _set_bvec4(self, offset: int, value: glm.bvec4):
-        if not isinstance(value, glm.bvec4):
-            value = glm.bvec4(value)
+    def _set_bvec4(self, offset: int, value: cgm.bvec4):
+        if not isinstance(value, cgm.bvec4):
+            value = cgm.bvec4(value)
 
         self.bufferSubData(offset, sizeof(value), np.array(value, dtype=np.int32))
 
-    def _set_ivec2(self, offset: int, value: glm.ivec2):
-        if not isinstance(value, glm.ivec2):
-            value = glm.ivec2(value)
+    def _set_ivec2(self, offset: int, value: cgm.ivec2):
+        if not isinstance(value, cgm.ivec2):
+            value = cgm.ivec2(value)
 
         self.bufferSubData(offset, sizeof(value), np.array(value, dtype=np.int32))
 
-    def _set_ivec3(self, offset: int, value: glm.ivec3):
-        if not isinstance(value, glm.ivec3):
-            value = glm.ivec3(value)
+    def _set_ivec3(self, offset: int, value: cgm.ivec3):
+        if not isinstance(value, cgm.ivec3):
+            value = cgm.ivec3(value)
 
         self.bufferSubData(offset, sizeof(value), np.array(value, dtype=np.int32))
 
-    def _set_ivec4(self, offset: int, value: glm.ivec4):
-        if not isinstance(value, glm.ivec4):
-            value = glm.ivec4(value)
+    def _set_ivec4(self, offset: int, value: cgm.ivec4):
+        if not isinstance(value, cgm.ivec4):
+            value = cgm.ivec4(value)
 
         self.bufferSubData(offset, sizeof(value), np.array(value, dtype=np.int32))
 
-    def _set_uvec2(self, offset: int, value: Union[glm.uvec2, int]):
-        if isinstance(value, glm.uvec2):
+    def _set_uvec2(self, offset: int, value: Union[cgm.uvec2, int]):
+        if isinstance(value, cgm.uvec2):
             self.bufferSubData(offset, sizeof(value), np.array(value, dtype=np.uint32))
         else:
             if not isinstance(value, int):
@@ -385,195 +385,195 @@ class SSUBO(BO):
 
             self.bufferSubData(offset, 8, np.array(value, dtype=np.uint64))
 
-    def _set_uvec3(self, offset: int, value: glm.uvec3):
-        if not isinstance(value, glm.uvec3):
-            value = glm.uvec3(value)
+    def _set_uvec3(self, offset: int, value: cgm.uvec3):
+        if not isinstance(value, cgm.uvec3):
+            value = cgm.uvec3(value)
 
         self.bufferSubData(offset, sizeof(value), np.array(value, dtype=np.uint32))
 
-    def _set_uvec4(self, offset: int, value: glm.uvec4):
-        if not isinstance(value, glm.uvec4):
-            value = glm.uvec4(value)
+    def _set_uvec4(self, offset: int, value: cgm.uvec4):
+        if not isinstance(value, cgm.uvec4):
+            value = cgm.uvec4(value)
 
         self.bufferSubData(offset, sizeof(value), np.array(value, dtype=np.uint32))
 
-    def _set_vec2(self, offset: int, value: glm.vec2):
-        if not isinstance(value, glm.vec2):
-            value = glm.vec2(value)
+    def _set_vec2(self, offset: int, value: cgm.vec2):
+        if not isinstance(value, cgm.vec2):
+            value = cgm.vec2(value)
 
         self.bufferSubData(offset, sizeof(value), np.array(value, dtype=np.float32))
 
-    def _set_vec3(self, offset: int, value: glm.vec3):
-        if not isinstance(value, glm.vec3):
-            value = glm.vec3(value)
+    def _set_vec3(self, offset: int, value: cgm.vec3):
+        if not isinstance(value, cgm.vec3):
+            value = cgm.vec3(value)
 
         self.bufferSubData(offset, sizeof(value), np.array(value, dtype=np.float32))
 
-    def _set_vec4(self, offset: int, value: glm.vec4):
-        if not isinstance(value, glm.vec4):
-            value = glm.vec4(value)
+    def _set_vec4(self, offset: int, value: cgm.vec4):
+        if not isinstance(value, cgm.vec4):
+            value = cgm.vec4(value)
 
         self.bufferSubData(offset, sizeof(value), np.array(value, dtype=np.float32))
 
-    def _set_dvec2(self, offset: int, value: glm.dvec2):
-        if not isinstance(value, glm.dvec2):
-            value = glm.dvec2(value)
+    def _set_dvec2(self, offset: int, value: cgm.dvec2):
+        if not isinstance(value, cgm.dvec2):
+            value = cgm.dvec2(value)
 
         self.bufferSubData(offset, sizeof(value), np.array(value, dtype=np.float64))
 
-    def _set_dvec3(self, offset: int, value: glm.dvec3):
-        if not isinstance(value, glm.dvec3):
-            value = glm.dvec3(value)
+    def _set_dvec3(self, offset: int, value: cgm.dvec3):
+        if not isinstance(value, cgm.dvec3):
+            value = cgm.dvec3(value)
 
         self.bufferSubData(offset, sizeof(value), np.array(value, dtype=np.float64))
 
-    def _set_dvec4(self, offset: int, value: glm.dvec4):
-        if not isinstance(value, glm.dvec4):
-            value = glm.dvec4(value)
+    def _set_dvec4(self, offset: int, value: cgm.dvec4):
+        if not isinstance(value, cgm.dvec4):
+            value = cgm.dvec4(value)
 
         self.bufferSubData(offset, sizeof(value), np.array(value, dtype=np.float64))
 
-    def _set_mat2(self, offset: int, value: glm.mat2):
-        if not isinstance(value, glm.mat2):
-            value = glm.mat2(value)
+    def _set_mat2(self, offset: int, value: cgm.mat2):
+        if not isinstance(value, cgm.mat2):
+            value = cgm.mat2(value)
 
         self.bufferSubData(offset, sizeof(value), np.array(value, dtype=np.float32))
 
-    def _set_mat3x2(self, offset: int, value: glm.mat3x2):
-        if not isinstance(value, glm.mat3x2):
-            value = glm.mat3x2(value)
+    def _set_mat3x2(self, offset: int, value: cgm.mat3x2):
+        if not isinstance(value, cgm.mat3x2):
+            value = cgm.mat3x2(value)
 
         self.bufferSubData(offset, sizeof(value), np.array(value, dtype=np.float32))
 
-    def _set_mat4x2(self, offset: int, value: glm.mat4x2):
-        if not isinstance(value, glm.mat4x2):
-            value = glm.mat4x2(value)
+    def _set_mat4x2(self, offset: int, value: cgm.mat4x2):
+        if not isinstance(value, cgm.mat4x2):
+            value = cgm.mat4x2(value)
 
         self.bufferSubData(offset, sizeof(value), np.array(value, dtype=np.float32))
 
-    def _set_mat2x3(self, offset: int, value: glm.mat2x3):
-        if not isinstance(value, glm.mat2x3):
-            value = glm.mat2x3(value)
+    def _set_mat2x3(self, offset: int, value: cgm.mat2x3):
+        if not isinstance(value, cgm.mat2x3):
+            value = cgm.mat2x3(value)
 
         self.bufferSubData(offset, sizeof(value), np.array(value, dtype=np.float32))
 
-    def _set_mat3(self, offset: int, value: glm.mat3x3):
-        if not isinstance(value, glm.mat3x3):
-            value = glm.mat3x3(value)
+    def _set_mat3(self, offset: int, value: cgm.mat3x3):
+        if not isinstance(value, cgm.mat3x3):
+            value = cgm.mat3x3(value)
 
         self.bufferSubData(offset, sizeof(value), np.array(value, dtype=np.float32))
 
-    def _set_mat4x3(self, offset: int, value: glm.mat4x3):
-        if not isinstance(value, glm.mat4x3):
-            value = glm.mat4x3(value)
+    def _set_mat4x3(self, offset: int, value: cgm.mat4x3):
+        if not isinstance(value, cgm.mat4x3):
+            value = cgm.mat4x3(value)
 
         self.bufferSubData(offset, sizeof(value), np.array(value, dtype=np.float32))
 
-    def _set_mat2x4(self, offset: int, value: glm.mat2x4):
-        if not isinstance(value, glm.mat2x4):
-            value = glm.mat2x4(value)
+    def _set_mat2x4(self, offset: int, value: cgm.mat2x4):
+        if not isinstance(value, cgm.mat2x4):
+            value = cgm.mat2x4(value)
 
         self.bufferSubData(offset, sizeof(value), np.array(value, dtype=np.float32))
 
-    def _set_mat3x4(self, offset: int, value: glm.mat3x4):
-        if not isinstance(value, glm.mat3x4):
-            value = glm.mat3x4(value)
+    def _set_mat3x4(self, offset: int, value: cgm.mat3x4):
+        if not isinstance(value, cgm.mat3x4):
+            value = cgm.mat3x4(value)
 
         self.bufferSubData(offset, sizeof(value), np.array(value, dtype=np.float32))
 
-    def _set_mat4(self, offset: int, value: glm.mat4x4):
-        if not isinstance(value, glm.mat4x4):
-            value = glm.mat4x4(value)
+    def _set_mat4(self, offset: int, value: cgm.mat4x4):
+        if not isinstance(value, cgm.mat4x4):
+            value = cgm.mat4x4(value)
 
         self.bufferSubData(offset, sizeof(value), np.array(value, dtype=np.float32))
 
-    def _set_mat2x2(self, offset: int, value: glm.mat2x2):
-        if not isinstance(value, glm.mat2x2):
-            value = glm.mat2x2(value)
+    def _set_mat2x2(self, offset: int, value: cgm.mat2x2):
+        if not isinstance(value, cgm.mat2x2):
+            value = cgm.mat2x2(value)
 
         self.bufferSubData(offset, sizeof(value), np.array(value, dtype=np.float32))
 
-    def _set_mat3x3(self, offset: int, value: glm.mat3x3):
-        if not isinstance(value, glm.mat3x3):
-            value = glm.mat3x3(value)
+    def _set_mat3x3(self, offset: int, value: cgm.mat3x3):
+        if not isinstance(value, cgm.mat3x3):
+            value = cgm.mat3x3(value)
 
         self.bufferSubData(offset, sizeof(value), np.array(value, dtype=np.float32))
 
-    def _set_mat4x4(self, offset: int, value: glm.mat4x4):
-        if not isinstance(value, glm.mat4x4):
-            value = glm.mat4x4(value)
+    def _set_mat4x4(self, offset: int, value: cgm.mat4x4):
+        if not isinstance(value, cgm.mat4x4):
+            value = cgm.mat4x4(value)
 
         self.bufferSubData(offset, sizeof(value), np.array(value, dtype=np.float32))
 
-    def _set_dmat2(self, offset: int, value: glm.mat2x2):
-        if not isinstance(value, glm.mat2x2):
-            value = glm.mat2x2(value)
+    def _set_dmat2(self, offset: int, value: cgm.mat2x2):
+        if not isinstance(value, cgm.mat2x2):
+            value = cgm.mat2x2(value)
 
         self.bufferSubData(offset, sizeof(value), np.array(value, dtype=np.float64))
 
-    def _set_dmat3x2(self, offset: int, value: glm.mat3x2):
-        if not isinstance(value, glm.mat3x2):
-            value = glm.mat3x2(value)
+    def _set_dmat3x2(self, offset: int, value: cgm.mat3x2):
+        if not isinstance(value, cgm.mat3x2):
+            value = cgm.mat3x2(value)
 
         self.bufferSubData(offset, sizeof(value), np.array(value, dtype=np.float64))
 
-    def _set_dmat4x2(self, offset: int, value: glm.mat4x2):
-        if not isinstance(value, glm.mat4x2):
-            value = glm.mat4x2(value)
+    def _set_dmat4x2(self, offset: int, value: cgm.mat4x2):
+        if not isinstance(value, cgm.mat4x2):
+            value = cgm.mat4x2(value)
 
         self.bufferSubData(offset, sizeof(value), np.array(value, dtype=np.float64))
 
-    def _set_dmat2x3(self, offset: int, value: glm.mat2x3):
-        if not isinstance(value, glm.mat2x3):
-            value = glm.mat2x3(value)
+    def _set_dmat2x3(self, offset: int, value: cgm.mat2x3):
+        if not isinstance(value, cgm.mat2x3):
+            value = cgm.mat2x3(value)
 
         self.bufferSubData(offset, sizeof(value), np.array(value, dtype=np.float64))
 
-    def _set_dmat3(self, offset: int, value: glm.mat3x3):
-        if not isinstance(value, glm.mat3x3):
-            value = glm.mat3x3(value)
+    def _set_dmat3(self, offset: int, value: cgm.mat3x3):
+        if not isinstance(value, cgm.mat3x3):
+            value = cgm.mat3x3(value)
 
         self.bufferSubData(offset, sizeof(value), np.array(value, dtype=np.float64))
 
-    def _set_dmat4x3(self, offset: int, value: glm.mat4x3):
-        if not isinstance(value, glm.mat4x3):
-            value = glm.mat4x3(value)
+    def _set_dmat4x3(self, offset: int, value: cgm.mat4x3):
+        if not isinstance(value, cgm.mat4x3):
+            value = cgm.mat4x3(value)
 
         self.bufferSubData(offset, sizeof(value), np.array(value, dtype=np.float64))
 
-    def _set_dmat2x4(self, offset: int, value: glm.mat2x4):
-        if not isinstance(value, glm.mat2x4):
-            value = glm.mat2x4(value)
+    def _set_dmat2x4(self, offset: int, value: cgm.mat2x4):
+        if not isinstance(value, cgm.mat2x4):
+            value = cgm.mat2x4(value)
 
         self.bufferSubData(offset, sizeof(value), np.array(value, dtype=np.float64))
 
-    def _set_dmat3x4(self, offset: int, value: glm.mat3x4):
-        if not isinstance(value, glm.mat3x4):
-            value = glm.mat3x4(value)
+    def _set_dmat3x4(self, offset: int, value: cgm.mat3x4):
+        if not isinstance(value, cgm.mat3x4):
+            value = cgm.mat3x4(value)
 
         self.bufferSubData(offset, sizeof(value), np.array(value, dtype=np.float64))
 
-    def _set_dmat4(self, offset: int, value: glm.mat4x4):
-        if not isinstance(value, glm.mat4x4):
-            value = glm.mat4x4(value)
+    def _set_dmat4(self, offset: int, value: cgm.mat4x4):
+        if not isinstance(value, cgm.mat4x4):
+            value = cgm.mat4x4(value)
 
         self.bufferSubData(offset, sizeof(value), np.array(value, dtype=np.float64))
 
-    def _set_dmat2x2(self, offset: int, value: glm.dmat2x2):
-        if not isinstance(value, glm.dmat2x2):
-            value = glm.dmat2x2(value)
+    def _set_dmat2x2(self, offset: int, value: cgm.dmat2x2):
+        if not isinstance(value, cgm.dmat2x2):
+            value = cgm.dmat2x2(value)
 
         self.bufferSubData(offset, sizeof(value), np.array(value, dtype=np.float64))
 
-    def _set_dmat3x3(self, offset: int, value: glm.dmat3x3):
-        if not isinstance(value, glm.dmat3x3):
-            value = glm.dmat3x3(value)
+    def _set_dmat3x3(self, offset: int, value: cgm.dmat3x3):
+        if not isinstance(value, cgm.dmat3x3):
+            value = cgm.dmat3x3(value)
 
         self.bufferSubData(offset, sizeof(value), np.array(value, dtype=np.float64))
 
-    def _set_dmat4x4(self, offset: int, value: glm.dmat4x4):
-        if not isinstance(value, glm.dmat4x4):
-            value = glm.dmat4x4(value)
+    def _set_dmat4x4(self, offset: int, value: cgm.dmat4x4):
+        if not isinstance(value, cgm.dmat4x4):
+            value = cgm.dmat4x4(value)
 
         self.bufferSubData(offset, sizeof(value), np.array(value, dtype=np.float64))
 
@@ -624,199 +624,199 @@ class SSUBO(BO):
     def _get_double(self, offset: int) -> float:
         return struct.unpack("lf", self._buffer[offset : offset + 4])[0]
 
-    def _get_bvec2(self, offset: int) -> glm.bvec2:
-        return glm.bvec2.from_bytes(
-            bytes(self._buffer[offset : offset + glm.sizeof(glm.bvec2)])
+    def _get_bvec2(self, offset: int) -> cgm.bvec2:
+        return cgm.bvec2.from_bytes(
+            bytes(self._buffer[offset : offset + cgm.sizeof(cgm.bvec2)])
         )
 
-    def _get_bvec3(self, offset: int) -> glm.bvec3:
-        return glm.bvec3.from_bytes(
-            bytes(self._buffer[offset : offset + glm.sizeof(glm.bvec3)])
+    def _get_bvec3(self, offset: int) -> cgm.bvec3:
+        return cgm.bvec3.from_bytes(
+            bytes(self._buffer[offset : offset + cgm.sizeof(cgm.bvec3)])
         )
 
-    def _get_bvec4(self, offset: int) -> glm.bvec4:
-        return glm.bvec4.from_bytes(
-            bytes(self._buffer[offset : offset + glm.sizeof(glm.bvec4)])
+    def _get_bvec4(self, offset: int) -> cgm.bvec4:
+        return cgm.bvec4.from_bytes(
+            bytes(self._buffer[offset : offset + cgm.sizeof(cgm.bvec4)])
         )
 
-    def _get_ivec2(self, offset: int) -> glm.ivec2:
-        return glm.ivec2.from_bytes(
-            bytes(self._buffer[offset : offset + glm.sizeof(glm.ivec2)])
+    def _get_ivec2(self, offset: int) -> cgm.ivec2:
+        return cgm.ivec2.from_bytes(
+            bytes(self._buffer[offset : offset + cgm.sizeof(cgm.ivec2)])
         )
 
-    def _get_ivec3(self, offset: int) -> glm.ivec3:
-        return glm.ivec3.from_bytes(
-            bytes(self._buffer[offset : offset + glm.sizeof(glm.ivec3)])
+    def _get_ivec3(self, offset: int) -> cgm.ivec3:
+        return cgm.ivec3.from_bytes(
+            bytes(self._buffer[offset : offset + cgm.sizeof(cgm.ivec3)])
         )
 
-    def _get_ivec4(self, offset: int) -> glm.ivec4:
-        return glm.ivec4.from_bytes(
-            bytes(self._buffer[offset : offset + glm.sizeof(glm.ivec4)])
+    def _get_ivec4(self, offset: int) -> cgm.ivec4:
+        return cgm.ivec4.from_bytes(
+            bytes(self._buffer[offset : offset + cgm.sizeof(cgm.ivec4)])
         )
 
-    def _get_uvec2(self, offset: int) -> glm.uvec2:
-        return glm.uvec2.from_bytes(
-            bytes(self._buffer[offset : offset + glm.sizeof(glm.uvec2)])
+    def _get_uvec2(self, offset: int) -> cgm.uvec2:
+        return cgm.uvec2.from_bytes(
+            bytes(self._buffer[offset : offset + cgm.sizeof(cgm.uvec2)])
         )
 
-    def _get_uvec3(self, offset: int) -> glm.uvec3:
-        return glm.uvec3.from_bytes(
-            bytes(self._buffer[offset : offset + glm.sizeof(glm.uvec3)])
+    def _get_uvec3(self, offset: int) -> cgm.uvec3:
+        return cgm.uvec3.from_bytes(
+            bytes(self._buffer[offset : offset + cgm.sizeof(cgm.uvec3)])
         )
 
-    def _get_uvec4(self, offset: int) -> glm.uvec4:
-        return glm.uvec4.from_bytes(
-            bytes(self._buffer[offset : offset + glm.sizeof(glm.uvec4)])
+    def _get_uvec4(self, offset: int) -> cgm.uvec4:
+        return cgm.uvec4.from_bytes(
+            bytes(self._buffer[offset : offset + cgm.sizeof(cgm.uvec4)])
         )
 
-    def _get_vec2(self, offset: int) -> glm.vec2:
-        return glm.vec2.from_bytes(
-            bytes(self._buffer[offset : offset + glm.sizeof(glm.vec2)])
+    def _get_vec2(self, offset: int) -> cgm.vec2:
+        return cgm.vec2.from_bytes(
+            bytes(self._buffer[offset : offset + cgm.sizeof(cgm.vec2)])
         )
 
-    def _get_vec3(self, offset: int) -> glm.vec3:
-        return glm.vec3.from_bytes(
-            bytes(self._buffer[offset : offset + glm.sizeof(glm.vec3)])
+    def _get_vec3(self, offset: int) -> cgm.vec3:
+        return cgm.vec3.from_bytes(
+            bytes(self._buffer[offset : offset + cgm.sizeof(cgm.vec3)])
         )
 
-    def _get_vec4(self, offset: int) -> glm.vec4:
-        return glm.vec4.from_bytes(
-            bytes(self._buffer[offset : offset + glm.sizeof(glm.vec4)])
+    def _get_vec4(self, offset: int) -> cgm.vec4:
+        return cgm.vec4.from_bytes(
+            bytes(self._buffer[offset : offset + cgm.sizeof(cgm.vec4)])
         )
 
-    def _get_dvec2(self, offset: int) -> glm.dvec2:
-        return glm.dvec2.from_bytes(
-            bytes(self._buffer[offset : offset + glm.sizeof(glm.dvec2)])
+    def _get_dvec2(self, offset: int) -> cgm.dvec2:
+        return cgm.dvec2.from_bytes(
+            bytes(self._buffer[offset : offset + cgm.sizeof(cgm.dvec2)])
         )
 
-    def _get_dvec3(self, offset: int) -> glm.dvec3:
-        return glm.dvec3.from_bytes(
-            bytes(self._buffer[offset : offset + glm.sizeof(glm.dvec3)])
+    def _get_dvec3(self, offset: int) -> cgm.dvec3:
+        return cgm.dvec3.from_bytes(
+            bytes(self._buffer[offset : offset + cgm.sizeof(cgm.dvec3)])
         )
 
-    def _get_dvec4(self, offset: int) -> glm.dvec4:
-        return glm.dvec4.from_bytes(
-            bytes(self._buffer[offset : offset + glm.sizeof(glm.dvec4)])
+    def _get_dvec4(self, offset: int) -> cgm.dvec4:
+        return cgm.dvec4.from_bytes(
+            bytes(self._buffer[offset : offset + cgm.sizeof(cgm.dvec4)])
         )
 
-    def _get_mat2(self, offset: int) -> glm.mat2x2:
-        return glm.mat2.from_bytes(
-            bytes(self._buffer[offset : offset + glm.sizeof(glm.mat2)])
+    def _get_mat2(self, offset: int) -> cgm.mat2x2:
+        return cgm.mat2.from_bytes(
+            bytes(self._buffer[offset : offset + cgm.sizeof(cgm.mat2)])
         )
 
-    def _get_mat3x2(self, offset: int) -> glm.mat3x2:
-        return glm.mat3x2.from_bytes(
-            bytes(self._buffer[offset : offset + glm.sizeof(glm.mat3x2)])
+    def _get_mat3x2(self, offset: int) -> cgm.mat3x2:
+        return cgm.mat3x2.from_bytes(
+            bytes(self._buffer[offset : offset + cgm.sizeof(cgm.mat3x2)])
         )
 
-    def _get_mat4x2(self, offset: int) -> glm.mat4x2:
-        return glm.mat4x2.from_bytes(
-            bytes(self._buffer[offset : offset + glm.sizeof(glm.mat4x2)])
+    def _get_mat4x2(self, offset: int) -> cgm.mat4x2:
+        return cgm.mat4x2.from_bytes(
+            bytes(self._buffer[offset : offset + cgm.sizeof(cgm.mat4x2)])
         )
 
-    def _get_mat2x3(self, offset: int) -> glm.mat2x3:
-        return glm.mat2x3.from_bytes(
-            bytes(self._buffer[offset : offset + glm.sizeof(glm.mat2x3)])
+    def _get_mat2x3(self, offset: int) -> cgm.mat2x3:
+        return cgm.mat2x3.from_bytes(
+            bytes(self._buffer[offset : offset + cgm.sizeof(cgm.mat2x3)])
         )
 
-    def _get_mat3(self, offset: int) -> glm.mat3x3:
-        return glm.mat3.from_bytes(
-            bytes(self._buffer[offset : offset + glm.sizeof(glm.mat3)])
+    def _get_mat3(self, offset: int) -> cgm.mat3x3:
+        return cgm.mat3.from_bytes(
+            bytes(self._buffer[offset : offset + cgm.sizeof(cgm.mat3)])
         )
 
-    def _get_mat4x3(self, offset: int) -> glm.mat4x3:
-        return glm.mat4x3.from_bytes(
-            bytes(self._buffer[offset : offset + glm.sizeof(glm.mat4x3)])
+    def _get_mat4x3(self, offset: int) -> cgm.mat4x3:
+        return cgm.mat4x3.from_bytes(
+            bytes(self._buffer[offset : offset + cgm.sizeof(cgm.mat4x3)])
         )
 
-    def _get_mat2x4(self, offset: int) -> glm.mat2x4:
-        return glm.mat2x4.from_bytes(
-            bytes(self._buffer[offset : offset + glm.sizeof(glm.mat2x4)])
+    def _get_mat2x4(self, offset: int) -> cgm.mat2x4:
+        return cgm.mat2x4.from_bytes(
+            bytes(self._buffer[offset : offset + cgm.sizeof(cgm.mat2x4)])
         )
 
-    def _get_mat3x4(self, offset: int) -> glm.mat3x4:
-        return glm.mat3x4.from_bytes(
-            bytes(self._buffer[offset : offset + glm.sizeof(glm.mat3x4)])
+    def _get_mat3x4(self, offset: int) -> cgm.mat3x4:
+        return cgm.mat3x4.from_bytes(
+            bytes(self._buffer[offset : offset + cgm.sizeof(cgm.mat3x4)])
         )
 
-    def _get_mat4(self, offset: int) -> glm.mat4x4:
-        return glm.mat4.from_bytes(
-            bytes(self._buffer[offset : offset + glm.sizeof(glm.mat4)])
+    def _get_mat4(self, offset: int) -> cgm.mat4x4:
+        return cgm.mat4.from_bytes(
+            bytes(self._buffer[offset : offset + cgm.sizeof(cgm.mat4)])
         )
 
-    def _get_mat2x2(self, offset: int) -> glm.mat2x2:
-        return glm.mat2x2.from_bytes(
-            bytes(self._buffer[offset : offset + glm.sizeof(glm.mat2x2)])
+    def _get_mat2x2(self, offset: int) -> cgm.mat2x2:
+        return cgm.mat2x2.from_bytes(
+            bytes(self._buffer[offset : offset + cgm.sizeof(cgm.mat2x2)])
         )
 
-    def _get_mat3x3(self, offset: int) -> glm.mat3x3:
-        return glm.mat3x3.from_bytes(
-            bytes(self._buffer[offset : offset + glm.sizeof(glm.mat3x3)])
+    def _get_mat3x3(self, offset: int) -> cgm.mat3x3:
+        return cgm.mat3x3.from_bytes(
+            bytes(self._buffer[offset : offset + cgm.sizeof(cgm.mat3x3)])
         )
 
-    def _get_mat4x4(self, offset: int) -> glm.mat4x4:
-        return glm.mat4x4.from_bytes(
-            bytes(self._buffer[offset : offset + glm.sizeof(glm.mat4x4)])
+    def _get_mat4x4(self, offset: int) -> cgm.mat4x4:
+        return cgm.mat4x4.from_bytes(
+            bytes(self._buffer[offset : offset + cgm.sizeof(cgm.mat4x4)])
         )
 
-    def _get_dmat2(self, offset: int) -> glm.mat2x2:
-        return glm.dmat2.from_bytes(
-            bytes(self._buffer[offset : offset + glm.sizeof(glm.dmat2)])
+    def _get_dmat2(self, offset: int) -> cgm.mat2x2:
+        return cgm.dmat2.from_bytes(
+            bytes(self._buffer[offset : offset + cgm.sizeof(cgm.dmat2)])
         )
 
-    def _get_dmat3x2(self, offset: int) -> glm.mat3x2:
-        return glm.dmat3x2.from_bytes(
-            bytes(self._buffer[offset : offset + glm.sizeof(glm.dmat3x2)])
+    def _get_dmat3x2(self, offset: int) -> cgm.mat3x2:
+        return cgm.dmat3x2.from_bytes(
+            bytes(self._buffer[offset : offset + cgm.sizeof(cgm.dmat3x2)])
         )
 
-    def _get_dmat4x2(self, offset: int) -> glm.mat4x2:
-        return glm.dmat4x2.from_bytes(
-            bytes(self._buffer[offset : offset + glm.sizeof(glm.dmat4x2)])
+    def _get_dmat4x2(self, offset: int) -> cgm.mat4x2:
+        return cgm.dmat4x2.from_bytes(
+            bytes(self._buffer[offset : offset + cgm.sizeof(cgm.dmat4x2)])
         )
 
-    def _get_dmat2x3(self, offset: int) -> glm.mat2x3:
-        return glm.dmat2x3.from_bytes(
-            bytes(self._buffer[offset : offset + glm.sizeof(glm.dmat2x3)])
+    def _get_dmat2x3(self, offset: int) -> cgm.mat2x3:
+        return cgm.dmat2x3.from_bytes(
+            bytes(self._buffer[offset : offset + cgm.sizeof(cgm.dmat2x3)])
         )
 
-    def _get_dmat3(self, offset: int) -> glm.mat3x3:
-        return glm.dmat3.from_bytes(
-            bytes(self._buffer[offset : offset + glm.sizeof(glm.dmat3)])
+    def _get_dmat3(self, offset: int) -> cgm.mat3x3:
+        return cgm.dmat3.from_bytes(
+            bytes(self._buffer[offset : offset + cgm.sizeof(cgm.dmat3)])
         )
 
-    def _get_dmat4x3(self, offset: int) -> glm.mat4x3:
-        return glm.dmat4x3.from_bytes(
-            bytes(self._buffer[offset : offset + glm.sizeof(glm.dmat4x3)])
+    def _get_dmat4x3(self, offset: int) -> cgm.mat4x3:
+        return cgm.dmat4x3.from_bytes(
+            bytes(self._buffer[offset : offset + cgm.sizeof(cgm.dmat4x3)])
         )
 
-    def _get_dmat2x4(self, offset: int) -> glm.mat2x4:
-        return glm.dmat2x4.from_bytes(
-            bytes(self._buffer[offset : offset + glm.sizeof(glm.dmat2x4)])
+    def _get_dmat2x4(self, offset: int) -> cgm.mat2x4:
+        return cgm.dmat2x4.from_bytes(
+            bytes(self._buffer[offset : offset + cgm.sizeof(cgm.dmat2x4)])
         )
 
-    def _get_dmat3x4(self, offset: int) -> glm.mat3x4:
-        return glm.dmat3x4.from_bytes(
-            bytes(self._buffer[offset : offset + glm.sizeof(glm.dmat3x4)])
+    def _get_dmat3x4(self, offset: int) -> cgm.mat3x4:
+        return cgm.dmat3x4.from_bytes(
+            bytes(self._buffer[offset : offset + cgm.sizeof(cgm.dmat3x4)])
         )
 
-    def _get_dmat4(self, offset: int) -> glm.mat4x4:
-        return glm.dmat4.from_bytes(
-            bytes(self._buffer[offset : offset + glm.sizeof(glm.dmat4)])
+    def _get_dmat4(self, offset: int) -> cgm.mat4x4:
+        return cgm.dmat4.from_bytes(
+            bytes(self._buffer[offset : offset + cgm.sizeof(cgm.dmat4)])
         )
 
-    def _get_dmat2x2(self, offset: int) -> glm.dmat2x2:
-        return glm.dmat2x2.from_bytes(
-            bytes(self._buffer[offset : offset + glm.sizeof(glm.dmat2x2)])
+    def _get_dmat2x2(self, offset: int) -> cgm.dmat2x2:
+        return cgm.dmat2x2.from_bytes(
+            bytes(self._buffer[offset : offset + cgm.sizeof(cgm.dmat2x2)])
         )
 
-    def _get_dmat3x3(self, offset: int) -> glm.dmat3x3:
-        return glm.dmat3x3.from_bytes(
-            bytes(self._buffer[offset : offset + glm.sizeof(glm.dmat3x3)])
+    def _get_dmat3x3(self, offset: int) -> cgm.dmat3x3:
+        return cgm.dmat3x3.from_bytes(
+            bytes(self._buffer[offset : offset + cgm.sizeof(cgm.dmat3x3)])
         )
 
-    def _get_dmat4x4(self, offset: int) -> glm.dmat4x4:
-        return glm.dmat4x4.from_bytes(
-            bytes(self._buffer[offset : offset + glm.sizeof(glm.dmat4x4)])
+    def _get_dmat4x4(self, offset: int) -> cgm.dmat4x4:
+        return cgm.dmat4x4.from_bytes(
+            bytes(self._buffer[offset : offset + cgm.sizeof(cgm.dmat4x4)])
         )
 
     def _get_sampler2D(self, offset: int) -> int:

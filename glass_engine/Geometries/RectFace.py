@@ -3,7 +3,7 @@ from ..Mesh import Mesh
 from glass.utils import checktype
 from glass import Vertex
 
-import glm
+import cgmath as cgm
 from typing import Union
 
 
@@ -14,8 +14,8 @@ class RectFace(Mesh):
         self,
         width: float = 2,
         height: float = 1,
-        color: Union[glm.vec3, glm.vec4] = glm.vec4(0.396, 0.74151, 0.69102, 1),
-        back_color: Union[glm.vec3, glm.vec4, None] = None,
+        color: Union[cgm.vec3, cgm.vec4] = cgm.vec4(0.396, 0.74151, 0.69102, 1),
+        back_color: Union[cgm.vec3, cgm.vec4, None] = None,
         vertical: bool = False,
         normalize_st: bool = False,
         st_per_unit: float = 1,
@@ -41,56 +41,56 @@ class RectFace(Mesh):
         height = self.__height
         vertical = self.__vertical
 
-        normal = glm.vec3(0, 0, 1)
+        normal = cgm.vec3(0, 0, 1)
         if vertical:
-            normal = glm.vec3(0, -1, 0)
+            normal = cgm.vec3(0, -1, 0)
 
         # 左下
         vertex0 = Vertex()
-        vertex0.position = glm.vec3(-width / 2, -height / 2, 0)
+        vertex0.position = cgm.vec3(-width / 2, -height / 2, 0)
         if vertical:
-            vertex0.position = glm.vec3(-width / 2, 0, -height / 2)
+            vertex0.position = cgm.vec3(-width / 2, 0, -height / 2)
         vertex0.normal = normal
-        vertex0.tex_coord = glm.vec3(0, 1 - self.t_per_unit * height, 0)
+        vertex0.tex_coord = cgm.vec3(0, 1 - self.t_per_unit * height, 0)
         if self.normalize_tex_coord:
-            vertex0.tex_coord = glm.vec3(0, 1 - height / width, 0)
+            vertex0.tex_coord = cgm.vec3(0, 1 - height / width, 0)
 
         # 右下
         vertex1 = Vertex()
-        vertex1.position = glm.vec3(width / 2, -height / 2, 0)
+        vertex1.position = cgm.vec3(width / 2, -height / 2, 0)
         if vertical:
-            vertex1.position = glm.vec3(width / 2, 0, -height / 2)
+            vertex1.position = cgm.vec3(width / 2, 0, -height / 2)
         vertex1.normal = normal
-        vertex1.tex_coord = glm.vec3(self.s_per_unit * width, 1 - self.t_per_unit * height, 0)
+        vertex1.tex_coord = cgm.vec3(self.s_per_unit * width, 1 - self.t_per_unit * height, 0)
         if self.normalize_tex_coord:
-            vertex1.tex_coord = glm.vec3(1, 1 - height / width, 0)
+            vertex1.tex_coord = cgm.vec3(1, 1 - height / width, 0)
 
         # 右上
         vertex2 = Vertex()
-        vertex2.position = glm.vec3(width / 2, height / 2, 0)
+        vertex2.position = cgm.vec3(width / 2, height / 2, 0)
         if vertical:
-            vertex2.position = glm.vec3(width / 2, 0, height / 2)
+            vertex2.position = cgm.vec3(width / 2, 0, height / 2)
         vertex2.normal = normal
-        vertex2.tex_coord = glm.vec3(self.s_per_unit * width, 1, 0)
+        vertex2.tex_coord = cgm.vec3(self.s_per_unit * width, 1, 0)
         if self.normalize_tex_coord:
-            vertex2.tex_coord = glm.vec3(1, 1, 0)
+            vertex2.tex_coord = cgm.vec3(1, 1, 0)
 
         # 左上
         vertex3 = Vertex()
-        vertex3.position = glm.vec3(-width / 2, height / 2, 0)
+        vertex3.position = cgm.vec3(-width / 2, height / 2, 0)
         if vertical:
-            vertex3.position = glm.vec3(-width / 2, 0, height / 2)
+            vertex3.position = cgm.vec3(-width / 2, 0, height / 2)
 
         vertex3.normal = normal
-        vertex3.tex_coord = glm.vec3(0, 1, 0)
+        vertex3.tex_coord = cgm.vec3(0, 1, 0)
 
         vertices[0] = vertex0
         vertices[1] = vertex1
         vertices[2] = vertex2
         vertices[3] = vertex3
 
-        indices[0] = glm.uvec3(0, 1, 2)
-        indices[1] = glm.uvec3(0, 2, 3)
+        indices[0] = cgm.uvec3(0, 1, 2)
+        indices[1] = cgm.uvec3(0, 2, 3)
 
         self.generate_temp_TBN(vertices[0], vertices[1], vertices[2])
         self.generate_temp_TBN(vertices[0], vertices[2], vertices[3])

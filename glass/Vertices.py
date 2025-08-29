@@ -1,6 +1,6 @@
 import copy
 from OpenGL import GL
-import glm
+import cgmath as cgm
 import numpy as np
 from typing import Union
 
@@ -207,12 +207,12 @@ class Vertices:
                     attr_list.dtype = need_type
                     attr_list._apply()
                     feed_type = need_type
-                elif feed_type == int and need_type == glm.uvec2:
+                elif feed_type == int and need_type == cgm.uvec2:
                     attr_list.dtype = np.uint64
                     attr_list._apply()
-                    feed_type = glm.uvec2
-                elif feed_type in (np.uint64, dtype_uint64) and need_type == glm.uvec2:
-                    feed_type = glm.uvec2
+                    feed_type = cgm.uvec2
+                elif feed_type in (np.uint64, dtype_uint64) and need_type == cgm.uvec2:
+                    feed_type = cgm.uvec2
                 else:
                     error_message = f"vertex attribute '{key}' need type {need_type}, {feed_type} value were given"
                     raise TypeError(error_message)

@@ -1,8 +1,8 @@
 from __future__ import annotations
 
 from typing import Set, List, Dict, Union, Any, Optional, Tuple, TYPE_CHECKING
-from .helper import generate_getter_swizzles, generate_setter_swizzles
-from .genType import genType
+from .helper import generate_getter_swizzles, generate_setter_swizzles, is_number
+from .genType import genType, MathForm
 from abc import abstractmethod
 
 if TYPE_CHECKING:
@@ -48,13 +48,13 @@ class genVec(genType):
         
         if n_args == 1:
             arg = args[0]
-            if isinstance(arg, (float,int,bool)):
+            if is_number(arg):
                 for i in range(n_data):
                     self._data[i] = arg
                 return
         
         for i_arg, arg in enumerate(args):
-            if isinstance(arg, (float,int,bool)):
+            if is_number(arg):
                 self._data[i] = arg
 
                 i += 1
@@ -81,6 +81,10 @@ class genVec(genType):
             
         raise ValueError(f"invalid arguments for {self.__class__.__name__}()")
     
+    @property
+    def math_form(self)->MathForm:
+        return MathForm.Vec
+
     @abstractmethod
     def __len__(self)->int:
         pass
@@ -130,7 +134,7 @@ class genVec(genType):
 
         update_indices:List[int] = []
         value_is_vec:bool = (isinstance(value, genVec) and len(value) == len(name))
-        if not value_is_vec and not isinstance(value, (bool, float, int)):
+        if not value_is_vec and not is_number(value):
             raise TypeError(f"can not set '{value.__class__.__name__}' object to property '{name}' of '{self.__class__.__name__}' object")
         
         for i, ch in enumerate(name):
@@ -157,7 +161,7 @@ class genVec(genType):
             return
 
         start, stop, step = index.indices(len(self))
-        value_is_vec:bool = (not isinstance(value, (float, int, bool)))
+        value_is_vec:bool = (not is_number(value))
         update_indices:List[int] = []
         for i in range(start, stop, step):
             self._data[i] = value[i] if value_is_vec else value
@@ -171,24 +175,24 @@ class genVec(genType):
     def __getter_swizzles(self):
         if not self.__class__._all_getter_swizzles:
             n:int = len(self)
-            self._all_getter_swizzles = set(
+            self.__class__._all_getter_swizzles = set(
                 generate_getter_swizzles(
                     namespace[:n] for namespace in genVec.__namespaces
                 )
             )
 
-        return self._all_getter_swizzles
+        return self.__class__._all_getter_swizzles
     
     def __setter_swizzles(self):
-        if not self._all_setter_swizzles:
+        if not self.__class__._all_setter_swizzles:
             n:int = len(self)
-            self._all_setter_swizzles = set(
+            self.__class__._all_setter_swizzles = set(
                 generate_setter_swizzles(
                     namespace[:n] for namespace in genVec.__namespaces
                 )
             )
 
-        return self._all_setter_swizzles
+        return self.__class__._all_setter_swizzles
     
     @staticmethod
     def __total_swizzles():

@@ -3,7 +3,7 @@ from ..Mesh import Mesh
 from glass import Vertex
 from glass.utils import checktype
 
-import glm
+import cgmath as cgm
 import math
 from OpenGL import GL
 from typing import Union
@@ -18,7 +18,7 @@ class Circle(Mesh):
         n_points: int = 100,
         start_angle: float = 0,
         span_angle: float = 360,
-        color: Union[glm.vec3, glm.vec4] = glm.vec4(0.396, 0.74151, 0.69102, 1),
+        color: Union[cgm.vec3, cgm.vec4] = cgm.vec4(0.396, 0.74151, 0.69102, 1),
         line_width: int = 2,
         normalize_st: bool = False,
         st_per_unit: float = 1,
@@ -51,19 +51,19 @@ class Circle(Mesh):
             theta_deg = start_angle + i / (n_points - 1) * span_angle
             theta = theta_deg / 180 * math.pi
 
-            position = radius * glm.vec3(math.cos(theta), math.sin(theta), 0)
-            bitangent = glm.vec3(-math.sin(theta), math.cos(theta), 0)
+            position = radius * cgm.vec3(math.cos(theta), math.sin(theta), 0)
+            bitangent = cgm.vec3(-math.sin(theta), math.cos(theta), 0)
             if vertical:
-                position = radius * glm.vec3(math.cos(theta), 0, math.sin(theta))
-                bitangent = glm.vec3(-math.sin(theta), 0, math.cos(theta))
+                position = radius * cgm.vec3(math.cos(theta), 0, math.sin(theta))
+                bitangent = cgm.vec3(-math.sin(theta), 0, math.cos(theta))
 
             vertices[i] = Vertex(
                 position=position,
                 bitangent=bitangent,
                 tex_coord=(
-                    glm.vec3((start_angle + theta_deg) / (start_angle + span_angle), 0, 0)
+                    cgm.vec3((start_angle + theta_deg) / (start_angle + span_angle), 0, 0)
                     if self.normalize_st else
-                    glm.vec3(self.s_per_unit * radius * theta, 0, 0)
+                    cgm.vec3(self.s_per_unit * radius * theta, 0, 0)
                 )
             )
 

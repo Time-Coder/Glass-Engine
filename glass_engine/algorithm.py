@@ -1,4 +1,4 @@
-import glm
+import cgmath as cgm
 import math
 import copy
 import numpy as np
@@ -58,12 +58,12 @@ def angle_of(v1, v2):
 
 
 def cos_angle_of(v1, v2):
-    len_v1 = glm.length(v1)
-    len_v2 = glm.length(v2)
+    len_v1 = cgm.length(v1)
+    len_v2 = cgm.length(v2)
     if len_v1 < 1e-6 or len_v2 < 1e-6:
         return 0
 
-    cos_theta = glm.dot(v1, v2) / (len_v1 * len_v2)
+    cos_theta = cgm.dot(v1, v2) / (len_v1 * len_v2)
     if cos_theta < -1:
         cos_theta = -1
     if cos_theta > 1:
@@ -73,7 +73,7 @@ def cos_angle_of(v1, v2):
 
 
 def approx_pos(pos, precision: int = 7):
-    return glm.vec3(
+    return cgm.vec3(
         round(pos.x, precision), round(pos.y, precision), round(pos.z, precision)
     )
 
@@ -141,11 +141,11 @@ def is_closed(vertices, indices):
         hash_pos1 = hash_pos(vertex1.position)
         hash_pos2 = hash_pos(vertex2.position)
 
-        v01 = glm.normalize(vertex1.position - vertex0.position)
+        v01 = cgm.normalize(vertex1.position - vertex0.position)
         v10 = -v01
-        v02 = glm.normalize(vertex2.position - vertex0.position)
+        v02 = cgm.normalize(vertex2.position - vertex0.position)
         v20 = -v02
-        v12 = glm.normalize(vertex2.position - vertex1.position)
+        v12 = cgm.normalize(vertex2.position - vertex1.position)
         v21 = -v12
 
         hash_v01 = hash_pos(v01)
@@ -269,13 +269,13 @@ def generate_TBN(vertices, indices):
 
 def generate_auto_TBN(vertices, indices, calculate_normal=True):
     if "tangent" not in vertices._attr_list_map:
-        vertices._attr_list_map["tangent"] = AttrList(dtype=glm.vec3)
+        vertices._attr_list_map["tangent"] = AttrList(dtype=cgm.vec3)
 
     if "bitangent" not in vertices._attr_list_map:
-        vertices._attr_list_map["bitangent"] = AttrList(dtype=glm.vec3)
+        vertices._attr_list_map["bitangent"] = AttrList(dtype=cgm.vec3)
 
     if "normal" not in vertices._attr_list_map:
-        vertices._attr_list_map["normal"] = AttrList(dtype=glm.vec3)
+        vertices._attr_list_map["normal"] = AttrList(dtype=cgm.vec3)
 
     points_list = []
     for i in range(vertices["position"].ndarray.shape[0]):
@@ -319,13 +319,13 @@ def generate_auto_TBN(vertices, indices, calculate_normal=True):
 
 def generate_smooth_TBN(vertices, indices, calculate_normal=True):
     if "tangent" not in vertices._attr_list_map:
-        vertices._attr_list_map["tangent"] = AttrList(dtype=glm.vec3)
+        vertices._attr_list_map["tangent"] = AttrList(dtype=cgm.vec3)
 
     if "bitangent" not in vertices._attr_list_map:
-        vertices._attr_list_map["bitangent"] = AttrList(dtype=glm.vec3)
+        vertices._attr_list_map["bitangent"] = AttrList(dtype=cgm.vec3)
 
     if "normal" not in vertices._attr_list_map:
-        vertices._attr_list_map["normal"] = AttrList(dtype=glm.vec3)
+        vertices._attr_list_map["normal"] = AttrList(dtype=cgm.vec3)
 
     points_map = {}
     pos_keys = []
@@ -372,10 +372,10 @@ def generate_smooth_TBN(vertices, indices, calculate_normal=True):
 
 
 def line_intersect_plane(
-    line_start: glm.vec3,
-    line_direction: glm.vec3,
-    plane_start: glm.vec3,
-    plane_normal: glm.vec3,
+    line_start: cgm.vec3,
+    line_direction: cgm.vec3,
+    plane_start: cgm.vec3,
+    plane_normal: cgm.vec3,
 ):
     A = plane_start
     B = line_start
@@ -383,25 +383,25 @@ def line_intersect_plane(
     n = plane_normal
     AB = B - A
 
-    return B - glm.dot(AB, n) / glm.dot(d, n) * d
+    return B - cgm.dot(AB, n) / cgm.dot(d, n) * d
 
 
 def point_distance_to_line(
-    point: glm.vec3, line_start: glm.vec3, line_direction: glm.vec3
+    point: cgm.vec3, line_start: cgm.vec3, line_direction: cgm.vec3
 ):
     A = line_start
     d = line_direction
     B = point
 
     AB = B - A
-    return glm.length(glm.cross(AB, d))
+    return cgm.length(cgm.cross(AB, d))
 
 
 def point_mirror_by_plane(
-    point: glm.vec3, plane_start: glm.vec3, plane_normal: glm.vec3
+    point: cgm.vec3, plane_start: cgm.vec3, plane_normal: cgm.vec3
 ):
     d = plane_start - point
-    return point + 2 * glm.dot(d, plane_normal) * plane_normal
+    return point + 2 * cgm.dot(d, plane_normal) * plane_normal
 
 
 def polygon_centroid(polygon):
@@ -423,7 +423,7 @@ def polygon_centroid(polygon):
         point0 = polygon[i - 1]
         point1 = polygon[i] if i < len_polygon else polygon[0]
         center = (O + point0 + point1) / 3
-        weight = glm.length(glm.cross(point0 - O, point1 - O)) / 2
+        weight = cgm.length(cgm.cross(point0 - O, point1 - O)) / 2
         weight_sum += weight
         if centroid is None:
             centroid = weight * center
@@ -437,7 +437,7 @@ def polygon_normal(polygon, centroid=None):
     if centroid is None:
         centroid = polygon_centroid(polygon)
 
-    normal = glm.vec3(0)
+    normal = cgm.vec3(0)
     weight_sum = 0
     len_polygon = len(polygon)
     for i in range(1, len_polygon + 1):
@@ -447,8 +447,8 @@ def polygon_normal(polygon, centroid=None):
         v0 = point0 - centroid
         v1 = point1 - centroid
 
-        n = glm.cross(v0, v1)
-        len_n = glm.length(n)
+        n = cgm.cross(v0, v1)
+        len_n = cgm.length(n)
         if len_n < 1e-6:
             continue
         n /= len_n
@@ -457,7 +457,7 @@ def polygon_normal(polygon, centroid=None):
         weight_sum += weight
         normal += weight * n
 
-    return glm.normalize(normal)
+    return cgm.normalize(normal)
 
 
 def is_even(num: int):

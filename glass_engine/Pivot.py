@@ -1,20 +1,24 @@
-import glm
+import cgmath as cgm
 import math
 import numpy as np
 from typing import Union
 
-from glass import callback_quat, callback_vec3
+import cgmath as cgm
 
 
 class Pivot:
 
     def __init__(self, scene_node):
-        self._position: callback_vec3 = callback_vec3(0, 0, 0, callback=self.update_screens)
-        self._orientation: callback_quat = callback_quat(
-            1, 0, 0, 0, callback=self._update_yaw_pitch_roll
-        )
-        self._scale: callback_vec3 = callback_vec3(1, 1, 1, callback=self.update_screens)
-        self._yaw_pitch_roll: glm.vec3 = glm.vec3(0, 0, 0)
+        self._position: cgm.vec3 = cgm.vec3()
+        self._position.on_changed = self.update_screens
+
+        self._orientation: cgm.quat = cgm.quat()
+        self._orientation.on_changed = self._update_yaw_pitch_roll
+
+        self._scale: cgm.vec3 = cgm.vec3(1)
+        self._scale.on_changed = self.update_screens
+
+        self._yaw_pitch_roll: cgm.vec3 = cgm.vec3()
         self._parent_scene_node = scene_node
         self._should_update_yaw_pitch_roll: bool = True
         self._is_set:bool = False
@@ -32,7 +36,7 @@ class Pivot:
         return self._position
 
     @position.setter
-    def position(self, position: glm.vec3):
+    def position(self, position: cgm.vec3):
         self._should_callback = False
         self._position.x = position.x
         self._position.y = position.y
@@ -45,7 +49,7 @@ class Pivot:
         return self._scale
 
     @scale.setter
-    def scale(self, scale: Union[glm.vec3, float]):
+    def scale(self, scale: Union[cgm.vec3, float]):
         if isinstance(scale, (int, float)):
             self._should_callback = False
             self._scale.x = scale
@@ -66,7 +70,7 @@ class Pivot:
         return self._orientation
 
     @orientation.setter
-    def orientation(self, orientation: glm.quat):
+    def orientation(self, orientation: cgm.quat):
         self._should_callback = False
         self._orientation.w = orientation.w
         self._orientation.x = orientation.x
@@ -75,9 +79,9 @@ class Pivot:
 
         self._orientation.z = orientation.z
 
-    def rotate(self, axis:glm.vec3, angle:float):
+    def rotate(self, axis:cgm.vec3, angle:float):
         angle_rad = angle/180*math.pi
-        new_orientation = glm.quat(math.cos(angle_rad/2), math.sin(angle_rad/2)*axis) * self._orientation
+        new_orientation = cgm.quat(math.cos(angle_rad/2), math.sin(angle_rad/2)*axis) * self._orientation
 
         self._should_callback = False
         self._orientation.w = new_orientation.w
@@ -87,7 +91,7 @@ class Pivot:
 
         self._orientation.z = new_orientation.z
 
-    def translate(self, translation:glm.vec3):
+    def translate(self, translation:cgm.vec3):
         self._should_callback = False
         self._position.x = self._position.x + translation.x
         self._position.y = self._position.x + translation.y
@@ -124,9 +128,9 @@ class Pivot:
         pitch = self._yaw_pitch_roll[1] / 180 * math.pi
         roll = self._yaw_pitch_roll[2] / 180 * math.pi
 
-        quat1 = glm.quat(math.cos(yaw / 2), 0, 0, math.sin(yaw / 2))
-        quat2 = glm.quat(math.cos(pitch / 2), math.sin(pitch / 2), 0, 0)
-        quat3 = glm.quat(math.cos(roll / 2), 0, math.sin(roll / 2), 0)
+        quat1 = cgm.quat(math.cos(yaw / 2), 0, 0, math.sin(yaw / 2))
+        quat2 = cgm.quat(math.cos(pitch / 2), math.sin(pitch / 2), 0, 0)
+        quat3 = cgm.quat(math.cos(roll / 2), 0, math.sin(roll / 2), 0)
 
         self._should_update_yaw_pitch_roll = False
         self.orientation = quat1 * quat2 * quat3

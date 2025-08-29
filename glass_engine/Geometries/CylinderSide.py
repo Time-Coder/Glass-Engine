@@ -3,7 +3,7 @@ from ..Mesh import Mesh
 from glass.utils import checktype
 from glass import Vertex
 
-import glm
+import cgmath as cgm
 import math
 from typing import Union
 
@@ -18,8 +18,8 @@ class CylinderSide(Mesh):
         start_angle: float = 0,
         span_angle: float = 360,
         n_divide: int = 100,
-        color: Union[glm.vec3, glm.vec4] = glm.vec4(0.396, 0.74151, 0.69102, 1),
-        back_color: Union[glm.vec3, glm.vec4, None] = None,
+        color: Union[cgm.vec3, cgm.vec4] = cgm.vec4(0.396, 0.74151, 0.69102, 1),
+        back_color: Union[cgm.vec3, cgm.vec4, None] = None,
         normalize_st=False,
         st_per_unit=1,
         name: str = "",
@@ -65,19 +65,19 @@ class CylinderSide(Mesh):
             else:
                 s = (start_angle + theta) * radius * self.s_per_unit
 
-            top = glm.vec3(radius * cos_theta, radius * sin_theta, height)
-            bottom = glm.vec3(radius * cos_theta, radius * sin_theta, 0)
-            normal = glm.vec3(cos_theta, sin_theta, 0)
+            top = cgm.vec3(radius * cos_theta, radius * sin_theta, height)
+            bottom = cgm.vec3(radius * cos_theta, radius * sin_theta, 0)
+            normal = cgm.vec3(cos_theta, sin_theta, 0)
 
             vertex_top = Vertex()
             vertex_top.position = top
             vertex_top.normal = normal
-            vertex_top.tex_coord = glm.vec3(s, t, 0)
+            vertex_top.tex_coord = cgm.vec3(s, t, 0)
 
             vertex_bottom = Vertex()
             vertex_bottom.position = bottom
             vertex_bottom.normal = normal
-            vertex_bottom.tex_coord = glm.vec3(s, 0, 0)
+            vertex_bottom.tex_coord = cgm.vec3(s, 0, 0)
 
             vertices[i_vertex] = vertex_top  # 2*j
             i_vertex += 1
@@ -87,7 +87,7 @@ class CylinderSide(Mesh):
 
             if j > 0:
                 # 侧面三角形 1
-                triangle = glm.uvec3(0, 0, 0)
+                triangle = cgm.uvec3(0, 0, 0)
                 triangle[0] = 2 * j + 1
                 triangle[1] = 2 * j
                 triangle[2] = 2 * j - 2
@@ -98,7 +98,7 @@ class CylinderSide(Mesh):
                 )
 
                 # 侧面三角形 2
-                triangle = glm.uvec3(0, 0, 0)
+                triangle = cgm.uvec3(0, 0, 0)
                 triangle[0] = 2 * j + 1
                 triangle[1] = 2 * j - 2
                 triangle[2] = 2 * j - 1

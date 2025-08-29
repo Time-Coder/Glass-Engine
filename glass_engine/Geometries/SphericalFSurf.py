@@ -6,7 +6,7 @@ from .Surf import Surf
 from glass.utils import checktype
 
 import numpy as np
-import glm
+import cgmath as cgm
 import math
 from typing import Union, Optional
 
@@ -21,8 +21,8 @@ class SphericalFSurf(Mesh):
         lat_range=[-math.pi / 2, math.pi / 2],
         color_map: Optional[ColorMap] = None,
         back_color_map: Optional[ColorMap] = None,
-        color: Union[glm.vec3, glm.vec4, None] = None,
-        back_color: Union[glm.vec3, glm.vec4, None] = None,
+        color: Union[cgm.vec3, cgm.vec4, None] = None,
+        back_color: Union[cgm.vec3, cgm.vec4, None] = None,
         surf_type: Mesh.SurfType = Mesh.SurfType.Smooth,
         name: str = "",
     ):

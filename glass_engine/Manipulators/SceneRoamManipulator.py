@@ -1,7 +1,7 @@
 from .Manipulator import Manipulator
 from glass.RenderHints import RenderHints
 
-import glm
+import cgmath as cgm
 from OpenGL import GL
 import copy
 import datetime
@@ -13,16 +13,16 @@ class SceneRoamManipulator(Manipulator):
         Manipulator.__init__(self)
 
         self._is_right_pressed = False
-        self._right_press_global_pos = glm.vec2(0, 0)
+        self._right_press_global_pos = cgm.vec2(0, 0)
         self._right_press_yaw = 0
         self._right_press_pitch = 0
 
         self._is_left_pressed = False
-        self._left_press_global_pos = glm.vec2(0, 0)
+        self._left_press_global_pos = cgm.vec2(0, 0)
         self._left_press_yaw = 0
         self._left_press_pitch = 0
 
-        self._hide_cursor_global_pos = glm.vec2(0, 0)
+        self._hide_cursor_global_pos = cgm.vec2(0, 0)
         self._hide_cursor_yaw = 0
         self._hide_cursor_pitch = 0
         self._video_writer = None
@@ -32,8 +32,8 @@ class SceneRoamManipulator(Manipulator):
     def on_mouse_pressed(
         self,
         button: Manipulator.MouseButton,
-        screen_pos: glm.vec2,
-        global_pos: glm.vec2,
+        screen_pos: cgm.vec2,
+        global_pos: cgm.vec2,
     ):
         if button == Manipulator.MouseButton.XButton1:
             self.moving_speed /= pow(2, 1 / 2)
@@ -56,8 +56,8 @@ class SceneRoamManipulator(Manipulator):
     def on_mouse_double_clicked(
         self,
         button: Manipulator.MouseButton,
-        screen_pos: glm.vec2,
-        global_pos: glm.vec2,
+        screen_pos: cgm.vec2,
+        global_pos: cgm.vec2,
     ) -> None:
         if button == Manipulator.MouseButton.LeftButton:
             self.camera.fov = 45
@@ -65,8 +65,8 @@ class SceneRoamManipulator(Manipulator):
     def on_mouse_released(
         self,
         button: Manipulator.MouseButton,
-        screen_pos: glm.vec2,
-        global_pos: glm.vec2,
+        screen_pos: cgm.vec2,
+        global_pos: cgm.vec2,
     ):
         if button == Manipulator.MouseButton.RightButton:
             self._is_right_pressed = False
@@ -79,9 +79,9 @@ class SceneRoamManipulator(Manipulator):
                 height = self.camera.screen.height()
                 s = x / (width - 1)
                 t = 1 - y / (height - 1)
-                self.camera.lens.focus_tex_coord = glm.vec2(s, t)
+                self.camera.lens.focus_tex_coord = cgm.vec2(s, t)
 
-    def on_mouse_moved(self, screen_pos: glm.vec2, global_pos: glm.vec2):
+    def on_mouse_moved(self, screen_pos: cgm.vec2, global_pos: cgm.vec2):
         if self.camera.screen.is_cursor_hiden:
             d = global_pos - self._hide_cursor_global_pos
             dx = d.x
@@ -109,11 +109,11 @@ class SceneRoamManipulator(Manipulator):
 
             self.camera.position = (
                 self._left_press_camera_pos
-                + self.camera.orientation * glm.vec3(-dx, 0, dy)
+                + self.camera.orientation * cgm.vec3(-dx, 0, dy)
             )
 
     def on_wheel_scrolled(
-        self, angle: glm.vec2, screen_pos: glm.vec2, global_pos: glm.vec2
+        self, angle: cgm.vec2, screen_pos: cgm.vec2, global_pos: cgm.vec2
     ):
         n = self.scroll_sensitivity * angle.y / 120
         scale = pow(2, n / 6)
@@ -168,17 +168,17 @@ class SceneRoamManipulator(Manipulator):
             return False
 
         if Manipulator.Key.Key_W in keys and Manipulator.Key.Key_S not in keys:  # 前进
-            self.camera.position += self.camera.orientation * glm.vec3(0, d, 0)
+            self.camera.position += self.camera.orientation * cgm.vec3(0, d, 0)
         if Manipulator.Key.Key_S in keys and Manipulator.Key.Key_W not in keys:  # 后退
-            self.camera.position += self.camera.orientation * glm.vec3(0, -d, 0)
+            self.camera.position += self.camera.orientation * cgm.vec3(0, -d, 0)
         if Manipulator.Key.Key_A in keys and Manipulator.Key.Key_D not in keys:  # 向左
-            self.camera.position += self.camera.orientation * glm.vec3(-d, 0, 0)
+            self.camera.position += self.camera.orientation * cgm.vec3(-d, 0, 0)
         if Manipulator.Key.Key_D in keys and Manipulator.Key.Key_A not in keys:  # 向右
-            self.camera.position += self.camera.orientation * glm.vec3(d, 0, 0)
+            self.camera.position += self.camera.orientation * cgm.vec3(d, 0, 0)
         if Manipulator.Key.Key_E in keys and Manipulator.Key.Key_C not in keys:  # 向上
-            self.camera.position += self.camera.orientation * glm.vec3(0, 0, d)
+            self.camera.position += self.camera.orientation * cgm.vec3(0, 0, d)
         if Manipulator.Key.Key_C in keys and Manipulator.Key.Key_E not in keys:  # 向下
-            self.camera.position += self.camera.orientation * glm.vec3(0, 0, -d)
+            self.camera.position += self.camera.orientation * cgm.vec3(0, 0, -d)
         if Manipulator.Key.Key_F in keys:
             screen = self.camera.screen
             print("fps:", screen.fps, "draw calls:", screen.draw_calls)

@@ -1,4 +1,4 @@
-import glm
+import cgmath as cgm
 import math
 from enum import Enum
 from OpenGL import GL
@@ -20,7 +20,7 @@ class Fog(metaclass=MetaInstancesRecorder):
     @MetaInstancesRecorder.init
     def __init__(self):
         self._mode = Fog.Mode.Exp
-        self._color = glm.vec3(1, 1, 1)
+        self._color = cgm.vec3(1, 1, 1)
         self._extinction_density = 0
         self._inscattering_density = 0
 
@@ -29,12 +29,12 @@ class Fog(metaclass=MetaInstancesRecorder):
         pass
 
     def apply(
-        self, color: Union[glm.vec3, glm.vec4], camera_pos: glm.vec3, frag_pos: glm.vec3
+        self, color: Union[cgm.vec3, cgm.vec4], camera_pos: cgm.vec3, frag_pos: cgm.vec3
     ):
         if self.extinction_density < 1e-6 and self.inscattering_density < 1e-6:
             return color
 
-        d = glm.length(frag_pos - camera_pos)
+        d = cgm.length(frag_pos - camera_pos)
         extinction = 1
         inscattering = 1
         if self.mode == Fog.Mode.Linear:
@@ -48,8 +48,8 @@ class Fog(metaclass=MetaInstancesRecorder):
             inscattering = math.exp(-self.inscattering_density * d * d)
 
         self_color = self.color
-        if isinstance(color, glm.vec4):
-            self_color = glm.vec4(self_color, 1)
+        if isinstance(color, cgm.vec4):
+            self_color = cgm.vec4(self_color, 1)
 
         return color * extinction + self_color * (1 - inscattering)
 
@@ -66,12 +66,12 @@ class Fog(metaclass=MetaInstancesRecorder):
         self._mode = mode
 
     @property
-    def color(self) -> glm.vec3:
+    def color(self) -> cgm.vec3:
         return self._color
 
     @color.setter
     @checktype
-    def color(self, color: glm.vec3):
+    def color(self, color: cgm.vec3):
         self._color = color
 
     @property

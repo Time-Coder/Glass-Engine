@@ -4,7 +4,7 @@ from glass.utils import checktype
 from glass import Vertex
 from glass.ImageLoader import ImageLoader
 
-import glm
+import cgmath as cgm
 import numpy as np
 from enum import Enum
 from typing import Union, Optional
@@ -34,7 +34,7 @@ class ImageQuad(Mesh):
         name: str = "",
     ):
         Mesh.__init__(
-            self, color=glm.vec4(0), back_color=glm.vec4(0), name=name, block=True
+            self, color=cgm.vec4(0), back_color=cgm.vec4(0), name=name, block=True
         )
         self.__align_center = align_center
 
@@ -76,49 +76,49 @@ class ImageQuad(Mesh):
         align0 = self.__align_center.value[0] * width
         align1 = self.__align_center.value[1] * height
 
-        normal = glm.vec3(0, 0, 1)
+        normal = cgm.vec3(0, 0, 1)
         if vertical:
-            normal = glm.vec3(0, -1, 0)
+            normal = cgm.vec3(0, -1, 0)
 
         # 左下
         vertex0 = Vertex()
-        vertex0.position = glm.vec3(-width / 2 - align0, -height / 2 - align1, 0)
+        vertex0.position = cgm.vec3(-width / 2 - align0, -height / 2 - align1, 0)
         if vertical:
-            vertex0.position = glm.vec3(-width / 2 - align0, 0, -height / 2 - align1)
+            vertex0.position = cgm.vec3(-width / 2 - align0, 0, -height / 2 - align1)
         vertex0.normal = normal
-        vertex0.tex_coord = glm.vec3(0)
+        vertex0.tex_coord = cgm.vec3(0)
 
         # 右下
         vertex1 = Vertex()
-        vertex1.position = glm.vec3(width / 2 - align0, -height / 2 - align1, 0)
+        vertex1.position = cgm.vec3(width / 2 - align0, -height / 2 - align1, 0)
         if vertical:
-            vertex1.position = glm.vec3(width / 2 - align0, 0, -height / 2 - align1)
+            vertex1.position = cgm.vec3(width / 2 - align0, 0, -height / 2 - align1)
         vertex1.normal = normal
-        vertex1.tex_coord = glm.vec3(1, 0, 0)
+        vertex1.tex_coord = cgm.vec3(1, 0, 0)
 
         # 右上
         vertex2 = Vertex()
-        vertex2.position = glm.vec3(width / 2 - align0, height / 2 - align1, 0)
+        vertex2.position = cgm.vec3(width / 2 - align0, height / 2 - align1, 0)
         if vertical:
-            vertex2.position = glm.vec3(width / 2 - align0, 0, height / 2 - align1)
+            vertex2.position = cgm.vec3(width / 2 - align0, 0, height / 2 - align1)
         vertex2.normal = normal
-        vertex2.tex_coord = glm.vec3(1, 1, 0)
+        vertex2.tex_coord = cgm.vec3(1, 1, 0)
 
         # 左上
         vertex3 = Vertex()
-        vertex3.position = glm.vec3(-width / 2 - align0, height / 2 - align1, 0)
+        vertex3.position = cgm.vec3(-width / 2 - align0, height / 2 - align1, 0)
         if vertical:
-            vertex3.position = glm.vec3(-width / 2 - align0, 0, height / 2 - align1)
+            vertex3.position = cgm.vec3(-width / 2 - align0, 0, height / 2 - align1)
         vertex3.normal = normal
-        vertex3.tex_coord = glm.vec3(0, 1, 0)
+        vertex3.tex_coord = cgm.vec3(0, 1, 0)
 
         vertices[0] = vertex0
         vertices[1] = vertex1
         vertices[2] = vertex2
         vertices[3] = vertex3
 
-        indices[0] = glm.uvec3(0, 1, 2)
-        indices[1] = glm.uvec3(0, 2, 3)
+        indices[0] = cgm.uvec3(0, 1, 2)
+        indices[1] = cgm.uvec3(0, 2, 3)
 
         self.generate_temp_TBN(vertices[0], vertices[1], vertices[2])
         self.generate_temp_TBN(vertices[0], vertices[2], vertices[3])

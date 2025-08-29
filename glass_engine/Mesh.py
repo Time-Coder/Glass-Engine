@@ -3,11 +3,11 @@ from .SceneNode import SceneNode
 from .Material import Material
 from .algorithm import generate_auto_TBN, generate_smooth_TBN
 
-from glass import ShaderProgram, Instances, Vertices, Indices, GLInfo, RenderHints, callback_vec4
+from glass import ShaderProgram, Instances, Vertices, Indices, GLInfo, RenderHints
 from glass.utils import checktype
 from glass.AttrList import AttrList
 
-import glm
+import cgmath as cgm
 from functools import wraps
 from OpenGL import GL
 import inspect
@@ -34,11 +34,11 @@ class Mesh(SceneNode):
     def __init__(
         self,
         primitive_type: GLInfo.primitive_types = GL.GL_TRIANGLES,
-        color: Union[glm.vec3, glm.vec4] = glm.vec4(1, 1, 1, 1),
-        back_color: Union[glm.vec3, glm.vec4, None] = None,
+        color: Union[cgm.vec3, cgm.vec4] = cgm.vec4(1, 1, 1, 1),
+        back_color: Union[cgm.vec3, cgm.vec4, None] = None,
         surf_type: Union[Mesh.SurfType, None] = None,
         normalize_st: bool = False,
-        st_per_unit: Union[float, glm.vec2] = 1,
+        st_per_unit: Union[float, cgm.vec2] = 1,
         name: str = "",
         block: bool = True
     ):
@@ -58,30 +58,23 @@ class Mesh(SceneNode):
         self._normalize_st = normalize_st
         self._st_per_unit = st_per_unit
         if isinstance(st_per_unit, (float,int)):
-            self._st_per_unit = glm.vec2(st_per_unit, st_per_unit)
+            self._st_per_unit = cgm.vec2(st_per_unit, st_per_unit)
 
-        if isinstance(color, glm.vec3):
-            color = glm.vec4(color, 1)
+        if isinstance(color, cgm.vec3):
+            color = cgm.vec4(color, 1)
 
-        if isinstance(back_color, glm.vec3):
-            back_color = glm.vec4(back_color, 1)
+        if isinstance(back_color, cgm.vec3):
+            back_color = cgm.vec4(back_color, 1)
 
-        self._color = callback_vec4(
-            color.r, color.g, color.b, color.a, self._color_change_callback
-        )
+        self._color = cgm.vec4(color)
+        self._color.on_changed = self._color_change_callback
         self._back_color_user_set = back_color is not None
         if self._back_color_user_set:
-            self._back_color = callback_vec4(
-                back_color.r,
-                back_color.g,
-                back_color.b,
-                back_color.a,
-                self._back_color_change_callback,
-            )
+            self._back_color = cgm.vec4(back_color)
+            self._back_color.on_changed = self._back_color_change_callback
         else:
-            self._back_color = callback_vec4(
-                color.r, color.g, color.b, color.a, self._back_color_change_callback
-            )
+            self._back_color = cgm.vec4(color)
+            self._back_color.on_changed = self._back_color_change_callback
 
         self._should_add_color = True
         self._should_callback = True
@@ -186,7 +179,7 @@ class Mesh(SceneNode):
         )
         if "color" not in self._vertices._attr_list_map:
             self._vertices._attr_list_map["color"] = AttrList(
-                color_array, dtype=glm.vec4
+                color_array, dtype=cgm.vec4
             )
         else:
             self._vertices._attr_list_map["color"].ndarray = color_array
@@ -207,7 +200,7 @@ class Mesh(SceneNode):
         )
         if "back_color" not in self._vertices._attr_list_map:
             self._vertices._attr_list_map["back_color"] = AttrList(
-                back_color_array, dtype=glm.vec4
+                back_color_array, dtype=cgm.vec4
             )
         else:
             self._vertices._attr_list_map["back_color"].ndarray = back_color_array
@@ -229,7 +222,7 @@ class Mesh(SceneNode):
         )
         if "color" not in self._vertices._attr_list_map:
             self._vertices._attr_list_map["color"] = AttrList(
-                color_array, dtype=glm.vec4
+                color_array, dtype=cgm.vec4
             )
         else:
             self._vertices._attr_list_map["color"].ndarray = color_array
@@ -237,7 +230,7 @@ class Mesh(SceneNode):
         if not self._back_color_user_set:
             if "back_color" not in self._vertices._attr_list_map:
                 self._vertices._attr_list_map["back_color"] = AttrList(
-                    color_array, dtype=glm.vec4
+                    color_array, dtype=cgm.vec4
                 )
             else:
                 self._vertices._attr_list_map["back_color"].ndarray = color_array
@@ -245,7 +238,7 @@ class Mesh(SceneNode):
         self._should_callback = True
 
     @property
-    def color(self) -> callback_vec4:
+    def color(self) -> cgm.vec4:
         old_should_callback = self._should_callback
         self._should_callback = False
         if "color" not in self._vertices._attr_list_map:
@@ -284,9 +277,9 @@ class Mesh(SceneNode):
         return self._color
 
     @color.setter
-    def color(self, color: Union[glm.vec3, glm.vec4]):
-        if isinstance(color, glm.vec3):
-            color = glm.vec4(color, 1)
+    def color(self, color: Union[cgm.vec3, cgm.vec4]):
+        if isinstance(color, cgm.vec3):
+            color = cgm.vec4(color, 1)
 
         color_array = np.dot(
             np.ones((len(self._vertices), 1), dtype=np.float32),
@@ -294,7 +287,7 @@ class Mesh(SceneNode):
         )
         if "color" not in self._vertices._attr_list_map:
             self._vertices._attr_list_map["color"] = AttrList(
-                color_array, dtype=glm.vec4
+                color_array, dtype=cgm.vec4
             )
         else:
             self._vertices._attr_list_map["color"].ndarray = color_array
@@ -302,7 +295,7 @@ class Mesh(SceneNode):
         if not self._back_color_user_set:
             if "back_color" not in self._vertices._attr_list_map:
                 self._vertices._attr_list_map["back_color"] = AttrList(
-                    color_array, dtype=glm.vec4
+                    color_array, dtype=cgm.vec4
                 )
             else:
                 self._vertices._attr_list_map["back_color"].ndarray = color_array
@@ -319,25 +312,25 @@ class Mesh(SceneNode):
         self._normalize_st = flag
 
     @property
-    def st_per_unit(self)->glm.vec2:
+    def st_per_unit(self)->cgm.vec2:
         if self._normalize_st:
-            return glm.vec2(1, 1)
+            return cgm.vec2(1, 1)
         
         return self._st_per_unit
     
     @property
-    def str_per_unit(self)->glm.vec3:
+    def str_per_unit(self)->cgm.vec3:
         if self._normalize_st:
-            return glm.vec2(1, 1, 1)
+            return cgm.vec2(1, 1, 1)
         
-        return glm.vec3(self._st_per_unit, 1)
+        return cgm.vec3(self._st_per_unit, 1)
     
     @st_per_unit.setter
     @param_setter
-    def st_per_unit(self, st_per_unit:Union[float, glm.vec2]):
+    def st_per_unit(self, st_per_unit:Union[float, cgm.vec2]):
         self._st_per_unit = st_per_unit
         if isinstance(st_per_unit, (float,int)):
-            self._st_per_unit = glm.vec2(st_per_unit)
+            self._st_per_unit = cgm.vec2(st_per_unit)
 
     @property
     def s_per_unit(self):
@@ -381,7 +374,7 @@ class Mesh(SceneNode):
         )
         if "back_color" not in self._vertices._attr_list_map:
             self._vertices._attr_list_map["back_color"] = AttrList(
-                color_array, dtype=glm.vec4
+                color_array, dtype=cgm.vec4
             )
         else:
             self._vertices._attr_list_map["back_color"].ndarray = color_array
@@ -390,7 +383,7 @@ class Mesh(SceneNode):
         self.update_screens()
 
     @property
-    def back_color(self) -> callback_vec4:
+    def back_color(self) -> cgm.vec4:
         old_should_callback = self._should_callback
         self._should_callback = False
         if "back_color" not in self._vertices._attr_list_map:
@@ -433,9 +426,9 @@ class Mesh(SceneNode):
         return self._back_color
 
     @back_color.setter
-    def back_color(self, color: Union[glm.vec3, glm.vec4]):
-        if isinstance(color, glm.vec3):
-            color = glm.vec4(color, 1)
+    def back_color(self, color: Union[cgm.vec3, cgm.vec4]):
+        if isinstance(color, cgm.vec3):
+            color = cgm.vec4(color, 1)
 
         self._back_color_user_set = True
         color_array = np.dot(
@@ -444,7 +437,7 @@ class Mesh(SceneNode):
         )
         if "back_color" not in self._vertices._attr_list_map:
             self._vertices._attr_list_map["back_color"] = AttrList(
-                color_array, dtype=glm.vec4
+                color_array, dtype=cgm.vec4
             )
         else:
             self._vertices._attr_list_map["back_color"].ndarray = color_array
@@ -504,7 +497,7 @@ class Mesh(SceneNode):
 
     @property
     def center(self):
-        return glm.vec3(
+        return cgm.vec3(
             0.5 * (self.x_min + self.x_max),
             0.5 * (self.y_min + self.y_max),
             0.5 * (self.z_min + self.z_max),
@@ -727,12 +720,12 @@ class Mesh(SceneNode):
 
         det = st01.s * st02.t - st02.s * st01.t
 
-        normal = glm.cross(v01, v02)
-        len_normal = glm.length(normal)
+        normal = cgm.cross(v01, v02)
+        len_normal = cgm.length(normal)
         if len_normal > 1e-6:
             normal = normal / len_normal
         else:
-            normal = glm.vec3(0)
+            normal = cgm.vec3(0)
 
         tangent = st02.t * v01 - st01.t * v02
         bitangent = st01.s * v02 - st02.s * v01
@@ -740,8 +733,8 @@ class Mesh(SceneNode):
             tangent /= det
             bitangent /= det
         else:
-            tangent = glm.vec3(0)
-            bitangent = glm.vec3(0)
+            tangent = cgm.vec3(0)
+            bitangent = cgm.vec3(0)
 
         # vertex0
         vertex0.tangent = tangent
@@ -771,17 +764,17 @@ class Mesh(SceneNode):
 
         if "tangent" not in self._vertices._attr_list_map:
             self._vertices._attr_list_map["tangent"] = AttrList(
-                np.zeros_like(self._vertices["position"].ndarray), dtype=glm.vec3
+                np.zeros_like(self._vertices["position"].ndarray), dtype=cgm.vec3
             )
 
         if "bitangent" not in self._vertices._attr_list_map:
             self._vertices._attr_list_map["bitangent"] = AttrList(
-                np.zeros_like(self._vertices["position"].ndarray), dtype=glm.vec3
+                np.zeros_like(self._vertices["position"].ndarray), dtype=cgm.vec3
             )
 
         if "normal" not in self._vertices._attr_list_map:
             self._vertices._attr_list_map["normal"] = AttrList(
-                np.zeros_like(self._vertices["position"].ndarray), dtype=glm.vec3
+                np.zeros_like(self._vertices["position"].ndarray), dtype=cgm.vec3
             )
 
         if self.__surf_type == Mesh.SurfType.Auto:

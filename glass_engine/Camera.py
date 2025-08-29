@@ -6,7 +6,7 @@ from .VideoRecorder import VideoRecorder
 
 from glass.utils import checktype
 
-import glm
+import cgmath as cgm
 import math
 from enum import Enum
 import numpy as np
@@ -39,7 +39,7 @@ class Camera(SceneNode):
             self.__focus: float = 0.09
             self.__aperture: float = 0.05
             self.__auto_focus: bool = True
-            self.__focus_tex_coord: glm.vec2 = glm.vec2(0.5, 0.5)
+            self.__focus_tex_coord: cgm.vec2 = cgm.vec2(0.5, 0.5)
             self.__focus_change_time: float = 2
             self.__exposure: float = 1
             self.__auto_exposure: bool = True
@@ -116,7 +116,7 @@ class Camera(SceneNode):
         
         @focus_tex_coord.setter
         @param_setter
-        def focus_tex_coord(self, focus_tex_coord: glm.vec2):
+        def focus_tex_coord(self, focus_tex_coord: cgm.vec2):
             self.__focus_tex_coord = focus_tex_coord
 
         @property
@@ -536,27 +536,27 @@ class Camera(SceneNode):
     ) -> VideoRecorder:
         return self.screen.capture_video(save_path, viewport, fps)
 
-    def project(self, world_coord: glm.vec3) -> glm.vec4:
+    def project(self, world_coord: cgm.vec3) -> cgm.vec4:
         return self.view_to_NDC(self.world_to_view(world_coord))
 
-    def project3(self, world_coord: glm.vec3) -> glm.vec3:
+    def project3(self, world_coord: cgm.vec3) -> cgm.vec3:
         NDC = self.project(world_coord)
         return NDC.xyz / NDC.w
 
-    def world_to_view(self, world_coord: glm.vec3) -> glm.vec3:
-        return glm.inverse(self.abs_orientation) * (world_coord - self.abs_position)
+    def world_to_view(self, world_coord: cgm.vec3) -> cgm.vec3:
+        return cgm.inverse(self.abs_orientation) * (world_coord - self.abs_position)
 
-    def view_to_world(self, view_coord: glm.vec3) -> glm.vec3:
+    def view_to_world(self, view_coord: cgm.vec3) -> cgm.vec3:
         return self.abs_orientation * view_coord + self.abs_position
 
-    def world_dir_to_view(self, world_dir: glm.vec3) -> glm.vec3:
-        return glm.inverse(self.abs_orientation) * world_dir
+    def world_dir_to_view(self, world_dir: cgm.vec3) -> cgm.vec3:
+        return cgm.inverse(self.abs_orientation) * world_dir
 
-    def view_dir_to_world(self, view_dir: glm.vec3) -> glm.vec3:
+    def view_dir_to_world(self, view_dir: cgm.vec3) -> cgm.vec3:
         return self.abs_orientation * view_dir
 
-    def view_to_NDC(self, view_coord: glm.vec3) -> glm.vec4:
-        NDC_coord = glm.vec4()
+    def view_to_NDC(self, view_coord: cgm.vec3) -> cgm.vec4:
+        NDC_coord = cgm.vec4()
         if self.projection_mode == Camera.ProjectionMode.Perspective:
             NDC_coord.x = view_coord.x / (self.aspect * self.tan_half_fov)
             NDC_coord.y = view_coord.z / self.tan_half_fov
@@ -572,15 +572,15 @@ class Camera(SceneNode):
 
         return NDC_coord
 
-    def screen_to_view_dir(self, screen_pos: glm.vec2) -> glm.vec3:
+    def screen_to_view_dir(self, screen_pos: cgm.vec2) -> cgm.vec3:
         xNDC = 2 * screen_pos.x / self.screen.width() - 1
         yNDC = 1 - 2 * screen_pos.y / self.screen.height()
 
-        view_dir = glm.vec3()
+        view_dir = cgm.vec3()
         view_dir.x = xNDC * self.aspect * self.tan_half_fov
         view_dir.y = 1
         view_dir.z = yNDC * self.tan_half_fov
-        return glm.normalize(view_dir)
+        return cgm.normalize(view_dir)
 
-    def screen_to_world_dir(self, screen_pos: glm.vec2) -> glm.vec3:
+    def screen_to_world_dir(self, screen_pos: cgm.vec2) -> cgm.vec3:
         return self.view_dir_to_world(self.screen_to_view_dir(screen_pos))

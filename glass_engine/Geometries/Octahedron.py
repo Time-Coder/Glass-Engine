@@ -3,7 +3,7 @@ from ..Mesh import Mesh
 from glass.utils import checktype
 from glass import Vertex
 
-import glm
+import cgmath as cgm
 import math
 from typing import Union
 
@@ -11,23 +11,23 @@ from typing import Union
 def init_Octahedron(cls):
     cls.edge_length = math.sqrt(2)
     cls.base_positions = [
-        glm.vec3(-1, 0, 0),  # 0
-        glm.vec3(1, 0, 0),  # 1
-        glm.vec3(0, -1, 0),  # 2
-        glm.vec3(0, 1, 0),  # 3
-        glm.vec3(0, 0, -1),  # 4
-        glm.vec3(0, 0, 1),  # 5
+        cgm.vec3(-1, 0, 0),  # 0
+        cgm.vec3(1, 0, 0),  # 1
+        cgm.vec3(0, -1, 0),  # 2
+        cgm.vec3(0, 1, 0),  # 3
+        cgm.vec3(0, 0, -1),  # 4
+        cgm.vec3(0, 0, 1),  # 5
     ]
 
     cls.base_indices = [
-        glm.uvec3(5, 0, 2),
-        glm.uvec3(5, 2, 1),
-        glm.uvec3(5, 1, 3),
-        glm.uvec3(5, 3, 0),
-        glm.uvec3(4, 2, 0),
-        glm.uvec3(4, 1, 2),
-        glm.uvec3(4, 3, 1),
-        glm.uvec3(4, 0, 3),
+        cgm.uvec3(5, 0, 2),
+        cgm.uvec3(5, 2, 1),
+        cgm.uvec3(5, 1, 3),
+        cgm.uvec3(5, 3, 0),
+        cgm.uvec3(4, 2, 0),
+        cgm.uvec3(4, 1, 2),
+        cgm.uvec3(4, 3, 1),
+        cgm.uvec3(4, 0, 3),
     ]
 
     cls.fixed_vertices = []
@@ -38,18 +38,18 @@ def init_Octahedron(cls):
 
         v1 = pos1 - pos0
         v2 = pos2 - pos0
-        normal = glm.normalize(glm.cross(v1, v2))
+        normal = cgm.normalize(cgm.cross(v1, v2))
 
-        vertex0 = Vertex(position=pos0, normal=normal, tex_coord=glm.vec3(0.5, 1, 0))
+        vertex0 = Vertex(position=pos0, normal=normal, tex_coord=cgm.vec3(0.5, 1, 0))
         vertex1 = Vertex(
             position=pos1,
             normal=normal,
-            tex_coord=glm.vec3(0.5 - math.sqrt(3) / 4, 0.25, 0),
+            tex_coord=cgm.vec3(0.5 - math.sqrt(3) / 4, 0.25, 0),
         )
         vertex2 = Vertex(
             position=pos2,
             normal=normal,
-            tex_coord=glm.vec3(0.5 + math.sqrt(3) / 4, 0.25, 0),
+            tex_coord=cgm.vec3(0.5 + math.sqrt(3) / 4, 0.25, 0),
         )
         cls.fixed_vertices.append(vertex0)
         cls.fixed_vertices.append(vertex1)
@@ -65,8 +65,8 @@ class Octahedron(Mesh):
     def __init__(
         self,
         radius=1,
-        color: Union[glm.vec3, glm.vec4] = glm.vec4(0.396, 0.74151, 0.69102, 1),
-        back_color: Union[glm.vec3, glm.vec4, None] = None,
+        color: Union[cgm.vec3, cgm.vec4] = cgm.vec4(0.396, 0.74151, 0.69102, 1),
+        back_color: Union[cgm.vec3, cgm.vec4, None] = None,
         stable=False,
         normalize_st=False,
         st_per_unit=1,
@@ -90,12 +90,12 @@ class Octahedron(Mesh):
         radius = self.__radius
         stable = self.__stable
 
-        quat = glm.quat(1, 0, 0, 0)
+        quat = cgm.quat(1, 0, 0, 0)
         if stable:
-            quat_z = glm.quat(math.cos(math.pi / 8), 0, 0, math.sin(math.pi / 8))
+            quat_z = cgm.quat(math.cos(math.pi / 8), 0, 0, math.sin(math.pi / 8))
 
             theta = math.acos(math.sqrt(3) / 3)
-            quat_x = glm.quat(math.cos(theta / 2), math.sin(theta / 2), 0, 0)
+            quat_x = cgm.quat(math.cos(theta / 2), math.sin(theta / 2), 0, 0)
 
             quat = quat_x * quat_z
 
@@ -103,8 +103,8 @@ class Octahedron(Mesh):
             tex_coord = fix_vert.tex_coord
             if not self.normalize_st:
                 tex_coord = 2 * self.str_per_unit * radius * (
-                    tex_coord - glm.vec3(0.5, 0.5, 0)
-                ) * Octahedron.edge_length / math.sqrt(3) + glm.vec3(0.5, 0.5, 0)
+                    tex_coord - cgm.vec3(0.5, 0.5, 0)
+                ) * Octahedron.edge_length / math.sqrt(3) + cgm.vec3(0.5, 0.5, 0)
 
             vertices[i] = Vertex(
                 position=radius * (quat * fix_vert.position),
@@ -113,7 +113,7 @@ class Octahedron(Mesh):
             )
 
         for i in range(0, len(Octahedron.fixed_vertices), 3):
-            indices[int(i / 3)] = glm.uvec3(i, i + 1, i + 2)
+            indices[int(i / 3)] = cgm.uvec3(i, i + 1, i + 2)
             self.generate_temp_TBN(vertices[i], vertices[i + 1], vertices[i + 2])
 
     @property

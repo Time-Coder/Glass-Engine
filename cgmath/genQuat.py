@@ -1,10 +1,11 @@
 from __future__ import annotations
 
-from .genType import genType
+from .genType import genType, MathForm
 from .genVec import genVec
-from .helper import from_import
+from .genVec3 import genVec3
+from .helper import from_import, is_number
 
-from typing import Tuple, Any, Union, Dict
+from typing import Tuple, Any, Union, Dict, Callable
 import ctypes
 
 
@@ -34,7 +35,7 @@ class genQuat(genType):
             w = args[0]
             v = args[1]
 
-            if not isinstance(w, (float,int,bool)) or not isinstance(v, genVec):
+            if not is_number(w) or not isinstance(v, genVec):
                 raise TypeError(f"invalid argument type(s) for {self.__class__.__name__}()")
             
             self._data[0] = w
@@ -51,6 +52,61 @@ class genQuat(genType):
         raise ValueError(f"invalid arguments for {self.__class__.__name__}()")
             
     @property
+    def math_form(self)->MathForm:
+        return MathForm.Quat
+
+    @property
+    def w(self)->float:
+        return self._data[0]
+    
+    @w.setter
+    def w(self, w:float)->None:
+        self._data[0] = w
+        self._update_data()
+
+    @property
+    def x(self)->float:
+        return self._data[1]
+    
+    @x.setter
+    def x(self, x:float)->None:
+        self._data[1] = x
+        self._update_data()
+
+    @property
+    def y(self)->float:
+        return self._data[2]
+    
+    @y.setter
+    def y(self, y:float)->None:
+        self._data[2] = y
+        self._update_data()
+
+    @property
+    def z(self)->float:
+        return self._data[3]
+    
+    @z.setter
+    def z(self, z:float)->None:
+        self._data[3] = z
+        self._update_data()
+
+    @property
+    def xyz(self)->genVec3:
+        vec_type = genVec.vec_type(self.dtype, 3)
+        return vec_type(self._data[1], self._data[2], self._data[3])
+    
+    @xyz.setter
+    def xyz(self, xyz:genVec3)->None:
+        if not isinstance(xyz, genVec3):
+            raise TypeError(f'must be genVec3, not {type(xyz)}')
+
+        self._data[1] = xyz._data[0]
+        self._data[2] = xyz._data[1]
+        self._data[3] = xyz._data[2]
+        self._update_data()
+
+    @staticmethod
     def quat_type(dtype:type)->type:
         if dtype not in genQuat.__gen_quat_map:
             if dtype == ctypes.c_float:
@@ -90,44 +146,48 @@ class genQuat(genType):
             if isinstance(other, genVec) and len(other) != 3:
                 raise TypeError(f"unsupported operand type(s) for {operator}: '{self.__class__.__name__}' and '{other.__class__.__name__}'")
 
-            result_dtype = self._operator_dtype(self.dtype, operator, other.dtype)
-            result_shape = (self.rows, other.cols) if isinstance(other, genMat) else (self.rows,)
-            result_type = self.gen_type(result_dtype, result_shape)
-            result = result_type()
-            if isinstance(result, genMat):
-                for i in range(result.rows):
-                    for j in range(result.cols):
-                        value = 0
-                        for k in range(self.cols):
-                            value += self[k, i] * other[j, k]
-
-                        result[j, i] = value
-            elif isinstance(result, genVec):
-                for i in range(len(result)):
-                    value = 0
-                    for k in range(self.cols):
-                        value += self[k, i] * other[k]
-
-                    result._data[i] = value
+            result_dtype = self._operator_dtype(self.dtype, operator, other.dtype, False)
+            if isinstance(other, genQuat):
+                result_type = self.quat_type(result_dtype)
+                result = result_type()
+                result.w = self.w * other.w - self.x * other.x - self.y * other.y - self.z * other.z
+                result.x = self.w * other.x + self.x * other.w + self.y * other.z - self.z * other.y
+                result.y = self.w * other.y + self.y * other.w + self.z * other.x - self.x * other.z
+                result.z = self.w * other.z + self.z * other.w + self.x * other.y - self.y * other.x
+            elif isinstance(other, genVec):
+                result_type = genVec.vec_type(result_dtype, 3)
+                result = result_type()
+                result.x = self.w * other.x + self.y * other.z - self.z * other.y
+                result.y = self.w * other.y + self.z * other.x - self.x * other.z
+                result.z = self.w * other.z + self.x * other.y - self.y * other.x
 
             return result
+        
+        if isinstance(other, genType) and not isinstance(other, genQuat):
+            raise TypeError(f"unsupported operand type(s) for {operator}: '{self.__class__.__name__}' and '{other.__class__.__name__}'")
 
         return genType._op(operator, other)
 
-    def _iop(self, operator:str, other:Union[float, bool, int, genMat])->genMat:
+    def _iop(self, operator:str, other:Union[float, bool, int, genQuat])->genQuat:
         if operator == "**" or (operator in ["/", "//", "%"] and isinstance(other, genType)):
             raise TypeError(f"unsupported operand type(s) for {operator}=: '{self.__class__.__name__}' and '{other.__class__.__name__}'")
 
         if operator == "*" and isinstance(other, genType):
-            if not isinstance(other, genMat):
-                raise TypeError(f"unsupported operand type(s) for {operator}=: '{self.__class__.__name__}' and '{other.__class__.__name__}'")
+            if not isinstance(other, genQuat):
+                raise TypeError(f"unsupported operand type(s) for {operator}: '{self.__class__.__name__}' and '{other.__class__.__name__}'")
             
-            if self.cols != other.rows or other.rows != other.cols:
-                raise TypeError(f"unsupported operand type(s) for {operator}=: '{self.__class__.__name__}' and '{other.__class__.__name__}'")
+            w = self.w * other.w - self.x * other.x - self.y * other.y - self.z * other.z
+            x = self.w * other.x + self.x * other.w + self.y * other.z - self.z * other.y
+            y = self.w * other.y + self.y * other.w + self.z * other.x - self.x * other.z
+            z = self.w * other.z + self.z * other.w + self.x * other.y - self.y * other.x
+            self.w = w
+            self.x = x
+            self.y = y
+            self.z = z
 
-            result:genMat = self * other
-            self._data[:] = result._data[:]
-            self._update_data()
             return self
-            
+        
+        if isinstance(other, genType) and not isinstance(other, genQuat):
+            raise TypeError(f"unsupported operand type(s) for {operator}=: '{self.__class__.__name__}' and '{other.__class__.__name__}'")
+
         return genType._iop(operator, other)

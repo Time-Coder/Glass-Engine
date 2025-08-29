@@ -2,7 +2,7 @@ from functools import wraps
 import ctypes
 import re
 import math
-import glm
+import cgmath as cgm
 import os
 import types
 import cProfile
@@ -42,7 +42,7 @@ def bincat(file_name):
 
 
 def uint64_to_uvec2(uint64_value):
-    result = glm.uvec2()
+    result = cgm.uvec2()
     bytes_data = uint64_value.to_bytes(8, byteorder="little", signed=False)
     result.x = int.from_bytes(bytes_data[:4], byteorder="little", signed=False)
     result.y = int.from_bytes(bytes_data[4:], byteorder="little", signed=False)
@@ -468,13 +468,13 @@ def capacity_of(length):
 
 
 @checktype
-def quat_to_mat4(q: glm.quat):
+def quat_to_mat4(q: cgm.quat):
     w = q.w
     x = q.x
     y = q.y
     z = q.z
 
-    return glm.mat4(
+    return cgm.mat4(
         1 - 2 * (y**2 + z**2),
         2 * (x * y + w * z),
         2 * (x * z - w * y),
@@ -495,13 +495,13 @@ def quat_to_mat4(q: glm.quat):
 
 
 @checktype
-def quat_to_mat3(q: glm.quat):
+def quat_to_mat3(q: cgm.quat):
     w = q.w
     x = q.x
     y = q.y
     z = q.z
 
-    return glm.mat3(
+    return cgm.mat3(
         1 - 2 * (y**2 + z**2),
         2 * (x * y + w * z),
         2 * (x * z - w * y),
@@ -514,16 +514,16 @@ def quat_to_mat3(q: glm.quat):
     )
 
 
-def scale_to_mat4(s: glm.vec3):
-    return glm.mat4(s.x, 0, 0, 0, 0, s.y, 0, 0, 0, 0, s.z, 0, 0, 0, 0, 1)
+def scale_to_mat4(s: cgm.vec3):
+    return cgm.mat4(s.x, 0, 0, 0, 0, s.y, 0, 0, 0, 0, s.z, 0, 0, 0, 0, 1)
 
 
-def scale_to_mat3(s: glm.vec3):
-    return glm.mat3(s.x, 0, 0, 0, s.y, 0, 0, 0, s.z)
+def scale_to_mat3(s: cgm.vec3):
+    return cgm.mat3(s.x, 0, 0, 0, s.y, 0, 0, 0, s.z)
 
 
-def translate_to_mat4(t: glm.vec3):
-    return glm.mat4(1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, t.x, t.y, t.z, 1)
+def translate_to_mat4(t: cgm.vec3):
+    return cgm.mat4(1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, t.x, t.y, t.z, 1)
 
 
 def defines_key(*args):

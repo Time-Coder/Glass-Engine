@@ -3,7 +3,7 @@ import os
 os.environ["OPENCV_IO_ENABLE_OPENEXR"] = "1"
 import cv2
 import numpy as np
-import glm
+import cgmath as cgm
 from OpenGL import GL
 import OpenGL.GL.ARB.bindless_texture as bt
 import time
@@ -59,7 +59,7 @@ class sampler2D(FBOAttachment):
         self._filter_min = self.__class__._default_filter_min
         self._filter_mag = self.__class__._default_filter_mag
         self._filter_mipmap = self.__class__._default_filter_mipmap
-        self._border_color = glm.vec4(0, 0, 0, 1)
+        self._border_color = cgm.vec4(0, 0, 0, 1)
 
         self._image_changed = True
         self._wrap_s_changed = True
@@ -177,7 +177,7 @@ class sampler2D(FBOAttachment):
             GL.glTexParameterfv(
                 GL.GL_TEXTURE_2D,
                 GL.GL_TEXTURE_BORDER_COLOR,
-                glm.value_ptr(self._border_color),
+                cgm.value_ptr(self._border_color),
             )
             self._border_color_changed = False
 
@@ -434,9 +434,9 @@ class sampler2D(FBOAttachment):
 
     @border_color.setter
     @FBOAttachment.param_setter
-    def border_color(self, color: Union[glm.vec3, glm.vec4]):
-        if isinstance(color, glm.vec3):
-            color = glm.vec4(color, 1)
+    def border_color(self, color: Union[cgm.vec3, cgm.vec4]):
+        if isinstance(color, cgm.vec3):
+            color = cgm.vec4(color, 1)
 
         self._border_color = color
         self._border_color_changed = True
@@ -593,7 +593,7 @@ class sampler2D(FBOAttachment):
             GLConfig.polygon_mode = GL.GL_FILL
             
             with self.fbo:
-                resolution = glm.vec3(self._width, self._height, 1)
+                resolution = cgm.vec3(self._width, self._height, 1)
                 self._shadertoy_program["iResolution"] = resolution
                 self._shadertoy_program["iChannelResolution"] = [resolution] * 4
                 self._shadertoy_program["iTime"] = t
@@ -601,7 +601,7 @@ class sampler2D(FBOAttachment):
                 self._shadertoy_program["iFrameRate"] = fps
                 self._shadertoy_program["iFrame"] = self._shadertoy_frame_index
                 self._shadertoy_program["iChannelTime"] = [t, t, t, t]
-                self._shadertoy_program["iDate"] = glm.vec4(
+                self._shadertoy_program["iDate"] = cgm.vec4(
                     now.year, now.month, now.day, now.second + now.microsecond / 1000
                 )
                 self._shadertoy_program["iSampleRate"] = 44100

@@ -3,7 +3,7 @@ from ..Mesh import Mesh
 from glass.utils import checktype
 from glass import Vertex
 
-import glm
+import cgmath as cgm
 import math
 from typing import Union
 
@@ -18,8 +18,8 @@ class Cylinder(Mesh):
         start_angle: float = 0,
         span_angle: float = 360,
         n_divide: int = 100,
-        color: Union[glm.vec3, glm.vec4] = glm.vec4(0.396, 0.74151, 0.69102, 1),
-        back_color: Union[glm.vec3, glm.vec4, None] = None,
+        color: Union[cgm.vec3, cgm.vec4] = cgm.vec4(0.396, 0.74151, 0.69102, 1),
+        back_color: Union[cgm.vec3, cgm.vec4, None] = None,
         normalize_st:bool=False,
         st_per_unit: float = 1,
         name: str = "",
@@ -54,17 +54,17 @@ class Cylinder(Mesh):
 
         # 顶面中心点
         vertex_top = Vertex()
-        vertex_top.position = glm.vec3(0, 0, height)
-        vertex_top.normal = glm.vec3(0, 0, 1)
-        vertex_top.tex_coord = glm.vec3(0.5, 0.5, 0)
+        vertex_top.position = cgm.vec3(0, 0, height)
+        vertex_top.normal = cgm.vec3(0, 0, 1)
+        vertex_top.tex_coord = cgm.vec3(0.5, 0.5, 0)
         vertices[i_vertex] = vertex_top
         i_vertex += 1
 
         # 底面中心点
         vertex_bottom = Vertex()
-        vertex_bottom.position = glm.vec3(0)
-        vertex_bottom.normal = glm.vec3(0, 0, -1)
-        vertex_bottom.tex_coord = glm.vec3(0.5, 0.5, 0)
+        vertex_bottom.position = cgm.vec3(0)
+        vertex_bottom.normal = cgm.vec3(0, 0, -1)
+        vertex_bottom.tex_coord = cgm.vec3(0.5, 0.5, 0)
         vertices[i_vertex] = vertex_bottom
         i_vertex += 1
 
@@ -78,14 +78,14 @@ class Cylinder(Mesh):
 
             s = radius * theta / height * t
 
-            top = glm.vec3(radius * cos_theta, radius * sin_theta, height)
-            bottom = glm.vec3(radius * cos_theta, radius * sin_theta, 0)
-            normal = glm.vec3(cos_theta, sin_theta, 0)
+            top = cgm.vec3(radius * cos_theta, radius * sin_theta, height)
+            bottom = cgm.vec3(radius * cos_theta, radius * sin_theta, 0)
+            normal = cgm.vec3(cos_theta, sin_theta, 0)
 
             vertex_top_top = Vertex()
             vertex_top_top.position = top
-            vertex_top_top.normal = glm.vec3(0, 0, 1)
-            vertex_top_top.tex_coord = glm.vec3(
+            vertex_top_top.normal = cgm.vec3(0, 0, 1)
+            vertex_top_top.tex_coord = cgm.vec3(
                 0.5 + self.s_per_unit * tex_coord_radius * cos_theta,
                 0.5 + self.t_per_unit * tex_coord_radius * sin_theta,
                 0,
@@ -94,17 +94,17 @@ class Cylinder(Mesh):
             vertex_top = Vertex()
             vertex_top.position = top
             vertex_top.normal = normal
-            vertex_top.tex_coord = glm.vec3(s, t, 0)
+            vertex_top.tex_coord = cgm.vec3(s, t, 0)
 
             vertex_bottom = Vertex()
             vertex_bottom.position = bottom
             vertex_bottom.normal = normal
-            vertex_bottom.tex_coord = glm.vec3(s, 0, 0)
+            vertex_bottom.tex_coord = cgm.vec3(s, 0, 0)
 
             vertex_bottom_bottom = Vertex()
             vertex_bottom_bottom.position = bottom
-            vertex_bottom_bottom.normal = glm.vec3(0, 0, -1)
-            vertex_bottom_bottom.tex_coord = glm.vec3(
+            vertex_bottom_bottom.normal = cgm.vec3(0, 0, -1)
+            vertex_bottom_bottom.tex_coord = cgm.vec3(
                 0.5 + tex_coord_radius * cos_theta,
                 0.5 + tex_coord_radius * sin_theta,
                 0,
@@ -124,7 +124,7 @@ class Cylinder(Mesh):
 
             if j > 0:
                 # 顶面
-                triangle = glm.uvec3(0, 0, 0)
+                triangle = cgm.uvec3(0, 0, 0)
                 triangle[0] = 2 + 4 * j
                 triangle[1] = 0
                 triangle[2] = 2 + 4 * j - 4
@@ -135,7 +135,7 @@ class Cylinder(Mesh):
                 )
 
                 # 侧面三角形 1
-                triangle = glm.uvec3(0, 0, 0)
+                triangle = cgm.uvec3(0, 0, 0)
                 triangle[0] = 2 + 4 * j + 2
                 triangle[1] = 2 + 4 * j + 1
                 triangle[2] = 2 + 4 * j - 3
@@ -146,7 +146,7 @@ class Cylinder(Mesh):
                 )
 
                 # 侧面三角形 2
-                triangle = glm.uvec3(0, 0, 0)
+                triangle = cgm.uvec3(0, 0, 0)
                 triangle[0] = 2 + 4 * j + 2
                 triangle[1] = 2 + 4 * j - 3
                 triangle[2] = 2 + 4 * j - 2
@@ -157,7 +157,7 @@ class Cylinder(Mesh):
                 )
 
                 # 底面
-                triangle = glm.uvec3(0, 0, 0)
+                triangle = cgm.uvec3(0, 0, 0)
                 triangle[0] = 2 + 4 * j + 3
                 triangle[1] = 2 + 4 * j - 1
                 triangle[2] = 1

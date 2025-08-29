@@ -41,15 +41,15 @@ OpenGL 函数的底层接口的设计为了跨平台，牺牲了易用性。
     vertices = Vertices() # 像 list 一样操作 vertices，只不过元素只能为 Vertex 类型
 
     # 添加顶点
-    vertices.append(Vertex(position=glm.vec2(-0.5,-0.5), color=glm.vec3(1,0,0)))
-    vertices.append(Vertex(position=glm.vec2(0.5,-0.5), color=glm.vec3(0,1,0)))
-    vertices.append(Vertex(position=glm.vec2(0,0.5), color=glm.vec3(0,0,1)))
+    vertices.append(Vertex(position=cgm.vec2(-0.5,-0.5), color=cgm.vec3(1,0,0)))
+    vertices.append(Vertex(position=cgm.vec2(0.5,-0.5), color=cgm.vec3(0,1,0)))
+    vertices.append(Vertex(position=cgm.vec2(0,0.5), color=cgm.vec3(0,0,1)))
     # 构建顶点 Vertex 时，属性名可为任意值
     # 只要在 vertex shader 中的 layout 指定了该属性名并且类型匹配
 
     # 创建索引数组
-    indices = Indices() # 像 list 一样操作 indices，只不过元素只能为 glm.uvec3 类型
-    indices.append(glm.uvec3(0, 1, 2))
+    indices = Indices() # 像 list 一样操作 indices，只不过元素只能为 cgm.uvec3 类型
+    indices.append(cgm.uvec3(0, 1, 2))
 
     # 绘制三角形
     program.draw_triangles(vertices=vertices, indices=indices)

@@ -1,18 +1,17 @@
 from ..SceneNode import SceneNode
-from glass import callback_vec3
 
 from glass.utils import checktype
 from glass import GLConfig
 from ..GlassEngineConfig import GlassEngineConfig
 
-import glm
+import cgmath as cgm
 
 
 class Light(SceneNode):
 
     def __init__(self, name: str = ""):
         SceneNode.__init__(self, name)
-        self._color: callback_vec3 = callback_vec3(1, 1, 1, callback=self._update_color)
+        self._color: cgm.vec3 = cgm.vec3(1, 1, 1, callback=self._update_color)
         self._intensity: float = 1.0
         self._generate_shadows: bool = True
         self._rim_power: float = 0.3
@@ -50,7 +49,7 @@ class Light(SceneNode):
 
     @color.setter
     @checktype
-    def color(self, color: glm.vec3):
+    def color(self, color: cgm.vec3):
         if self._color == color:
             return
 

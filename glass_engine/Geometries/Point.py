@@ -3,7 +3,7 @@ from ..Mesh import Mesh
 from glass import Vertex
 from glass.utils import checktype
 
-import glm
+import cgmath as cgm
 from OpenGL import GL
 from typing import Union
 
@@ -12,8 +12,8 @@ class Point(Mesh):
 
     def __init__(
         self,
-        position: glm.vec3 = glm.vec3(0),
-        color: Union[glm.vec3, glm.vec4] = glm.vec4(0.396, 0.74151, 0.69102, 1),
+        position: cgm.vec3 = cgm.vec3(0),
+        color: Union[cgm.vec3, cgm.vec4] = cgm.vec4(0.396, 0.74151, 0.69102, 1),
         point_size: int = 5,
         name: str = "",
     ):
@@ -25,7 +25,7 @@ class Point(Mesh):
         position = self.__position
         vertices = self._vertices
 
-        vertices[0] = Vertex(position=position, tex_coord=glm.vec3(0.5, 0.5, 0))
+        vertices[0] = Vertex(position=position, tex_coord=cgm.vec3(0.5, 0.5, 0))
         del vertices[1:]
 
     @property
@@ -34,7 +34,7 @@ class Point(Mesh):
 
     @position.setter
     @Mesh.param_setter
-    def position(self, position: glm.vec3):
+    def position(self, position: cgm.vec3):
         self.__position = position
 
     @property

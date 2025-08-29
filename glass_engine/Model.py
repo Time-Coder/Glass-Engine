@@ -15,7 +15,7 @@ import cv2
 import numpy as np
 
 import assimpy
-import glm
+import cgmath as cgm
 from OpenGL import GL
 from enum import Flag
 
@@ -46,15 +46,15 @@ class ModelMesh(Mesh):
 
         self.should_add_color = False
         self._vertices = Vertices(
-            position=AttrList.frombuffer(assimp_mesh.position_buffer, glm.vec3),
-            tangent=AttrList.frombuffer(assimp_mesh.tangent_buffer, glm.vec3),
-            bitangent=AttrList.frombuffer(assimp_mesh.bitangent_buffer, glm.vec3),
-            normal=AttrList.frombuffer(assimp_mesh.normal_buffer, glm.vec3),
-            tex_coord=AttrList.frombuffer(assimp_mesh.tex_coord_buffers[0], glm.vec3),
-            color=AttrList.frombuffer(assimp_mesh.color_buffers[0], glm.vec4),
-            back_color=AttrList.frombuffer(assimp_mesh.color_buffers[1], glm.vec4),
+            position=AttrList.frombuffer(assimp_mesh.position_buffer, cgm.vec3),
+            tangent=AttrList.frombuffer(assimp_mesh.tangent_buffer, cgm.vec3),
+            bitangent=AttrList.frombuffer(assimp_mesh.bitangent_buffer, cgm.vec3),
+            normal=AttrList.frombuffer(assimp_mesh.normal_buffer, cgm.vec3),
+            tex_coord=AttrList.frombuffer(assimp_mesh.tex_coord_buffers[0], cgm.vec3),
+            color=AttrList.frombuffer(assimp_mesh.color_buffers[0], cgm.vec4),
+            back_color=AttrList.frombuffer(assimp_mesh.color_buffers[1], cgm.vec4),
         )
-        self._indices = Indices.frombuffer(assimp_mesh.indices_buffer, glm.uvec3)
+        self._indices = Indices.frombuffer(assimp_mesh.indices_buffer, cgm.uvec3)
 
 
 class Model(SceneNode):
@@ -201,33 +201,33 @@ class Model(SceneNode):
         for assimp_material in assimp_model.materials:
             material = Material(name=assimp_material.name)
 
-            ambient = glm.vec3(
+            ambient = cgm.vec3(
                 assimp_material.ambient.r,
                 assimp_material.ambient.g,
                 assimp_material.ambient.b,
             )
-            diffuse = glm.vec3(
+            diffuse = cgm.vec3(
                 assimp_material.diffuse.r,
                 assimp_material.diffuse.g,
                 assimp_material.diffuse.b,
             )
-            specular = glm.vec3(
+            specular = cgm.vec3(
                 assimp_material.specular.r,
                 assimp_material.specular.g,
                 assimp_material.specular.b,
             )
-            emission = glm.vec3(
+            emission = cgm.vec3(
                 assimp_material.emission.r,
                 assimp_material.emission.g,
                 assimp_material.emission.b,
             )
-            reflection = glm.vec4(
+            reflection = cgm.vec4(
                 assimp_material.reflection.r,
                 assimp_material.reflection.g,
                 assimp_material.reflection.b,
                 assimp_material.reflection.a,
             )
-            base_color = glm.vec3(
+            base_color = cgm.vec3(
                 assimp_material.base_color.r,
                 assimp_material.base_color.g,
                 assimp_material.base_color.b,
@@ -239,22 +239,22 @@ class Model(SceneNode):
             roughness = assimp_material.roughness
             metallic = assimp_material.metallic
 
-            if glm.length(ambient) > 0:
+            if cgm.length(ambient) > 0:
                 material.ambient = ambient
 
-            if glm.length(diffuse) > 0:
+            if cgm.length(diffuse) > 0:
                 material.diffuse = diffuse
 
-            if glm.length(specular) > 0:
+            if cgm.length(specular) > 0:
                 material.specular = specular
 
-            if glm.length(emission) > 0:
+            if cgm.length(emission) > 0:
                 material.emission = emission
 
-            if glm.length(reflection) > 0:
+            if cgm.length(reflection) > 0:
                 material.reflection = reflection
 
-            if glm.length(base_color) > 0:
+            if cgm.length(base_color) > 0:
                 material.base_color = base_color
 
             if refractive_index > 0:

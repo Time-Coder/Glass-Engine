@@ -3,11 +3,10 @@ from glass import sampler2D
 from glass.ImageLoader import ImageLoader
 from glass.WeakSet import WeakSet
 from glass.MetaInstancesRecorder import MetaInstancesRecorder
-from glass import callback_vec2, callback_vec3, callback_vec4
 from .GlassEngineConfig import GlassEngineConfig
 from glass.utils import checktype
 
-import glm
+import cgmath as cgm
 from enum import Enum
 import numpy as np
 import math
@@ -92,26 +91,33 @@ class Material(metaclass=MetaInstancesRecorder):
         self._name: str = name
         self._shading_model: Material.ShadingModel = Material.ShadingModel.PhongBlinn
 
-        self._ambient: callback_vec3 = callback_vec3(
-            0, 0, 0, self._color_change_callback
-        )
-        self._base_color: callback_vec3 = callback_vec3(
-            0.396, 0.74151, 0.69102, self._color_change_callback
-        )
-        self._specular: callback_vec3 = callback_vec3(
-            0.3, 0.3, 0.3, self._color_change_callback
-        )
+        self._ambient: cgm.vec3 = cgm.vec3()
+        self._ambient.on_changed = self._color_change_callback
+
+        self._base_color: cgm.vec3 = cgm.vec3(0.396, 0.74151, 0.69102)
+        self._base_color.on_changed = self._color_change_callback
+
+        self._specular: cgm.vec3 = cgm.vec3(0.3, 0.3, 0.3)
+        self._specular.on_changed = self._color_change_callback
+
         self._shininess: float = 0.6 * 128
         self._shininess_strength: float = 1
-        self._emission: callback_vec3 = callback_vec3(
-            0, 0, 0, self._color_change_callback
-        )
+
+        self._emission: cgm.vec3 = cgm.vec3(0, 0, 0)
+        self._emission.on_changed = self._color_change_callback
+
         self._emission_strength: float = 1
         self._opacity: float = 1
         self._vertex_color_usage: Material.VertexColorUsage = Material.VertexColorUsage.NotUse
-        self._st_pivot:callback_vec2 = callback_vec2(0.5, 0.5, self._st_transform_change_callback)
-        self._st_scale:callback_vec2 = callback_vec2(1, 1, self._st_transform_change_callback)
-        self._st_offset:callback_vec2 = callback_vec2(0, 0, self._st_transform_change_callback)
+        self._st_pivot:cgm.vec2 = cgm.vec2(0.5, 0.5)
+        self._st_pivot.on_changed = self._st_transform_change_callback
+
+        self._st_scale:cgm.vec2 = cgm.vec2(1, 1)
+        self._st_scale.on_changed = self._st_transform_change_callback
+
+        self._st_offset:cgm.vec2 = cgm.vec2(0, 0)
+        self._st_offset.on_changed = self._st_transform_change_callback
+
         self._st_rotation:float = 0
         self._height_scale: float = 0.05
         self._metallic: float = 0.5
@@ -124,9 +130,9 @@ class Material(metaclass=MetaInstancesRecorder):
         self._specular_softness: float = 0.02
         self._rim_power: float = 0.3
         self._fog: bool = True
-        self._reflection: callback_vec4 = callback_vec4(
-            1, 1, 1, 0, self._color_change_callback
-        )
+        self._reflection: cgm.vec4 = cgm.vec4(1, 1, 1, 0)
+        self._reflection.on_changed = self._color_change_callback
+        
         self._refractive_index: float = 0
         self._env_mix_diffuse: bool = True
         self._env_max_bake_times: int = 2
@@ -217,7 +223,7 @@ class Material(metaclass=MetaInstancesRecorder):
 
         self._should_callback = old_should_callback
 
-    def _color_change_callback(self):
+    def _color_change_callback(self, color):
         if not self._should_callback:
             return
 
@@ -228,8 +234,8 @@ class Material(metaclass=MetaInstancesRecorder):
             self._reflection_user_set = True
 
         if self._prop_name == "ambient":
-            if glm.length(self._ambient) < 1e-6:
-                self.ambient = glm.vec3(1e-6)
+            if cgm.length(self._ambient) < 1e-6:
+                self.ambient = cgm.vec3(1e-6)
 
         self._update_all_env_maps()
         self.update_screens()
@@ -247,11 +253,11 @@ class Material(metaclass=MetaInstancesRecorder):
         GlassEngineConfig._update_recv_fog(fog)
 
     @property
-    def st_pivot(self)->callback_vec2:
+    def st_pivot(self)->cgm.vec2:
         return self._st_pivot
     
     @st_pivot.setter
-    def st_pivot(self, pivot:glm.vec2):
+    def st_pivot(self, pivot:cgm.vec2):
         old_should_callback = self._should_callback
         self._should_callback = False
         self._st_pivot.s = pivot.s
@@ -259,13 +265,13 @@ class Material(metaclass=MetaInstancesRecorder):
         self._st_pivot.t = pivot.t
 
     @property
-    def st_scale(self)->callback_vec2:
+    def st_scale(self)->cgm.vec2:
         return self._st_scale
     
     @st_scale.setter
-    def st_scale(self, scale: Union[glm.vec2, float]):
+    def st_scale(self, scale: Union[cgm.vec2, float]):
         if isinstance(scale, (float,int)):
-            scale = glm.vec2(scale)
+            scale = cgm.vec2(scale)
         
         old_should_callback = self._should_callback
         self._should_callback = False
@@ -274,11 +280,11 @@ class Material(metaclass=MetaInstancesRecorder):
         self._st_scale.t = scale.t
 
     @property
-    def st_offset(self)->callback_vec2:
+    def st_offset(self)->cgm.vec2:
         return self._st_offset
     
     @st_offset.setter
-    def st_offset(self, offset:glm.vec2):
+    def st_offset(self, offset:cgm.vec2):
         old_should_callback = self._should_callback
         self._should_callback = False
         self._st_offset.s = offset.s
@@ -379,7 +385,7 @@ class Material(metaclass=MetaInstancesRecorder):
         has_reflection = False
         if self._reflection_map is None:
             has_reflection = (
-                glm.length(self._reflection.rgb * self._reflection.a) > 1e-6
+                cgm.length(self._reflection.rgb * self._reflection.a) > 1e-6
             )
         else:
             has_reflection = True
@@ -435,17 +441,17 @@ class Material(metaclass=MetaInstancesRecorder):
         GlassEngineConfig._update_shading_model()
 
     @property
-    def ambient(self) -> callback_vec3:
+    def ambient(self) -> cgm.vec3:
         self._prop_name = "ambient"
 
         return self._ambient
 
     @ambient.setter
-    def ambient(self, ambient: glm.vec3) -> None:
+    def ambient(self, ambient: cgm.vec3) -> None:
         self._prop_name = "ambient"
 
-        if glm.length(ambient) < 1e-6:
-            ambient = glm.vec3(1e-6)
+        if cgm.length(ambient) < 1e-6:
+            ambient = cgm.vec3(1e-6)
 
         old_should_callback = self._should_callback
         self._should_callback = False
@@ -456,21 +462,21 @@ class Material(metaclass=MetaInstancesRecorder):
         self._ambient.b = ambient.b
 
     @property
-    def diffuse(self) -> callback_vec3:
+    def diffuse(self) -> cgm.vec3:
         return self.base_color
 
     @diffuse.setter
-    def diffuse(self, diffuse: glm.vec3) -> None:
+    def diffuse(self, diffuse: cgm.vec3) -> None:
         self.base_color = diffuse
 
     @property
-    def specular(self) -> callback_vec3:
+    def specular(self) -> cgm.vec3:
         self._prop_name = "specular"
 
         return self._specular
 
     @specular.setter
-    def specular(self, specular: glm.vec3) -> None:
+    def specular(self, specular: cgm.vec3) -> None:
         self._prop_name = "specular"
 
         old_should_callback = self._should_callback
@@ -537,13 +543,13 @@ class Material(metaclass=MetaInstancesRecorder):
         self._test_transparent()
 
     @property
-    def emission(self) -> callback_vec3:
+    def emission(self) -> cgm.vec3:
         self._prop_name = "emission"
 
         return self._emission
 
     @emission.setter
-    def emission(self, emission: glm.vec3) -> None:
+    def emission(self, emission: cgm.vec3) -> None:
         self._prop_name = "emission"
 
         old_should_callback = self._should_callback
@@ -564,16 +570,16 @@ class Material(metaclass=MetaInstancesRecorder):
         self._env_mix_diffuse = flag
 
     @property
-    def reflection(self) -> callback_vec4:
+    def reflection(self) -> cgm.vec4:
         self._prop_name = "reflection"
         return self._reflection
 
     @reflection.setter
-    def reflection(self, reflection: Union[glm.vec4, glm.vec3, float]) -> None:
-        if isinstance(reflection, glm.vec3):
-            reflection = glm.vec4(reflection, 1)
+    def reflection(self, reflection: Union[cgm.vec4, cgm.vec3, float]) -> None:
+        if isinstance(reflection, cgm.vec3):
+            reflection = cgm.vec4(reflection, 1)
         if isinstance(reflection, (float, int)):
-            reflection = glm.vec4(1, 1, 1, reflection)
+            reflection = cgm.vec4(1, 1, 1, reflection)
 
         self._prop_name = "reflection"
         self._reflection_user_set = True
@@ -597,7 +603,7 @@ class Material(metaclass=MetaInstancesRecorder):
         self._refractive_index = refractive_index
 
         if not self._reflection_user_set:
-            self._reflection = glm.vec4(1, 1, 1, 1)
+            self._reflection = cgm.vec4(1, 1, 1, 1)
 
     @property
     def height_scale(self):
@@ -609,12 +615,12 @@ class Material(metaclass=MetaInstancesRecorder):
         self._height_scale = distance
 
     @property
-    def base_color(self) -> callback_vec3:
+    def base_color(self) -> cgm.vec3:
         self._prop_name = "base_color"
         return self._base_color
 
     @base_color.setter
-    def base_color(self, base_color: glm.vec3) -> None:
+    def base_color(self, base_color: cgm.vec3) -> None:
         self._prop_name = "base_color"
 
         old_should_callback = self._should_callback
@@ -858,124 +864,124 @@ class Material(metaclass=MetaInstancesRecorder):
     @checktype
     def set_as(self, type: Type):
         if type == Material.Type.Emerald:
-            self.ambient = glm.vec3(0.0215, 0.1745, 0.0215)
-            self.diffuse = glm.vec3(0.07568, 0.61424, 0.07568)
-            self.specular = glm.vec3(0.633, 0.727811, 0.633)
+            self.ambient = cgm.vec3(0.0215, 0.1745, 0.0215)
+            self.diffuse = cgm.vec3(0.07568, 0.61424, 0.07568)
+            self.specular = cgm.vec3(0.633, 0.727811, 0.633)
             self.shininess = 0.6 * 128
         elif type == Material.Type.Jade:
-            self.ambient = glm.vec3(0.135, 0.2225, 0.1575)
-            self.diffuse = glm.vec3(0.54, 0.89, 0.63)
-            self.specular = glm.vec3(0.316228, 0.316228, 0.316228)
+            self.ambient = cgm.vec3(0.135, 0.2225, 0.1575)
+            self.diffuse = cgm.vec3(0.54, 0.89, 0.63)
+            self.specular = cgm.vec3(0.316228, 0.316228, 0.316228)
             self.shininess = 0.1 * 128
         elif type == Material.Type.Obsidian:
-            self.ambient = glm.vec3(0.05375, 0.05, 0.06625)
-            self.diffuse = glm.vec3(0.18275, 0.17, 0.22525)
-            self.specular = glm.vec3(0.332741, 0.328634, 0.346435)
+            self.ambient = cgm.vec3(0.05375, 0.05, 0.06625)
+            self.diffuse = cgm.vec3(0.18275, 0.17, 0.22525)
+            self.specular = cgm.vec3(0.332741, 0.328634, 0.346435)
             self.shininess = 0.3 * 128
         elif type == Material.Type.Pearl:
-            self.ambient = glm.vec3(0.25, 0.20725, 0.20725)
-            self.diffuse = glm.vec3(1, 0.829, 0.829)
-            self.specular = glm.vec3(0.296648, 0.296648, 0.296648)
+            self.ambient = cgm.vec3(0.25, 0.20725, 0.20725)
+            self.diffuse = cgm.vec3(1, 0.829, 0.829)
+            self.specular = cgm.vec3(0.296648, 0.296648, 0.296648)
             self.shininess = 0.088 * 128
         elif type == Material.Type.Ruby:
-            self.ambient = glm.vec3(0.1745, 0.01175, 0.01175)
-            self.diffuse = glm.vec3(0.61424, 0.04136, 0.04136)
-            self.specular = glm.vec3(0.727811, 0.626959, 0.626959)
+            self.ambient = cgm.vec3(0.1745, 0.01175, 0.01175)
+            self.diffuse = cgm.vec3(0.61424, 0.04136, 0.04136)
+            self.specular = cgm.vec3(0.727811, 0.626959, 0.626959)
             self.shininess = 0.6 * 128
         elif type == Material.Type.Turquoise:
-            self.ambient = glm.vec3(0.1, 0.18725, 0.1745)
-            self.diffuse = glm.vec3(0.396, 0.74151, 0.69102)
-            self.specular = glm.vec3(0.297254, 0.30829, 0.306678)
+            self.ambient = cgm.vec3(0.1, 0.18725, 0.1745)
+            self.diffuse = cgm.vec3(0.396, 0.74151, 0.69102)
+            self.specular = cgm.vec3(0.297254, 0.30829, 0.306678)
             self.shininess = 0.1 * 128
         elif type == Material.Type.Brass:
-            self.ambient = glm.vec3(0.329412, 0.223529, 0.027451)
-            self.diffuse = glm.vec3(0.780392, 0.568627, 0.113725)
-            self.specular = glm.vec3(0.992157, 0.941176, 0.807843)
+            self.ambient = cgm.vec3(0.329412, 0.223529, 0.027451)
+            self.diffuse = cgm.vec3(0.780392, 0.568627, 0.113725)
+            self.specular = cgm.vec3(0.992157, 0.941176, 0.807843)
             self.shininess = 0.21794872 * 128
         elif type == Material.Type.Bronze:
-            self.ambient = glm.vec3(0.2125, 0.1275, 0.054)
-            self.diffuse = glm.vec3(0.714, 0.4284, 0.18144)
-            self.specular = glm.vec3(0.393548, 0.271906, 0.166721)
+            self.ambient = cgm.vec3(0.2125, 0.1275, 0.054)
+            self.diffuse = cgm.vec3(0.714, 0.4284, 0.18144)
+            self.specular = cgm.vec3(0.393548, 0.271906, 0.166721)
             self.shininess = 0.2 * 128
         elif type == Material.Type.Chrome:
-            self.ambient = glm.vec3(0.25, 0.25, 0.25)
-            self.diffuse = glm.vec3(0.4, 0.4, 0.4)
-            self.specular = glm.vec3(0.774597, 0.774597, 0.774597)
+            self.ambient = cgm.vec3(0.25, 0.25, 0.25)
+            self.diffuse = cgm.vec3(0.4, 0.4, 0.4)
+            self.specular = cgm.vec3(0.774597, 0.774597, 0.774597)
             self.shininess = 0.6 * 128
         elif type == Material.Type.Copper:
-            self.ambient = glm.vec3(0.19125, 0.0735, 0.0225)
-            self.diffuse = glm.vec3(0.7038, 0.27048, 0.0828)
-            self.specular = glm.vec3(0.256777, 0.137622, 0.086014)
+            self.ambient = cgm.vec3(0.19125, 0.0735, 0.0225)
+            self.diffuse = cgm.vec3(0.7038, 0.27048, 0.0828)
+            self.specular = cgm.vec3(0.256777, 0.137622, 0.086014)
             self.shininess = 0.1 * 128
         elif type == Material.Type.Gold:
-            self.ambient = glm.vec3(0.24725, 0.1995, 0.0745)
-            self.diffuse = glm.vec3(0.75164, 0.60648, 0.22648)
-            self.specular = glm.vec3(0.628281, 0.555802, 0.366065)
+            self.ambient = cgm.vec3(0.24725, 0.1995, 0.0745)
+            self.diffuse = cgm.vec3(0.75164, 0.60648, 0.22648)
+            self.specular = cgm.vec3(0.628281, 0.555802, 0.366065)
             self.shininess = 0.4 * 128
         elif type == Material.Type.Silver:
-            self.ambient = glm.vec3(0.19225, 0.19225, 0.19225)
-            self.diffuse = glm.vec3(0.50754, 0.50754, 0.50754)
-            self.specular = glm.vec3(0.508273, 0.508273, 0.508273)
+            self.ambient = cgm.vec3(0.19225, 0.19225, 0.19225)
+            self.diffuse = cgm.vec3(0.50754, 0.50754, 0.50754)
+            self.specular = cgm.vec3(0.508273, 0.508273, 0.508273)
             self.shininess = 0.4 * 128
         elif type == Material.Type.BlackPlastic:
-            self.ambient = glm.vec3(0.0, 0.0, 0.0)
-            self.diffuse = glm.vec3(0.01, 0.01, 0.01)
-            self.specular = glm.vec3(0.50, 0.50, 0.50)
+            self.ambient = cgm.vec3(0.0, 0.0, 0.0)
+            self.diffuse = cgm.vec3(0.01, 0.01, 0.01)
+            self.specular = cgm.vec3(0.50, 0.50, 0.50)
             self.shininess = 0.25 * 128
         elif type == Material.Type.CyanPlastic:
-            self.ambient = glm.vec3(0.0, 0.1, 0.06)
-            self.diffuse = glm.vec3(0.0, 0.50980392, 0.50980392)
-            self.specular = glm.vec3(0.50196078, 0.50196078, 0.50196078)
+            self.ambient = cgm.vec3(0.0, 0.1, 0.06)
+            self.diffuse = cgm.vec3(0.0, 0.50980392, 0.50980392)
+            self.specular = cgm.vec3(0.50196078, 0.50196078, 0.50196078)
             self.shininess = 0.25 * 128
         elif type == Material.Type.GreenPlastic:
-            self.ambient = glm.vec3(0.0, 0.0, 0.0)
-            self.diffuse = glm.vec3(0.1, 0.35, 0.1)
-            self.specular = glm.vec3(0.45, 0.55, 0.45)
+            self.ambient = cgm.vec3(0.0, 0.0, 0.0)
+            self.diffuse = cgm.vec3(0.1, 0.35, 0.1)
+            self.specular = cgm.vec3(0.45, 0.55, 0.45)
             self.shininess = 0.25 * 128
         elif type == Material.Type.RedPlastic:
-            self.ambient = glm.vec3(0.0, 0.0, 0.0)
-            self.diffuse = glm.vec3(0.5, 0.0, 0.0)
-            self.specular = glm.vec3(0.7, 0.6, 0.6)
+            self.ambient = cgm.vec3(0.0, 0.0, 0.0)
+            self.diffuse = cgm.vec3(0.5, 0.0, 0.0)
+            self.specular = cgm.vec3(0.7, 0.6, 0.6)
             self.shininess = 0.25 * 128
         elif type == Material.Type.WhitePlastic:
-            self.ambient = glm.vec3(0.0, 0.0, 0.0)
-            self.diffuse = glm.vec3(0.55, 0.55, 0.55)
-            self.specular = glm.vec3(0.70, 0.70, 0.70)
+            self.ambient = cgm.vec3(0.0, 0.0, 0.0)
+            self.diffuse = cgm.vec3(0.55, 0.55, 0.55)
+            self.specular = cgm.vec3(0.70, 0.70, 0.70)
             self.shininess = 0.25 * 128
         elif type == Material.Type.YellowPlastic:
-            self.ambient = glm.vec3(0.0, 0.0, 0.0)
-            self.diffuse = glm.vec3(0.5, 0.5, 0.0)
-            self.specular = glm.vec3(0.60, 0.60, 0.50)
+            self.ambient = cgm.vec3(0.0, 0.0, 0.0)
+            self.diffuse = cgm.vec3(0.5, 0.5, 0.0)
+            self.specular = cgm.vec3(0.60, 0.60, 0.50)
             self.shininess = 0.25 * 128
         elif type == Material.Type.BlackRubber:
-            self.ambient = glm.vec3(0.02, 0.02, 0.02)
-            self.diffuse = glm.vec3(0.01, 0.01, 0.01)
-            self.specular = glm.vec3(0.4, 0.4, 0.4)
+            self.ambient = cgm.vec3(0.02, 0.02, 0.02)
+            self.diffuse = cgm.vec3(0.01, 0.01, 0.01)
+            self.specular = cgm.vec3(0.4, 0.4, 0.4)
             self.shininess = 0.078125 * 128
         elif type == Material.Type.CyanRubber:
-            self.ambient = glm.vec3(0.0, 0.05, 0.05)
-            self.diffuse = glm.vec3(0.4, 0.5, 0.5)
-            self.specular = glm.vec3(0.04, 0.7, 0.7)
+            self.ambient = cgm.vec3(0.0, 0.05, 0.05)
+            self.diffuse = cgm.vec3(0.4, 0.5, 0.5)
+            self.specular = cgm.vec3(0.04, 0.7, 0.7)
             self.shininess = 0.078125 * 128
         elif type == Material.Type.GreenRubber:
-            self.ambient = glm.vec3(0.0, 0.05, 0.0)
-            self.diffuse = glm.vec3(0.4, 0.5, 0.4)
-            self.specular = glm.vec3(0.04, 0.7, 0.04)
+            self.ambient = cgm.vec3(0.0, 0.05, 0.0)
+            self.diffuse = cgm.vec3(0.4, 0.5, 0.4)
+            self.specular = cgm.vec3(0.04, 0.7, 0.04)
             self.shininess = 0.078125 * 128
         elif type == Material.Type.RedRubber:
-            self.ambient = glm.vec3(0.05, 0.0, 0.0)
-            self.diffuse = glm.vec3(0.5, 0.4, 0.4)
-            self.specular = glm.vec3(0.7, 0.04, 0.04)
+            self.ambient = cgm.vec3(0.05, 0.0, 0.0)
+            self.diffuse = cgm.vec3(0.5, 0.4, 0.4)
+            self.specular = cgm.vec3(0.7, 0.04, 0.04)
             self.shininess = 0.078125 * 128
         elif type == Material.Type.WhiteRubber:
-            self.ambient = glm.vec3(0.05, 0.05, 0.05)
-            self.diffuse = glm.vec3(0.5, 0.5, 0.5)
-            self.specular = glm.vec3(0.7, 0.7, 0.7)
+            self.ambient = cgm.vec3(0.05, 0.05, 0.05)
+            self.diffuse = cgm.vec3(0.5, 0.5, 0.5)
+            self.specular = cgm.vec3(0.7, 0.7, 0.7)
             self.shininess = 0.078125 * 128
         elif type == Material.Type.YellowRubber:
-            self.ambient = glm.vec3(0.05, 0.05, 0.0)
-            self.diffuse = glm.vec3(0.5, 0.5, 0.4)
-            self.specular = glm.vec3(0.7, 0.7, 0.04)
+            self.ambient = cgm.vec3(0.05, 0.05, 0.0)
+            self.diffuse = cgm.vec3(0.5, 0.5, 0.4)
+            self.specular = cgm.vec3(0.7, 0.7, 0.04)
             self.shininess = 0.078125 * 128
 
     def _update_all_depth_maps(self):

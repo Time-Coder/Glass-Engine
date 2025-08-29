@@ -1,3 +1,20 @@
+from .genType import MathForm, genType
+from .genVec import genVec
+from .genVec2 import genVec2
+from .genVec3 import genVec3
+from .genVec4 import genVec4
+from .genMat import genMat
+from .genMat2x2 import genMat2x2, genMat2
+from .genMat2x3 import genMat2x3
+from .genMat2x4 import genMat2x4
+from .genMat3x2 import genMat3x2
+from .genMat3x3 import genMat3x3, genMat3
+from .genMat3x4 import genMat3x4
+from .genMat4x2 import genMat4x2
+from .genMat4x3 import genMat4x3
+from .genMat4x4 import genMat4x4, genMat4
+from .genQuat import genQuat
+
 from .bvec2 import bvec2
 from .bvec3 import bvec3
 from .bvec4 import bvec4
@@ -67,3 +84,6 @@ from .dmat3x4 import dmat3x4
 from .dmat4x2 import dmat4x2
 from .dmat4x3 import dmat4x3
 from .dmat4x4 import dmat4x4, dmat4
+
+from .quat import quat
+from .dquat import dquat

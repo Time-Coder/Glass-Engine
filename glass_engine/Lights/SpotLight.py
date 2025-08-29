@@ -3,7 +3,7 @@ from glass.utils import checktype
 from glass.DictList import DictList
 from glass import BlockHostClass
 
-import glm
+import cgmath as cgm
 import math
 
 
@@ -63,7 +63,7 @@ class SpotLight(PointLight):
 class FlatSpotLight(FlatPointLight):
 
     def __init__(self, spot_light: SpotLight):
-        self.direction = glm.vec3(0, 1, 0)
+        self.direction = cgm.vec3(0, 1, 0)
         FlatPointLight.__init__(self, spot_light)
 
     def update(self, spot_light: SpotLight):

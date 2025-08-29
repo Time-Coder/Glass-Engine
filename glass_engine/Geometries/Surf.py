@@ -5,7 +5,7 @@ from ..Material import Material
 from glass.utils import checktype
 from glass import AttrList
 
-import glm
+import cgmath as cgm
 import numpy as np
 import copy
 from typing import Union, Optional
@@ -23,8 +23,8 @@ class Surf(Mesh):
         back_C: Optional[np.ndarray] = None,
         color_map: Optional[ColorMap] = None,
         back_color_map: Optional[ColorMap] = None,
-        color: Union[glm.vec3, glm.vec4, None] = None,
-        back_color: Union[glm.vec3, glm.vec4, None] = None,
+        color: Union[cgm.vec3, cgm.vec4, None] = None,
+        back_color: Union[cgm.vec3, cgm.vec4, None] = None,
         surf_type: Mesh.SurfType = Mesh.SurfType.Smooth,
         name="",
     ):
@@ -136,13 +136,13 @@ class Surf(Mesh):
         back_colors = back_colors.astype(np.float32)
 
         obj.vertices.reset(
-            position=AttrList.fromarray(pos, glm.vec3),
-            tangent=AttrList.fromarray(np.zeros_like(pos), glm.vec3),
-            bitangent=AttrList.fromarray(np.zeros_like(pos), glm.vec3),
-            normal=AttrList.fromarray(np.zeros_like(pos), glm.vec3),
-            tex_coord=AttrList.fromarray(tex_coords, glm.vec3),
-            color=AttrList.fromarray(colors, glm.vec4),
-            back_color=AttrList.fromarray(back_colors, glm.vec4),
+            position=AttrList.fromarray(pos, cgm.vec3),
+            tangent=AttrList.fromarray(np.zeros_like(pos), cgm.vec3),
+            bitangent=AttrList.fromarray(np.zeros_like(pos), cgm.vec3),
+            normal=AttrList.fromarray(np.zeros_like(pos), cgm.vec3),
+            tex_coord=AttrList.fromarray(tex_coords, cgm.vec3),
+            color=AttrList.fromarray(colors, cgm.vec4),
+            back_color=AttrList.fromarray(back_colors, cgm.vec4),
         )
 
         it_vertex = it_vertex[(ii != 0) & (jj != 0)]
@@ -156,7 +156,7 @@ class Surf(Mesh):
             (indices0, indices1, indices2, indices3, indices4, indices5)
         )
         indices_mat = indices_mat.transpose().reshape(-1, 3)
-        obj.indices.reset(indices_mat, dtype=glm.uvec3)
+        obj.indices.reset(indices_mat, dtype=cgm.uvec3)
 
     def build(self):
         X = self._XData

@@ -3,7 +3,7 @@ from ..Mesh import Mesh
 from glass.utils import checktype
 from glass import Vertex
 
-import glm
+import cgmath as cgm
 import math
 from typing import Union, Optional
 
@@ -18,8 +18,8 @@ class PyramidSide(Mesh):
         total_sides: Optional[int] = None,
         radius: float = 1,
         height: float = 1,
-        color: Union[glm.vec3, glm.vec4] = glm.vec4(0.396, 0.74151, 0.69102, 1),
-        back_color: Union[glm.vec3, glm.vec4, None] = None,
+        color: Union[cgm.vec3, cgm.vec4] = cgm.vec4(0.396, 0.74151, 0.69102, 1),
+        back_color: Union[cgm.vec3, cgm.vec4, None] = None,
         normalize_st: bool = False,
         st_per_unit: float = 1,
         name: str = "",
@@ -70,20 +70,20 @@ class PyramidSide(Mesh):
             cos_theta = math.cos(theta)
             sin_theta = math.sin(theta)
 
-            top = glm.vec3(0, 0, height)
-            bottom = radius * glm.vec3(cos_theta, sin_theta, 0)
+            top = cgm.vec3(0, 0, height)
+            bottom = radius * cgm.vec3(cos_theta, sin_theta, 0)
 
             vertex_top = Vertex()
             vertex_top.position = top
-            vertex_top.tex_coord = glm.vec3(0.5, t, 0)
+            vertex_top.tex_coord = cgm.vec3(0.5, t, 0)
 
             vertex_side_bottom1 = Vertex()
             vertex_side_bottom1.position = bottom
-            vertex_side_bottom1.tex_coord = glm.vec3(s1, 0, 0)
+            vertex_side_bottom1.tex_coord = cgm.vec3(s1, 0, 0)
 
             vertex_side_bottom2 = Vertex()
             vertex_side_bottom2.position = bottom
-            vertex_side_bottom2.tex_coord = glm.vec3(s2, 0, 0)
+            vertex_side_bottom2.tex_coord = cgm.vec3(s2, 0, 0)
 
             vertices[i_vertex] = vertex_top  # 3*j
             i_vertex += 1
@@ -95,7 +95,7 @@ class PyramidSide(Mesh):
             i_vertex += 1
 
             if j > 0:
-                triangle = glm.uvec3(0, 0, 0)
+                triangle = cgm.uvec3(0, 0, 0)
                 triangle[0] = 3 * j + 1
                 triangle[1] = 3 * j
                 triangle[2] = 3 * j - 1

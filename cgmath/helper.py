@@ -1,8 +1,10 @@
 import itertools
-from typing import List, Set, Dict
+from typing import List, Set, Dict, Any
 from types import ModuleType
 import importlib
 import os
+import ctypes
+from decimal import Decimal
 
 
 _module_map:Dict[str, ModuleType] = {}
@@ -17,6 +19,21 @@ def from_import(module_name:str, attr_name:str)->type:
         _module_map[module_name] = module
     
     return getattr(_module_map[module_name], attr_name)
+
+def is_number(value:Any)->bool:
+    return isinstance(value, (
+        float, bool, int, Decimal,
+        ctypes.c_bool, ctypes.c_int8, ctypes.c_uint8,
+        ctypes.c_int16, ctypes.c_uint16,
+        ctypes.c_int32, ctypes.c_uint32,
+        ctypes.c_int64, ctypes.c_uint64,
+        ctypes.c_float, ctypes.c_double, ctypes.c_longdouble
+    )) or value.__class__.__name__ in (
+        'int8', 'int16', 'int32', 'int64',
+        'uint8', 'uint16', 'uint32', 'uint64',
+        'float16', 'float32', 'float64', 'float128',
+        'bool'
+    )
 
 def generate_getter_swizzles(char_sets:List[str])->Set[str]:
     result:List[str] = []

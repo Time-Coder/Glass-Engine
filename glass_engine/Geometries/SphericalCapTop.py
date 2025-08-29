@@ -3,7 +3,7 @@ from ..Mesh import Mesh
 from glass.utils import checktype
 from glass import Vertex
 
-import glm
+import cgmath as cgm
 import math
 from typing import Union
 
@@ -15,8 +15,8 @@ class SphericalCapTop(Mesh):
         self,
         base_radius: float = 1,
         height: float = 0.5,
-        color: Union[glm.vec3, glm.vec4] = glm.vec4(0.396, 0.74151, 0.69102, 1),
-        back_color: Union[glm.vec3, glm.vec4, None] = None,
+        color: Union[cgm.vec3, cgm.vec4] = cgm.vec4(0.396, 0.74151, 0.69102, 1),
+        back_color: Union[cgm.vec3, cgm.vec4, None] = None,
         n_lon_divide: int = 100,
         start_lon: float = 0,
         span_lon: float = 360,
@@ -71,32 +71,32 @@ class SphericalCapTop(Mesh):
                 vertex = Vertex()
 
                 vertex.tangent = (
-                    2 * math.pi * radius * cos_phi * glm.vec3(-sin_theta, cos_theta, 0)
+                    2 * math.pi * radius * cos_phi * cgm.vec3(-sin_theta, cos_theta, 0)
                 )
                 vertex.bitangent = (
                     math.pi
                     * radius
-                    * glm.vec3(-sin_phi * cos_theta, -sin_phi * sin_theta, cos_phi)
+                    * cgm.vec3(-sin_phi * cos_theta, -sin_phi * sin_theta, cos_phi)
                 )
-                vertex.normal = glm.vec3(
+                vertex.normal = cgm.vec3(
                     cos_phi * cos_theta, cos_phi * sin_theta, sin_phi
                 )
                 vertex.position = radius * vertex.normal
                 vertex.position.z -= h_delta
-                vertex.tex_coord = glm.vec3(s, t, 0)
+                vertex.tex_coord = cgm.vec3(s, t, 0)
 
                 vertices[i_vertex] = vertex
                 i_vertex += 1
 
                 if i > 0 and j > 0:
-                    triangle = glm.uvec3(0, 0, 0)
+                    triangle = cgm.uvec3(0, 0, 0)
                     triangle[0] = i_vertex - 1
                     triangle[1] = i_vertex - 1 - n_lat_divide
                     triangle[2] = i_vertex - 1 - n_lat_divide - 1
                     indices[i_index] = triangle
                     i_index += 1
 
-                    triangle = glm.uvec3(0, 0, 0)
+                    triangle = cgm.uvec3(0, 0, 0)
                     triangle[0] = i_vertex - 1
                     triangle[1] = i_vertex - 1 - n_lat_divide - 1
                     triangle[2] = i_vertex - 1 - 1

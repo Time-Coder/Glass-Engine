@@ -7,7 +7,7 @@ from glass import FBO, ShaderProgram, sampler2D, GLConfig, GLInfo
 from OpenGL import GL
 import os
 import time
-import glm
+import cgmath as cgm
 from datetime import datetime
 
 
@@ -134,7 +134,7 @@ class ShaderEffect(PostProcessEffect):
             self.program["iTimeDelta"] = time_delta
             self.program["iFrameRate"] = fps
             self.program["iFrame"] = self._frame_index
-            self.program["iDate"] = glm.vec4(
+            self.program["iDate"] = cgm.vec4(
                 now.year, now.month, now.day, now.second + now.microsecond / 1000
             )
 

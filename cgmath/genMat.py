@@ -2,7 +2,8 @@ from __future__ import annotations
 
 from typing import Tuple, Union, Any
 from .genVec import genVec
-from .genType import genType
+from .genType import genType, MathForm
+from .helper import is_number
 
 
 class genMatIterator:
@@ -36,7 +37,7 @@ class genMat(genType):
         
         if n_args == 1:
             arg = args[0]
-            if isinstance(arg, (float,int,bool)):
+            if is_number(arg):
                 for i in range(n):
                     self[i, i] = arg
                 return
@@ -48,7 +49,7 @@ class genMat(genType):
                 return
         
         for i_arg, arg in enumerate(args):
-            if isinstance(arg, (float,int,bool)):
+            if is_number(arg):
                 self._data[i] = arg
 
                 i += 1
@@ -74,6 +75,10 @@ class genMat(genType):
                 raise TypeError(f"invalid argument type(s) for {self.__class__.__name__}()")
             
         raise ValueError(f"invalid arguments for {self.__class__.__name__}()")
+
+    @property
+    def math_form(self)->MathForm:
+        return MathForm.Mat
 
     @property
     def rows(self)->int:
@@ -104,7 +109,7 @@ class genMat(genType):
         return genMatIterator(self)
     
     def __contains__(self, value:Any)->bool:
-        if isinstance(value, (float,int,bool)):
+        if is_number(value):
             return value in self._data
         elif isinstance(value, genVec) and len(value) == self.rows:
             for i in range(self.cols):
@@ -121,7 +126,7 @@ class genMat(genType):
             if not isinstance(other, (genMat, genVec)) or self.cols != (other.rows if isinstance(other, genMat) else len(other)):
                 raise TypeError(f"unsupported operand type(s) for {operator}: '{self.__class__.__name__}' and '{other.__class__.__name__}'")
             
-            result_dtype = self._operator_dtype(self.dtype, operator, other.dtype)
+            result_dtype = self._operator_dtype(self.dtype, operator, other.dtype, False)
             result_shape = (self.rows, other.cols) if isinstance(other, genMat) else (self.rows,)
             result_type = self.gen_type(result_dtype, result_shape)
             result = result_type()

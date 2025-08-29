@@ -3,7 +3,7 @@ from ..Mesh import Mesh
 from glass import Vertex
 from glass.utils import checktype
 
-import glm
+import cgmath as cgm
 from OpenGL import GL
 from typing import Union
 
@@ -13,7 +13,7 @@ class Points(Mesh):
     def __init__(
         self,
         points: list = [],
-        color: Union[glm.vec3, glm.vec4] = glm.vec4(0.396, 0.74151, 0.69102, 1),
+        color: Union[cgm.vec3, cgm.vec4] = cgm.vec4(0.396, 0.74151, 0.69102, 1),
         point_size: int = 5,
         name: str = "",
         block: bool = True,
@@ -36,8 +36,8 @@ class Points(Mesh):
         len_points = len(points)
         for i in range(len_points):
             if i > 0:
-                length += glm.length(points[i] - points[i - 1])
-            vertices[i] = Vertex(position=points[i], tex_coord=glm.vec3(length, 0, 0))
+                length += cgm.length(points[i] - points[i - 1])
+            vertices[i] = Vertex(position=points[i], tex_coord=cgm.vec3(length, 0, 0))
 
         del vertices[len_points:]
 

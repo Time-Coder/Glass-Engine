@@ -5,7 +5,7 @@ from glass.utils import checktype
 
 from OpenGL import GL
 import math
-import glm
+import cgmath as cgm
 import datetime
 
 
@@ -15,18 +15,18 @@ class ModelViewManipulator(Manipulator):
         Manipulator.__init__(self)
 
         self.__is_left_pressed = False
-        self.__left_press_global_posF = glm.vec2(0, 0)
+        self.__left_press_global_posF = cgm.vec2(0, 0)
         self.__left_press_azimuth = 0
         self.__left_press_elevation = 0
 
         self.__is_right_pressed = False
-        self.__right_press_global_posF = glm.vec2(0, 0)
-        self.__right_press_offset = glm.vec2(0, 0)
+        self.__right_press_global_posF = cgm.vec2(0, 0)
+        self.__right_press_offset = cgm.vec2(0, 0)
 
         self.__distance = distance
         self.__azimuth = azimuth
         self.__elevation = elevation
-        self.__offset = glm.vec2(0, 0)
+        self.__offset = cgm.vec2(0, 0)
         self.drag_sensitivity: float = 1
         self.scroll_sensitivity: float = 1
 
@@ -75,9 +75,9 @@ class ModelViewManipulator(Manipulator):
         )
         self.camera.position.z = self.__distance * math.sin(elevation)
 
-        if glm.length(self.__offset) > 1e-6:
-            right = glm.vec3(math.cos(azimuth), math.sin(azimuth), 0)
-            forward = glm.vec3(
+        if cgm.length(self.__offset) > 1e-6:
+            right = cgm.vec3(math.cos(azimuth), math.sin(azimuth), 0)
+            forward = cgm.vec3(
                 -math.sin(elevation) * math.sin(azimuth),
                 math.sin(elevation) * math.cos(azimuth),
                 math.cos(elevation),
@@ -93,8 +93,8 @@ class ModelViewManipulator(Manipulator):
     def on_mouse_pressed(
         self,
         button: Manipulator.MouseButton,
-        screen_pos: glm.vec2,
-        global_pos: glm.vec2,
+        screen_pos: cgm.vec2,
+        global_pos: cgm.vec2,
     ):
         if button == Manipulator.MouseButton.LeftButton:
             self.__is_left_pressed = True
@@ -113,8 +113,8 @@ class ModelViewManipulator(Manipulator):
     def on_mouse_released(
         self,
         button: Manipulator.MouseButton,
-        screen_pos: glm.vec2,
-        global_pos: glm.vec2,
+        screen_pos: cgm.vec2,
+        global_pos: cgm.vec2,
     ):
         if button == Manipulator.MouseButton.LeftButton:
             self.__is_left_pressed = False
@@ -125,22 +125,22 @@ class ModelViewManipulator(Manipulator):
                 height = self.camera.screen.height()
                 s = x / (width - 1)
                 t = 1 - y / (height - 1)
-                self.camera.lens.focus_tex_coord = glm.vec2(s, t)
+                self.camera.lens.focus_tex_coord = cgm.vec2(s, t)
         elif button == Manipulator.MouseButton.RightButton:
             self.__is_right_pressed = False
 
     def on_mouse_double_clicked(
         self,
         button: Manipulator.MouseButton,
-        screen_pos: glm.vec2,
-        global_pos: glm.vec2,
+        screen_pos: cgm.vec2,
+        global_pos: cgm.vec2,
     ) -> None:
         if button == Manipulator.MouseButton.LeftButton:
-            self.__offset = glm.vec2(0, 0)
+            self.__offset = cgm.vec2(0, 0)
             self.camera.fov = 45
             self.__update_camera()
 
-    def on_mouse_moved(self, screen_pos: glm.vec2, global_pos: glm.vec2)->None:
+    def on_mouse_moved(self, screen_pos: cgm.vec2, global_pos: cgm.vec2)->None:
         if self.__is_left_pressed:
             d = global_pos - self.__left_press_global_posF
             dx = d.x
@@ -158,7 +158,7 @@ class ModelViewManipulator(Manipulator):
             dx = -d.x
             dy = d.y
 
-            offset_delta = glm.vec2()
+            offset_delta = cgm.vec2()
             offset_delta.x = (
                 dx
                 / self.camera.screen.width()
@@ -178,7 +178,7 @@ class ModelViewManipulator(Manipulator):
             self.__update_camera()
 
     def on_wheel_scrolled(
-        self, angle: glm.vec2, screen_pos: glm.vec2, global_pos: glm.vec2
+        self, angle: cgm.vec2, screen_pos: cgm.vec2, global_pos: cgm.vec2
     ):
         n = self.scroll_sensitivity * angle.y / 120
         scale = pow(2, n / 6)

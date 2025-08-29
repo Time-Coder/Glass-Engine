@@ -3,7 +3,7 @@ from ..Mesh import Mesh
 from glass.utils import checktype
 from glass import Vertex
 
-import glm
+import cgmath as cgm
 import math
 from typing import Union, Optional
 
@@ -18,8 +18,8 @@ class HollowRPolygonFace(Mesh):
         total_sides: Optional[int] = None,
         inner_radius: float = 1,
         outer_radius: float = 2,
-        color: Union[glm.vec3, glm.vec4] = glm.vec4(0.396, 0.74151, 0.69102, 1),
-        back_color: Union[glm.vec3, glm.vec4, None] = None,
+        color: Union[cgm.vec3, cgm.vec4] = cgm.vec4(0.396, 0.74151, 0.69102, 1),
+        back_color: Union[cgm.vec3, cgm.vec4, None] = None,
         vertical: bool = False,
         normalize_st:bool=False,
         tex_coord_per_unit: float = 1,
@@ -59,9 +59,9 @@ class HollowRPolygonFace(Mesh):
         i_vertex = 0
         i_index = 0
 
-        normal = glm.vec3(0, 0, 1)
+        normal = cgm.vec3(0, 0, 1)
         if vertical:
-            normal = glm.vec3(0, -1, 0)
+            normal = cgm.vec3(0, -1, 0)
 
         tex_coord_inner_radius = inner_radius
         tex_coord_outer_radius = outer_radius
@@ -74,16 +74,16 @@ class HollowRPolygonFace(Mesh):
             cos_theta = math.cos(theta)
             sin_theta = math.sin(theta)
 
-            edge_inner = inner_radius * glm.vec3(cos_theta, sin_theta, 0)
-            edge_outer = outer_radius * glm.vec3(cos_theta, sin_theta, 0)
+            edge_inner = inner_radius * cgm.vec3(cos_theta, sin_theta, 0)
+            edge_outer = outer_radius * cgm.vec3(cos_theta, sin_theta, 0)
             if vertical:
-                edge_inner = inner_radius * glm.vec3(cos_theta, 0, sin_theta)
-                edge_outer = outer_radius * glm.vec3(cos_theta, 0, sin_theta)
+                edge_inner = inner_radius * cgm.vec3(cos_theta, 0, sin_theta)
+                edge_outer = outer_radius * cgm.vec3(cos_theta, 0, sin_theta)
 
             vertex_inner = Vertex()
             vertex_inner.position = edge_inner
             vertex_inner.normal = normal
-            vertex_inner.tex_coord = glm.vec3(
+            vertex_inner.tex_coord = cgm.vec3(
                 0.5 + self.s_per_unit * tex_coord_inner_radius * cos_theta,
                 0.5 + self.t_per_unit * tex_coord_inner_radius * sin_theta,
                 0,
@@ -92,7 +92,7 @@ class HollowRPolygonFace(Mesh):
             vertex_outer = Vertex()
             vertex_outer.position = edge_outer
             vertex_outer.normal = normal
-            vertex_outer.tex_coord = glm.vec3(
+            vertex_outer.tex_coord = cgm.vec3(
                 0.5 + tex_coord_outer_radius * cos_theta,
                 0.5 + tex_coord_outer_radius * sin_theta,
                 0,
@@ -105,7 +105,7 @@ class HollowRPolygonFace(Mesh):
             i_vertex += 1
 
             if j > 0:
-                triangle = glm.uvec3(0, 0, 0)
+                triangle = cgm.uvec3(0, 0, 0)
                 triangle[0] = 2 * j + 1
                 triangle[1] = 2 * j
                 triangle[2] = 2 * j - 2
@@ -115,7 +115,7 @@ class HollowRPolygonFace(Mesh):
                     vertices[triangle[0]], vertices[triangle[1]], vertices[triangle[2]]
                 )
 
-                triangle = glm.uvec3(0, 0, 0)
+                triangle = cgm.uvec3(0, 0, 0)
                 triangle[0] = 2 * j + 1
                 triangle[1] = 2 * j - 2
                 triangle[2] = 2 * j - 1

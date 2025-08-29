@@ -3,7 +3,7 @@ from .SkyDome import SkyDome
 
 from glass import samplerCube, sampler2D
 
-import glm
+import cgmath as cgm
 from typing import Union
 
 
@@ -11,7 +11,7 @@ class Background:
     def __init__(self):
         self._skybox: SkyBox = SkyBox()
         self._skydome: SkyDome = SkyDome()
-        self._color: glm.vec4 = glm.vec4(0, 0, 0, 1)
+        self._color: cgm.vec4 = cgm.vec4(0, 0, 0, 1)
         self._distance: float = 100.0
 
     @property
@@ -47,12 +47,12 @@ class Background:
         self._distance = distance
 
     @property
-    def color(self) -> glm.vec4:
+    def color(self) -> cgm.vec4:
         return self._color
 
     @color.setter
-    def color(self, color: Union[glm.vec4, glm.vec3]) -> None:
-        if isinstance(color, glm.vec3):
-            color = glm.vec4(color, 1)
+    def color(self, color: Union[cgm.vec4, cgm.vec3]) -> None:
+        if isinstance(color, cgm.vec3):
+            color = cgm.vec4(color, 1)
 
         self._color = color

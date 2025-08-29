@@ -3,7 +3,7 @@ from ..Mesh import Mesh
 from glass.utils import checktype
 from glass import Vertex
 
-import glm
+import cgmath as cgm
 import math
 from typing import Union
 
@@ -15,8 +15,8 @@ class EllipseFace(Mesh):
         self,
         a: float = 2,
         b: float = 1,
-        color: Union[glm.vec3, glm.vec4] = glm.vec4(0.396, 0.74151, 0.69102, 1),
-        back_color: Union[glm.vec3, glm.vec4, None] = None,
+        color: Union[cgm.vec3, cgm.vec4] = cgm.vec4(0.396, 0.74151, 0.69102, 1),
+        back_color: Union[cgm.vec3, cgm.vec4, None] = None,
         start_angle: float = 0,
         span_angle: float = 360,
         n_divide: int = 100,
@@ -55,14 +55,14 @@ class EllipseFace(Mesh):
         i_vertex = 0
         i_index = 0
 
-        normal = glm.vec3(0, 0, 1)
+        normal = cgm.vec3(0, 0, 1)
         if vertical:
-            normal = glm.vec3(0, -1, 0)
+            normal = cgm.vec3(0, -1, 0)
 
         vertex_center = Vertex()
-        vertex_center.position = glm.vec3(0)
+        vertex_center.position = cgm.vec3(0)
         vertex_center.normal = normal
-        vertex_center.tex_coord = glm.vec3(0.5, 0.5, 0)
+        vertex_center.tex_coord = cgm.vec3(0.5, 0.5, 0)
         vertices[i_vertex] = vertex_center
         i_vertex += 1
 
@@ -81,14 +81,14 @@ class EllipseFace(Mesh):
                 else r / max_len * 0.5
             )
 
-            edge = r * glm.vec3(cos_theta, sin_theta, 0)
+            edge = r * cgm.vec3(cos_theta, sin_theta, 0)
             if vertical:
-                edge = r * glm.vec3(cos_theta, 0, sin_theta)
+                edge = r * cgm.vec3(cos_theta, 0, sin_theta)
 
             vertex_edge = Vertex()
             vertex_edge.position = edge
             vertex_edge.normal = normal
-            vertex_edge.tex_coord = glm.vec3(
+            vertex_edge.tex_coord = cgm.vec3(
                 0.5 + self.s_per_unit * tex_coord_radius * cos_theta,
                 0.5 + self.t_per_unit * tex_coord_radius * sin_theta,
                 0,
@@ -98,7 +98,7 @@ class EllipseFace(Mesh):
             i_vertex += 1
 
             if j > 0:
-                triangle = glm.uvec3(0, 0, 0)
+                triangle = cgm.uvec3(0, 0, 0)
                 triangle[0] = 1 + j
                 triangle[1] = 0
                 triangle[2] = 1 + j - 1

@@ -3,7 +3,7 @@ from ..Mesh import Mesh
 from glass.utils import checktype
 from glass import Vertex
 
-import glm
+import cgmath as cgm
 import math
 from typing import Union, Optional
 
@@ -19,8 +19,8 @@ class PyramidTrustumSide(Mesh):
         bottom_radius: float = 2,
         top_radius: float = 1,
         height: float = 1,
-        color: Union[glm.vec3, glm.vec4] = glm.vec4(0.396, 0.74151, 0.69102, 1),
-        back_color: Union[glm.vec3, glm.vec4, None] = None,
+        color: Union[cgm.vec3, cgm.vec4] = cgm.vec4(0.396, 0.74151, 0.69102, 1),
+        back_color: Union[cgm.vec3, cgm.vec4, None] = None,
         normalize_st: bool = False,
         st_per_unit: float = 1,
         name: str = "",
@@ -79,24 +79,24 @@ class PyramidTrustumSide(Mesh):
             cos_theta = math.cos(theta)
             sin_theta = math.sin(theta)
 
-            top = glm.vec3(top_radius * cos_theta, top_radius * sin_theta, height)
-            bottom = bottom_radius * glm.vec3(cos_theta, sin_theta, 0)
+            top = cgm.vec3(top_radius * cos_theta, top_radius * sin_theta, height)
+            bottom = bottom_radius * cgm.vec3(cos_theta, sin_theta, 0)
 
             vertex_side_top1 = Vertex()
             vertex_side_top1.position = top
-            vertex_side_top1.tex_coord = glm.vec3(s1_top, t, 0)
+            vertex_side_top1.tex_coord = cgm.vec3(s1_top, t, 0)
 
             vertex_side_top2 = Vertex()
             vertex_side_top2.position = top
-            vertex_side_top2.tex_coord = glm.vec3(s2_top, t, 0)
+            vertex_side_top2.tex_coord = cgm.vec3(s2_top, t, 0)
 
             vertex_side_bottom1 = Vertex()
             vertex_side_bottom1.position = bottom
-            vertex_side_bottom1.tex_coord = glm.vec3(s1_bottom, 0, 0)
+            vertex_side_bottom1.tex_coord = cgm.vec3(s1_bottom, 0, 0)
 
             vertex_side_bottom2 = Vertex()
             vertex_side_bottom2.position = bottom
-            vertex_side_bottom2.tex_coord = glm.vec3(s2_bottom, 0, 0)
+            vertex_side_bottom2.tex_coord = cgm.vec3(s2_bottom, 0, 0)
 
             vertices[i_vertex] = vertex_side_top1  # 4*j
             i_vertex += 1
@@ -112,7 +112,7 @@ class PyramidTrustumSide(Mesh):
 
             if j > 0:
                 # 棱台侧面 1
-                triangle = glm.uvec3(0, 0, 0)
+                triangle = cgm.uvec3(0, 0, 0)
                 triangle[0] = 4 * j + 2
                 triangle[1] = 4 * j
                 triangle[2] = 4 * j - 3
@@ -123,7 +123,7 @@ class PyramidTrustumSide(Mesh):
                 )
 
                 # 棱台侧面 2
-                triangle = glm.uvec3(0, 0, 0)
+                triangle = cgm.uvec3(0, 0, 0)
                 triangle[0] = 4 * j + 2
                 triangle[1] = 4 * j - 3
                 triangle[2] = 4 * j - 1

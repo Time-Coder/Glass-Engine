@@ -3,8 +3,8 @@ import ctypes
 from .genQuat import genQuat
 
 
-class quat(genQuat):
+class dquat(genQuat):
 
     @property
     def dtype(self)->type:
-        return ctypes.c_float
+        return ctypes.c_double

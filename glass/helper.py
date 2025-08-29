@@ -1,6 +1,6 @@
 from OpenGL import GL, constant
 import numpy as np
-import glm
+import cgmath as cgm
 import struct
 
 from .GLInfo import GLInfo
@@ -51,7 +51,7 @@ def sizeof(type_var):
     size = 0
 
     try:
-        size = glm.sizeof(type_var)
+        size = cgm.sizeof(type_var)
     except:
         pass
 
