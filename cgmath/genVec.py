@@ -95,7 +95,7 @@ class genVec(genType):
     
     @staticmethod
     def vec_type(dtype:type, size:int)->type:
-        return genType.gen_type(dtype, (size,))
+        return genType.gen_type(MathForm.Vec, dtype, (size,))
 
     def _update_data(self, indices:Optional[List[int]] = None):
         genType._update_data(self, indices)
@@ -107,8 +107,7 @@ class genVec(genType):
             for index in indices:
                 self._related_mat._data[self._mat_start_index + index] = self._data[index]
 
-            if self._related_mat._on_changed is not None:
-                self._related_mat._on_changed(self._related_mat)
+            self._related_mat._call_on_changed()
 
     def __getattr__(self, name:str)->Union[float,bool,int,genVec]:
         if name not in self.__getter_swizzles():
@@ -149,7 +148,7 @@ class genVec(genType):
             if len(result) == 1:
                 return result[0]
             else:
-                result_type = self.gen_type(self.dtype, len(result))
+                result_type = self.vec_type(self.dtype, len(result))
                 return result_type(*result)
         else:
             return result

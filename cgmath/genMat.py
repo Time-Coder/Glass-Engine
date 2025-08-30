@@ -88,6 +88,10 @@ class genMat(genType):
     def cols(self)->int:
         return self.shape[0]
     
+    @staticmethod
+    def mat_type(dtype:type, shape:Tuple[int]):
+        return genType.gen_type(MathForm.Mat, dtype, shape)
+    
     def __getitem__(self, index:Union[int,Tuple[int]])->Union[int,bool,float,genVec]:
         if isinstance(index, int):
             result_type = genVec.vec_type(self.dtype, self.rows)
@@ -126,9 +130,9 @@ class genMat(genType):
             if not isinstance(other, (genMat, genVec)) or self.cols != (other.rows if isinstance(other, genMat) else len(other)):
                 raise TypeError(f"unsupported operand type(s) for {operator}: '{self.__class__.__name__}' and '{other.__class__.__name__}'")
             
-            result_dtype = self._operator_dtype(self.dtype, operator, other.dtype, False)
+            result_dtype = self._bin_op_dtype(operator, self.dtype, other.dtype, False)
             result_shape = (self.rows, other.cols) if isinstance(other, genMat) else (self.rows,)
-            result_type = self.gen_type(result_dtype, result_shape)
+            result_type = self.gen_type(other.math_form, result_dtype, result_shape)
             result = result_type()
             if isinstance(result, genMat):
                 for i in range(result.rows):

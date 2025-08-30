@@ -87,3 +87,15 @@ from .dmat4x4 import dmat4x4, dmat4
 
 from .quat import quat
 from .dquat import dquat
+
+from .funcs import (
+    abs, sign, floor, ceil, trunc, round, roundEven, fract, mod,
+    min, max, clamp, mix, step, smoothstep, sqrt, inversesqrt,
+    pow, exp, exp2, exp10, log, log2, log10,
+    sin, cos, tan, asin, acos, atan,
+    sinh, cosh, tanh, asinh, acosh, atanh,
+    length, normalize, distance, dot, cross, faceforward, reflect, refract,
+    transpose, determinant, inverse, trace, conjugate,
+    matrixCompMult, outerProduct, lessThan, lessThanEqual,
+    greaterThan, greaterThanEqual, equal, notEqual, any, all, not_
+)

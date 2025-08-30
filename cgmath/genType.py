@@ -6,12 +6,14 @@ import ctypes
 from .helper import from_import, is_number
 import math
 from enum import Enum
+import numpy as np
 
 
 class MathForm(Enum):
-    Vec = 0
-    Mat = 1
-    Quat = 2
+    Scalar = 0
+    Vec = 1
+    Mat = 2
+    Quat = 3
 
 
 class genType(ABC):
@@ -59,17 +61,18 @@ class genType(ABC):
 
     def __init__(self):
         self._data = (self.dtype * math.prod(self.shape))()
-        self._on_changed:Optional[Callable[[genType], None]] = None
+        self._on_changed:Optional[Callable[[], None]] = None
+        self._on_changed_param_count:int = 0
 
     def __repr__(self)->str:
         return f"{self.__class__.__name__}({', '.join([str(value) for value in self])})"
 
     @property
-    def on_changed(self)->Optional[Callable[[genType], None]]:
+    def on_changed(self)->Optional[Callable[[], None]]:
         return self._on_changed
     
     @on_changed.setter
-    def on_changed(self, on_changed:Optional[Callable[[genType], None]]):
+    def on_changed(self, on_changed:Optional[Callable[[], None]]):
         if not callable(on_changed):
             raise TypeError('on_changed should be a function')
 
@@ -90,17 +93,26 @@ class genType(ABC):
     def shape(self)->Tuple[int]:
         pass
 
+    def __array__(self, dtype=None):
+        if dtype is None:
+            return np.frombuffer(self._data, dtype=self.dtype)
+        else:
+            return np.frombuffer(self._data, dtype=self.dtype).astype(dtype)
+
     @staticmethod
-    def gen_type(dtype:type, shape:Tuple[int])->type:
-        key:Tuple[type, int] = (dtype, shape)
+    def gen_type(math_form:MathForm, dtype:type, shape:Tuple[int])->type:
+        key:Tuple[MathForm, type, int] = (math_form, dtype, shape)
         if key not in genType.__gen_type_map:
-            if math.prod(shape) == 1:
+            if math.prod(shape) == 1 or math_form == MathForm.Scalar:
                 genType.__gen_type_map[key] = genType.__dtype_python_type_map[dtype]
-            else:
-                if len(shape) == 1:
-                    result_name:str = f"{genType.__dtype_prefix_map[dtype]}vec{shape[0]}"
-                else:
-                    result_name:str = f"{genType.__dtype_prefix_map[dtype]}mat{shape[0]}x{shape[1]}"
+            elif math_form == MathForm.Vec:
+                result_name:str = f"{genType.__dtype_prefix_map[dtype]}vec{shape[0]}"
+                genType.__gen_type_map[key] = from_import("." + result_name, result_name)
+            elif math_form == MathForm.Mat:
+                result_name:str = f"{genType.__dtype_prefix_map[dtype]}mat{shape[0]}x{shape[1]}"
+                genType.__gen_type_map[key] = from_import("." + result_name, result_name)
+            elif math_form == MathForm.Quat:
+                result_name:str = f"{genType.__dtype_prefix_map[dtype]}quat"
                 genType.__gen_type_map[key] = from_import("." + result_name, result_name)
 
         return genType.__gen_type_map[key]
@@ -108,9 +120,14 @@ class genType(ABC):
     def value_ptr(self):
         return self._data
     
+    def _call_on_changed(self):
+        if self._on_changed is None:
+            return
+        
+        self._on_changed()
+
     def _update_data(self, indices:Optional[List[int]] = None):
-        if self._on_changed is not None:
-            self._on_changed(self)
+        self._call_on_changed()
 
     @staticmethod
     def __has_negative(value:Union[float,bool,int,genType]):
@@ -126,7 +143,7 @@ class genType(ABC):
             raise TypeError(type(value))
     
     @staticmethod
-    def _operator_dtype(type1:type, operator:str, type2:type, type2_has_negative:bool)->type:
+    def _bin_op_dtype(operator:str, type1:type, type2:type, type2_has_negative:bool=False)->type:
         type1_order = genType.__type_order.index(type1)
         type2_order = genType.__type_order.index(type2)
         if type1_order <= genType.__uint_index and type2_order <= genType.__uint_index and (
@@ -136,30 +153,41 @@ class genType(ABC):
         else:
             return (type1 if type1_order > type2_order else type2)
 
-    def _operator_type(self, operator:str, other:Union[float, bool, int, genType], reverse:bool, second_has_negative:bool=False)->type:
-        other_dtype:type = None
-        if is_number(other):
-            other_dtype = type(other)
-        elif isinstance(other, genType) and self.shape == other.shape:
-            other_dtype = other.dtype
-        else:
-            if not reverse:
-                raise TypeError(f"unsupported operand type(s) for {operator}: '{self.__class__.__name__}' and '{other.__class__.__name__}'")
+    @staticmethod
+    def _bin_op_type(operator:str, value1:Union[float, bool, int, genType], value2:Union[float, bool, int, genType])->type:
+        value1_dtype:type = type(value1) if is_number(value1) else value1.dtype
+        value2_dtype:type = type(value2) if is_number(value2) else value2.dtype
+
+        if isinstance(value1, genType) and isinstance(value2, genType) and not value1._is_homo(value2):
+            raise TypeError(f"unsupported operand type(s) for {operator}: '{value1.__class__.__name__}' and '{value2.__class__.__name__}'")
+        
+        second_has_negative:bool = False
+        if operator == "**":
+            if isinstance(value2, genType):
+                for i in range(len(value2._data)):
+                    if value2._data[i] < 0:
+                        second_has_negative = True
+                        break
             else:
-                raise TypeError(f"unsupported operand type(s) for {operator}: '{other.__class__.__name__}' and '{self.__class__.__name__}'")
+                second_has_negative = (value2 < 0)
 
-        if not reverse:
-            result_dtype:type = self._operator_dtype(self.dtype, operator, other_dtype, second_has_negative)
-        else:
-            result_dtype:type = self._operator_dtype(other_dtype, operator, self.dtype, second_has_negative)
-
-        result_type:type = self.gen_type(result_dtype, self.shape)
+        math_form:Optional[MathForm] = None
+        shape:Optional[Tuple[int]] = (1,)
+        if isinstance(value1, genType):
+            math_form = value1.math_form
+            shape = value1.shape
+        elif isinstance(value2, genType):
+            math_form = value2.math_form
+            shape = value2.shape
+        
+        result_dtype:type = genType._bin_op_dtype(operator, value1_dtype, value2_dtype, second_has_negative)
+        result_type:type = genType.gen_type(math_form, result_dtype, shape)
         return result_type
 
     def __neg__(self)->genType:
         result_type = self.__class__
         if self.dtype == ctypes.c_uint:
-            result_type = self.gen_type(ctypes.c_int, self.shape)
+            result_type = self.gen_type(self.math_form, ctypes.c_int, self.shape)
 
         result:genType = result_type()
         for i in range(len(result._data)):
@@ -175,11 +203,7 @@ class genType(ABC):
         )
 
     def _op(self, operator:str, other:Union[float, bool, int, genType])->genType:
-        second_has_negative:bool = False
-        if operator == "**":
-            second_has_negative = self.__has_negative(other)
-
-        result_type = self._operator_type(operator, other, reverse=False, second_has_negative=second_has_negative)
+        result_type = self._bin_op_type(operator, self, other)
         result:genType = result_type()
         other_is_homo:bool = self._is_homo(other)
         operator_func:Callable[[Any,Any], Any] = self._operator_funcs[operator]
@@ -189,11 +213,7 @@ class genType(ABC):
         return result
     
     def _rop(self, operator:str, other:Union[float, bool, int, genType])->genType:
-        second_has_negative:bool = False
-        if operator == "**":
-            second_has_negative = self.__has_negative(other)
-
-        result_type = self._operator_type(operator, other, reverse=True, second_has_negative=second_has_negative)
+        result_type = self._bin_op_type(operator, other, self)
         result:genType = result_type()
         operator_func:Callable[[Any,Any], Any] = self._operator_funcs[operator]
         for i in range(len(result._data)):
@@ -215,7 +235,7 @@ class genType(ABC):
         return self
     
     def _compare_op(self, operator:str, other:Union[float, bool, int, genType])->genType:
-        btype = self.gen_type(ctypes.c_bool, self.shape)
+        btype = self.gen_type(self.math_form, ctypes.c_bool, self.shape)
         result:genType = btype()
 
         other_is_homo:bool = self._is_homo(other)
@@ -229,7 +249,7 @@ class genType(ABC):
         return result
     
     def _compare_rop(self, operator:str, other:Union[float, bool, int, genType])->genType:
-        btype = self.gen_type(ctypes.c_bool, self.shape)
+        btype = self.gen_type(self.math_form, ctypes.c_bool, self.shape)
         result:genType = btype()
 
         operator_func:Callable[[Any,Any], Any] = self._operator_funcs[operator]

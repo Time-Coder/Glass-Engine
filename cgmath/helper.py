@@ -84,6 +84,7 @@ def generate_swizzle_defines(type_name:str, dtype_name:str, char_sets:List[str])
             
     return result
 
+
 if __name__ == "__main__":
     self_folder = os.path.dirname(os.path.abspath(__file__))
     vec_infos = [

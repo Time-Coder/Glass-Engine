@@ -11,7 +11,9 @@ class Light(SceneNode):
 
     def __init__(self, name: str = ""):
         SceneNode.__init__(self, name)
-        self._color: cgm.vec3 = cgm.vec3(1, 1, 1, callback=self._update_color)
+        self._color: cgm.vec3 = cgm.vec3(1)
+        self._color.on_changed = self._update_color
+
         self._intensity: float = 1.0
         self._generate_shadows: bool = True
         self._rim_power: float = 0.3
@@ -154,7 +156,7 @@ class FlatLight:
         self.depth_fbo_map[GLConfig.buffered_current_context] = fbo
 
     def update(self, light: Light):
-        self.color = light._intensity * light._color.flat
+        self.color = light._intensity * light._color
         self.generate_shadows = light._generate_shadows
         self.rim_power = light._rim_power
 

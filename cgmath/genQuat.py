@@ -42,12 +42,14 @@ class genQuat(genType):
             self._data[1] = v._data[0]
             self._data[2] = v._data[1]
             self._data[3] = v._data[2]
+            return
 
         if len(args) == 4:
             self._data[0] = args[0]
             self._data[1] = args[1]
             self._data[2] = args[2]
             self._data[3] = args[3]
+            return
 
         raise ValueError(f"invalid arguments for {self.__class__.__name__}()")
             
@@ -108,13 +110,7 @@ class genQuat(genType):
 
     @staticmethod
     def quat_type(dtype:type)->type:
-        if dtype not in genQuat.__gen_quat_map:
-            if dtype == ctypes.c_float:
-                genQuat.__gen_quat_map[dtype] = from_import(".quat", "quat")
-            elif dtype == ctypes.c_double:
-                genQuat.__gen_quat_map[dtype] = from_import(".dquat", "dquat")
-
-        return genQuat.__gen_quat_map[dtype]
+        return genType.gen_type(MathForm.Quat, dtype, (4,))
 
     @property
     def shape(self)->Tuple[int]:
@@ -146,7 +142,7 @@ class genQuat(genType):
             if isinstance(other, genVec) and len(other) != 3:
                 raise TypeError(f"unsupported operand type(s) for {operator}: '{self.__class__.__name__}' and '{other.__class__.__name__}'")
 
-            result_dtype = self._operator_dtype(self.dtype, operator, other.dtype, False)
+            result_dtype = self._bin_op_dtype(operator, self.dtype, other.dtype, False)
             if isinstance(other, genQuat):
                 result_type = self.quat_type(result_dtype)
                 result = result_type()
