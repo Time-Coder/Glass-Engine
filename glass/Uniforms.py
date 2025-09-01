@@ -36,7 +36,6 @@ class Uniforms:
 
         self._atoms_to_update = {}
         self._uniform_var_map:Dict[str, UniformVar] = {}
-        self._atom_value_map = {}
         self._texture_value_map = {}
         self._current_atom_name:str = ""
 
@@ -56,7 +55,6 @@ class Uniforms:
         self.descendants.clear()
         self._atoms_to_update.clear()
         self._uniform_var_map.clear()
-        self._atom_value_map.clear()
         self._texture_value_map.clear()
         self._current_atom_name:str = ""
 
@@ -101,11 +99,6 @@ class Uniforms:
 
     def _set_atom(self, atom_info: SimpleVar, value):
         name:str = atom_info.name
-        if name in self._atom_value_map and self._atom_value_map[name] == value:
-            if isinstance(value, FBOAttachment):
-                value.bind()
-            return
-
         if GL.glGetUniformLocation:
             program = self.program
             program.use()
@@ -125,7 +118,6 @@ class Uniforms:
                 self._current_atom_name = name
                 func = getattr(self, "_set_" + atom_type)
                 func(location, value)
-                self._atom_value_map[name] = Uniforms._copy(value)
             else:
                 binding_point = atom_info.binding_point
                 offset = atom_info.offset
