@@ -242,10 +242,7 @@ class Mesh(SceneNode):
         old_should_callback = self._should_callback
         self._should_callback = False
         if "color" not in self._vertices._attr_list_map:
-            self._color.r = 0
-            self._color.g = 0
-            self._color.b = 0
-            self._color.a = 0
+            self._color[:] = 0
         else:
             color_array = self._vertices._attr_list_map["color"].ndarray
             if len(color_array.shape) != 2 or color_array.shape[1] != 4:
@@ -387,10 +384,7 @@ class Mesh(SceneNode):
         old_should_callback = self._should_callback
         self._should_callback = False
         if "back_color" not in self._vertices._attr_list_map:
-            self._back_color.r = 0
-            self._back_color.g = 0
-            self._back_color.b = 0
-            self._back_color.a = 0
+            self._back_color[:] = 0
         else:
             color_array = self._vertices._attr_list_map["back_color"].ndarray
             if len(color_array.shape) != 2 or color_array.shape[1] != 4:
@@ -417,10 +411,7 @@ class Mesh(SceneNode):
                 else:
                     self._back_color.a = 0
             else:
-                self._back_color.r = 0
-                self._back_color.g = 0
-                self._back_color.b = 0
-                self._back_color.a = 0
+                self._back_color[:] = 0
         self._should_callback = old_should_callback
 
         return self._back_color

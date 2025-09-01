@@ -1,6 +1,12 @@
+from __future__ import annotations
+
 from enum import Flag, IntEnum
+from typing import TYPE_CHECKING
 
 import cgmath as cgm
+
+if TYPE_CHECKING:
+    from ..Camera import Camera
 
 
 class Manipulator:
@@ -508,7 +514,7 @@ class Manipulator:
         self._camera = None
 
     @property
-    def camera(self):
+    def camera(self)->Camera:
         return self._camera
 
     def startup(self) -> None:

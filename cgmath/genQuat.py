@@ -11,11 +11,9 @@ import ctypes
 
 class genQuat(genType):
 
-    __gen_quat_map:Dict[type, type] = {}
-
     def __init__(self, *args):
         genType.__init__(self)
-        self._data = (self.dtype * 4)(1, 0, 0, 0)
+        self._data[0] = 1
 
         if len(args) == 0:
             return

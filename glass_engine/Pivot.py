@@ -37,12 +37,7 @@ class Pivot:
 
     @position.setter
     def position(self, position: cgm.vec3):
-        self._should_callback = False
-        self._position.x = position.x
-        self._position.y = position.y
-        self._should_callback = True
-
-        self._position.z = position.z
+        self._position[:] = position
 
     @property
     def scale(self):
@@ -50,20 +45,7 @@ class Pivot:
 
     @scale.setter
     def scale(self, scale: Union[cgm.vec3, float]):
-        if isinstance(scale, (int, float)):
-            self._should_callback = False
-            self._scale.x = scale
-            self._scale.y = scale
-            self._should_callback = True
-            
-            self._scale.z = scale
-        else:
-            self._should_callback = False
-            self._scale.x = scale.x
-            self._scale.y = scale.y
-            self._should_callback = True
-
-            self._scale.z = scale.z
+        self._scale[:] = scale
 
     @property
     def orientation(self):
@@ -71,33 +53,14 @@ class Pivot:
 
     @orientation.setter
     def orientation(self, orientation: cgm.quat):
-        self._should_callback = False
-        self._orientation.w = orientation.w
-        self._orientation.x = orientation.x
-        self._orientation.y = orientation.y
-        self._should_callback = True
-
-        self._orientation.z = orientation.z
+        self._orientation[:] = orientation
 
     def rotate(self, axis:cgm.vec3, angle:float):
         angle_rad = angle/180*math.pi
-        new_orientation = cgm.quat(math.cos(angle_rad/2), math.sin(angle_rad/2)*axis) * self._orientation
+        self._orientation[:] = cgm.quat(math.cos(angle_rad/2), math.sin(angle_rad/2)*axis) * self._orientation
 
-        self._should_callback = False
-        self._orientation.w = new_orientation.w
-        self._orientation.x = new_orientation.x
-        self._orientation.y = new_orientation.y
-        self._should_callback = True
-
-        self._orientation.z = new_orientation.z
-
-    def translate(self, translation:cgm.vec3):
-        self._should_callback = False
-        self._position.x = self._position.x + translation.x
-        self._position.y = self._position.x + translation.y
-        self._should_callback = True
-        
-        self._position.z = self._position.x + translation.z
+    def translate(self, translation:cgm.vec3):        
+        self._position += translation
 
     def _update_yaw_pitch_roll(self):
         if not self._should_update_yaw_pitch_roll:

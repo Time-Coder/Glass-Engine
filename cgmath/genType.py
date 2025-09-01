@@ -62,7 +62,12 @@ class genType(ABC):
     def __init__(self):
         self._data = (self.dtype * math.prod(self.shape))()
         self._on_changed:Optional[Callable[[], None]] = None
-        self._on_changed_param_count:int = 0
+
+    def __copy__(self)->genType:
+        return self.__class__(*self._data)
+    
+    def __deepcopy__(self, memo)->genType:
+        return self.__class__(*self._data)
 
     def __repr__(self)->str:
         return f"{self.__class__.__name__}({', '.join([str(value) for value in self])})"

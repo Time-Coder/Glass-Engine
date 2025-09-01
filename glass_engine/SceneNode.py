@@ -1,8 +1,9 @@
+from __future__ import annotations
 import cgmath as cgm
 import math
 import uuid
 import numpy as np
-from typing import Union
+from typing import Union, List
 
 from glass.DictList import DictList
 from glass.WeakSet import WeakSet
@@ -275,71 +276,35 @@ class SceneNode(metaclass=MetaInstancesRecorder):
         self._name = name
 
     @property
-    def position(self):
+    def position(self)->cgm.vec3:
         return self._position
 
     @position.setter
-    def position(self, position: cgm.vec3):
-        self._should_callback = False
-        self._position.x = position.x
-        self._position.y = position.y
-        self._should_callback = True
-
-        self._position.z = position.z
+    def position(self, position: cgm.vec3)->None:
+        self._position[:] = position
 
     @property
-    def scale(self):
+    def scale(self)->cgm.vec3:
         return self._scale
 
     @scale.setter
-    def scale(self, scale: Union[cgm.vec3, float]):
-        if isinstance(scale, (int, float)):
-            self._should_callback = False
-            self._scale.x = scale
-            self._scale.y = scale
-            self._should_callback = True
-
-            self._scale.z = scale
-        else:
-            self._should_callback = False
-            self._scale.x = scale.x
-            self._scale.y = scale.y
-            self._should_callback = True
-
-            self._scale.z = scale.z
+    def scale(self, scale: Union[cgm.vec3, float])->None:
+        self._scale[:] = scale
 
     @property
-    def orientation(self):
+    def orientation(self)->cgm.quat:
         return self._orientation
 
     @orientation.setter
-    def orientation(self, orientation: cgm.quat):
-        self._should_callback = False
-        self._orientation.w = orientation.w
-        self._orientation.x = orientation.x
-        self._orientation.y = orientation.y
-        self._should_callback = True
+    def orientation(self, orientation: cgm.quat)->None:
+        self._orientation[:] = orientation
 
-        self._orientation.z = orientation.z
-
-    def rotate(self, axis:cgm.vec3, angle:float):
+    def rotate(self, axis:cgm.vec3, angle:float)->None:
         angle_rad = angle/180*math.pi
-        new_orientation = cgm.quat(math.cos(angle_rad/2), math.sin(angle_rad/2)*axis) * self._orientation
-        self._should_callback = False
-        self._orientation.w = new_orientation.w
-        self._orientation.x = new_orientation.x
-        self._orientation.y = new_orientation.y
-        self._should_callback = True
+        self._orientation[:] = cgm.quat(math.cos(angle_rad/2), math.sin(angle_rad/2)*axis) * self._orientation
 
-        self._orientation.z = new_orientation.z
-
-    def translate(self, translation:cgm.vec3):
-        self._should_callback = False
-        self._position.x = self._position.x + translation.x
-        self._position.y = self._position.x + translation.y
-        self._should_callback = True
-
-        self._position.z = self._position.x + translation.z
+    def translate(self, translation:cgm.vec3)->None:
+        self._position += translation
 
     def _add_scenes(self, scenes):
         self._scenes.update(scenes)
@@ -386,34 +351,34 @@ class SceneNode(metaclass=MetaInstancesRecorder):
         self._set_dirty()
 
     @property
-    def yaw(self):
+    def yaw(self)->float:
         return self._yaw_pitch_roll[0]
 
     @yaw.setter
-    def yaw(self, yaw: float):
+    def yaw(self, yaw: float)->None:
         self._yaw_pitch_roll[0] = yaw
         self._update_orientation()
 
     @property
-    def pitch(self):
+    def pitch(self)->float:
         return self._yaw_pitch_roll[1]
 
     @pitch.setter
-    def pitch(self, pitch: float):
+    def pitch(self, pitch: float)->None:
         self._yaw_pitch_roll[1] = pitch
         self._update_orientation()
 
     @property
-    def roll(self):
+    def roll(self)->float:
         return self._yaw_pitch_roll[2]
 
     @roll.setter
-    def roll(self, roll: float):
+    def roll(self, roll: float)->None:
         self._yaw_pitch_roll[2] = roll
         self._update_orientation()
 
     @property
-    def paths(self):
+    def paths(self)->List[SceneNode]:
         if not self.parents:
             return [[self]]
 
@@ -427,7 +392,7 @@ class SceneNode(metaclass=MetaInstancesRecorder):
         return all_paths
 
     @property
-    def paths_str(self):
+    def paths_str(self)->List[str]:
         if not self.parents:
             return ["/" + self.name]
 

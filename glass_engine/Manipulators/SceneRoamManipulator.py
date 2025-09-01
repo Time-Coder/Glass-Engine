@@ -51,7 +51,7 @@ class SceneRoamManipulator(Manipulator):
                 self._left_press_global_pos = global_pos
                 self._left_press_yaw = self.camera.yaw
                 self._left_press_pitch = self.camera.pitch
-                self._left_press_camera_pos = copy.deepcopy(self.camera.position)
+                self._left_press_camera_pos = self.camera.position.xyz
 
     def on_mouse_double_clicked(
         self,

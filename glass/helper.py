@@ -42,21 +42,16 @@ def width_adapt(width):
 
 
 def sizeof(type_var):
+    try:
+        return cgm.sizeof(type_var)
+    except:
+        pass
+
     if not isinstance(type_var, type):
         type_var = type(type_var)
 
     if "sampler" in str(type_var):
         return 8
-
-    size = 0
-
-    try:
-        size = cgm.sizeof(type_var)
-    except:
-        pass
-
-    if size != 0:
-        return size
 
     if type_var == bool:
         return 1

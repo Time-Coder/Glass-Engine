@@ -258,11 +258,7 @@ class Material(metaclass=MetaInstancesRecorder):
     
     @st_pivot.setter
     def st_pivot(self, pivot:cgm.vec2):
-        old_should_callback = self._should_callback
-        self._should_callback = False
-        self._st_pivot.s = pivot.s
-        self._should_callback = old_should_callback
-        self._st_pivot.t = pivot.t
+        self._st_pivot[:] = pivot
 
     @property
     def st_scale(self)->cgm.vec2:
@@ -273,11 +269,7 @@ class Material(metaclass=MetaInstancesRecorder):
         if isinstance(scale, (float,int)):
             scale = cgm.vec2(scale)
         
-        old_should_callback = self._should_callback
-        self._should_callback = False
-        self._st_scale.s = scale.s
-        self._should_callback = old_should_callback
-        self._st_scale.t = scale.t
+        self._st_scale[:] = scale
 
     @property
     def st_offset(self)->cgm.vec2:
@@ -285,11 +277,7 @@ class Material(metaclass=MetaInstancesRecorder):
     
     @st_offset.setter
     def st_offset(self, offset:cgm.vec2):
-        old_should_callback = self._should_callback
-        self._should_callback = False
-        self._st_offset.s = offset.s
-        self._should_callback = old_should_callback
-        self._st_offset.t = offset.t
+        self._st_offset[:] = offset
 
     @property
     def st_rotation(self)->float:
@@ -453,13 +441,7 @@ class Material(metaclass=MetaInstancesRecorder):
         if cgm.length(ambient) < 1e-6:
             ambient = cgm.vec3(1e-6)
 
-        old_should_callback = self._should_callback
-        self._should_callback = False
-        self._ambient.r = ambient.r
-        self._ambient.g = ambient.g
-        self._should_callback = old_should_callback
-
-        self._ambient.b = ambient.b
+        self._ambient[:] = ambient
 
     @property
     def diffuse(self) -> cgm.vec3:
@@ -478,14 +460,7 @@ class Material(metaclass=MetaInstancesRecorder):
     @specular.setter
     def specular(self, specular: cgm.vec3) -> None:
         self._prop_name = "specular"
-
-        old_should_callback = self._should_callback
-        self._should_callback = False
-        self._specular.r = specular.r
-        self._specular.g = specular.g
-        self._should_callback = old_should_callback
-
-        self._specular.b = specular.b
+        self._specular[:] = specular
 
     @property
     def glossiness(self):
@@ -552,13 +527,7 @@ class Material(metaclass=MetaInstancesRecorder):
     def emission(self, emission: cgm.vec3) -> None:
         self._prop_name = "emission"
 
-        old_should_callback = self._should_callback
-        self._should_callback = False
-        self._emission.r = emission.r
-        self._emission.g = emission.g
-        self._should_callback = old_should_callback
-
-        self._emission.b = emission.b
+        self._emission[:] = emission
 
     @property
     def env_mix_diffuse(self):
@@ -583,15 +552,7 @@ class Material(metaclass=MetaInstancesRecorder):
 
         self._prop_name = "reflection"
         self._reflection_user_set = True
-
-        old_should_callback = self._should_callback
-        self._should_callback = False
-        self._reflection.r = reflection.r
-        self._reflection.g = reflection.g
-        self._reflection.b = reflection.b
-        self._should_callback = old_should_callback
-
-        self._reflection.a = reflection.a
+        self._reflection[:] = reflection
 
     @property
     def refractive_index(self):
@@ -603,7 +564,7 @@ class Material(metaclass=MetaInstancesRecorder):
         self._refractive_index = refractive_index
 
         if not self._reflection_user_set:
-            self._reflection = cgm.vec4(1, 1, 1, 1)
+            self._reflection[:] = 1
 
     @property
     def height_scale(self):
@@ -622,14 +583,7 @@ class Material(metaclass=MetaInstancesRecorder):
     @base_color.setter
     def base_color(self, base_color: cgm.vec3) -> None:
         self._prop_name = "base_color"
-
-        old_should_callback = self._should_callback
-        self._should_callback = False
-        self._base_color.r = base_color.r
-        self._base_color.g = base_color.g
-        self._should_callback = old_should_callback
-
-        self._base_color.b = base_color.b
+        self._base_color[:] = base_color
 
     @property
     def roughness(self):

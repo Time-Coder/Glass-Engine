@@ -35,11 +35,11 @@ class Camera(SceneNode):
     class Lens:
 
         def __init__(self, camera):
-            self.camera = camera
+            self.camera:Camera = camera
             self.__focus: float = 0.09
             self.__aperture: float = 0.05
             self.__auto_focus: bool = True
-            self.__focus_tex_coord: cgm.vec2 = cgm.vec2(0.5, 0.5)
+            self.__focus_tex_coord: cgm.vec2 = cgm.vec2(0.5)
             self.__focus_change_time: float = 2
             self.__exposure: float = 1
             self.__auto_exposure: bool = True
@@ -50,7 +50,7 @@ class Camera(SceneNode):
 
             @wraps(func)
             def wrapper(*args, **kwargs):
-                self = args[0]
+                self:Camera.Lens = args[0]
                 value = args[1]
 
                 equal = False

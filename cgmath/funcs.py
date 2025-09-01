@@ -408,3 +408,6 @@ def not_(x:genType):
         result._data[i] = not x._data[i]
 
     return result
+
+def sizeof(x:genType)->int:
+    return ctypes.sizeof(x._data)

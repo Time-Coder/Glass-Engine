@@ -55,9 +55,7 @@ class Light(SceneNode):
         if self._color == color:
             return
 
-        self._color.r = color.r
-        self._color.g = color.g
-        self._color.b = color.b
+        self._color[:] = color
 
     @property
     def intensity(self):
