@@ -165,37 +165,27 @@ class BO(GLObject):
         if GlassConfig.debug:
             if start < 0:
                 raise ValueError(
-                    "Memory start position should be positive, "
-                    + str(start)
-                    + " is passed"
+                    f"buffer start position should be positive, {start} is passed"
                 )
 
             if nbytes < 0:
                 raise ValueError(
-                    "'nbytes' should be positive, " + str(nbytes) + " is passed"
+                    f"parameter 'nbytes' should be positive, {nbytes} is passed"
                 )
 
             if start >= self._nbytes:
                 raise ValueError(
-                    "Memory start position is out of range, max position is "
-                    + str(self._nbytes - 1)
-                    + ", "
-                    + str(start)
-                    + " is passed."
+                    f"buffer start position is out of range, max position is {self._nbytes - 1}, {start} is passed"
                 )
 
             if start + nbytes > self._nbytes:
                 raise ValueError(
-                    "Memory end position is out of range, max position is "
-                    + str(self._nbytes)
-                    + ", "
-                    + str(start + nbytes)
-                    + " is applied."
+                    f"buffer end position is out of range, max position is {self._nbytes}, {start + nbytes} is applied"
                 )
 
             if nbytes > array_nbytes:
                 raise ValueError(
-                    "Need copy data is over value_array's size. Max data size is "
+                    "need copy data is over value_array's size. Max data size is "
                     + str(value_array.nbytes)
                     + " bytes, "
                     + str(nbytes)

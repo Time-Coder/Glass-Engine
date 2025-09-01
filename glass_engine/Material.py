@@ -223,7 +223,7 @@ class Material(metaclass=MetaInstancesRecorder):
 
         self._should_callback = old_should_callback
 
-    def _color_change_callback(self, color):
+    def _color_change_callback(self):
         if not self._should_callback:
             return
 
@@ -862,7 +862,7 @@ class Material(metaclass=MetaInstancesRecorder):
                 self._roughness_map.image = roughness_map
 
     @checktype
-    def set_as(self, type: Type):
+    def set_as(self, type: Material.Type):
         if type == Material.Type.Emerald:
             self.ambient = cgm.vec3(0.0215, 0.1745, 0.0215)
             self.diffuse = cgm.vec3(0.07568, 0.61424, 0.07568)
