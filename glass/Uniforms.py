@@ -3,7 +3,7 @@ import OpenGL.GL.ARB.gpu_shader_int64 as gsi64
 import cgmath as cgm
 import copy
 from enum import Enum
-from typing import Union, Dict
+from typing import Union, Dict, TYPE_CHECKING
 
 from .utils import checktype, uint64_to_uvec2
 from .CustomLiteral import CustomLiteral
@@ -24,13 +24,16 @@ from .GlassConfig import GlassConfig
 from .UniformVar import UniformVar
 from .ShaderParser import ShaderParser, SimpleVar, Var
 
+if TYPE_CHECKING:
+    from .ShaderProgram import ShaderProgram
+
 
 class Uniforms:
 
     _set_atom_map = {}
 
-    def __init__(self, shader_program):
-        self._program = shader_program
+    def __init__(self, shader_program:ShaderProgram):
+        self._program:ShaderProgram = shader_program
         self.info:Dict[str, Var] = {}
         self.descendants:Dict[str, Var] = {}
 
@@ -40,7 +43,7 @@ class Uniforms:
         self._current_atom_name:str = ""
 
     @property
-    def program(self):
+    def program(self)->ShaderProgram:
         return self._program
     
     def update_info(self, info:Dict[str, Var])->None:

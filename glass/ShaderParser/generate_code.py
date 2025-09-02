@@ -5,7 +5,7 @@ import os
 
 requests_cache.install_cache()
 
-atom_type_names = [
+atom_types = [
     "bool",
     "int",
     "uint",
@@ -464,7 +464,7 @@ for func in definition_dict.values():
     content += f'            name="{func["name"]}",\n'
     content += "            args=[\n"
     for arg_name, arg_type in zip(func["arg_names"], func["arg_types"]):
-        if arg_type not in atom_type_names:
+        if arg_type not in atom_types:
             print(f"not supported type '{arg_type}'", func["name"])
 
         pos_bracket = arg_name.find("[")

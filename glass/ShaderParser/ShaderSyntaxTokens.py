@@ -125,14 +125,14 @@ class Var:
         
         for child_name, child in self.children.items():
             self.descendants[child_name] = child
-            if child.type in GLInfo.atom_type_names:
+            if child.type in GLInfo.atom_types:
                 self.atoms.append(child.simple_var)
                 child.atoms.append(child.simple_var)
 
             child.collect_descendants()
             for descendant_name, descendant in child.descendants.items():
                 self.descendants[descendant_name] = descendant
-                if descendant.type in GLInfo.atom_type_names:
+                if descendant.type in GLInfo.atom_types:
                     self.atoms.append(descendant.simple_var)
                     descendant.atoms.append(descendant.simple_var)
 

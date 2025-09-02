@@ -835,24 +835,6 @@ class GLInfo:
         cgm.ivec4,
         cgm.uvec4,
         cgm.dvec4,
-        cgm.mat2x2,
-        cgm.mat2x3,
-        cgm.mat2x4,
-        cgm.mat3x2,
-        cgm.mat3x3,
-        cgm.mat3x4,
-        cgm.mat4x2,
-        cgm.mat4x3,
-        cgm.mat4x4,
-        cgm.dmat2x2,
-        cgm.dmat2x3,
-        cgm.dmat2x4,
-        cgm.dmat3x2,
-        cgm.dmat3x3,
-        cgm.dmat3x4,
-        cgm.dmat4x2,
-        cgm.dmat4x3,
-        cgm.dmat4x4,
     ]
 
     int_types: TypeAlias = CustomLiteral[
@@ -864,7 +846,7 @@ class GLInfo:
         GL.GL_UNSIGNED_INT,
     ]
 
-    atom_type_names = [
+    atom_types = [
         "bool",
         "int",
         "uint",
@@ -1017,6 +999,21 @@ class GLInfo:
     gmat4x2_types = ["mat4x2", "dmat4x2"]
     gmat4x3_types = ["mat4x3", "dmat4x3"]
     gmat4x4_types = [("mat4x4", "mat4"), ("dmat4x4", "dmat4")]
+    gen_types = [
+        "bvec2", "bvec3", "bvec4",
+        "ivec2", "ivec3", "ivec4",
+        "uvec2", "uvec3", "uvec4",
+        "vec2", "vec3", "vec4",
+        "dvec2", "dvec3", "dvec4",
+        "mat2x2", "mat3x2", "mat4x2",
+        "mat2x3", "mat3x3", "mat4x3",
+        "mat2x4", "mat3x4", "mat4x4",
+        "mat2", "mat3", "mat4",
+        "dmat2x2", "dmat3x2", "dmat4x2",
+        "dmat2x3", "dmat3x3", "dmat4x3",
+        "dmat2x4", "dmat3x4", "dmat4x4",
+        "dmat2", "dmat3", "dmat4"
+    ]
 
     atom_type_map = {
         "bool": (bool, "bool", ""),

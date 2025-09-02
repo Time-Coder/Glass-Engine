@@ -563,7 +563,7 @@ class ShaderParser:
         if current_var.is_resolved:
             return
         
-        if current_var.type in GLInfo.atom_type_names:
+        if current_var.type in GLInfo.atom_types:
             current_var.atoms.append(current_var.simple_var)
             current_var.is_resolved = True
             return
@@ -867,7 +867,7 @@ class ShaderParser:
         elif expression.type == "call_expression":
             func_call_name = expression.children[0].text
             if (
-                func_call_name in GLInfo.atom_type_names
+                func_call_name in GLInfo.atom_types
                 or func_call_name in self.structs
                 or func_call_name in ShaderBuiltins.structs
             ):

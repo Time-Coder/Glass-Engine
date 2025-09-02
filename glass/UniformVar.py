@@ -2,36 +2,71 @@
 from __future__ import annotations
 
 from OpenGL import GL
-from typing import Union, Dict, Any, Set
+from typing import Union, Dict, Any, Set, Optional, Callable, TYPE_CHECKING
+from cgmath import genType
 
 from .utils import checktype, setmethod
 from .GlassConfig import GlassConfig
 from .GLInfo import GLInfo
 from .ShaderParser import Var
 
+if TYPE_CHECKING:
+    from .Uniforms import Uniforms
+
+
+def __setattr__(self, name:str, value)->None:
+    if hasattr(self.__class__, "__setattr__"):
+        self.__class__.__setattr__(self, name, value)
+
+    used_value = getattr(self, name)
+
+    for uniform_var in UniformVar._bound_vars[self]:
+        if name in uniform_var:
+            uniform_var[name].bind(used_value)
+
+def __setitem__(self, index:int, value)->None:
+    if hasattr(self.__class__, "__setitem__"):
+        self.__class__.__setitem__(self, index, value)
+
+    used_value = self[index]
+
+    for uniform_var in UniformVar._bound_vars[self]:
+        if index in uniform_var:
+            uniform_var[index].bind(used_value)
+
+
+class OnGenTypeChanged:
+
+    def __init__(self, var:genType):
+        self._var:genType = var
+        self._old_on_changed:Optional[Callable[[], None]] = var.on_changed
+        var.on_changed = self
+
+    def __call__(self):
+        for uniform_var in UniformVar._bound_vars[self._var]:
+            uniform_var.set_value(self._var)
+
+        if self._old_on_changed is not None:
+            self._old_on_changed()
+
+    def unbind(self):
+        if self._var.on_changed is not self:
+            return
+        
+        self._var.on_changed = self._old_on_changed
 
 class UniformVar:
 
     _all_attrs:Set[str] = {
-        "__init__",
-        "__getitem__",
-        "__setitem__",
-        "__getattr__",
-        "__setattr__",
         "_uniforms",
         "_var_token",
         "_bound_var",
-        "bind",
-        "unbind",
-        "bound_var",
-        "is_bound",
-        "location",
     }
 
     _bound_vars:Dict[Any, Set[UniformVar]] = {}
 
-    def __init__(self, uniforms, var_token:Var):
-        self._uniforms = uniforms
+    def __init__(self, uniforms:Uniforms, var_token:Var):
+        self._uniforms:Uniforms = uniforms
         self._var_token:Var = var_token
         self._bound_var:Any = None
 
@@ -43,6 +78,9 @@ class UniformVar:
             full_name += "[" + str(name) + "]"
 
         return full_name in self._var_token.descendants
+    
+    def set_value(self, value:Any)->None:
+        self._uniforms[self._var_token.name] = value
 
     def __getitem__(self, name: Union[str, int])->UniformVar:
         full_name = self._var_token.name
@@ -51,52 +89,48 @@ class UniformVar:
         elif isinstance(name, int):
             full_name += "[" + str(name) + "]"
 
-        uniforms = self._uniforms
-        program = uniforms.program
         if GlassConfig.debug and full_name not in self._var_token.descendants:
             error_message = (
                 "uniform variable '"
                 + full_name
                 + "' is not defined in following files:\n"
             )
-            error_message += "\n".join(program.related_files)
+            error_message += "\n".join(self._uniforms._program.related_files)
             raise NameError(error_message)
 
-        if full_name not in uniforms._uniform_var_map:
-            uniforms._uniform_var_map[full_name] = UniformVar(
-                uniforms, self._var_token.descendants[full_name]
+        if full_name not in self._uniforms._uniform_var_map:
+            self._uniforms._uniform_var_map[full_name] = UniformVar(
+                self._uniforms, self._var_token.descendants[full_name]
             )
 
-        return uniforms._uniform_var_map[full_name]
+        return self._uniforms._uniform_var_map[full_name]
 
     @checktype
-    def __setitem__(self, name: Union[str, int], value)->None:
+    def __setitem__(self, name: Union[str, int], value:Any)->None:
         full_name = self._var_token.name
         if isinstance(name, str):
             full_name += "." + name
         elif isinstance(name, int):
             full_name += "[" + str(name) + "]"
 
-        uniforms = self.uniforms
-        program = uniforms.program
         if GlassConfig.debug and full_name not in self._var_token.descendants:
             error_message = (
                 "uniform variable '"
                 + full_name
                 + "' is not defined in following files:\n"
             )
-            error_message += "\n".join(program.related_files)
+            error_message += "\n".join(self._uniforms._program.related_files)
             raise NameError(error_message)
 
-        uniforms[full_name] = value
+        self._uniforms[full_name] = value
 
-    def __getattr__(self, name: str):
+    def __getattr__(self, name: str)->UniformVar:
         if name in UniformVar._all_attrs:
             return super().__getattribute__(name)
 
         return self.__getitem__(name)
 
-    def __setattr__(self, name: str, value):
+    def __setattr__(self, name: str, value: Any)->None:
         if name in UniformVar._all_attrs:
             return super().__setattr__(name, value)
 
@@ -107,7 +141,7 @@ class UniformVar:
         uniforms = self._uniforms
         program = uniforms.program
 
-        if GlassConfig.debug and self._var_token.type not in GLInfo.atom_type_names:
+        if GlassConfig.debug and self._var_token.type not in GLInfo.atom_types:
             raise ValueError("'" + self._var_token.name + "' is not an atom uniform variable")
 
         if self._var_token.location == -2:
@@ -137,44 +171,31 @@ class UniformVar:
         if self._bound_var is python_var:
             return True
         
-        if self._var_token.type in GLInfo.atom_type_names:
+        if self._var_token.type in GLInfo.basic_types:
             return False
 
-        def __setattr__(self, name:str, value)->None:
-            if hasattr(self.__class__, "__setattr__"):
-                self.__class__.__setattr__(self, name, value)
-
-            used_value = getattr(self, name)
-
-            for uniform_var in UniformVar._bound_vars[python_var]:
-                if name in uniform_var:
-                    uniform_var[name].bind(used_value)
-
-        def __setitem__(self, index:int, value)->None:
-            if hasattr(self.__class__, "__setitem__"):
-                self.__class__.__setitem__(self, index, value)
-
-            used_value = self[index]
-
-            for uniform_var in UniformVar._bound_vars[python_var]:
-                if index in uniform_var:
-                    uniform_var[index].bind(used_value)
         
         if python_var not in UniformVar._bound_vars:
             UniformVar._bound_vars[python_var] = set()
-            setmethod(python_var, "__setattr__", __setattr__)
-            setmethod(python_var, "__setitem__", __setitem__)
+            if self._var_token.type not in GLInfo.gen_types:
+                setmethod(python_var, "__setattr__", __setattr__)
+                setmethod(python_var, "__setitem__", __setitem__)
+            else:
+                python_var.on_changed = OnGenTypeChanged(python_var)
 
         UniformVar._bound_vars[python_var].add(self)
         for child_name, child in self._var_token.children.items():
-            if child.type in GLInfo.atom_type_names:
-                continue # to-do
+            if child.type in GLInfo.basic_types:
+                continue
 
             suffix:str = child_name[len(self._var_token.name):]
+            used_var = None
             if suffix.startswith("."):
-                self._uniforms[child_name].bind(getattr(python_var, suffix[1:]), False)
+                used_var = getattr(python_var, suffix[1:])
             elif suffix.startswith("["):
-                self._uniforms[child_name].bind(python_var[int(suffix[1:-1])], False)
+                used_var = python_var[int(suffix[1:-1])]
+
+            self._uniforms[child_name].bind(used_var, False)
 
     def unbind(self)->None:
         python_var = self._bound_var
@@ -203,15 +224,19 @@ class UniformVar:
             else:
                 del python_var.__setitem__
 
+            if hasattr(python_var, "on_changed") and isinstance(python_var.on_changed, OnGenTypeChanged):
+                python_var.on_changed.unbind()
+
         for child_name, child in self._var_token.children.items():
-            if child.type in GLInfo.atom_type_names:
-                continue # to-do
+            if child.type in GLInfo.basic_types:
+                continue
 
             suffix:str = child_name[len(self._var_token.name):]
+            used_var:Any = None
             if suffix.startswith("."):
-                if self._uniforms[child_name]._bound_var is getattr(python_var, suffix[1:]):
-                    self._uniforms[child_name].unbind()
-
+                used_var = getattr(python_var, suffix[1:])
             elif suffix.startswith("["):
-                if self._uniforms[child_name]._bound_var is python_var[int(suffix[1:-1])]:
-                    self._uniforms[child_name].unbind()
+                used_var = python_var[int(suffix[1:-1])]
+
+            if self._uniforms[child_name]._bound_var is used_var:
+                self._uniforms[child_name].unbind()
