@@ -3,7 +3,6 @@ from glass.RenderHints import RenderHints
 
 import cgmath as cgm
 from OpenGL import GL
-import copy
 import datetime
 
 

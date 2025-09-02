@@ -3,10 +3,10 @@ from __future__ import annotations
 from .genType import genType, MathForm
 from .genVec import genVec
 from .genVec3 import genVec3
-from .helper import from_import, is_number
+from .helper import is_number
 
-from typing import Tuple, Any, Union, Dict, Callable
-import ctypes
+from typing import Tuple, Any, Union
+import math
 
 
 class genQuat(genType):
@@ -141,26 +141,23 @@ class genQuat(genType):
                 raise TypeError(f"unsupported operand type(s) for {operator}: '{self.__class__.__name__}' and '{other.__class__.__name__}'")
 
             result_dtype = self._bin_op_dtype(operator, self.dtype, other.dtype, False)
+            quat_type = self.quat_type(result_dtype)
             if isinstance(other, genQuat):
-                result_type = self.quat_type(result_dtype)
-                result = result_type()
+                result:genQuat = quat_type()
                 result.w = self.w * other.w - self.x * other.x - self.y * other.y - self.z * other.z
                 result.x = self.w * other.x + self.x * other.w + self.y * other.z - self.z * other.y
                 result.y = self.w * other.y + self.y * other.w + self.z * other.x - self.x * other.z
                 result.z = self.w * other.z + self.z * other.w + self.x * other.y - self.y * other.x
-            elif isinstance(other, genVec):
-                result_type = genVec.vec_type(result_dtype, 3)
-                result = result_type()
-                result.x = self.w * other.x + self.y * other.z - self.z * other.y
-                result.y = self.w * other.y + self.z * other.x - self.x * other.z
-                result.z = self.w * other.z + self.x * other.y - self.y * other.x
-
-            return result
+                return result
+            else: # if isinstance(other, genVec):
+                vec_quat:genQuat = quat_type(0, other)
+                temp_quat:genQuat = self * vec_quat * quat_type(self.w, -self.xyz) / math.sqrt(self.w**2 + self.x**2 + self.y**2 + self.z**2)
+                return temp_quat.xyz
         
         if isinstance(other, genType) and not isinstance(other, genQuat):
             raise TypeError(f"unsupported operand type(s) for {operator}: '{self.__class__.__name__}' and '{other.__class__.__name__}'")
 
-        return genType._op(operator, other)
+        return genType._op(self, operator, other)
 
     def _iop(self, operator:str, other:Union[float, bool, int, genQuat])->genQuat:
         if operator == "**" or (operator in ["/", "//", "%"] and isinstance(other, genType)):
@@ -184,4 +181,4 @@ class genQuat(genType):
         if isinstance(other, genType) and not isinstance(other, genQuat):
             raise TypeError(f"unsupported operand type(s) for {operator}=: '{self.__class__.__name__}' and '{other.__class__.__name__}'")
 
-        return genType._iop(operator, other)
+        return genType._iop(self, operator, other)

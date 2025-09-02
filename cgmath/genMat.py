@@ -152,7 +152,7 @@ class genMat(genType):
 
             return result
 
-        return genType._op(operator, other)
+        return genType._op(self, operator, other)
 
     def _iop(self, operator:str, other:Union[float, bool, int, genMat])->genMat:
         if operator == "**" or (operator in ["/", "//", "%"] and isinstance(other, genType)):
@@ -170,4 +170,4 @@ class genMat(genType):
             self._update_data()
             return self
             
-        return genType._iop(operator, other)
+        return genType._iop(self, operator, other)

@@ -6,7 +6,7 @@ import ctypes
 from .helper import from_import, is_number
 import math
 from enum import Enum
-import numpy as np
+import importlib
 
 
 class MathForm(Enum):
@@ -99,6 +99,8 @@ class genType(ABC):
         pass
 
     def __array__(self, dtype=None):
+        np = importlib.import_module("numpy")
+        
         if dtype is None:
             return np.frombuffer(self._data, dtype=self.dtype)
         else:
