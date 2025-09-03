@@ -214,7 +214,7 @@ class Scene:
                 camera = scene_node
                 camera.abs_position = new_mat[3].xyz
                 camera.abs_orientation = new_quat
-
+                
         if self in scene_node._children_transform_dirty:
             for child in scene_node._children_transform_dirty[self]:
                 self.__trav(child, new_quat, new_mat, new_path)

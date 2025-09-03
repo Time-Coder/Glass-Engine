@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 from OpenGL import GL
 import OpenGL.GL.ARB.gpu_shader_int64 as gsi64
 import cgmath as cgm

@@ -120,8 +120,9 @@ class genQuat(genType):
     def __getitem__(self, index:int)->float:
         return self._data[index]
     
-    def __setitem__(self, index:int, value:float)->None:
+    def __setitem__(self, index:Union[slice,int], value:Union[genQuat,float])->None:
         self._data[index] = value
+        self._update_data()
 
     def __iter__(self):
         return iter(self._data)

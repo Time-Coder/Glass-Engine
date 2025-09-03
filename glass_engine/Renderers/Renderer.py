@@ -7,6 +7,7 @@ if TYPE_CHECKING:
     from ..Camera import Camera
     from ..Scene import Scene
 
+
 class Renderer(ABC):
 
     def __init__(self):
@@ -18,11 +19,11 @@ class Renderer(ABC):
 
     @property
     def scene(self)->Scene:
-        return self.camera.scene
+        return self._camera.scene
 
     @property
     def screen(self):
-        return self.camera.screen
+        return self._camera.screen
 
     def startup(self):
         pass

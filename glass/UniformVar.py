@@ -14,25 +14,56 @@ if TYPE_CHECKING:
     from .Uniforms import Uniforms
 
 
-def __setattr__(self, name:str, value)->None:
-    if hasattr(self.__class__, "__setattr__"):
-        self.__class__.__setattr__(self, name, value)
+class AttrSetter:
 
-    used_value = getattr(self, name)
+    def __init__(self, var_class:type):
+        self._old_setattr = var_class.__setattr__
+        self._var_class:type = var_class
 
-    for uniform_var in UniformVar._bound_vars[self]:
-        if name in uniform_var:
-            uniform_var[name].bind(used_value)
+    def __call__(self, var:Any, name:str, value)->None:
+        self._old_setattr(var, name, value)
+        used_value = getattr(self, name)
 
-def __setitem__(self, index:int, value)->None:
-    if hasattr(self.__class__, "__setitem__"):
-        self.__class__.__setitem__(self, index, value)
+        id_var:int = id(var)
+        for uniform_var in UniformVar._bound_vars[id_var]:
+            if name in uniform_var:
+                uniform_var[name].bind(used_value)
 
-    used_value = self[index]
+    def unbind(self):
+        if self._var_class.__setattr__ is not self:
+            return
+        
+        self._var_class.__setattr__ = self._old_setattr
 
-    for uniform_var in UniformVar._bound_vars[self]:
-        if index in uniform_var:
-            uniform_var[index].bind(used_value)
+
+class ItemSetter:
+
+    def __init__(self, var_class:type):
+        self._old_setitem = None
+        if hasattr(var_class, "__setitem__"):
+            self._old_setitem = var_class.__setitem__
+
+        self._var_class:Any = var_class
+
+    def __call__(self, var:Any, index, value)->None:
+        if self._old_setitem is not None:
+            self._old_setitem(var, index, value)
+
+        used_value = self[index]
+
+        id_var:int = id(var)
+        for uniform_var in UniformVar._bound_vars[id_var]:
+            if index in uniform_var:
+                uniform_var[index].bind(used_value)
+
+    def unbind(self):
+        if not hasattr(self._var_class, "__setitem__") or self._var_class.__setitem__ is not self:
+            return
+        
+        if self._old_setitem is None:
+            del self._var_class.__setitem__
+        else:
+            self._var_class.__setitem__ = self._old_setitem
 
 
 class OnGenTypeChanged:
@@ -43,7 +74,8 @@ class OnGenTypeChanged:
         var.on_changed = self
 
     def __call__(self):
-        for uniform_var in UniformVar._bound_vars[self._var]:
+        id_var:int = id(self._var)
+        for uniform_var in UniformVar._bound_vars[id_var]:
             uniform_var.set_value(self._var)
 
         if self._old_on_changed is not None:
@@ -55,6 +87,7 @@ class OnGenTypeChanged:
         
         self._var.on_changed = self._old_on_changed
 
+
 class UniformVar:
 
     _all_attrs:Set[str] = {
@@ -63,7 +96,7 @@ class UniformVar:
         "_bound_var",
     }
 
-    _bound_vars:Dict[Any, Set[UniformVar]] = {}
+    _bound_vars:Dict[int, Set[UniformVar]] = {}
 
     def __init__(self, uniforms:Uniforms, var_token:Var):
         self._uniforms:Uniforms = uniforms
@@ -175,15 +208,19 @@ class UniformVar:
             return False
 
         
-        if python_var not in UniformVar._bound_vars:
-            UniformVar._bound_vars[python_var] = set()
-            if self._var_token.type not in GLInfo.gen_types:
-                setmethod(python_var, "__setattr__", __setattr__)
-                setmethod(python_var, "__setitem__", __setitem__)
-            else:
+        id_python_var:int = id(python_var)
+        if id_python_var not in UniformVar._bound_vars:
+            UniformVar._bound_vars[id_python_var] = set()
+            if isinstance(python_var, genType):
                 python_var.on_changed = OnGenTypeChanged(python_var)
+            else:
+                if not isinstance(python_var.__setattr__, AttrSetter):
+                    python_var.__class__.__setattr__ = AttrSetter(python_var.__class__)
 
-        UniformVar._bound_vars[python_var].add(self)
+                if not hasattr(python_var, "__setitem__") or not isinstance(python_var.__setitem__, ItemSetter):
+                    python_var.__class__.__setitem__ = ItemSetter(python_var.__class__) 
+
+        UniformVar._bound_vars[id_python_var].add(self)
         for child_name, child in self._var_token.children.items():
             if child.type in GLInfo.basic_types:
                 continue
@@ -204,25 +241,22 @@ class UniformVar:
         if python_var is None:
             return
 
-        if python_var not in UniformVar._bound_vars:
+        id_python_var = id(python_var)
+        if id_python_var not in UniformVar._bound_vars:
             return
         
-        if self not in UniformVar._bound_vars[python_var]:
+        if self not in UniformVar._bound_vars[id_python_var]:
             return
         
-        UniformVar._bound_vars[python_var].remove(self)
-        if not UniformVar._bound_vars[python_var]:
-            del UniformVar._bound_vars[python_var]
+        UniformVar._bound_vars[id_python_var].remove(self)
+        if not UniformVar._bound_vars[id_python_var]:
+            del UniformVar._bound_vars[id_python_var]
 
-            if hasattr(python_var.__class__, "__setattr__"):
-                setmethod(python_var, "__setattr__", python_var.__class__.__setattr__)
-            else:
-                del python_var.__setattr__
+            if hasattr(python_var.__class__, "__setattr__") and isinstance(python_var.__class__.__setattr__, AttrSetter):
+                python_var.__class__.__setattr__.unbind()
 
-            if hasattr(python_var.__class__, "__setitem__"):
-                setmethod(python_var, "__setitem__", python_var.__class__.__setitem__)
-            else:
-                del python_var.__setitem__
+            if hasattr(python_var.__class__, "__setitem__") and isinstance(python_var.__class__.__setitem__, ItemSetter):
+                python_var.__class__.__setitem__.unbind()
 
             if hasattr(python_var, "on_changed") and isinstance(python_var.on_changed, OnGenTypeChanged):
                 python_var.on_changed.unbind()

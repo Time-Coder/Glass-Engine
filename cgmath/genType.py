@@ -135,19 +135,6 @@ class genType(ABC):
 
     def _update_data(self, indices:Optional[List[int]] = None):
         self._call_on_changed()
-
-    @staticmethod
-    def __has_negative(value:Union[float,bool,int,genType]):
-        if is_number(value):
-            return (value < 0)
-        elif isinstance(value, genType):
-            for i in range(len(value._data)):
-                if value._data[i] < 0:
-                    return True
-                
-            return False
-        else:
-            raise TypeError(type(value))
     
     @staticmethod
     def _bin_op_dtype(operator:str, type1:type, type2:type, type2_has_negative:bool=False)->type:

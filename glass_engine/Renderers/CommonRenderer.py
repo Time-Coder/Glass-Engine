@@ -562,6 +562,7 @@ class CommonRenderer(Renderer):
             self_folder + "/../glsl/Pipelines/forward_rendering/forward_rendering.frag"
         )
 
+        program["camera"].bind(self.camera)
         program["DirLights"].bind(self.scene.dir_lights)
         program["PointLights"].bind(self.scene.point_lights)
         program["SpotLights"].bind(self.scene.spot_lights)
@@ -794,8 +795,7 @@ class CommonRenderer(Renderer):
     def prepare_gen_env_map_draw_mesh(
         self, view_center: cgm.vec3, is_opaque_pass: bool
     ):
-        camera = self.camera
-        self.gen_env_map_program["CSM_camera"] = camera
+        self.gen_env_map_program["CSM_camera"] = self.camera
         self.gen_env_map_program["view_center"] = view_center
         self.gen_env_map_program["is_opaque_pass"] = is_opaque_pass
         self.gen_env_map_program["background"] = self.scene.background
@@ -812,8 +812,7 @@ class CommonRenderer(Renderer):
     def prepare_gen_env_map_draw_lines(
         self, view_center: cgm.vec3, is_opaque_pass: bool
     ):
-        camera = self.camera
-        self.gen_env_map_lines_program["CSM_camera"] = camera
+        self.gen_env_map_lines_program["CSM_camera"] = self.camera
         self.gen_env_map_lines_program["view_center"] = view_center
         self.gen_env_map_lines_program["is_opaque_pass"] = is_opaque_pass
         self.gen_env_map_lines_program["background"] = self.scene.background
@@ -828,8 +827,7 @@ class CommonRenderer(Renderer):
     def prepare_gen_env_map_draw_points(
         self, view_center: cgm.vec3, is_opaque_pass: bool
     ):
-        camera = self.camera
-        self.gen_env_map_points_program["CSM_camera"] = camera
+        self.gen_env_map_points_program["CSM_camera"] = self.camera
         self.gen_env_map_points_program["view_center"] = view_center
         self.gen_env_map_points_program["is_opaque_pass"] = is_opaque_pass
         self.gen_env_map_points_program["background"] = self.scene.background
@@ -958,8 +956,7 @@ class CommonRenderer(Renderer):
                 self.update_screens()
 
     def prepare_forward_draw_mesh(self, is_opaque_pass: bool):
-        camera = self.camera
-        self.forward_program["camera"] = camera
+        # self.forward_program["camera"] = self.camera
         self.forward_program["is_opaque_pass"] = is_opaque_pass
         self.forward_program["background"] = self.scene.background
         if GlassEngineConfig["USE_FOG"]:
