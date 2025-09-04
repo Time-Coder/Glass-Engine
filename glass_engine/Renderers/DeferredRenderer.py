@@ -42,6 +42,7 @@ class DeferredRenderer(CommonRenderer):
             self_folder + "/../glsl/Pipelines/deferred_rendering/deferred_rendering.frag"
         )
 
+        program["camera"].bind(self.camera)
         program["DirLights"].bind(self.scene.dir_lights)
         program["PointLights"].bind(self.scene.point_lights)
         program["SpotLights"].bind(self.scene.spot_lights)
@@ -68,9 +69,11 @@ class DeferredRenderer(CommonRenderer):
             self_folder + "/../glsl/Pipelines/deferred_rendering/draw_to_gbuffer.frag"
         )
 
+        program["camera"].bind(self.camera)
         program["DirLights"].bind(self.scene.dir_lights)
         program["PointLights"].bind(self.scene.point_lights)
         program["SpotLights"].bind(self.scene.spot_lights)
+
         self.programs["draw_to_gbuffer"] = program
 
         return program
@@ -91,9 +94,11 @@ class DeferredRenderer(CommonRenderer):
             + "/../glsl/Pipelines/deferred_rendering/draw_points_to_gbuffer.frag"
         )
 
+        program["camera"].bind(self.camera)
         program["DirLights"].bind(self.scene.dir_lights)
         program["PointLights"].bind(self.scene.point_lights)
         program["SpotLights"].bind(self.scene.spot_lights)
+
         self.programs["draw_lines_to_gbuffer"] = program
 
         return program
@@ -114,9 +119,11 @@ class DeferredRenderer(CommonRenderer):
             + "/../glsl/Pipelines/deferred_rendering/draw_points_to_gbuffer.frag"
         )
 
+        program["camera"].bind(self.camera)
         program["DirLights"].bind(self.scene.dir_lights)
         program["PointLights"].bind(self.scene.point_lights)
         program["SpotLights"].bind(self.scene.spot_lights)
+
         self.programs["draw_points_to_gbuffer"] = program
 
         return program
@@ -177,9 +184,6 @@ class DeferredRenderer(CommonRenderer):
                 self.fbos["gbuffer"] = fbo
             return fbo
 
-    def prepare_draw_to_gbuffer(self):
-        self.draw_to_gbuffer_program["camera"] = self.camera
-
     def draw_to_gbuffer(self, mesh, instances):
         if mesh.material.need_env_map or mesh._back_material.need_env_map:
             self.gen_env_map(mesh, instances)
@@ -190,9 +194,6 @@ class DeferredRenderer(CommonRenderer):
         self.draw_to_gbuffer_program["mesh_center"] = mesh.center
         mesh.draw(self.draw_to_gbuffer_program, instances)
 
-    def prepare_draw_lines_to_gbuffer(self):
-        self.draw_lines_to_gbuffer_program["camera"] = self.camera
-
     def draw_lines_to_gbuffer(self, mesh, instances):
         if mesh.material.need_env_map:
             self.gen_env_map(mesh, instances)
@@ -200,9 +201,6 @@ class DeferredRenderer(CommonRenderer):
         self.draw_lines_to_gbuffer_program["material"] = mesh.material
         self.draw_lines_to_gbuffer_program["mesh_center"] = mesh.center
         mesh.draw(self.draw_lines_to_gbuffer_program, instances)
-
-    def prepare_draw_points_to_gbuffer(self):
-        self.draw_points_to_gbuffer_program["camera"] = self.camera
 
     def draw_points_to_gbuffer(self, mesh, instances):
         if mesh.material.need_env_map:
@@ -227,17 +225,14 @@ class DeferredRenderer(CommonRenderer):
                 GLConfig.clear_buffers()
 
                 if self._opaque_meshes:
-                    self.prepare_draw_to_gbuffer()
                     for mesh, instances in self._opaque_meshes:
                         self.draw_to_gbuffer(mesh, instances)
 
                 if self._opaque_lines:
-                    self.prepare_draw_lines_to_gbuffer()
                     for mesh, instances in self._opaque_lines:
                         self.draw_lines_to_gbuffer(mesh, instances)
 
                 if self._opaque_points:
-                    self.prepare_draw_points_to_gbuffer()
                     for mesh, instances in self._opaque_points:
                         self.draw_points_to_gbuffer(mesh, instances)
 
@@ -260,7 +255,6 @@ class DeferredRenderer(CommonRenderer):
             GLConfig.polygon_mode = GL.GL_FILL
 
             GLConfig.clear_buffers()
-            self.deferred_render_program["camera"] = self.camera
             self.deferred_render_program["world_pos_and_alpha_map"] = (
                 world_pos_and_alpha_map
             )

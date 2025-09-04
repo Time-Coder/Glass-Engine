@@ -146,7 +146,7 @@ class BaseShader(GLObject):
                 flush=True,
             )
 
-        if GlassConfig.debug and GlassConfig.save_used_shaders:
+        if GlassConfig.save_used_shaders:
             dest_folder = "used_shaders/" + os.path.basename(sys.argv[0])
             if not os.path.isdir(dest_folder):
                 os.makedirs(dest_folder)
@@ -310,11 +310,11 @@ class BaseShader(GLObject):
 
     def _format_error_warning(self, message):
 
-        def _replace_message(match):
+        def _replace_message(match:re.Match):
             message_type = match.group("message_type").lower()
             line_number = int(match.group("line_number"))
-            file_name = self._line_map[line_number][0]
-            new_line_number = self._line_map[line_number][1]
+            file_name = self._shader_parser.line_map[line_number][0]
+            new_line_number = self._shader_parser.line_map[line_number][1]
             return file_name + ":" + str(new_line_number) + ": " + message_type + ": "
 
         message = BaseShader.__message_prefix1.sub(_replace_message, message)

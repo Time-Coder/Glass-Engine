@@ -2,7 +2,7 @@
 from __future__ import annotations
 
 from OpenGL import GL
-from typing import Union, Dict, Any, Set, Optional, Callable, TYPE_CHECKING
+from typing import Union, Dict, Any, Set, Optional, Callable, List, TYPE_CHECKING
 from cgmath import genType
 
 from .utils import checktype, setmethod
@@ -19,27 +19,50 @@ def __setattr__(self, name:str, value:Any):
     old_setattr(self, name, value)
     used_value:Any = None
 
+    self_class:type = self.__class__
+    if self_class not in UniformVar._bound_vars:
+        return
+    
     id_self:int = id(self)
-    for uniform_var in UniformVar._bound_vars[id_self]:
-        if name in uniform_var:
-            if used_value is None:
-                used_value:Any = getattr(self, name)
+    if id_self not in UniformVar._bound_vars[self_class]:
+        return
 
-            uniform_var[name].bind(used_value)
+    for uniform_var in UniformVar._bound_vars[self_class][id_self]:
+        if name not in uniform_var:
+            continue
+
+        if used_value is None:
+            used_value:Any = getattr(self, name)
+
+        uniform_var[name].bind(used_value)
 
 
-def __setitem__(self, index:int, value:Any):
+def __setitem__(self, index:Union[slice,int], value:Any):
     old_setitem = UniformVar._old_setitems[self.__class__]
     old_setitem(self, index, value)
     used_value:Any = None
 
+    self_class:type = self.__class__
+    if self_class not in UniformVar._bound_vars:
+        return
+    
     id_self:int = id(self)
-    for uniform_var in UniformVar._bound_vars[id_self]:
-        if index in uniform_var:
-            if used_value is None:
-                used_value = self[index]
+    if id_self not in UniformVar._bound_vars[self_class]:
+        return
 
-            uniform_var[index].bind(used_value)
+    indices:List[int] = [index]
+    if isinstance(index, slice):
+        indices = index.indices(len(self))
+
+    for uniform_var in UniformVar._bound_vars[self_class][id_self]:
+        for i in indices:
+            if i not in uniform_var:
+                continue
+
+            if used_value is None:
+                used_value:Any = self[i]
+
+            uniform_var[i].bind(used_value)
 
 
 class ItemSetter:
@@ -123,6 +146,7 @@ class UniformVar:
     def set_value(self, value:Any)->None:
         self._uniforms[self._var_token.name] = value
 
+    @checktype
     def __getitem__(self, name: Union[str, int])->UniformVar:
         full_name = self._var_token.name
         if isinstance(name, str):
@@ -147,23 +171,23 @@ class UniformVar:
         return self._uniforms._uniform_var_map[full_name]
 
     @checktype
-    def __setitem__(self, name: Union[str, int], value:Any)->None:
-        full_name = self._var_token.name
+    def __setitem__(self, name: Union[str, int, slice], value:Any)->None:
+        full_names = []
         if isinstance(name, str):
-            full_name += "." + name
+            full_names.append(f"{self._var_token.name}.{name}")
         elif isinstance(name, int):
-            full_name += "[" + str(name) + "]"
+            full_names.append(f"{self._var_token.name}[{name}]")
+        elif isinstance(name, slice):
+            for i in range(name.indices(len(self._var_token.children))):
+                full_names.append(f"{self._var_token.name}[{i}]")
 
-        if GlassConfig.debug and full_name not in self._var_token.descendants:
-            error_message = (
-                "uniform variable '"
-                + full_name
-                + "' is not defined in following files:\n"
-            )
-            error_message += "\n".join(self._uniforms._program.related_files)
-            raise NameError(error_message)
+        for full_name in full_names:
+            if GlassConfig.debug and full_name not in self._var_token.descendants:
+                error_message = f"uniform variable '{full_name}' is not defined in following files:\n"
+                error_message += "\n".join(self._uniforms._program.related_files)
+                raise NameError(error_message)
 
-        self._uniforms[full_name] = value
+            self._uniforms[full_name] = value
 
     def __getattr__(self, name: str)->UniformVar:
         if name in UniformVar._all_attrs:

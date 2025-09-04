@@ -1,6 +1,5 @@
-from typing import Union, List, Dict, Tuple, Optional
+from typing import Union, List, Dict, Tuple, Optional, Set
 
-import tree_sitter
 import copy
 
 from ..helper import type_from_str, sizeof
@@ -174,7 +173,7 @@ class Struct:
         self.members: Dict[str, Var] = {} if members is None else members
         self.start_index: int = start_index
         self.end_index: int = end_index
-        self.used_structs: List[Struct] = []
+        self.used_structs: Set[Struct] = set()
         self.is_resolved: bool = False
         self._is_used: bool = False
 
@@ -268,8 +267,8 @@ class Func:
         self.name: str = name
         self.args: List[Var] = [] if args is None else args
         self.local_vars: List[Var] = []
-        self.used_structs: List[Struct] = []
-        self.used_global_vars: List[Var] = []
+        self.used_structs: Set[Struct] = set()
+        self.used_global_vars: Set[Var] = set()
         self.func_calls: Dict[str, Union[FuncCall, Func]] = {}
         self._is_used: bool = False
         self.start_index: int = start_index

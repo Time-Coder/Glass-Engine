@@ -332,14 +332,18 @@ class ShaderParser:
     def __parse_struct(self, struct_specifier: ShaderSyntaxTree.Node):
         type_identifier = struct_specifier.children[1]
         field_declaration_list = struct_specifier.children[2]
-        struct_name = type_identifier.text
+        struct_name:str = type_identifier.text
+        end_byte:int = struct_specifier.end_byte
+        if struct_specifier.next_sibling is not None and struct_specifier.next_sibling.text == ";":
+            end_byte = struct_specifier.next_sibling.end_byte
+
         struct = Struct(
             name=struct_name,
             members=ShaderParser.__parse_field_declaration_list(
                 field_declaration_list
             ),
             start_index=struct_specifier.start_byte,
-            end_index=struct_specifier.end_byte,
+            end_index=end_byte,
         )
         self.structs[struct_name] = struct
 
@@ -571,6 +575,14 @@ class ShaderParser:
         pos_bracket = current_var.type.find("[")
         if pos_bracket != -1:
             pure_type = current_var.type[:pos_bracket]
+            used_struct = None
+            if pure_type in self.structs:
+                used_struct = self.structs[pure_type]
+            elif pure_type in ShaderBuiltins.structs:
+                used_struct = ShaderBuiltins.structs[pure_type]
+            elif not pure_type in GLInfo.atom_types:
+                raise TypeError(f"type '{pure_type}' is not defined in current shader")
+            
             suffix = current_var.type[pos_bracket:]
             elements = ShaderParser.__resolve_array(suffix)
             for element in elements:
@@ -581,12 +593,13 @@ class ShaderParser:
                     access_chain=current_var.access_chain + element[1]
                 )
                 current_var.children[child_var.name] = child_var
-                self.__resolve_var(child_var)
+                self.__resolve_var(child_var, parent=used_struct, mark_as_used=mark_as_used)
 
             current_var.collect_descendants()
             current_var.is_resolved = True
             return
 
+        used_struct = None
         if current_var.type in self.structs:
             used_struct = self.structs[current_var.type]
         elif current_var.type in ShaderBuiltins.structs:
@@ -594,8 +607,8 @@ class ShaderParser:
         else:
             raise TypeError(f"type '{current_var.type}' is not defined in current shader")
 
-        if parent is not None:
-            parent.used_structs.append(used_struct)
+        if parent is not None and used_struct is not parent:
+            parent.used_structs.add(used_struct)
 
         if mark_as_used:
             used_struct.is_used = True
@@ -608,7 +621,7 @@ class ShaderParser:
                 access_chain=current_var.access_chain + [("getattr", member.name)]
             )
             current_var.children[child_var.name] = child_var
-            self.__resolve_var(child_var)
+            self.__resolve_var(child_var, parent=used_struct, mark_as_used=mark_as_used)
 
         current_var.collect_descendants()
         current_var.is_resolved = True
@@ -872,7 +885,7 @@ class ShaderParser:
                 or func_call_name in ShaderBuiltins.structs
             ):
                 if func_call_name in self.structs:
-                    func.used_structs.append(self.structs[func_call_name])
+                    func.used_structs.add(self.structs[func_call_name])
 
                 return func_call_name
 
@@ -930,6 +943,17 @@ class ShaderParser:
             return self.clean_code
 
         self.functions["main()"].is_used = True
+        for var in self.global_vars.values():
+            if var.type in self.structs:
+                self.structs[var.type].is_used = True
+
+        for var in self.uniform_blocks.values():
+            if var.type in self.structs:
+                self.structs[var.type].is_used = True
+
+        for var in self.shader_storage_blocks.values():
+            if var.type in self.structs:
+                self.structs[var.type].is_used = True
 
         segments_to_be_removed = []
         for func in self.functions.values():

@@ -63,11 +63,6 @@ class ShaderProgram(GPUProgram):
         self._defines: dict = {}
 
     @staticmethod
-    def __update_dict(dest_dict, src_dict):
-        for key, value in src_dict.items():
-            dest_dict[key] = copy.copy(value)
-
-    @staticmethod
     def global_define(name: str, value=None):
         ShaderProgram.__global_defines[name] = value
 
@@ -175,7 +170,6 @@ class ShaderProgram(GPUProgram):
             return
 
         self._uniforms._atoms_to_update.clear()
-        self._uniforms._atom_value_map.clear()
         self._uniforms._texture_value_map.clear()
         self.collect_info()
         self._link()
@@ -671,11 +665,7 @@ class ShaderProgram(GPUProgram):
 
         not_set_uniforms = []
         for name, uniform_info in self._uniforms.info.items():
-            if (
-                not uniform_info.atoms
-                and uniform_info.location == -2
-                and name not in self._uniforms._atom_value_map
-            ):
+            if not uniform_info.atoms and uniform_info.location == -2:
                 location = GL.glGetUniformLocation(self._id, name)
                 uniform_info.location = location
                 if location != -1:
