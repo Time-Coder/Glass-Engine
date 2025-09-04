@@ -5,7 +5,7 @@ import OpenGL.GL.ARB.gpu_shader_int64 as gsi64
 import cgmath as cgm
 import copy
 from enum import Enum
-from typing import Union, Dict, TYPE_CHECKING
+from typing import Union, Dict, Any, TYPE_CHECKING
 
 from .utils import checktype, uint64_to_uvec2
 from .CustomLiteral import CustomLiteral
@@ -77,17 +77,17 @@ class Uniforms:
 
         return self._uniform_var_map[name]
 
-    def __setitem__(self, name: str, value):
-        program = self.program
+    def __setitem__(self, name: str, value: Any)->None:
         if GlassConfig.debug and name not in self.descendants:
             error_message = (
                 f"uniform variable '{name}' is not defined in following files:\n"
             )
-            error_message += "\n".join(program.related_files)
+            error_message += "\n".join(self.program.related_files)
             raise NameError(error_message)
 
+        skip_count:int = name.count(".") + name.count("[")
         for atom in self.descendants[name].atoms:
-            atom_value = ShaderParser.access(value, atom.access_chain)
+            atom_value = ShaderParser.access(value, atom.access_chain[skip_count:])
             self._set_atom(atom, atom_value)
 
     @checktype

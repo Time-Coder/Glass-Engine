@@ -78,7 +78,7 @@ class genType(ABC):
     
     @on_changed.setter
     def on_changed(self, on_changed:Optional[Callable[[], None]]):
-        if not callable(on_changed):
+        if on_changed is not None and not callable(on_changed):
             raise TypeError('on_changed should be a function')
 
         self._on_changed = on_changed

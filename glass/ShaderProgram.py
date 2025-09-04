@@ -551,20 +551,8 @@ class ShaderProgram(GPUProgram):
         return total
 
     def __update_uniforms(self):
-        for uniform_var in self._uniforms._uniform_var_map.values():
-            var = uniform_var._bound_var
-            if var is None:
-                continue
-
-            for atom_name, atom_info in Uniforms._bound_vars[id(var)].items():
-                atom_value = ShaderParser.access(var, atom_info["subscript_chain"])
-                self._uniforms._set_atom(atom_name, atom_value)
-
         for atom_name, atom_value in self._uniforms._atoms_to_update.items():
-            try:
-                self._uniforms._set_atom(atom_name, atom_value)
-            except:
-                pass
+            self._uniforms._set_atom(atom_name, atom_value)
 
         self._uniforms._atoms_to_update.clear()
 

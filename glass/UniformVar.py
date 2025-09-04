@@ -14,26 +14,32 @@ if TYPE_CHECKING:
     from .Uniforms import Uniforms
 
 
-class AttrSetter:
+def __setattr__(self, name:str, value:Any):
+    old_setattr = UniformVar._old_setattrs[self.__class__]
+    old_setattr(self, name, value)
+    used_value:Any = None
 
-    def __init__(self, var_class:type):
-        self._old_setattr = var_class.__setattr__
-        self._var_class:type = var_class
+    id_self:int = id(self)
+    for uniform_var in UniformVar._bound_vars[id_self]:
+        if name in uniform_var:
+            if used_value is None:
+                used_value:Any = getattr(self, name)
 
-    def __call__(self, var:Any, name:str, value)->None:
-        self._old_setattr(var, name, value)
-        used_value = getattr(self, name)
+            uniform_var[name].bind(used_value)
 
-        id_var:int = id(var)
-        for uniform_var in UniformVar._bound_vars[id_var]:
-            if name in uniform_var:
-                uniform_var[name].bind(used_value)
 
-    def unbind(self):
-        if self._var_class.__setattr__ is not self:
-            return
-        
-        self._var_class.__setattr__ = self._old_setattr
+def __setitem__(self, index:int, value:Any):
+    old_setitem = UniformVar._old_setitems[self.__class__]
+    old_setitem(self, index, value)
+    used_value:Any = None
+
+    id_self:int = id(self)
+    for uniform_var in UniformVar._bound_vars[id_self]:
+        if index in uniform_var:
+            if used_value is None:
+                used_value = self[index]
+
+            uniform_var[index].bind(used_value)
 
 
 class ItemSetter:
@@ -96,7 +102,9 @@ class UniformVar:
         "_bound_var",
     }
 
-    _bound_vars:Dict[int, Set[UniformVar]] = {}
+    _bound_vars:Dict[type, Dict[int, Set[UniformVar]]] = {}
+    _old_setattrs:Dict[type, Callable[[Any,str,Any], None]] = {}
+    _old_setitems:Dict[type, Callable[[Any,str,Any], None]] = {}
 
     def __init__(self, uniforms:Uniforms, var_token:Var):
         self._uniforms:Uniforms = uniforms
@@ -206,21 +214,26 @@ class UniformVar:
         
         if self._var_token.type in GLInfo.basic_types:
             return False
-
         
+        var_class:type = python_var.__class__
+        if var_class not in UniformVar._bound_vars:
+            UniformVar._bound_vars[var_class] = {}
+            if not isinstance(python_var, genType):
+                if var_class.__setattr__ is not __setattr__:
+                    UniformVar._old_setattrs[var_class] = var_class.__setattr__
+                    var_class.__setattr__ = __setattr__
+
+                if hasattr(var_class, '__setitem__') and var_class.__setitem__ is not __setitem__:
+                    UniformVar._old_setitems[var_class] = var_class.__setitem__
+                    var_class.__setitem__ = __setitem__
+
         id_python_var:int = id(python_var)
-        if id_python_var not in UniformVar._bound_vars:
-            UniformVar._bound_vars[id_python_var] = set()
+        if id_python_var not in UniformVar._bound_vars[var_class]:
+            UniformVar._bound_vars[var_class][id_python_var] = set()
             if isinstance(python_var, genType):
                 python_var.on_changed = OnGenTypeChanged(python_var)
-            else:
-                if not isinstance(python_var.__setattr__, AttrSetter):
-                    python_var.__class__.__setattr__ = AttrSetter(python_var.__class__)
 
-                if not hasattr(python_var, "__setitem__") or not isinstance(python_var.__setitem__, ItemSetter):
-                    python_var.__class__.__setitem__ = ItemSetter(python_var.__class__) 
-
-        UniformVar._bound_vars[id_python_var].add(self)
+        UniformVar._bound_vars[var_class][id_python_var].add(self)
         for child_name, child in self._var_token.children.items():
             if child.type in GLInfo.basic_types:
                 continue
@@ -234,6 +247,8 @@ class UniformVar:
 
             self._uniforms[child_name].bind(used_var, False)
 
+        self._bound_var = python_var
+
     def unbind(self)->None:
         python_var = self._bound_var
         self._bound_var = None
@@ -241,25 +256,33 @@ class UniformVar:
         if python_var is None:
             return
 
+        var_class:type = python_var.__class__
+        if var_class not in UniformVar._bound_vars:
+            return
+        
         id_python_var = id(python_var)
-        if id_python_var not in UniformVar._bound_vars:
+        if id_python_var not in UniformVar._bound_vars[var_class]:
+            return
+
+        if self not in UniformVar._bound_vars[var_class][id_python_var]:
             return
         
-        if self not in UniformVar._bound_vars[id_python_var]:
-            return
-        
-        UniformVar._bound_vars[id_python_var].remove(self)
-        if not UniformVar._bound_vars[id_python_var]:
-            del UniformVar._bound_vars[id_python_var]
+        UniformVar._bound_vars[var_class][id_python_var].remove(self)
+        if not UniformVar._bound_vars[var_class][id_python_var]:
+            del UniformVar._bound_vars[var_class][id_python_var]
 
-            if hasattr(python_var.__class__, "__setattr__") and isinstance(python_var.__class__.__setattr__, AttrSetter):
-                python_var.__class__.__setattr__.unbind()
-
-            if hasattr(python_var.__class__, "__setitem__") and isinstance(python_var.__class__.__setitem__, ItemSetter):
-                python_var.__class__.__setitem__.unbind()
-
-            if hasattr(python_var, "on_changed") and isinstance(python_var.on_changed, OnGenTypeChanged):
+            if isinstance(python_var, genType) and isinstance(python_var.on_changed, OnGenTypeChanged):
                 python_var.on_changed.unbind()
+
+        if not UniformVar._bound_vars[var_class]:
+            del UniformVar._bound_vars[var_class]
+
+            if var_class.__setattr__ is __setattr__:
+                var_class.__setattr__ = UniformVar._old_setattrs[var_class]
+
+            if hasattr(var_class, '__setitem__') and var_class.__setitem__ is __setitem__:
+                var_class.__setitem__ = UniformVar._old_setitems[var_class]
+
 
         for child_name, child in self._var_token.children.items():
             if child.type in GLInfo.basic_types:
