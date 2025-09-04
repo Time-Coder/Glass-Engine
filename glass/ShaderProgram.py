@@ -550,14 +550,7 @@ class ShaderProgram(GPUProgram):
 
         return total
 
-    def __update_uniforms(self):
-        for atom_name, atom_value in self._uniforms._atoms_to_update.items():
-            self._uniforms._set_atom(atom_name, atom_value)
-
-        self._uniforms._atoms_to_update.clear()
-
     def __update_samplers(self):
-        self.use()
         self_used_texture_units = set()
         self_used_image_units = set()
         not_set_samplers = []
@@ -751,7 +744,7 @@ class ShaderProgram(GPUProgram):
             times = len(instances) // instances.divisor
 
         self.use()
-        self.__update_uniforms()
+        self._uniforms._apply_waiting_set()
         self.__update_samplers()
         self.__check_not_set_uniforms()
         if self._uniform_blocks.auto_upload:

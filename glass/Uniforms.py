@@ -39,7 +39,7 @@ class Uniforms:
         self.info:Dict[str, Var] = {}
         self.descendants:Dict[str, Var] = {}
 
-        self._atoms_to_update = {}
+        self._atoms_to_update:Dict[SimpleVar, Any] = {}
         self._uniform_var_map:Dict[str, UniformVar] = {}
         self._texture_value_map = {}
         self._current_atom_name:str = ""
@@ -102,7 +102,7 @@ class Uniforms:
         else:
             return copy.copy(value)
 
-    def _set_atom(self, atom_info: SimpleVar, value):
+    def _set_atom(self, atom_info: SimpleVar, value: Any)->None:
         name:str = atom_info.name
         if GL.glGetUniformLocation:
             program = self.program
@@ -128,7 +128,13 @@ class Uniforms:
                 offset = atom_info.offset
                 ACBO.set(binding=binding_point, offset=offset, value=value)
         else:
-            self._atoms_to_update[name] = Uniforms._copy(value)
+            self._atoms_to_update[atom_info] = Uniforms._copy(value)
+
+    def _apply_waiting_set(self):
+        for atom, atom_value in self._atoms_to_update.items():
+            self._set_atom(atom, atom_value)
+
+        self._atoms_to_update.clear()
 
     def _set_bool(self, location: int, value):
         if not isinstance(value, int):
