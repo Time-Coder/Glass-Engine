@@ -361,25 +361,25 @@ def outerProduct(x:genVec, y:genVec)->genMat:
 
     return result
 
-def lessThan(x:genType, y:genType):
+def lessThan(x:genType, y:genType)->genType:
     return x < y
 
-def lessThanEqual(x:genType, y:genType):
+def lessThanEqual(x:genType, y:genType)->genType:
     return x <= y
 
-def greaterThan(x:genType, y:genType):
+def greaterThan(x:genType, y:genType)->genType:
     return x > y
 
-def greaterThanEqual(x:genType, y:genType):
+def greaterThanEqual(x:genType, y:genType)->genType:
     return x >= y
 
-def equal(x:genType, y:genType):
-    return x == y
+def equal(x:genType, y:genType)->genType:
+    return x._compare_op("==", y)
 
-def notEqual(x:genType, y:genType):
-    return x != y
+def notEqual(x:genType, y:genType)->genType:
+    return x._compare_op("!=", y)
 
-def any(x:genType):
+def any(x:genType)->bool:
     if not isinstance(x, genType):
         return bool(x)
     
@@ -389,7 +389,7 @@ def any(x:genType):
 
     return False
 
-def all(x:genType):
+def all(x:genType)->bool:
     if not isinstance(x, genType):
         return bool(x)
     

@@ -315,17 +315,31 @@ class genType(ABC):
     def __ipow__(self, other:Union[float, bool, int, genType]):
         return self._iop("**", other)
 
-    def __eq__(self, other:Union[float, bool, int, genType])->genType:
-        return self._compare_op("==", other)
+    def __eq__(self, other:Union[float, bool, int, genType])->bool:        
+        if not isinstance(other, self.__class__):
+            return False
+        
+        for i in range(len(self._data)):
+            if self._data[i] != other._data[i]:
+                return False
+            
+        return True
     
-    def __req__(self, other:Union[float, bool, int, genType])->genType:
-        return self._compare_rop("==", other)
+    def __req__(self, other:Union[float, bool, int, genType])->bool:
+        return (self == other)
     
-    def __ne__(self, other:Union[float, bool, int, genType])->genType:
-        return self._compare_op("!=", other)
+    def __ne__(self, other:Union[float, bool, int, genType])->bool:
+        if not isinstance(other, self.__class__):
+            return True
+        
+        for i in range(len(self._data)):
+            if self._data[i] != other._data[i]:
+                return True
+            
+        return False
     
-    def __rne__(self, other:Union[float, bool, int, genType])->genType:
-        return self._compare_rop("!=", other)
+    def __rne__(self, other:Union[float, bool, int, genType])->bool:
+        return (self != other)
     
     def __gt__(self, other:Union[float, bool, int, genType])->genType:
         return self._compare_op(">", other)

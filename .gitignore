@@ -26,3 +26,4 @@ test_*
 *.spv
 note.txt
 glass_engine/glsl/temp
+result.json

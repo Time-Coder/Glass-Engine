@@ -11,7 +11,6 @@ from .utils import checktype, uint64_to_uvec2
 from .CustomLiteral import CustomLiteral
 from .sampler2D import sampler2D
 from .image2D import image2D
-from .FBOAttachment import FBOAttachment
 from .usampler2D import usampler2D
 from .isampler2D import isampler2D
 from .uimage2D import uimage2D

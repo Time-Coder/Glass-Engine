@@ -40,7 +40,6 @@ def __setattr__(self, name:str, value:Any):
 def __setitem__(self, index:Union[slice,int], value:Any):
     old_setitem = UniformVar._old_setitems[self.__class__]
     old_setitem(self, index, value)
-    used_value:Any = None
 
     self_class:type = self.__class__
     if self_class not in UniformVar._bound_vars:
@@ -59,40 +58,7 @@ def __setitem__(self, index:Union[slice,int], value:Any):
             if i not in uniform_var:
                 continue
 
-            if used_value is None:
-                used_value:Any = self[i]
-
-            uniform_var[i].bind(used_value)
-
-
-class ItemSetter:
-
-    def __init__(self, var_class:type):
-        self._old_setitem = None
-        if hasattr(var_class, "__setitem__"):
-            self._old_setitem = var_class.__setitem__
-
-        self._var_class:Any = var_class
-
-    def __call__(self, var:Any, index, value)->None:
-        if self._old_setitem is not None:
-            self._old_setitem(var, index, value)
-
-        used_value = self[index]
-
-        id_var:int = id(var)
-        for uniform_var in UniformVar._bound_vars[id_var]:
-            if index in uniform_var:
-                uniform_var[index].bind(used_value)
-
-    def unbind(self):
-        if not hasattr(self._var_class, "__setitem__") or self._var_class.__setitem__ is not self:
-            return
-        
-        if self._old_setitem is None:
-            del self._var_class.__setitem__
-        else:
-            self._var_class.__setitem__ = self._old_setitem
+            uniform_var[i].bind(self[i])
 
 
 class OnGenTypeChanged:
