@@ -123,9 +123,6 @@ class genType(ABC):
                 genType.__gen_type_map[key] = from_import("." + result_name, result_name)
 
         return genType.__gen_type_map[key]
-        
-    def value_ptr(self):
-        return self._data
     
     def _call_on_changed(self):
         if self._on_changed is None:

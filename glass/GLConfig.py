@@ -224,17 +224,23 @@ class _MetaGLConfig(type):
 
         @functools.wraps(func)
         def wrapper(*args, **kwargs):
-            if _MetaGLConfig._active_local_env is not None:
-                cls = args[0]
-                new_value = args[1]
-                old_value = getattr(cls, func.__name__)
+            if (
+                _MetaGLConfig._active_local_env is None or
+                func.__name__ in _MetaGLConfig._active_local_env._old_values
+            ):
+                return func(*args, **kwargs)
+            
+            cls = args[0]
+            new_value = args[1]
 
-                if old_value == new_value:
-                    return
+            old_value = getattr(cls, func.__name__)
 
-                _MetaGLConfig._active_local_env.add_old_value(
-                    func.__name__, old_value
-                )
+            if old_value == new_value:
+                return
+
+            _MetaGLConfig._active_local_env.add_old_value(
+                func.__name__, old_value
+            )
 
             return func(*args, **kwargs)
 
@@ -560,7 +566,6 @@ class _MetaGLConfig(type):
         return _MetaGLConfig.__buffered_viewport[current_context]
 
     @buffered_viewport.setter
-    @record_old_value
     def buffered_viewport(cls, viewport):
         current_context = cls.buffered_current_context
         _MetaGLConfig.__buffered_viewport[current_context] = viewport
@@ -581,7 +586,6 @@ class _MetaGLConfig(type):
         return int(GL.glGetIntegerv(GL.GL_ACTIVE_TEXTURE) - GL.GL_TEXTURE0)
 
     @active_texture_unit.setter
-    @record_old_value
     def active_texture_unit(cls, unit):
         if unit >= cls.max_texture_units:
             raise ValueError(
@@ -695,7 +699,6 @@ class _MetaGLConfig(type):
             return _MetaGLConfig.__buffered_current_context
 
     @buffered_current_context.setter
-    @record_old_value
     def buffered_current_context(cls, context_id: int):
         _MetaGLConfig.__buffered_current_context = context_id
 

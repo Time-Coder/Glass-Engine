@@ -411,3 +411,6 @@ def not_(x:genType):
 
 def sizeof(x:genType)->int:
     return ctypes.sizeof(x._data)
+
+def value_ptr(x:genType):
+    return x._data

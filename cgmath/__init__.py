@@ -97,5 +97,5 @@ from .funcs import (
     length, normalize, distance, dot, cross, faceforward, reflect, refract,
     transpose, determinant, inverse, trace, conjugate,
     matrixCompMult, outerProduct, lessThan, lessThanEqual,
-    greaterThan, greaterThanEqual, equal, notEqual, any, all, not_, sizeof
+    greaterThan, greaterThanEqual, equal, notEqual, any, all, not_, sizeof, value_ptr
 )

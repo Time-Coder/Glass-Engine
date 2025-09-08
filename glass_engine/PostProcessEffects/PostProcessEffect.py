@@ -30,7 +30,7 @@ class PostProcessEffect(ABC):
                 if type(lvalue) != type(value):
                     equal = False
                 else:
-                    equal = bool(getattr(self, func.__name__) == value)
+                    equal = bool(lvalue == value)
             except:
                 equal = False
 
