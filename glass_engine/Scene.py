@@ -157,13 +157,13 @@ class Scene:
                     self._all_meshes[mesh][new_path] = AffineTransform()
 
                 self._all_meshes[mesh][new_path]["affine_transform_row0"] = cgm.vec4(
-                    new_mat[0][0], new_mat[1][0], new_mat[2][0], new_mat[3][0]
+                    current_quat[0][0], current_quat[1][0], current_quat[2][0], current_quat[3][0]
                 )
                 self._all_meshes[mesh][new_path]["affine_transform_row1"] = cgm.vec4(
-                    new_mat[0][1], new_mat[1][1], new_mat[2][1], new_mat[3][1]
+                    current_quat[0][1], current_quat[1][1], current_quat[2][1], current_quat[3][1]
                 )
                 self._all_meshes[mesh][new_path]["affine_transform_row2"] = cgm.vec4(
-                    new_mat[0][2], new_mat[1][2], new_mat[2][2], new_mat[3][2]
+                    current_quat[0][2], current_quat[1][2], current_quat[2][2], current_quat[3][2]
                 )
                 self.__anything_changed = True
             elif isinstance(scene_node, SpotLight):
